@@ -1,0 +1,683 @@
+<mat-card *ngIf="userStory" id="style-1" [ngClass]="setHeight()">
+  <mat-card-header>
+    <mat-card-title>
+      <div fxLayout="row wrap" *ngIf="selectedIndex === 'GENERAL'" class="mt-05 assignee-field">
+        <div fxFlex>
+          <mat-form-field (click)="$event.stopPropagation()" class="full-width">
+            <mat-select #showAssignee
+              [disabled]="checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))"
+              placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}" (selectionChange)="changeAssignee($event.value)"
+              [(ngModel)]="assignee">
+              <mat-select-trigger>
+                {{selectedMember}}
+              </mat-select-trigger>
+              <mat-option [value]="-1"
+                *ngIf="!checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))">
+                <fa-icon icon="plus" class="mr-05 mat-color-accent"></fa-icon>
+                {{'USERSTORY.ADDPROJECTMEMBER'|translate | softLabelsPipe : softLabels}}
+              </mat-option>
+              <mat-option [value]="0">Select None</mat-option>
+              <mat-option *ngFor="let person of (projectMembers$ | async | dependencyFilter: 'id':dependancyUserId)"
+                [value]="person.projectMember.id">
+                <app-avatar class="employee_img" *ngIf="!person.projectMember.profileImage"
+                  [name]="person.projectMember.name | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-avatar>
+                <img class="employee_img" *ngIf="person.projectMember.profileImage"
+                  [src]="person.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ person.projectMember.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="custom-add-icon mt-md-1 pt-3">
+          <fa-icon icon="user-plus" aria-hidden="false" aria-label="add"
+            matTooltip="{{'USERSTORY.ADDPROJECTMEMBER'|translate | softLabelsPipe : softLabels}}"
+            *ngIf="!checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))"
+            [satPopoverAnchorFor]="projectMemberPopover" (click)="projectMemberPopover.open();createProjectMember()">
+          </fa-icon>
+        </div>
+      </div>
+      <b>
+        <div fxlayout="row wrap" class="assignee-display full-width">
+          <span fxFlex="30px" *ngIf="selectedIndex === 'GENERAL'">
+            <app-avatar class="mr-05" [name]="userStory.ownerName | removeSpecialCharacters" class="icon-button"
+              *ngIf="userStory.ownerUserId && userStory.ownerProfileImage"
+              [src]="userStory.ownerProfileImage | fetchSizedAndCachedImage: '25':''" [isRound]="true" size="25"
+              (click)="openAssignee()">
+            </app-avatar>
+
+            <app-avatar class="mr-05" [name]="userStory.ownerName | removeSpecialCharacters" [isRound]="true" size="25"
+              *ngIf="userStory.ownerUserId && !userStory.ownerProfileImage" (click)="openAssignee()"></app-avatar>
+
+            <app-avatar [name]="profileImage| removeSpecialCharacters" *ngIf="!userStory.ownerUserId"
+              class="icon-button" class="mr-05" [src]='defaultProfileImage' [isRound]="true" size="25"
+              (click)="openAssignee()">
+            </app-avatar>
+          </span>
+          <div fxFlex class="edit-userstory"><span (dblclick)="showMatFormField()" style="cursor: pointer;"
+              *ngIf="isEditUserStory && !checkUserStoryNameIsDisabled((canAccess_entityType_feature_EditActiveGoalWorkItemName),(canAccess_entityType_feature_EditBacklogGoalWorkItemName),(canAccess_entityType_feature_EditReplanGoalWorkItemName))">{{ userStoryData.userStoryName}}</span>
+            <span style="cursor: pointer;"
+              *ngIf="isEditUserStory && checkUserStoryNameIsDisabled((canAccess_entityType_feature_EditActiveGoalWorkItemName),(canAccess_entityType_feature_EditBacklogGoalWorkItemName),(canAccess_entityType_feature_EditReplanGoalWorkItemName))">{{ userStoryData.userStoryName}}</span>
+
+            <!-- <fa-icon icon="edit" matTooltip="{{'UPDATE'|translate | softLabelsPipe : softLabels}}" class="ml-05 icon-edit"
+            (click)="showMatFormField();$event.stopPropagation()"
+            *ngIf="!checkUserStoryNameIsDisabled((canAccess_entityType_feature_EditActiveGoalWorkItemName$|async),(canAccess_entityType_feature_EditBacklogGoalWorkItemName$|async),(canAccess_entityType_feature_EditReplanGoalWorkItemName$|async))  && selectedIndex === 'GENERAL'">
+          </fa-icon> -->
+            <mat-form-field class="full-width search_goalinput" *ngIf="!isEditUserStory">
+              <input matInput placeholder="{{'USERDETAIL.USERSTORY'|translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="userStoryName" (blur)="updateUserStoryName()" (keydown.enter)="updateUserStoryName()" />
+            </mat-form-field>
+          </div>
+        </div>
+      </b>
+    </mat-card-title>
+
+    <a class="detail_close mt-05" color="warn" (click)="closeUserStoryDetailWindow()">
+      <fa-icon icon="times"></fa-icon>
+    </a>
+  </mat-card-header>
+  <mat-card-content class="p-0">
+    <kendo-tabstrip [tabPosition]="position" (tabSelect)="onTabSelect($event)" id="tab" #tabstrip>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.GENERAL'|translate}}" [selected]="true">
+        <ng-template kendoTabContent>
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async) || isLoading">
+          </mat-progress-bar>
+          <div class="userstory-detail-container ml-08" fxLayout="row wrap" fxLayout.md="column" fxLayoutGap="5px">
+            <span class="hide-mat-form-label" fxFlex="150px">
+              <div fxFlex="150px" fxLayout="column">
+                <label class="hide-content-overflow">{{'STATUS'|translate}}</label>
+              <mat-form-field class="search_goalinput" (click)="$event.stopPropagation()">
+                <mat-select [disabled]="isUserStoryStatus || isUserStoryStatusDisabled" fxFlex="150px"
+                  placeholder="{{'STATUS'|translate}}" (selectionChange)="getUserStoryStatusChange($event.value)"
+                  class="custom-chip-box" [ngStyle]="{'background-color': userStory.userStoryStatusColor}"
+                  [(ngModel)]="userStoryStatusId">
+                  <mat-option *ngFor="let userStoryStatus of (workflowStatus$ | async)"
+                    [value]="userStoryStatus.userStoryStatusId">{{ userStoryStatus.userStoryStatusName | titlecase}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              </div>
+            </span>
+
+            <span class="chip-box-margin hide-mat-form-label sprint-mat-form-label" *ngIf="isSprintUserStories" fxFlex="135px">
+              <div fxFlex="135px" fxLayout="column">
+                <label 
+                  class="hide-content-overflow">{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}</label>
+              <mat-form-field class="estimated-time search_goalinput chip-box-margin ml-02 input-padding"
+                (click)="$event.stopPropagation()" [appearance]="none">
+                <!-- fxFlex="135px"  -->
+                  <!-- fxFlex="135px" -->
+                <input matInput class="custom-chip-box mb-n2 custom-chip-bg mat-form-field-width"
+                  [(ngModel)]="sprintEstimatedTime" 
+                  [disabled]="(isUserStoriesPage && checkUserStoryEstimatedIsDisabled((canAccess_entityType_feature_EditActiveGoalEstimatedTime),(canAccess_entityType_feature_EditBacklogGoalEstimatedTime),(canAccess_entityType_feature_EditReplanGoalEstimatedTime))) || !isUserStoriesPage"
+                  (blur)="saveEstimatedTime()" (keypress)="$event.stopPropagation()" style="padding-top: 0px !important; padding-bottom: 0px !important;"
+                  placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}" amountOnly />
+                  <!-- fxFlex="135px" -->
+              </mat-form-field>
+              <mat-error *ngIf="isValidation">
+                {{ 'USERSTORY.ESTIMATEDTIMEINSPCANNOTGREATERTHAN99HOURS' | translate }}
+              </mat-error>
+              </div>
+            </span>
+
+            <app-common-estimatedTime [estimatedTime]="estimatedTimeSet" [estimationTimeReset]=null [isDetailsPage]=true
+              [isDisabled]="(isUserStoriesPage && checkUserStoryEstimatedIsDisabled((canAccess_entityType_feature_EditActiveGoalEstimatedTime),(canAccess_entityType_feature_EditBacklogGoalEstimatedTime),(canAccess_entityType_feature_EditReplanGoalEstimatedTime))) || !isUserStoriesPage"
+              (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+
+            <span class="chip-box-margin hide-mat-form-label ml-02" fxFlex="300px" *ngIf="!isSprintUserStories">
+              <div fxFlex="150px" *ngIf="isDateTimeConfiguration"  fxLayout="column">
+                <label
+                  class="hide-content-overflow">{{'GOALS.STARTDATE'|translate | softLabelsPipe : softLabels}}</label>
+              <mat-form-field appearance="none" *ngIf="isDateTimeConfiguration">
+                <!-- fxFlex="150px"  -->
+                <input matInput [min]="onBoardProcessDate" class="custom-chip-box mb-n2 custom-chip-bg" 
+                  [(ngModel)]="startDate" (dateTimeChange)="changeStartDate()"
+                  [owlDateTimeTrigger]="deadlineDatePicker1" [owlDateTime]="deadlineDatePicker1" style="padding-top: 0px !important; padding-bottom: 0px !important;"
+                  [disabled]="(isUserStoriesPage && checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))) || !isUserStoriesPage"
+                  placeholder="{{ 'GOALS.STARTDATE' | translate | softLabelsPipe : softLabels}}">
+                  <!-- fxFlex="150px" -->
+                <owl-date-time #deadlineDatePicker1></owl-date-time>
+              </mat-form-field>
+              </div>
+              <div fxLayout="column" fxFlex="150px" *ngIf="!isDateTimeConfiguration">
+                <label class="hide-content-overflow">{{'USERDETAIL.STARTDATE'| translate | softLabelsPipe : softLabels}}</label>
+              <mat-form-field appearance="none" class="search_goalinput" *ngIf="!isDateTimeConfiguration">
+                <!-- fxFlex="150px" -->
+                <input [(ngModel)]="startDate" class="custom-chip-box mb-n2 custom-chip-bg" matInput
+                  [matDatepicker]="startDatePicker" (click)="startDatePicker.open()" [min]="onBoardProcessDate"
+                  placeholder="{{'USERDETAIL.STARTDATE'|translate | softLabelsPipe : softLabels}}"
+                  [disabled]="(isUserStoriesPage && checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))) || !isUserStoriesPage"
+                  (dateChange)="changeStartDate()" required style="padding-top: 0px !important; padding-bottom: 0px !important; width: 106px;" />
+                <mat-datepicker #startDatePicker></mat-datepicker>
+              </mat-form-field>
+              </div>
+              
+              <div fxLayout="column" fxFlex="150px" *ngIf="isDateTimeConfiguration">
+                <label
+                  class="hide-content-overflow">{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}</label>
+              <mat-form-field appearance="none"  *ngIf="isDateTimeConfiguration">
+                <!-- fxFlex="150px" -->
+                 <!-- <input matInput [min]="onBoardProcessDate" class="custom-chip-box mb-n2 custom-chip-bg" fxFlex="150px"
+                  [(ngModel)]="deadlineDate" [matDatetimepicker]="picker2" required autocomplete="false"
+                  (click)="picker2.open()"
+                  placeholder="{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}"
+                  [disabled]="(isUserStoriesPage && checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))) || !isUserStoriesPage"
+                  (dateChange)="changeDeadline()">
+                 <mat-datetimepicker-toggle [for]="picker2" matSuffix></mat-datetimepicker-toggle> 
+                <mat-datetimepicker #picker2 type="datetime"></mat-datetimepicker> -->
+                <input matInput [min]="onBoardProcessDate" class="custom-chip-box mb-n2 custom-chip-bg" 
+                  [(ngModel)]="deadlineDate" (dateTimeChange)="changeDeadline()" style="padding-top: 0px !important; padding-bottom: 0px !important;"
+                  [owlDateTimeTrigger]="deadlineDatePicker" [owlDateTime]="deadlineDatePicker"
+                  [disabled]="(isUserStoriesPage && checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))) || !isUserStoriesPage"
+                  placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+                  <!-- fxFlex="150px" -->
+                <owl-date-time #deadlineDatePicker></owl-date-time>
+              </mat-form-field>
+              </div>
+
+              <div fxLayout="column" fxFlex="150px" *ngIf="!isDateTimeConfiguration">
+                <label class="hide-content-overflow">{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}</label>
+              <mat-form-field appearance="none" *ngIf="!isDateTimeConfiguration"
+                class="search_goalinput">
+                <!-- fxFlex="150px" -->
+                <input [(ngModel)]="deadlineDate" class="custom-chip-box mb-n2 custom-chip-bg" matInput
+                  [matDatepicker]="picker" (click)="picker.open()" [min]="onBoardProcessDate"
+                  placeholder="{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}"
+                  [disabled]="(isUserStoriesPage && checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))) || !isUserStoriesPage"
+                  (dateChange)="changeDeadline()" required style="padding-top: 0px !important; padding-bottom: 0px !important; width: 106px;"/>
+                <mat-datepicker #picker></mat-datepicker>
+               
+              </mat-form-field>
+              </div>
+
+             
+            </span>
+            <span fxLayout="column" class="d-grid">
+              <span fxFlex></span>
+              <span fxFlex class="mt-1-05">
+                <button mat-icon-button [satPopoverAnchorFor]="FileUploadPopover" #FileUploadPopup="satPopoverAnchor"
+                  (click)="openFileUploadPopover(FileUploadPopup)">
+                  <fa-icon icon="image" class="filter mat-color-accent">
+                  </fa-icon>
+                </button>
+              </span>
+            </span>
+            <span fxLayout="column" class="d-grid">
+              <span fxFlex></span>
+              <span fxFlex class="mt-1">
+                <fa-icon class="rotate-icon ml-02  mt-05 m-0 p-03 icon-button" icon="chevron-right"
+                  [ngClass]="{'rotate-icon-down': expansionIcon}" (click)="togglePanel();$event.stopPropagation()">
+                </fa-icon>
+              </span>
+            </span>
+
+            <div class="userstory-detail-expansion">
+              <mat-accordion class="userstory-detail-expansion">
+                <mat-expansion-panel [expanded]="panelOpenState">
+                  <mat-form-field
+                    *ngIf="isUserStoriesPage && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) &&
+                  ((isAllGoalsPage && isPermisisontoChangeGoal) || (!isAllGoalsPage && canAccess_entityType_feature_CanMoveWorkItemToAnotherGoal))"
+                    class="full-width" (click)="$event.stopPropagation()">
+
+                    <mat-select placeholder="{{'USERDETAIL.SELECTPROJECT'|translate}}"
+                      (selectionChange)="getProjectChange($event.value)" [(ngModel)]="projectId">
+                      <mat-option *ngFor="let project of (projectsList)" [value]="project.projectId">
+                        {{ project.projectName  }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field
+                    *ngIf="isUserStoriesPage && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) &&
+                     ((isAllGoalsPage && isPermisisontoChangeGoal) || (!isAllGoalsPage && canAccess_entityType_feature_CanMoveWorkItemToAnotherGoal)) && (!isSprintUserStories || (isSprintUserStories && isReplanGoalStatusId))"
+                    class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select placeholder="{{'USERDETAIL.SELECTGOAL'|translate | softLabelsPipe : softLabels}}"
+                      (selectionChange)="getGoalChange($event.value)" [(ngModel)]="goalId" [disabled]="isLoadingGoals">
+                      <mat-option *ngFor="let goal of (goalsList)" [value]="goal.goalId">
+                        {{ goal.goalShortName? goal.goalShortName : goal.goalName  }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field
+                    *ngIf="isSprintsConfiguration  && canAccess_entityType_feature_CanMoveGoalWorkitemIntoSprints && !isGoalChange && enableSprints && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) "
+                    class="full-width" (click)="$event.stopPropagation()">
+
+                    <mat-select placeholder="{{'USERDETAIL.SELECTSPRINT'|translate}}"
+                      (selectionChange)="moveUserStoryToSprint($event.value)" [(ngModel)]="sprintId"
+                      [disabled]="isLoadingSprints">
+                      <mat-option *ngFor="let sprint of (sprintsList)" [value]="sprint.sprintId">
+                        {{ sprint.sprintName  }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field
+                    *ngIf="isSprintsConfiguration && isUserStoriesPage && isSprintUserStories && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && (canAccess_entityType_feature_CanMoveSprintWorkitemIntoAnotherSprint) && isGoalChange && enableSprints"
+                    class="full-width" (click)="$event.stopPropagation()">
+
+                    <mat-select placeholder="{{'USERDETAIL.SELECTSPRINT'|translate}}"
+                      (selectionChange)="getSprintChange($event.value)" [(ngModel)]="sprintId"
+                      [disabled]="isLoadingSprints">
+                      <mat-option *ngFor="let sprint of (sprintsList)" [value]="sprint.sprintId">
+                        {{ sprint.sprintName  }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field
+                    *ngIf="isUserStoriesPage && (parentUserStoryId && !isBugBoard) && ((isAllGoalsPage && isPermissionForMovingUserStoryTask) || (!isAllGoalsPage && canAccess_entityType_feature_CanMoveSubtaskFromOneWorkItemToAnother))"
+                    class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select placeholder="{{'USERDETAIL.USERSTORY'|translate | softLabelsPipe : softLabels}}"
+                      (selectionChange)="getUserStoryChange($event.value)" [(ngModel)]="parentUserStoryId">
+                      <mat-option *ngFor="let userStory of (userStories$ | async)" [value]="userStory.userStoryId">
+                        {{ userStory.userStoryName }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width">
+                    <mat-select [(ngModel)]="userStoryTypeId"
+                      placeholder="{{'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                      (selectionChange)="changeUserStoryType($event.value)"
+                      [disabled]="(isAllGoalsPage && !isPermissionForUserStory) || (!isAllGoalsPage && !canAccess_entityType_feature_AddOrUpdateWorkItem)">
+                      <mat-option value="option" [value]="type.userStoryTypeId"
+                        *ngFor="let type of (userStoryTypes$ | async)">
+                        {{ type.userStoryTypeName }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" *ngIf="isSprintUserStories">
+                    <mat-select [(ngModel)]="ragStatus" placeholder="{{'USERDETAIL.RAGSTATUS'|translate }}"
+                      (selectionChange)="setRagStatus($event.value)">
+                      <mat-option value="option" [value]="type.value" *ngFor="let type of ragColors">
+                        {{ type.name }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()" *ngIf="!isKanbanBoard">
+                    <mat-select placeholder="{{'USERDETAIL.DEPENDENCY'|translate}}"
+                      (selectionChange)="changeDependancy($event.value)" [(ngModel)]="dependancyUserId"
+                      [disabled]="checkUserStoryDependencyIsDisabled((canAccess_entityType_feature_EditActiveGoalDependency),(canAccess_entityType_feature_EditBacklogGoalDependency),(canAccess_entityType_feature_EditReplanGoalDependency))">
+                      <mat-select-trigger>
+                        {{selectedDependencyPerson}}
+                      </mat-select-trigger>
+                      <mat-option [value]="0">Select None</mat-option>
+                      <mat-option *ngFor="let person of (projectMembers$ | async | dependencyFilter: 'id':assignee)"
+                        [value]="person.projectMember.id">
+                        <div fxLayout="row wrap" fxLayoutGap="5px">
+                          <div fxFlex="30px">
+                            <app-avatar matTooltip="{{ person.projectMember.name }}"
+                              [name]="person.projectMember.name | removeSpecialCharacters"
+                              [src]="person.projectMember.profileImage" [isRound]="true" size="30">
+                            </app-avatar>
+                          </div>
+                          <div fxFlex="82">
+                            <p class="mat-body-2">
+                              {{ person.projectMember.name }}
+                            </p>
+                          </div>
+                        </div>
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-checkbox [(ngModel)]="isRecurringWorkItem" (change)="recurringWorkItem(addCronExpressionPopUp)"
+                    [satPopoverAnchorFor]="addCronExpressionPopovers" #addCronExpressionPopUp="satPopoverAnchor">
+                    {{'USERSTORY.RECURRINGWORKITEM' | translate}}</mat-checkbox>
+                  <div>
+                    <span *ngIf="isRecurringWorkItem && cronExpressionDescription" class="pl-05"><b>(
+                        {{cronExpressionDescription}} )</b>
+                    </span>
+                    <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent pl-05"
+                      [satPopoverAnchorFor]="addCronExpressionPopovers" #addCronExpressionPopUp="satPopoverAnchor"
+                      *ngIf="isRecurringWorkItem && cronExpressionDescription"
+                      (click)="editCronExpressionPopup(addCronExpressionPopUp)">
+                    </fa-icon>
+                  </div>
+                  <!-- <div *ngIf="isRecurringWorkItem && isEditScheduling">
+                    <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions">
+                    </cron-editor>
+                    <div class="mb-1 text-center">
+                      <button mat-raised-button color="primary" class="mr-1" (click)="upsertCronExpression(false)">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                      </button>
+                      <button mat-button mat-raised-button (click)="closeCronExpressionPopUp()" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                      </button>
+                    </div>
+                  </div> -->
+                  <mat-form-field class="full-width" *ngIf="isKanbanBoard">
+                    <input matInput placeholder="{{'USERSTORY.VERSIONNAME'|translate}}" [(ngModel)]="versionName"
+                      (blur)="updateVersionName()"
+                      [disabled]="checkUserStoryNameIsDisabled((canAccess_entityType_feature_EditActiveGoalWorkItemName),(canAccess_entityType_feature_EditBacklogGoalWorkItemName),(canAccess_entityType_feature_EditReplanGoalWorkItemName))" />
+                  </mat-form-field>
+                  <mat-error *ngIf="validationForVersionName">
+                    <span> {{ 'USERSTORY.VERSIONAMEMAXLENGTH' | translate }} </span>
+                  </mat-error>
+                  <mat-form-field class="full-width" *ngIf="isKanbanBoard">
+                    <mat-select [(ngModel)]="projectFeatureId" placeholder="{{'USERSTORY.SELECTCOMPONENT'|translate}}"
+                      (selectionChange)="updateProjectFeature($event.value)"
+                      [disabled]="(isUserStoriesPage && checkProjectFeatureIsDisabled((canAccess_entityType_feature_EditActiveGoalProjectFeature),(canAccess_entityType_feature_EditBacklogGoalProjectFeature))) || !isUserStoriesPage">
+                      <mat-option value="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                      <mat-option value="option" [value]="feature.projectFeatureId"
+                        *ngFor="let feature of (projectFeatures$ | async)">
+                        {{ feature.projectFeatureName }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" *ngIf="isKanbanBoard">
+                    <mat-select placeholder="{{'USERDETAIL.SELECTBUGCAUSEDUSER'|translate}}"
+                      (selectionChange)="updateBugCausedPerson($event.value)" [(ngModel)]="bugCausedUserId"
+                      [disabled]="(isUserStoriesPage && checkBugCausedUserIsDisabled((canAccess_entityType_feature_EditActiveGoalBugCausedUser),(canAccess_entityType_feature_EditBacklogGoalBugCausedUser))) || !isUserStoriesPage">
+                      <mat-select-trigger>
+                        {{selectedBugCausedUser}}
+                      </mat-select-trigger>
+                      <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                      <mat-option *ngFor="let person of (projectMembers$ | async)" [value]="person.projectMember.id">
+                        <div fxLayout="row wrap" fxLayoutGap="5px">
+                          <div fxFlex="30px">
+                            <app-avatar matTooltip="{{ person.projectMember.name }}"
+                              [name]="person.projectMember.name | removeSpecialCharacters"
+                              [src]="person.projectMember.profileImage" [isRound]="true" size="30">
+                            </app-avatar>
+                          </div>
+                          <div fxFlex="85">
+                            <p class="mat-body-2">
+                              {{ person.projectMember.name }}
+                            </p>
+                          </div>
+                        </div>
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width"
+                    *ngIf="(isKanbanBoard  && !isSprintUserStories) || (isKanbanBoard  && isSprintUserStories)">
+                    <mat-select [(ngModel)]="bugPriorityId" placeholder="{{'GOALS.SELECTBUGPRIORITY'|translate}}"
+                      (selectionChange)="updateBugPrioity($event.value)"
+                      [disabled]="(isUserStoriesPage && checkBugPriorityIsDisabled((canAccess_entityType_feature_EditActiveGoalBugPriority),(canAccess_entityType_feature_EditBacklogGoalBugPriority))) || !isUserStoriesPage">
+                      <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                      <mat-option [value]="priority.bugPriorityId" *ngFor="let priority of (bugPriorities$ | async)">
+                        <fa-icon icon="{{priority.icon}}" [ngStyle]=" setColorForBugPriorityTypes(priority.color)">
+                        </fa-icon>
+                        {{ priority.priorityName }}&nbsp;-&nbsp;{{ priority.description }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field class="full-width" *ngIf="isSprintUserStories && !isKanbanBoard">
+                    <mat-select [(ngModel)]="bugPriorityId" placeholder="{{'GOALS.PRIORITY'|translate}}"
+                      (selectionChange)="updateBugPrioity($event.value)">
+                      <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                      <mat-option [value]="priority.bugPriorityId" *ngFor="let priority of (bugPriorities$ | async)">
+                        <fa-icon icon="{{priority.icon}}" [ngStyle]="
+                      setColorForBugPriorityTypes(priority.color)"></fa-icon>
+                        {{ priority.description }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <div fxLayout="row wrap" fxLayoutGap="3px"
+                    *ngIf="(isSuperagileBoard || !isKanbanBoard) && showSectionsDropDown && isEnableTestRepo">
+                    <div fxFlex fxFlex.sm="140px">
+                      <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                        <mat-select placeholder="{{'TESTMANAGEMENT.SECTION' | translate}}" [(ngModel)]="sectionId"
+                          (selectionChange)="updateSection($event.value)"
+                          [disabled]="!(canAccess_entityType_feature_AddOrUpdateScenarioSection)">
+                          <mat-option [value]="0">Select None</mat-option>
+                          <mat-option *ngFor="let section of (sectionsList$ | async) " [value]="section.id">
+                            <pre class="dropdown-custom-text">{{section.value}}</pre>
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    <div fxFlex="20px" class="div-icon-style mt-1">
+                      <fa-icon icon="plus" aria-hidden="false" aria-label="add" class="goal-cursor"
+                        matTooltip="{{'TESTMANAGEMENT.ADDSECTION' | translate}}"
+                        *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection) && isEnableTestRepo"
+                        [satPopoverAnchorFor]="addSection" #addSectionPopover="satPopoverAnchor"
+                        class="icon-style icon-button" (click)="openSectionPopover(addSectionPopover)">
+                      </fa-icon>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+
+<div fxLayout="column">
+            <mat-label *ngIf="userStory.tag">
+              <div class="mb-05">{{'USERSTORY.TAGS' | translate}}:</div>
+              <div class="tags-details-popup ">
+                <div *ngFor="let tag of userStoryInputTags" class="tag-unque-display mt-08">
+                  <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{tag}}
+                  </span>
+                </div>
+              </div>
+            </mat-label>
+
+            <div fxFlex class="unique-details-bg p-05" [ngStyle]="{  'background':isEditorVisible ? 'none' : ''}" fxLayout='column'>
+              <!-- <h5 class="unique-details-text">{{'USERSTORYUNIQUE.DESCRIPTION' | translate}}</h5> -->
+              <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                <span *ngIf="description && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                  [innerHTML]=description>
+                </span>
+                <!-- <span *ngIf="descriptionSlug && !isEditorVisible">
+                  <b>&nbsp;{{'USERSTORYUNIQUE.CLICKHERETOADDDESCRIPTION' | translate}}</b>
+                </span> -->
+                <span *ngIf="!description && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                  class="description-text">
+                  <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                </span>
+              </div>
+              <div *ngIf="isEditorVisible">
+                <div class="full-width custom-input">
+                  <editor class="dfree-header custom-logtime-comment"
+                    apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Description" menubar="false"
+                    [init]="initSettings1" background="white" height="120" [(ngModel)]="description">
+                  </editor>
+                </div>
+                <div class="mt-05">
+                  <button mat-raised-button color="primary" class="mr-05" type="button"
+                    (click)="handleDescriptionEvent($event)" [disabled]="(upsertOperationInProgress$ | async)">
+                    <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'SAVE' | translate }}
+                  </button>
+                  <button mat-raised-button (click)="cancelDescription()" class="mr-05"
+                    [disabled]="(upsertOperationInProgress$ | async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+                  </button>
+                  <button mat-raised-button color="primary" (click)="descriptionReset()"
+                    [disabled]="(upsertOperationInProgress$ | async)">
+                    <fa-icon icon="undo" class="mr-05"></fa-icon> {{ 'ADVANCEDSEARCH.RESET' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+            <!-- <app-custom-field-component [moduleTypeId]="moduleTypeId" [referenceTypeId]="formReferenceTypeId"
+              [referenceId]="userStoryId" [isEditFieldPermission]="submitCustomFieldsInPM$">
+            </app-custom-field-component> -->
+            <div *ngIf="customFieldComponent">
+              <ndc-dynamic [ndcDynamicFactory]="customFieldComponent.component"
+                [ndcDynamicComponent]="customFieldComponent.component" [ndcDynamicInjector]="injector"
+                [ndcDynamicInputs]="customFieldComponent.inputs" [ndcDynamicOutputs]="customFieldComponent.outputs">
+              </ndc-dynamic>
+            </div>
+            <!-- <div *ngIf="(customFields$|async)?.length > 0">
+              <div *ngFor="let customField of (customFields$|async)">
+                <app-custom-view-form-component *ngIf="customField" [customField]="customField"
+                  [referenceId]="userStoryId" [isEditFieldPermission]="(submitCustomFieldsInPM$)">
+                </app-custom-view-form-component>
+              </div>
+            </div> -->
+          </div>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab
+        title="{{'USERDETAIL.LINKUSERSTORIES'|translate | softLabelsPipe : softLabels}}  &nbsp; ({{userStoryLinksCount$|async}})"
+        *ngIf="isUserStoriesPage && ((isAllGoalsPage && isPermissionForViewSubLinks) || (!isAllGoalsPage && canAccess_entityType_feature_ViewWorkItemLinks))">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-links [userStoryId]="userStoryId" [projectId]="userStory.projectId"
+            [isAddPermission]="checkPermissionForAddLinks(canAccess_entityType_feature_CreateWorkItemLinks)"
+            [isArchivePermission]="checkPermissionForArchiveLinks(canAccess_entityType_feature_ArchiveWorkItemLink)"
+            [isSprintUserStories]="isSprintUserStories">
+          </app-pm-component-userstory-links>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab
+        title="{{'USERDETAIL.COMMENTS'|translate}}&nbsp;({{componentModel.commentsCount ? componentModel.commentsCount : commentsCount$|async}})"
+        *ngIf="((isAllGoalsPage && isPermissionsForUserStoryComments) || (!isAllGoalsPage && canAccess_entityType_feature_WorkItemComments))">
+        <ng-template kendoTabContent>
+          <snovasys-comments [receiverId]="userStoryId" [componentModel]="componentModel"
+            [isPermissionExists]="((isAllGoalsPage && isPermissionsForUserStoryComments) || (!isAllGoalsPage && canAccess_entityType_feature_WorkItemComments))">
+          </snovasys-comments>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.LOGTIME'|translate}}" *ngIf="isLogTimeRequired">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-logtime [userStoryId]="userStoryId" [isFromAudits]=false>
+          </app-pm-component-userstory-logtime>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.SUBTASKS'|translate}} &nbsp; ({{subUserStoriesCount}})"
+        *ngIf="isUserStoriesPage && !parentUserStoryId &&  userStory.subUserStories">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-subtasks [userStoryId]="userStoryId" [goalId]="userStory.goalId"
+            [sprintId]="userStory.sprintId" [goalStatusId]="userStory.goalStatusId" [isAllGoalsPage]="isAllGoalsPage"
+            [userStories]="userStories" [isDraggable]="checkIsDraggable()" [isSprintUserStories]="isSprintUserStories">
+          </app-pm-component-userstory-subtasks>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.HISTORY'|translate}}">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-history [userStoryId]="userStoryId">
+          </app-pm-component-userstory-history>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.TESTCASES'|translate}}"
+        *ngIf="userStoryData && userStoryData.testSuiteId && isQaRequired && isEnableTestRepo">
+        <ng-template kendoTabContent>
+          <userstory-test-scenarios [userStoryData]="userStoryData" [isSprintUserStories]="isSprintUserStories">
+          </userstory-test-scenarios>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.BUGS'|translate}} &nbsp; ({{bugsCount$ | async}})"
+        *ngIf="!isBugBoard && userStoryData && activeGoalStatusId && isQaRequired && isEnableBugBoards">
+        <ng-template kendoTabContent>
+          <userstory-bugs [userStoryData]="userStoryData" [isSprintUserStories]="isSprintUserStories"
+            [isGoalsPage]="isAllGoalsPage" [isDetailPage]=true>
+          </userstory-bugs>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERSTORY.EXECUTIONRESULTS'|translate}}"
+        *ngIf="userStoryData && userStoryData.testSuiteId && activeGoalStatusId && isQaRequired && isEnableTestRepo">
+        <ng-template kendoTabContent>
+          <userstory-scenario-history [userStoryData]="userStoryData">
+          </userstory-scenario-history>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERSTORY.CUSTOMFIELDSHISTORY'|translate}}">
+        <ng-template kendoTabContent>
+          <app-custom-form-history [referenceId]="userStoryId">
+          </app-custom-form-history>
+        </ng-template>
+      </kendo-tabstrip-tab>
+    </kendo-tabstrip>
+  </mat-card-content>
+
+  <sat-popover #projectMemberPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+    scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+      <app-pm-component-add-projectmember *ngIf="loadprojectMember" [projectId]="userStory.projectId"
+        [clearProjectForm]="clearProjectMemberForm" (closePopup)="closeProjectMemberDialog()"
+        (getProjectMembersCount)="getProjectMembersCount()">
+      </app-pm-component-add-projectmember>
+    </mat-card>
+  </sat-popover>
+</mat-card>
+
+<!--------add Section dialog------>
+<sat-popover #addSection hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'TESTMANAGEMENT.ADDSECTION' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <!-- <testsuite-section-edit *ngIf="loadSection" [testSuiteId]="testSuiteId" [editingSection]="sectionEdit"
+        (closeSection)="closeSectionPopover()">
+      </testsuite-section-edit> -->
+      <ndc-dynamic *ngIf="loadSection" [ndcDynamicFactory]="testSuitSectionEdit.component"
+        [ndcDynamicComponent]="testSuitSectionEdit.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testSuitSectionEdit.inputs" [ndcDynamicOutputs]="testSuitSectionEdit.outputs">
+      </ndc-dynamic>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--------add Section dialog------>
+
+<!--------dropzone dialog------>
+<sat-popover #FileUploadPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition">
+  <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+    <mat-card-title>
+      <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex class="text-center">
+          {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center">
+          <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <div class="mobile-view-popover p-1">
+      <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="userStoryId"
+        [selectedParentFolderId]="userStoryId" [selectedStoreId]="selectedStoreId" [isFromFeedback]="false"
+        [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true"></app-dropzone>
+    </div>
+  </mat-card>
+</sat-popover>
+<!--------dropzone dialog------>
+
+<sat-popover #addCronExpressionPopovers verticalAlign="below" hasBackdrop horizontalAlign="center"
+  verticalAlign="center" backdropClass="backdrop-color" [interactiveClose]="false">
+  <mat-card id="style-1" class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'USERSTORY.SCHEDULE' | translate}}</div>
+    </mat-card-title>
+    <div fxLayout="row" fxLayoutAlign="center center" class="full-width p-1">
+      <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions">
+      </cron-editor>
+    </div>
+    <div class="ml-1">
+      <div fxLayout="row"><span><b>{{'USERSTORY.ENDS' | translate}}</b></span></div>
+      <mat-radio-group [formControl]="scheduleType" aria-label="Ends" class="p-1">
+        <mat-radio-button class="p-1" *ngFor="let type of schedulingEnds" [value]="type.code"
+          (change)="onEndTypeChanged($event)">
+          <div fxLayout="row">{{type.endType}}</div>
+        </mat-radio-button>
+      </mat-radio-group>
+      <mat-form-field class="pr-1" (click)="$event.stopPropagation();" *ngIf="selectedSchedulingType == '2'">
+        <input [formControl]="endDate" matInput [matDatepicker]="picker" [min]="minDate" placeholder="End date"
+          (click)="picker.open()" required>
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center center">
+        <span *ngIf="isPaused">{{'USERSTORY.RESUME' | translate}}</span>
+        <span *ngIf="!isPaused">{{'USERSTORY.PAUSE' | translate}}</span>
+        <mat-slide-toggle
+          [matTooltip]="isPaused == true ? ('USERSTORY.SWITCHTORESUME' | translate) : ('USERSTORY.SWITCHTOPAUSE' | translate)"
+          class="archive-switch" [(ngModel)]="isPaused" [checked]="isPaused">
+        </mat-slide-toggle>
+      </div>
+    </div>
+    <div class="mb-1 mt-1 text-center">
+      <button mat-raised-button color="primary" class="mr-1" (click)="upsertCronExpression(false)">
+        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+      </button>
+      <button mat-button mat-raised-button (click)="cancelCronExpressionPopUp()" type="button">
+        <fa-icon class="mr-05" icon="times"></fa-icon>
+        {{ 'CANCEL' | translate }}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>

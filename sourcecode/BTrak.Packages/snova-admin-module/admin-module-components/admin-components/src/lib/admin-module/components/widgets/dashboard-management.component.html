@@ -1,0 +1,172 @@
+<app-common-message-box *ngIf="!(canAccess_feature_ManageDashboards)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height" *ngIf="(canAccess_feature_ManageDashboards)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                    matTooltip="{{ 'TIMECONFIGURATIONSETTINGS.TIMECONFIGURATIONSETTINGSTITLE' | translate | titlecase }}">
+                    <span class="hide-content-overflow">{{ 'WIDGETS.DASHBOARDCONFIGURATION' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex="280px" class="search_goalinput ml-1 mr-1" fxLayoutAlign="end center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                [(ngModel)]="searchText" (input)="filterByName($event, true)">
+                        </mat-form-field>
+                    </div>
+                    <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center" style="right: 0px !important">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+            [limit]="100" [rows]="finalConfigurations" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'WIDGETS.DASHBOARD' | translate }}" [flexGrow]="1" prop="dashboardName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow"><span>{{ row?.dashboardName }}</span></div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{ 'WIDGETS.DEFAULTDASHBOARDROLES' | translate }}" [flexGrow]="1"
+                prop="defaultDashboardRoleNames">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span matTooltip="{{ row?.defaultDashboardRoleNames }}" matTooltipClass="tooltip-overflow"
+                            matTooltipShowDelay="400">{{ row?.defaultDashboardRoleNames }}
+                        </span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{ 'WIDGETS.VIEWROLES' | translate }}" [flexGrow]="1" prop="viewRoleNames">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span matTooltip="{{ row?.viewRoleNames }}" matTooltipClass="tooltip-overflow"
+                            matTooltipShowDelay="400">{{ row?.viewRoleNames }}</span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{ 'WIDGETS.EDITROLES' | translate }}" [flexGrow]="1" prop="editRoleNames">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span matTooltip="{{ row?.editRoleNames }}" matTooltipClass="tooltip-overflow"
+                            matTooltipShowDelay="400">{{ row?.editRoleNames }}</span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{ 'WIDGETS.DELETEROLES' | translate }}" [flexGrow]="1" prop="deleteRoleNames">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span matTooltip="{{ row?.deleteRoleNames }}" matTooltipClass="tooltip-overflow"
+                            matTooltipShowDelay="400">{{ row?.deleteRoleNames }}</span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'WIDGETS.EDITDASHBOARDCONFIGURATION' | translate }}"
+                        [satPopoverAnchorFor]="configurationPopover" #configurationEditPopover="satPopoverAnchor"
+                        (click)="editConfiguration(row,configurationEditPopover)" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<!-- editpopover -->
+<sat-popover #configurationPopover hasBackdrop [interactiveClose]="false" backdropClass="backdrop-color"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                {{ 'WIDGETS.EDITDASHBOARDCONFIGURATION' | translate }}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="configurationForm" novalidate
+                (submit)="configurationForm.valid && upsertConfiguration()">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="defaultDashboardRoleIds" [compareWith]="compareSelectedRolesFn"
+                        placeholder="{{ 'WIDGETS.DEFAULTDASHBOARDROLES' | translate }}" multiple>
+                        <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allSelected
+                            (click)="toggleRolesPerOne()">
+                            {{ role.roleName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="viewRoleIds" [compareWith]="compareViewSelectedRolesFn"
+                        placeholder="{{ 'WIDGETS.VIEWROLES' | translate }}" multiple>
+                        <mat-option #allViewSelected (click)="toggleViewAllRolesSelected()" [value]="0">
+                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allViewSelected
+                            (click)="toggleViewRolesPerOne()">
+                            {{ role.roleName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="editRoleIds" [compareWith]="compareEditSelectedRolesFn"
+                        placeholder="{{ 'WIDGETS.EDITROLES' | translate }}" multiple>
+                        <mat-option #allEditSelected (click)="toggleEditAllRolesSelected()" [value]="0">
+                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allEditSelected
+                            (click)="toggleEditRolesPerOne()">
+                            {{ role.roleName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="deleteRoleIds" [compareWith]="compareDeleteSelectedRolesFn"
+                        placeholder="{{ 'WIDGETS.DELETEROLES' | translate }}" multiple>
+                        <mat-option #allDeleteSelected (click)="toggleDeleteAllRolesSelected()" [value]="0">
+                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allDeleteSelected
+                            (click)="toggleDeleteRolesPerOne()">
+                            {{ role.roleName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <!-- <div fxLayout="row wrap">
+                    <mat-checkbox class="mr-05" formControlName="canView">{{ 'WIDGETS.CANVIEW' | translate }}
+                    </mat-checkbox>
+                    <mat-checkbox class="mr-05" formControlName="canEdit">{{ 'WIDGETS.CANEDIT' | translate }}
+                    </mat-checkbox>
+                    <mat-checkbox formControlName="canDelete">{{ 'WIDGETS.CANDELETE' | translate }}</mat-checkbox>
+                </div> -->
+                <div class="mt-05 text-center">
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!configurationForm.valid || isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertConfigurationDialog()" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

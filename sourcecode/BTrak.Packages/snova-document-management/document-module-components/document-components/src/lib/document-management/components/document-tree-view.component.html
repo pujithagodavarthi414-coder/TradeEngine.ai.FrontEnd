@@ -1,0 +1,174 @@
+<div fxLayout="row" style="margin: 1px 0px 0px 4px" id="style-1">
+    <div class="full-width" id="treeview">
+        <kendo-treeview [nodes]="folderTreeModel" textField="folderName" kendoTreeViewHierarchyBinding
+            childrenField="children" (collapse)="handleCollapse($event)" (expand)="handleExpand($event)"
+            kendoTreeViewDragAndDrop kendoTreeViewDragAndDropEditing (nodeDragStart)="log('nodeDragStart', $event)"
+            (nodeDrag)="log('nodeDrag', $event)" (nodeDrop)="handleDrop($event)" (addItem)="log('addItem', $event)"
+            (removeItem)="log('removeItem', $event)" (nodeDragEnd)="log('nodeDragEnd', $event)"
+            class="full-height document-tree" id="widget-scroll-id" kendoTreeViewExpandable [expandBy]="'folderId'"
+            [(expandedKeys)]="expandKeys" kendoTreeViewSelectable (selectionChange)="handleSelection($event)"
+            [isSelected]="isItemSelected">
+            <ng-template kendoTreeViewNodeTemplate let-dataItem>
+                <div>
+                    <span [matMenuTriggerFor]="fileMenu" [matMenuTriggerData]="{file: dataItem}"
+                        #fileMenuTrigger="matMenuTrigger"></span>
+                    <span [matMenuTriggerFor]="folderMenu" [matMenuTriggerData]="{folder: dataItem}"
+                        #folderMenuTrigger="matMenuTrigger"></span>
+                    <div fxLayout="row" (click)="selecteNodeDetils(dataItem)"
+                        (contextmenu)="dataItem.fileId ? openFileMenu($event, fileMenuTrigger,dataItem) : openFolderMenu($event, folderMenuTrigger,dataItem)">
+                        <span [ngClass]="iconClass(dataItem)" class="mt-05" style="font-size: large;"></span>
+                        <div class="documents" fxLayout="row">
+                            <span [matTooltip]="dataItem.folderName | softLabelsPipe :softLabels">{{dataItem.folderName | softLabelsPipe :softLabels}}&nbsp;&nbsp;</span>
+                            <!-- <div fxLayout="row" *ngIf="istoShowEditandDeleteIcons(dataItem)">
+                                <fa-icon icon="pen" class="ml-05 mat-color-accent cursor-pointer document-icon"
+                                    [satPopoverAnchorFor]="upsertFolderFilePopover"
+                                    #upsertFolderFilePopup="satPopoverAnchor" *ngIf="getEditPermission(dataItem)"
+                                    (click)="editFileFolderNamePopupOpen(dataItem,upsertFolderFilePopup);$event.stopPropagation()">
+                                </fa-icon>
+                                <fa-icon icon="trash" class="ml-05 mat-color-accent cursor-pointer document-icon"
+                                    #deleteFolderFilePopup="satPopoverAnchor"
+                                    [satPopoverAnchorFor]="deleteFolderFilePopover" *ngIf="isPermissionToDelete"
+                                    (click)="deleteFolderFilePopupOpen(dataItem,deleteFolderFilePopup);$event.stopPropagation()">
+                                </fa-icon>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </kendo-treeview>
+    </div>
+</div>
+
+<sat-popover #upsertFolderFilePopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <app-document-component-add-folder [editFolderDetails]="selectedNodeDetails"
+        [selectedStoreId]="selectedNodeDetails.storeId" [selectedParentFolderId]="selectedNodeDetails.parentFolderId"
+        (closePopup)="closeUpsertFolderPopup(true)" [folderReferenceId]="selectedNodeDetails.folderReferenceId"
+        [folderReferenceTypeId]="selectedNodeDetails.folderReferenceTypeId"
+        *ngIf="isFolderEdit && selectedNodeDetails && selectedNodeDetails.extension == null">
+    </app-document-component-add-folder>
+    <div *ngIf="selectedNodeDetails && selectedNodeDetails.extension != null">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                    <span>
+                        {{'DOCUMENTMANAGEMENT.RENAMEFILE' | translate}}
+                    </span>
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <form [formGroup]="uploadFileForm" #formDirective="ngForm" novalidate
+                    (submit)="uploadFileForm.valid && upsertFileName()">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="fileName"
+                                placeholder="{{'DOCUMENTMANAGEMENT.FILENAME' | translate}}" required trim>
+                            <mat-error *ngIf="uploadFileForm.get('fileName').hasError('maxlength')">
+                                {{'DOCUMENTMANAGEMENT.FILENAMEMAXLENGTHERROR' | translate}}</mat-error>
+                            <mat-error
+                                *ngIf="uploadFileForm.get('fileName').hasError('required') && uploadFileForm.get('fileName').touched">
+                                {{'DOCUMENTMANAGEMENT.FILENAMEREQUIREDERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="text-center mt-1">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!uploadFileForm.valid || isFileRenameInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isFileRenameInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertFolderPopup(false)" type="button"
+                            [disabled]="isFileRenameInprogress">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</sat-popover>
+
+<sat-popover #deleteFolderFilePopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" horizontalAlign="end">
+    <app-document-component-delete-folder-and-file [editFolderDetails]="selectedNodeDetails" [isFolder]="true"
+        (closeDeletionPopup)="cancelFolderFileDelete($event)" [isFromDocumentsApp]="isFromDocumentsApp"
+        *ngIf="isFolderDelete && selectedNodeDetails && selectedNodeDetails.extension == null">
+    </app-document-component-delete-folder-and-file>
+    <app-document-component-delete-folder-and-file [fileDetailsData]="selectedNodeDetails" [isFolder]="false"
+        (closeDeletionPopup)="cancelFolderFileDelete($event)" [isFromDocumentsApp]="isFromDocumentsApp"
+        *ngIf="isFileDelete && selectedNodeDetails && selectedNodeDetails.extension != null">
+    </app-document-component-delete-folder-and-file>
+</sat-popover>
+
+<mat-menu #folderMenu="matMenu" [overlapTrigger]="false">
+    <ng-template matMenuContent let-folder="folder">
+        <ng-container *ngIf="canAccess_feature_EditStores">
+            <button mat-menu-item [satPopoverAnchorFor]="upsertFolderFilePopover"
+                #upsertFolderFilePopup="satPopoverAnchor" *ngIf="(canAccess_feature_CreateFolder) && (permissionToUpload || isFromDocumentsApp)"
+                (click)="editFileFolderNamePopupOpen(folder,upsertFolderFilePopup);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="pen"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.RENAME' | translate}}</span>
+            </button>
+            <button mat-menu-item #deleteFolderFilePopup="satPopoverAnchor"
+                [satPopoverAnchorFor]="deleteFolderFilePopover" *ngIf="(permissionToUpload || isFromDocumentsApp)"
+                (click)="deleteFolderFilePopupOpen(folder,deleteFolderFilePopup);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="trash"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.DELETE' | translate}}</span>
+            </button>
+            <button mat-menu-item [satPopoverAnchorFor]="upsertFolderPopover"
+                #upsertFolderPopup="satPopoverAnchor" *ngIf="(permissionToUpload || isFromDocumentsApp) && canAccess_feature_CreateFolder"
+                (click)="addFolderFromParent(folder,upsertFolderPopup);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="folder-plus"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.ADDSUBFOLDER' | translate}}</span>
+            </button>
+        </ng-container>
+    </ng-template>
+</mat-menu>
+
+<mat-menu #fileMenu="matMenu" [overlapTrigger]="false">
+    <ng-template matMenuContent let-file="file">
+        <ng-container>
+            <button mat-menu-item *ngIf="(canAccess_feature_UploadFiles) && (permissionToUpload || isFromDocumentsApp)"
+                [satPopoverAnchorFor]="upsertFolderFilePopover" #upsertFolderFilePopup="satPopoverAnchor"
+                (click)="editFileFolderNamePopupOpen(file,upsertFolderFilePopup);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="pen"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.RENAMEFILE' | translate}}</span>
+            </button>
+        </ng-container>
+        <ng-container
+            *ngIf="(file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF')">
+            <button mat-menu-item (click)="openPreview(file)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.VIEWIMAGE' | translate}}</span>
+            </button>
+        </ng-container>
+        <ng-container
+            *ngIf="!((file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF'))">
+            <button mat-menu-item (click)="downloadFile(file)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="download"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.DOWNLOADFILETEXT' | translate}}</span>
+            </button>
+        </ng-container>
+        <button mat-menu-item (click)="copyFileUrl(file)">
+            <fa-icon class="icon-button mr-1 mat-color-accent" icon="copy"></fa-icon>
+            <span>{{'DOCUMENTMANAGEMENT.COPYTHELINK' | translate}}</span>
+        </button>
+        <button mat-menu-item [satPopoverAnchorFor]="deleteFolderFilePopover" #deleteFolderFilePopup="satPopoverAnchor"
+            (click)="deleteFolderFilePopupOpen(file,deleteFolderFilePopup);$event.stopPropagation()"
+            *ngIf="(permissionToUpload || isFromDocumentsApp)">
+            <fa-icon class="icon-button mr-1 mat-color-accent" icon="trash"></fa-icon>
+            <span>{{'DOCUMENTMANAGEMENT.DELETE' | translate}}</span>
+        </button>
+    </ng-template>
+</mat-menu>
+
+<sat-popover #upsertFolderPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="true" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <app-document-component-add-folder [selectedStoreId]="folderDetails?.storeId"
+        [selectedParentFolderId]="folderDetails?.folderId" (closePopup)="closeFolderPopup($event)"
+        [isFromDocumentsApp]="isFromDocumentsApp" [folderReferenceId]="folderDetails?.folderReferenceId"
+        [folderReferenceTypeId]="folderDetails?.folderReferenceTypeId">
+    </app-document-component-add-folder>
+</sat-popover>

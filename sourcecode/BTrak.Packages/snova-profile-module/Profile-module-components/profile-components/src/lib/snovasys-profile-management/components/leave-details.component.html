@@ -1,0 +1,142 @@
+<mat-card class="default" class="p-0">
+    <mat-card-title class="full-width">
+        <div fxLayout="row" fxLayoutAlign="start center">
+            <div fxFlex="80px">
+                <button type="submit" mat-icon-button (click)="filterClick()"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()"
+                    [hidden]="!isOpen">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex class="filter-section" [hidden]="!isOpen">
+                <ul>
+                    <li [ngClass]="{ 'active': searchByLeaveTypeFilterIsActive }"
+                        [satPopoverAnchorFor]="leaveTypePopover" (click)="leaveTypePopover.open()">
+                        <a>
+                            <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.LEAVETYPENAME' | translate}}
+                        </a>
+                        <sat-popover #leaveTypePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                            <mat-card class="filter-data">
+                                <mat-form-field class="full-width">
+                                    <mat-label>{{'LEAVESLIST.SELECTLEAVETYPE' | translate}}</mat-label>
+                                    <mat-select (selectionChange)="searchByLeaveType($event.value)"
+                                        [(ngModel)]="leaveTypeId">
+                                        <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                                        <mat-option *ngFor="let leaveType of leaveTypesList$ | async"
+                                            [value]="leaveType.leaveTypeId">
+                                            {{leaveType.leaveTypeName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-card>
+                        </sat-popover>
+                    </li>
+                    <li [ngClass]="{ 'active': dateFromFilterIsActive }" [satPopoverAnchorFor]="dateFromPopover"
+                        (click)="dateFromPopover.open()">
+                        <a>
+                            <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.FROMDATE' | translate}}
+                        </a>
+                        <sat-popover #dateFromPopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                            <mat-card class="filter-data" fxFlex="300px">
+                                <mat-form-field class="full-width">
+                                    <mat-label>{{'LEAVESLIST.SELECTDATEFROM' | translate}}</mat-label>
+                                    <input matInput [matDatepicker]="picker3" [(ngModel)]="dateFrom"
+                                        (click)="picker3.open()" autocomplete="off" [readonly]="true"
+                                        (dateChange)="onLeaveDateFromChange($event)" class="date-picker">
+                                    <mat-datepicker-toggle matSuffix [for]="picker3">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker3></mat-datepicker>
+                                </mat-form-field>
+                            </mat-card>
+                        </sat-popover>
+                    </li>
+                    <li [ngClass]="{ 'active': dateToFilterIsActive }" [satPopoverAnchorFor]="dateToPopover"
+                        (click)="dateToPopover.open()">
+                        <a>
+                            <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.TODATE' | translate}}
+                        </a>
+                        <sat-popover #dateToPopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                            <mat-card class="filter-data" fxFlex="300px">
+                                <mat-form-field class="full-width">
+                                    <mat-label>{{'LEAVESLIST.SELECTDATETO' | translate}}</mat-label>
+                                    <input matInput [matDatepicker]="picker2" [(ngModel)]="dateTo"
+                                        (click)="picker2.open()" autocomplete="off" [readonly]="true"
+                                        (dateChange)="onLeaveDateToChange($event)" class="date-picker" [min]="minDate">
+                                    <mat-datepicker-toggle matSuffix [for]="picker2">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker2></mat-datepicker>
+                                </mat-form-field>
+                            </mat-card>
+                        </sat-popover>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+</mat-card>
+
+
+<div class="activity-data">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="30"
+        [rows]="leaveDetails" [loadingIndicator]="loadingInprogress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.LEAVETYPE' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="leaveTypeName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.leaveTypeName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.DATEFROM' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="dateFrom">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <div *ngIf="row?.dateFrom !=null">{{ row?.dateFrom | date: "dd-MMM-yyyy"  }}
+                </div>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.DATETO' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="dateTo">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <div *ngIf="row?.dateTo !=null">{{ row?.dateTo | date: "dd-MMM-yyyy"  }}
+                </div>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.LEAVESTAKEN' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="leavesTaken">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.leavesTaken }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.ACTUALBALANCE' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="actualBalance">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.actualBalance }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.EFFECTIVEBALANCE' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="effectiveBalance">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.effectiveBalance }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.CARRYFORWARDLEAVES' | translate }}" [flexGrow]="1"
+            [sortable]="true" prop="carryForwardLeaves">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.carryForwardLeaves }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'LEAVEDETAILS.ISPAID' | translate }}" [flexGrow]="1" [sortable]="true"
+            prop="isPaid">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <div>
+                    <fa-icon *ngIf="row?.isPaid" class="mr-05 mat-color-accent" icon="check"></fa-icon>
+                    <fa-icon *ngIf="!row?.isPaid" class="mr-05 mat-color-accent" icon="times"></fa-icon>
+                </div>
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
+</div>

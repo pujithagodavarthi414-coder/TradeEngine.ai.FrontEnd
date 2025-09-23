@@ -1,0 +1,92 @@
+<mat-card class="custom-box mb-0 p-0 mt-0" fxLayout="column">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <!-- [ngStyle]="{'visibility': loadAuditRelatedData ? 'visible' : 'hidden'}" -->
+    <div class="ml-05 mt-n2" fxFlex="100" fxFlex.gt-sm="100">
+        <mat-form-field class="full-width custom-select-matform primary-text" fxFlex="78" fxFlex.gt-md="72"
+            fxFlex.md="78">
+            <mat-select [(ngModel)]="categoryFilter" (selectionChange)="onChangeCategoryFilter($event.value)">
+                <mat-option value="1">{{'AUDIT.SELECTEDGROUPONLY' | translate}}</mat-option>
+                <mat-option value="2">{{'AUDIT.SELECTEDGROUPANDSUBGROUPS' | translate}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <a *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived && isAuditSelected"
+            class="pull-right add-test-case ml-02 mt-20p" matTooltip="{{'AUDIT.ADDCATEGORY' | translate}}"
+            [satPopoverAnchorFor]="addCategory" #addCategoryPopover="satPopoverAnchor"
+            (click)="openCategoryPopover(addCategoryPopover)">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+        </a>
+        <a *ngIf="isCategoriesPresent && !expandAll && isAuditSelected" class="pull-right add-test-case mt-20p"
+            matTooltip="{{'AUDIT.EXPANDCATEGORIES' | translate}}" (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-right"></fa-icon>
+        </a>
+        <a *ngIf="isCategoriesPresent && expandAll && isAuditSelected" class="pull-right add-test-case mt-20p"
+            matTooltip="{{'AUDIT.COLLAPSECATEGORIES' | translate}}" (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-down"></fa-icon>
+        </a>
+    </div>
+    <div class="p-0 m-0 audits-category-list fit-content-audit-category-list" id="style-1">
+        <div *ngIf="!(anyOperationInProgress$ | async) && loadAuditRelatedData">
+            <mat-card *ngIf="!isCategoriesPresent" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                <div fxLayout="row" fxFlex="100">
+                    <div fxFlex="100" fxFlex.gt-xs="5" class="p-05">
+                        <fa-icon icon="info-circle"></fa-icon>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="95" class="p-05 ml-1">
+                        <p *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived"
+                            class="m-0">
+                            {{'AUDIT.ADDCATEGORIESTOTHISAUIDT' | translate}}</p>
+                        <p *ngIf="!canAccess_entityType_feature_AddOrUpdateAuditCategory" class="m-0">
+                            {{'AUDIT.NOCATEGORIESINTHISAUIDT' | translate}}</p>
+                        <p *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && isAuditArchived" class="m-0">
+                            {{'AUDIT.NOCATEGORIESINTHISAUIDT' | translate}}</p>
+                        <a class="add-test-case"
+                            matTooltip="{{'AUDIT.ADDAUDITCATEGORY' | translate | softLabelsPipe :softLabels}}"
+                            [satPopoverAnchorFor]="addCategory"
+                            *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived"
+                            #addCategoryPopover="satPopoverAnchor" (click)="openCategoryPopover(addCategoryPopover)"><b>
+                                {{'AUDIT.ADDFIRSTCATEGORY' | translate}}
+                            </b>
+                        </a>
+                    </div>
+                </div>
+            </mat-card>
+            <div *ngIf="isCategoriesPresent" dragula="categories" [(dragulaModel)]="auditCategoryList">
+                <div *ngFor="let category of auditCategoryList" [attr.data-auditCategoryId]="category.auditCategoryId" class="child-drag">
+                        <audit-categories-view (selectedAuditCategoryData)="getSelectedAuditCategoryData($event)"
+                            (deletedCategoryId)="getDeletedCategoryId($event)" [selectedAudit]="selectedAudit"
+                            [auditCategory]="category" [categoryCollapse]="expandAll"
+                            [categorySelected]="categorySelected">
+                        </audit-categories-view>
+                </div>
+            </div>
+        </div>
+        <mat-card *ngIf="isAuditSelected == false" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+            <div fxLayout="row" fxFlex="100">
+                <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                    <p class="m-0">
+                        {{'AUDIT.SELECTAUDITTOVIEWCONTENTS' | translate | softLabelsPipe :softLabels}}
+                    </p>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+</mat-card>
+
+<!--------add audit category dialog------>
+<sat-popover #addCategory hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05"> {{'AUDIT.ADDCATEGORY' | translate}}
+            </div>
+        </mat-card-title>
+        <audit-category-add-or-edit *ngIf="loadAuditCategory" [selectedAudit]="selectedAudit" [auditCategory]=null
+            [isCategoryEdit]=false (closeCategory)="closeCategoryPopover()">
+        </audit-category-add-or-edit>
+    </mat-card>
+</sat-popover>
+<!--------add audit category dialog------>

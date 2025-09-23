@@ -1,0 +1,90 @@
+<div>
+  <mat-card *ngIf="isSubmitted" class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header">
+      <div fxLayout="row wrap" fxLayoutAlign="end center">
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.ZOOMIN' | translate}}" (click)="zoomIn()">
+            <mat-icon class="filter mat-color-accent">zoom_in</mat-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.ZOOMOUT' | translate}}" (click)="zoomOut()">
+            <mat-icon class="filter mat-color-accent">zoom_out</mat-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ACTIVITYTRACKER.SHOWFILTERS' | translate}}" (click)="showFilter()">
+            <fa-icon class="filter mat-color-accent" icon="filter"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-divider></mat-divider>
+  </mat-card>
+  <div class="activity-data tracker-timeline">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading$| async">
+    </mat-progress-bar>
+    <div *ngIf="!isSubmitted" class="m-2">
+      <form [formGroup]="activityTrackerInputForm" #formDirective="ngForm" novalidate
+        (submit)="activityTrackerInputForm.valid && getBrytumViewJobDetails()">
+        <div>
+          <div fxLayout="row wrap" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="startDate" [matDatepicker]="inputpicker1" (click)="inputpicker1.open()"
+                  readonly  placeholder="{{'ACTIVITYTRACKER.STARTDATE' | translate}}"
+                  (input)="inputFormstartDateChange();"
+                  (dateChange)="inputFormstartDateChange();" class="date-picker" autocomplete="off" required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker1"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker1></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('startDate').hasError('required') && activityTrackerInputForm.get('startDate').touched">
+                    {{'HRMANAGAMENT.PLEASESELECTSTARTDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="endDate" [matDatepicker]="inputpicker2"
+                  (click)="inputFormstartDateChange();inputpicker2.open()" [readonly]="true"
+                  [min]="minDateForEndDateForInput"  class="date-picker"
+                  placeholder="{{'ACTIVITYTRACKER.ENDDATE' | translate}}" autocomplete="off" required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker2"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker2></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('endDate').hasError('required') && activityTrackerInputForm.get('endDate').touched">
+                    {{'HRMANAGAMENT.PLEASESELECTENDDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+            <button class="mr-1" mat-button mat-raised-button color="primary"
+              [disabled]="activityTrackerInputForm.invalid">
+              <fa-icon class="mr-05" icon="edit"></fa-icon> {{'ACTIVITYTRACKER.FILTER' | translate}}
+            </button>
+            <button type="button" mat-button mat-raised-button *ngIf="activityTrackerInputForm.value.rostName"
+              matTooltip="{{'ACTIVITYTRACKER.CANCEL' | translate}}">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'ACTIVITYTRACKER.CANCEL' | translate}}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="tracker-timeline" [style.display]="isSubmitted ? 'block' : 'none' ">
+      <bry-scheduler-interview #scheduler1 [columns]="schedulerConfig.columns" [endDate]="schedulerConfig.endDate"
+        [events]="schedulerConfig.events" [minHeight]="schedulerConfig.minHeight"
+        [resources]="schedulerConfig.resources" [startDate]="schedulerConfig.startDate"
+        [eventContextMenuFeature]="schedulerConfig.eventContextMenuFeature" [viewPreset]="schedulerConfig.viewPreset"
+        [treeFeature]="schedulerConfig.treeFeature" [stripeFeature]="schedulerConfig.stripeFeature"
+        [jobDetails]="jobDetails"
+        [requestData]="activityTrackerInputForm.value" (candidateArchived)="candidateArchived($event)">
+      </bry-scheduler-interview>
+    </div>
+  </div>
+</div>
+<ng-template #candidateUniquePage let-data>
+  <app-candidateview [data]="[data]"> </app-candidateview>
+</ng-template>

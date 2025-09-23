@@ -1,0 +1,309 @@
+<form [formGroup]="questionConductForm" novalidate (submit)="questionConductForm.valid && submitConductQuestion(true)">
+  <mat-card-content class="p-0 case-details-preview-scroll p-4" id="style-1" fxLayout="row wrap">
+    <div fxLayout="row wrap" fxFlex="100" *ngIf="!(questionDetails.questionDescription == null) 
+              && !(questionDetails.questionDescription == '')">
+      <!-- <mat-accordion>
+                <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="mb-05">
+                      {{'AUDIT.DESCRIPTION' | translate}}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <p><span class="m-0 word-break display-pre-line ml-05 p-02" [innerHTML]="questionDetails.questionDescription">
+                    </span></p>
+                </mat-expansion-panel>
+              </mat-accordion> -->
+
+      <div *ngIf="hiddenvalue">
+        <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+          <a class="add-test-case" class="m-0"
+            (click)="getDescriptionhiddenValue()"><b><u>{{'AUDIT.HIDEAUDITDESCRIPTION' | translate | softLabelsPipe :softLabels}}</u></b></a>
+        </div>
+      </div>
+      <div *ngIf="!hiddenvalue">
+        <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+          <a class="add-test-case" class="m-0"
+            (click)="getDescriptionhiddenValue()"><b><u>{{'AUDIT.VIEWAUDITDESCRIPTION' | translate | softLabelsPipe :softLabels}}</u></b></a>
+        </div>
+      </div>
+
+      <div fxLayout="row wrap" fxFlex="100" [hidden]="!hiddenvalue">
+        <span class="m-0 word-break display-pre-line ml-05 p-05" [innerHTML]="questionDetails.questionDescription">
+        </span>
+      </div>
+    </div>
+    <div *ngIf="questionDetails.impactName" fxFlex="100" fxLayout="row wrap" fxLayout.xs="column">
+      <div fxFlex="100" class="ml-1" fxFlex.gt-xs="23" fxLayout="column wrap">
+        <p class="m-0"><b>{{'AUDIT.IMPACT' | translate}}</b></p>
+        <p>{{questionDetails.impactName }}</p>
+      </div>
+      <div *ngIf="questionDetails.priorityName" fxFlex="100" class="ml-1" fxFlex.gt-xs="23" fxLayout="column wrap">
+        <p class="m-0"><b>{{'AUDIT.PRIORITY' | translate}}</b></p>
+        <p>{{questionDetails.priorityName }}</p>
+      </div>
+    </div>
+    <div class="ml-05 p-4" fxLayout="row wrap" fxFlex="100"
+      *ngIf="questionDetails.masterQuestionTypeId == dropdownQuestionTypeId" style="position: relative;">
+      <mat-form-field class="mb-05">
+        <mat-select placeholder="{{'AUDIT.RESULT' | translate}}" required formControlName="auditConductAnswerId"
+          [disabled]="!questionDetails.canEdit">
+          <mat-option *ngFor="let type of questionTypeOptions" [value]="type.auditConductAnswerId">
+            {{type.questionTypeOptionName}}
+          </mat-option>
+        </mat-select>
+        <mat-error
+          *ngIf="questionConductForm.get('auditConductAnswerId').hasError('required') && questionConductForm.get('auditConductAnswerId').touched">
+          {{'AUDIT.PLEASESELECTRESULT' | translate}}
+        </mat-error>
+      </mat-form-field>
+      <span class="mt-1 ml-1"
+        *ngIf="!(!isConductEditable || isAuditArchived || isConductSubmitted) && 
+                questionConductForm.get('auditConductAnswerId').value != null && 
+                questionConductForm.get('conductAnswerSubmittedId').value != null && 
+                checkAnswer(questionConductForm.get('auditConductAnswerId').value) && questionDetails.canAddAction && canAddAction">
+        <a class="add-test-case" matTooltip="{{'AUDIT.ADDACTION' | translate | softLabelsPipe :softLabels}}" [satPopoverAnchorFor]="addAction"
+          #addActionPopover="satPopoverAnchor" (click)="openAddActionPopover(addActionPopover)">
+          <fa-icon class="add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+        </a>
+      </span>
+    </div>
+    <div class="ml-05 questions-mat-radio p-4" fxLayout="row wrap" fxFlex="100"
+      *ngIf="questionDetails.masterQuestionTypeId == booleanQuestionTypeId">
+      <mat-radio-group class="mb-05 radio-group" formControlName="auditConductAnswerId">
+        <div class="mb-05" fxLayout="row wrap" fxFlex="100" *ngFor="let type of questionTypeOptions">
+          <mat-radio-button [value]="type.auditConductAnswerId" [disabled]="!questionDetails.canEdit"
+            [checked]="type.auditConductAnswerId == questionConductForm.get('auditConductAnswerId').value">
+            {{type.questionTypeOptionName}}
+            <span *ngIf="!(!isConductEditable || isAuditArchived || isConductSubmitted) 
+                            && questionConductForm.get('auditConductAnswerId').value != null 
+                            && questionConductForm.get('conductAnswerSubmittedId').value != null
+                            && type.auditConductAnswerId == questionConductForm.get('auditConductAnswerId').value 
+                            && type.questionOptionResult == false  && questionDetails.canAddAction && canAddAction">
+              <a class="add-test-case ml-05" matTooltip="{{'AUDIT.ADDACTION' | translate | softLabelsPipe :softLabels}}"
+                [satPopoverAnchorFor]="addAction" #addActionPopover="satPopoverAnchor"
+                (click)="$event.stopPropagation();openAddActionPopover(addActionPopover)">
+                <fa-icon class="add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+              </a>
+            </span>
+          </mat-radio-button>
+        </div>
+      </mat-radio-group>
+    </div>
+    <div *ngIf="questionDetails.masterQuestionTypeId == dateQuestionTypeId">
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <input matInput [matDatepicker]="picker" placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}"
+          [disabled]="!questionDetails.canEdit" (click)="picker.open()" formControlName="questionOptionDate">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error>
+          <span
+            *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div *ngIf="questionDetails.masterQuestionTypeId == numericQuestionTypeId">
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <input matInput formControlName="questionOptionDate" placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}"
+          type="number" [disabled]="!questionDetails.canEdit">
+        <mat-error>
+          <span
+            *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="full-width" *ngIf="questionDetails.masterQuestionTypeId == textQuestionTypeId">
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <input matInput formControlName="questionOptionDate" placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}"
+          [disabled]="!questionDetails.canEdit">
+        <mat-error>
+          <span
+            *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div *ngIf="questionDetails.masterQuestionTypeId == timeQuestionTypeId">
+      <mat-form-field class="full-width">
+        <input formControlName="questionOptionDate" matInput placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}"
+          aria-label="24hr format" [ngxTimepicker]="fullTime" [format]="24" readonly [(ngModel)]="intimepicker"
+          [disabled]="!questionDetails.canEdit" />
+        <ngx-material-timepicker #fullTime [cancelBtnTmpl]="intimecancelBtn" [confirmBtnTmpl]="confirmBtn">
+        </ngx-material-timepicker>
+        <span class="close-icon-padding close_icon pull-right">
+          <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false" (click)="closeintime()"
+            style="cursor:pointer">close</mat-icon>
+        </span>
+      </mat-form-field>
+      <ng-template #intimecancelBtn>
+        <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closeintime()">
+          {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+      </ng-template>
+      <ng-template #confirmBtn>
+        <p class="feedtimesheet-datepicker-button">{{'ROSTER.OK' | translate}}</p>
+      </ng-template>
+    </div>
+    <div fxLayout="row wrap" fxFlex="100" class="ml-05 mr-05 mb-05">
+      <div fxFlex="100" *ngIf="!(!isConductEditable || isAuditArchived || isConductSubmitted) == true">
+        <ng-container *ngIf="(questionConductForm.get('viewAnswerComment').value == false)">
+          <a class="add-test-case"
+            (click)="!(!isConductEditable || isAuditArchived || isConductSubmitted) ? questionConductForm.get('viewAnswerComment').setValue(!questionConductForm.get('viewAnswerComment').value) : $event.stopPropagation()">
+            <b>{{'AUDIT.ENTERCOMMENT' | translate}}</b>
+          </a>
+        </ng-container>
+        <ng-container *ngIf="!(questionConductForm.get('viewAnswerComment').value == false)">
+          <a class="add-test-case"
+            (click)="!(!isConductEditable || isAuditArchived || isConductSubmitted) ? questionConductForm.get('viewAnswerComment').setValue(!questionConductForm.get('viewAnswerComment').value) : $event.stopPropagation()">
+            <b>{{'AUDIT.HIDECOMMENT' | translate}}</b>
+          </a>
+        </ng-container>
+      </div>
+      <div fxLayout="row wrap" fxFlex="100"
+        *ngIf="(questionConductForm.get('answerComment').value != null) && (!(!isConductEditable || isAuditArchived || isConductSubmitted) == false)">
+        <span [innerHtml]="questionConductForm.get('answerComment').value"></span>
+      </div>
+      <div fxLayout="row wrap" fxFlex="100" [hidden]="questionConductForm.get('viewAnswerComment').value == false">
+        <div fxFlex="100">
+          <editor class="dfree-header custom-logtime-comment" apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+            placeholder="Add comment" menubar="false" [init]="initSettings" background="white" height="90"
+            formControlName="answerComment" (onKeyUp)="checkButtonDisabled()" [disabled]="!questionDetails.canEdit">
+          </editor>
+          <mat-error *ngIf="questionConductForm.get('answerComment').hasError('maxlength')">
+            {{ 'AUDIT.COMMENTEXCEED800CHARACTERS' | translate }}
+          </mat-error>
+        </div>
+      </div>
+    </div>
+
+    <div fxFlex *ngIf="documents && documents.length>0" [ngClass]="{'handleTable':!fromDialog, 'handleDialog': fromDialog }">
+      <ngx-datatable class="btrak" [rows]="documents" [columnMode]="'force'" [headerHeight]="35"
+      [footerHeight]="35" [rowHeight]="35">
+      <ngx-datatable-column name="{{ 'EMPLOYEEIMMIGRATIONDETAILS.DOCUMENT1' | translate }}" sortable="true"
+          prop="documentName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <span
+                  [matTooltip]="(row?.documentName?.length > 3) ? row.documentName : '' ">
+                  <span *ngIf="row?.isDocumentMandatory != null && (row?.isDocumentMandatory == true)"
+                  style="color: red;">
+                  *
+              </span>
+                   {{row.documentName}}</span>
+          </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EXPENSEMANAGEMENT.DOWNLOAD' | translate }}" [sortable]="false">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div fxLayout="row">
+          <div *ngIf="row.name" fxFlex="50px" style="overflow: hidden;text-overflow: ellipsis;padding-top: 8px !important;"
+          [matTooltip]="(row?.name?.length > 3) ? row.name : '' ">{{row?.name}}</div>
+          <div fxFlex style="padding-left: 15px !important;">
+            <button type="button"
+                class="text-center" (click)="downloadFile(row)"
+                matTooltip="{{ 'EXPENSEMANAGEMENT.DOWNLOAD' | translate }}" mat-icon-button>
+                <fa-icon class="icon-button mat-color-accent" icon="cloud-download-alt"> </fa-icon>
+            </button>
+            </div>
+            </div>
+        </ng-template>
+    </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'HRMANAGAMENT.UPLOAD' | translate }}" [sortable]="false">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <button type="button" [disabled]="isConductSubmitted"
+                class="text-center" [satPopoverAnchorFor]="FileUploadPopover"
+                #FileUploadPopup="satPopoverAnchor"
+                (click)="openFileUploadPopover(FileUploadPopup, row)"
+                matTooltip="{{ 'HRMANAGAMENT.UPLOAD' | translate }}" mat-icon-button>
+                <fa-icon class="icon-button mat-color-accent" icon="cloud-upload-alt"> </fa-icon>
+            </button>
+        </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+    </div>
+
+    <div fxLayout="row wrap" fxFlex="100"
+      *ngIf="questionDetails?.questionFilesXml && questionFiles && questionFiles.length > 0 && questionDetails.canEdit">
+      <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+        aria-orientation="horizontal">
+      </mat-divider>
+      <div fx-Flex="100" class="ml-05" fxFlex.gt-sm="100" fxLayout="column wrap">
+        <p class="m-0"><b>{{'AUDIT.ATTACHMENTS' | translate}}</b></p>
+      </div>
+      <div class="mt-05 mb-05 ml-2 userStory-name" fxFlex="100" fxLayout="column">
+        <span fxLayout="row" *ngFor="let img of questionFiles;let i = index">
+          <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+          <a target="_blank" [href]="sanitizeUrl(img.FilePath)" fxFlex="calc(100% - 20px)"
+            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img.FileName"
+            matTooltipShowDelay="300">{{img.FileName}}</a>
+        </span>
+      </div>
+    </div>
+    <div fxLayout="row wrap" fxFlex="100" class="text-center Test-buttons ml-05 mt-05 mb-05">
+      <button mat-button mat-raised-button color="primary" class="mt-05 mr-1 test-button" type="button"
+        [disabled]="!questionDetails.previousQuestion" (click)="previousQuestion()">
+        <mat-progress-bar *ngIf="(previousOperationInProgress$ | async) " color="primary" mode="indeterminate">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon>
+        {{'AUDIT.PREVIOUSQUESTION' | translate | softLabelsPipe :softLabels}}
+      </button>
+      <button mat-button mat-raised-button color="primary" class="mt-05 mr-1 test-button" type="submit"
+        [disabled]="disabledQuestion || checkSubmit() || !questionDetails.canEdit">
+        <mat-progress-bar *ngIf="(anyOperationInProgress$ | async) || (searchOperationInProgress$ | async)"
+          color="primary" mode="indeterminate">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon>
+        {{'AUDIT.SAVEANDCLOSEQUESTION' | translate | softLabelsPipe :softLabels}}
+      </button>
+      <button mat-button mat-raised-button color="primary" class="mt-05 mr-1 test-button" type="button"
+        [disabled]="!questionDetails.nextQuestion" (click)="nextQuestion()">
+        <mat-progress-bar *ngIf="(nextOperationInProgress$ | async) " color="primary" mode="indeterminate">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon>
+        {{'AUDIT.NEXTQUESTION' | translate | softLabelsPipe :softLabels}}
+      </button>
+      <button mat-button mat-raised-button type="button" class="mt-05" (click)="closeQuestionDialog()">
+        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+      </button>
+    </div>
+  </mat-card-content>
+</form>
+
+<!--------add action dialog------>
+<sat-popover #addAction hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'AUDIT.ADDACTION' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <conduct-question-action *ngIf="loadAction" [questionData]="questionDetails" [selectedConduct]="selectedConduct"
+        [loadBugs]=false (closeAction)="closeActionPopover()">
+      </conduct-question-action>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--------add action dialog------>
+
+<sat-popover #FileUploadPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition">
+  <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+      <mat-card-title>
+          <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+              <div fxFlex class="text-center">
+                  {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+              </div>
+              <div fxFlex="20px" fxLayoutAlign="end center">
+                  <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+                      <fa-icon icon="times"></fa-icon>
+                  </button>
+              </div>
+          </div>
+      </mat-card-title>
+      <div class="mobile-view-popover p-1" id="style-1">
+          <app-dropzone [isQuestionDocuments]="true" [questionDocumentId]="openedDocumentId" [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+              [referenceId]="questionDetails?.auditConductQuestionId"
+              [selectedParentFolderId]="questionDetails?.auditConductQuestionId" [selectedStoreId]="selectedStoreId"
+              [isFromFeedback]="false" [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="false" (closeFilePopup)="closeFileUploadPopover()">
+          </app-dropzone>
+      </div>
+  </mat-card>
+</sat-popover>

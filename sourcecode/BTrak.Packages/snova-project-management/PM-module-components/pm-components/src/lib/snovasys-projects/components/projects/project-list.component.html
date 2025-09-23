@@ -1,0 +1,779 @@
+<!-- <div class="pl-2 pt-2">
+  <h5>{{ 'TESTMANAGEMENT.PROJECTS' | translate | softLabelsPipe : softLabels }}</h5>
+</div> -->
+<mat-card class="p-0 m-0 ml-05 mr-05 mt-05 "
+  *ngIf="(canAccess_feature_ViewProjects || canAccess_feature_AccessAudits) && !fromAuditMenu">
+  <!--  <mat-card-title class="full-width">
+    <div fxLayout="row" class="projects-updated-filter" style="height:94%">
+      <div fxFlex fxLayoutAlign="start center">
+        <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+          matTooltip=" {{'PROJECTS.TOGGLEFORADVANCESEARCH' | translate}}">
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+          </fa-icon>
+        </button>
+      </div>
+      <div class="filter-section" [hidden]="!isOpen" *ngIf="!isForDialog">
+        <ul>
+          <li fxLayoutAlign="start start" class="mt-03">
+            <span
+              class="mr-1">{{ 'PROJECTS.ARCHIVE' | translate }}&nbsp;({{(projectSearchResults$ | async)?.length}})</span>
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              (change)="getAllProjectsByFilterContext()" [disabled]="(anyOperationInProgress$|async)">
+            </mat-slide-toggle>
+          </li>
+        </ul>
+      </div>
+      <div fxFlex="132px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+        fxLayoutAlign.xs="center center">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'PROJECTS.PROJECTROLEPERMISSION' | translate  | softLabelsPipe : softLabels}}"
+          *ngIf="(canAccess_feature_ManageProjectRolePermissions)" (click)="goToAllRoles()"
+          style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">brightness_high</span>
+        </button>
+        <button class="topbar-button-right mat-icon-button" *ngIf="canAccess_feature_ViewProjectActivity"
+          matTooltip="{{ 'GOALACTIVITY.PROJECTACTIVITY' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToProjectActivity()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">list_alt</span>
+        </button>
+
+        <b class="goto-all-goals" (click)="goToAllGoals()" *ngIf="(canAccess_feature_AllGoals)">
+          <mat-icon class="mr-05">work</mat-icon>
+          <span class="hide-content-overflow">{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}</span>
+        </b>
+        <button mat-icon-button color="accent"
+          *ngIf="!isForDialog && (canAccess_feature_AddProject) && !isArchived && (canAccess_feature_ViewProjects)"
+          matTooltip="{{ 'PROJECTS.CLICKHERETOCREATEANEWPROJECT' | translate | softLabelsPipe : softLabels }}"
+          [satPopoverAnchorFor]="createPopover" (click)="createPopover.open(); createProject()">
+          <fa-icon icon="plus" class="filter mat-color-accent">
+          </fa-icon>
+        </button>
+        <div *ngIf="(canAccess_feature_MyProjectWork)">
+          <button matTooltip="My Work" class="topbar-button-right" mat-icon-button (click)="navigateToStatusReport()">
+            <mat-icon>assignment</mat-icon>
+          </button>
+        </div> 
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title> -->
+
+  <mat-card-title class="full-width data-table-header">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+      <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+        <span fxFlex="100" class="hide-content-overflow">
+          {{ 'TESTMANAGEMENT.PROJECTS' | translate | softLabelsPipe : softLabels }}&nbsp;({{totalCount}})</span>
+      </div>
+
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="isForDialog && canAccess_feature_AllGoals"
+        (click)="goToAllGoals()">
+        <mat-icon class="mr-05 mat-color-accent" style="cursor: pointer;" matTooltip="{{ 'ADMIN.TASKS' | translate }}">
+          assignment
+        </mat-icon>
+      </div>
+
+      <div fxFlex="40px" fxLayoutAlign="end center" [hidden]="!isOpen" *ngIf="!isForDialog">
+        <span class="mr-1 max-content">{{ 'PROJECTS.ARCHIVE' | translate }}</span>
+        <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+          (change)="getArchivedProjects()" [disabled]="(anyOperationInProgress$|async)">
+        </mat-slide-toggle>
+      </div>
+
+      <div fxFlex="128px" fxLayoutAlign="end center" class="search_goalinput" [hidden]="!isOpen">
+        <mat-form-field class="full-width">
+          <input class="search_goal" matInput
+            placeholder="{{'PROJECTS.SEARCHPROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+            [(ngModel)]="searchText" (input)="filterByName($event)">
+        </mat-form-field>
+      </div>
+      <span class="close_icon" [ngClass]="setWidth()" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+        <span *ngIf="!searchText"></span>
+        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearchText()"
+          style="cursor:pointer">
+          close</mat-icon>
+      </span>
+      <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="(canAccess_feature_ManageProjectRolePermissions)">
+        <button mat-icon-button
+          matTooltip="{{ 'PROJECTS.PROJECTROLEPERMISSION' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToAllRoles()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">brightness_high</span>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ViewProjectActivity && canAccess_feature_ViewProjects">
+      </div> -->
+      <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ViewProjectActivity">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'GOALACTIVITY.PROJECTACTIVITY' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToProjectActivity()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">list_alt</span>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_AllGoals && canAccess_feature_ViewProjects">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}" (click)="goToAllGoals()"
+          style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">work</span>
+        </button>
+      </div>
+     <div fxFlex="40px" fxLayoutAlign="end center" (click)="goToAllGoals()" *ngIf="(canAccess_feature_AllGoals)"
+        style="cursor: pointer;">
+        <mat-icon class="mr-05 mat-color-accent"
+          matTooltip="{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}">work
+        </mat-icon>
+      </div> -->
+      <div fxFlex="40px" fxLayoutAlign="end center">
+        <button type="submit" mat-icon-button (click)="filterClick()"
+          matTooltip=" {{'PROJECTS.TOGGLEFORADVANCESEARCH' | translate}}">
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+          </fa-icon>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center"
+        *ngIf="!isForDialog && (canAccess_feature_AddProject) && !isArchived && (canAccess_feature_ViewProjects || canAccess_feature_AccessAudits)">
+        <button mat-icon-button
+          matTooltip="{{ 'PROJECTS.CLICKHERETOCREATEANEWPROJECT' | translate | softLabelsPipe : softLabels }}"
+          [satPopoverAnchorFor]="createPopover" (click)="createPopover.open(); createProject()">
+          <fa-icon icon="plus" class="mat-color-accent icon-button">
+          </fa-icon>
+        </button>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+</mat-card>
+<mat-card class="p-0 m-0 ml-05 mr-05 mt-05"
+  *ngIf="(canAccess_feature_ViewProjectsInAudits || canAccess_feature_ViewAudits) && fromAuditMenu">
+  <!--  <mat-card-title class="full-width">
+    <div fxLayout="row" class="projects-updated-filter" style="height:94%">
+      <div fxFlex fxLayoutAlign="start center">
+        <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+          matTooltip=" {{'PROJECTS.TOGGLEFORADVANCESEARCH' | translate}}">
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+          </fa-icon>
+        </button>
+      </div>
+      <div class="filter-section" [hidden]="!isOpen" *ngIf="!isForDialog">
+        <ul>
+          <li fxLayoutAlign="start start" class="mt-03">
+            <span
+              class="mr-1">{{ 'PROJECTS.ARCHIVE' | translate }}&nbsp;({{(projectSearchResults$ | async)?.length}})</span>
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              (change)="getAllProjectsByFilterContext()" [disabled]="(anyOperationInProgress$|async)">
+            </mat-slide-toggle>
+          </li>
+        </ul>
+      </div>
+      <div fxFlex="132px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+        fxLayoutAlign.xs="center center">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'PROJECTS.PROJECTROLEPERMISSION' | translate  | softLabelsPipe : softLabels}}"
+          *ngIf="(canAccess_feature_ManageProjectRolePermissions)" (click)="goToAllRoles()"
+          style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">brightness_high</span>
+        </button>
+        <button class="topbar-button-right mat-icon-button" *ngIf="canAccess_feature_ViewProjectActivity"
+          matTooltip="{{ 'GOALACTIVITY.PROJECTACTIVITY' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToProjectActivity()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">list_alt</span>
+        </button>
+
+        <b class="goto-all-goals" (click)="goToAllGoals()" *ngIf="(canAccess_feature_AllGoals)">
+          <mat-icon class="mr-05">work</mat-icon>
+          <span class="hide-content-overflow">{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}</span>
+        </b>
+        <button mat-icon-button color="accent"
+          *ngIf="!isForDialog && (canAccess_feature_AddProject) && !isArchived && (canAccess_feature_ViewProjects)"
+          matTooltip="{{ 'PROJECTS.CLICKHERETOCREATEANEWPROJECT' | translate | softLabelsPipe : softLabels }}"
+          [satPopoverAnchorFor]="createPopover" (click)="createPopover.open(); createProject()">
+          <fa-icon icon="plus" class="filter mat-color-accent">
+          </fa-icon>
+        </button>
+        <div *ngIf="(canAccess_feature_MyProjectWork)">
+          <button matTooltip="My Work" class="topbar-button-right" mat-icon-button (click)="navigateToStatusReport()">
+            <mat-icon>assignment</mat-icon>
+          </button>
+        </div> 
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title> -->
+
+  <mat-card-title class="full-width data-table-header">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+      <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+        <span fxFlex="100" class="hide-content-overflow">
+          {{ 'TESTMANAGEMENT.PROJECTS' | translate | softLabelsPipe : softLabels }}&nbsp;({{totalCount}})</span>
+      </div>
+
+      <div fxFlex="40px" fxLayoutAlign="end center" [hidden]="!isOpen" *ngIf="!isForDialog">
+        <span class="mr-1 max-content">{{ 'PROJECTS.ARCHIVE' | translate }}</span>
+        <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+          (change)="getArchivedProjects()" [disabled]="(anyOperationInProgress$|async)">
+        </mat-slide-toggle>
+      </div>
+
+      <div fxFlex="128px" fxLayoutAlign="end center" class="search_goalinput" [hidden]="!isOpen">
+        <mat-form-field class="full-width">
+          <input class="search_goal" matInput
+            placeholder="{{'PROJECTS.SEARCHPROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+            [(ngModel)]="searchText" (input)="filterByName($event)">
+        </mat-form-field>
+      </div>
+      <span class="close_icon" [ngClass]="setWidth()" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+        <span *ngIf="!searchText"></span>
+        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearchText()"
+          style="cursor:pointer">
+          close</mat-icon>
+      </span>
+      <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="(canAccess_feature_ManageProjectRolePermissions)">
+        <button mat-icon-button
+          matTooltip="{{ 'PROJECTS.PROJECTROLEPERMISSION' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToAllRoles()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">brightness_high</span>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ViewProjectActivity && canAccess_feature_ViewProjects">
+      </div> -->
+      <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ViewProjectActivity">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'GOALACTIVITY.PROJECTACTIVITY' | translate  | softLabelsPipe : softLabels}}"
+          (click)="goToProjectActivity()" style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">list_alt</span>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="canAccess_feature_AllGoals && canAccess_feature_ViewProjects">
+        <button class="topbar-button-right mat-icon-button"
+          matTooltip="{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}" (click)="goToAllGoals()"
+          style="line-height: 10px !important;">
+          <span class="material-icons icon-button mat-color-accent">work</span>
+        </button>
+      </div>
+     <div fxFlex="40px" fxLayoutAlign="end center" (click)="goToAllGoals()" *ngIf="(canAccess_feature_AllGoals)"
+        style="cursor: pointer;">
+        <mat-icon class="mr-05 mat-color-accent"
+          matTooltip="{{ 'GOALS.ALLGOALS' | translate  | softLabelsPipe : softLabels}}">work
+        </mat-icon>
+      </div> -->
+      <div fxFlex="40px" fxLayoutAlign="end center">
+        <button type="submit" mat-icon-button (click)="filterClick()"
+          matTooltip=" {{'PROJECTS.TOGGLEFORADVANCESEARCH' | translate}}">
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+          </fa-icon>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center"
+        *ngIf="!isForDialog && (canAccess_feature_AddProject) && !isArchived && (canAccess_feature_ViewProjectsInAudits || canAccess_feature_ViewAudits)">
+        <button mat-icon-button
+          matTooltip="{{ 'PROJECTS.CLICKHERETOCREATEANEWPROJECT' | translate | softLabelsPipe : softLabels }}"
+          [satPopoverAnchorFor]="createPopover" (click)="createPopover.open(); createProject()">
+          <fa-icon icon="plus" class="mat-color-accent icon-button">
+          </fa-icon>
+        </button>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+</mat-card>
+
+<ng-container *ngIf="(canAccess_feature_ViewProjects || canAccess_feature_AccessAudits) && !fromAuditMenu">
+  <div class="projects-list-grid grid-wrapper ml-05 mr-05 paging-move" id="style-1"
+    [ngClass]="optionalParameters ? '': showFilters ? 'project-list-filter':'project-list-height'">
+    <kendo-grid #grid [data]="proejectDetails" id="style-1" [pageSize]="state.take" [skip]="state.skip" [sort]="sort"
+      [pageable]="pageable" [filterable]="showFilters" [resizable]="true" [scrollable]="true" [sortable]="true"
+      [filter]="state.filter" (pageChange)="pageChange($event)" (sortChange)="sortChange($event)"
+      (cellClick)="cellClickHandler($event)"
+      (dataStateChange)="dataStateChange($event)">
+      <ng-template kendoGridNoRecordsTemplate>
+        {{ 'TESTMANAGEMENT.NODATATODISPLAY' | translate }}
+      </ng-template>
+      <kendo-grid-messages pagerOf="{{ 'TESTMANAGEMENT.OF' | translate }}"
+        pagerItems="{{ 'TESTMANAGEMENT.ITEMS' | translate }}">
+      </kendo-grid-messages>
+      <kendo-grid-column field="projectName" [width]="140">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'TESTMANAGEMENT.PROJECTNAME' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row" style="text-align: left !important">
+            <span class="hide-content-overflow" matTooltip="{{dataItem.projectName}}" matTooltipShowDelay="400" fxFlex>
+              {{ dataItem?.projectName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="fullName" [width]="250">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTRESPONSIBLEPERSON' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row" style="text-align: left !important">
+            <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != '' && dataItem.fullName != null">
+              <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="(dataItem.profileImage == null || dataItem.profileImage == '') && dataItem.fullName != null">
+              <app-avatar [name]="dataItem.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.fullName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ dataItem?.fullName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="activeGoalCount" *ngIf="!isArchived && canAccess_feature_ViewProjects && !isES"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.ACTIVEGOALSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item ml-1" [ngClass]="dataItem.numberOfReds > 0 ? 'mat-bg-red' : 'mat-bg-green'"
+            matTooltip="{{'PROJECTS.ACTIVEGOALSCOUNT' | translate | softLabelsPipe : softLabels}}">{{dataItem.activeGoalCount}}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="testSuiteCount" *ngIf="(canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.SCENARIOSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.testSuiteCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="testRunCount" *ngIf="(canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.RUNSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testruns-count count-padding">{{ dataItem.testRunCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="milestoneCount" *ngIf="(canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.VERSIONSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item test-milestones-count count-padding">{{ dataItem.milestoneCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="reportCount" *ngIf="(canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.TESTREPORTSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item test-reports-count count-padding">{{ dataItem.reportCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="casesCount" *ngIf="(canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.TESTCASESCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.casesCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+
+      <kendo-grid-column field="auditsCount" *ngIf="canAccess_feature_AccessAudits && isAuditsEnable" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.AUDITS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="conductsCount" *ngIf="canAccess_feature_AccessAudits && isAuditsEnable" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.CONDUCTS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.conductsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="auditReportsCount" *ngIf="canAccess_feature_AccessAudits && isAuditsEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.AUDITREPORTS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditReportsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="auditQuestionsCount" *ngIf="canAccess_feature_AccessAudits && isAuditsEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.QUESTIONS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditQuestionsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+
+      <kendo-grid-column field="isSprintsConfiguration" *ngIf="isSprintsEnable && canAccess_feature_ViewProjects"
+        [width]="140">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.ENABLESPRINTS' | translate }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span *ngIf=" dataItem?.isSprintsConfiguration">
+            Yes
+          </span>
+          <span *ngIf="! dataItem?.isSprintsConfiguration">
+            No
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="createdDateTime" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.CREATEDDATETIME' | translate }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" fxFlex matTooltip="{{dataItem.timeZoneName}}">
+              {{ dataItem?.createdDateTime | date: 'mediumDate' }}
+
+              <span class="timezone-name" *ngIf="(dataItem.createdDateTime | covertTimeIntoUtcTime) != Offset">{{
+                dataItem?.timeZoneAbbreviation }}
+              </span>
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="projectStartDate" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTSTARTDATE' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" *ngIf=" dataItem?.projectStartDate != null" fxFlex
+              matTooltip="{{dataItem?.startDateTimeZoneName}}">
+              {{ dataItem?.projectStartDate | date: 'mediumDate' }}
+              <span class="timezone-name" *ngIf="( dataItem.projectStartDate  | covertTimeIntoUtcTime) != Offset">{{
+                dataItem?.startDateTimeZoneAbbreviation}}
+              </span>
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="projectEndDate" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTENDDATE' | translate | softLabelsPipe : softLabels}}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" fxFlex *ngIf=" dataItem?.projectEndDate != null"
+              matTooltip="{{dataItem?.endDateTimeZoneName}}">
+              {{ dataItem?.projectEndDate | date: 'mediumDate' }}
+              <span class="timezone-name" *ngIf="(dataItem.projectEndDate | covertTimeIntoUtcTime) != Offset">{{
+                dataItem?.endDateTimeZoneAbbreviation}}
+              </span>
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column [filterable]="false" [width]="120"
+        *ngIf="!isForDialog && ((!isArchived && ((canAccess_feature_ArchiveProject) || (canAccess_feature_AddProject))) || (isArchived && (canAccess_feature_UnarchiveProject)))">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          <a class="k-link">{{ 'TESTMANAGEMENT.ACTIONS' | translate | softLabelsPipe : softLabels }}</a>
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div (click)="$event.stopPropagation()">
+            <button *ngIf="!(dataItem.isArchived) && (canAccess_feature_AddProject)" class="text-center"
+              title="{{ 'PROJECTS.EDITTHEPROJECT' | translate }}" [satPopoverAnchorFor]="editProjectPopover"
+              #configurationEditPopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();editProject(dataItem,configurationEditPopover)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button *ngIf="!isArchived && (canAccess_feature_ArchiveProject)" class="text-center"
+              title="{{ 'PROJECTS.ARCHIVEPROJECT' | translate }}" [satPopoverAnchorFor]="archivePopover"
+              #configurationArchivePopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();archiveProject(dataItem,configurationArchivePopover)" mat-icon-button>
+              <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+              <mat-icon class="mr-05" style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button *ngIf="isArchived && (canAccess_feature_UnarchiveProject)" class="text-center"
+              title="{{ 'PROJECTS.UNARCHIVEPROJECT' | translate }}" [satPopoverAnchorFor]="archivePopover"
+              #configurationArchivePopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();archiveProject(dataItem,configurationArchivePopover)" mat-icon-button>
+              <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+              <mat-icon class="mr-05" style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+    </kendo-grid>
+    <div [ngClass]="{'k-i-loading': anyOperationInProgress$ | async}"></div>
+  </div>
+</ng-container>
+<ng-container *ngIf="(canAccess_feature_ViewProjectsInAudits || canAccess_feature_ViewAudits) && fromAuditMenu">
+  <div class="projects-list-grid grid-wrapper ml-05 mr-05 paging-move" id="style-1">
+    <kendo-grid #grid [data]="proejectDetails" id="style-1" [pageSize]="state.take" [skip]="state.skip" [sort]="sort"
+      [pageable]="pageable" [filterable]="showFilters" [resizable]="true" [scrollable]="true" [sortable]="true"
+      (pageChange)="dataStateChange($event)" (sortChange)="sortChange($event)"
+      (cellClick)="cellClickHandler($event)">
+      <ng-template kendoGridNoRecordsTemplate>
+        {{ 'TESTMANAGEMENT.NODATATODISPLAY' | translate }}
+      </ng-template>
+      <kendo-grid-messages pagerOf="{{ 'TESTMANAGEMENT.OF' | translate }}"
+        pagerItems="{{ 'TESTMANAGEMENT.ITEMS' | translate }}">
+      </kendo-grid-messages>
+      <kendo-grid-column field="projectName" [width]="140">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'TESTMANAGEMENT.PROJECTNAME' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row" style="text-align: left !important">
+            <span class="hide-content-overflow" matTooltip="{{dataItem.projectName}}" matTooltipShowDelay="400" fxFlex>
+              {{ dataItem?.projectName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="fullName" [width]="250">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTRESPONSIBLEPERSON' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row" style="text-align: left !important">
+            <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != '' && dataItem.fullName != null">
+              <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="(dataItem.profileImage == null || dataItem.profileImage == '') && dataItem.fullName != null">
+              <app-avatar [name]="dataItem.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.fullName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ dataItem?.fullName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="activeGoalCount" *ngIf="!isArchived && canAccess_feature_ViewProjectsInAudits && !isES"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.ACTIVEGOALSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item ml-1" [ngClass]="dataItem.numberOfReds > 0 ? 'mat-bg-red' : 'mat-bg-green'"
+            matTooltip="{{'PROJECTS.ACTIVEGOALSCOUNT' | translate | softLabelsPipe : softLabels}}">{{dataItem.activeGoalCount}}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="testSuiteCount"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && (canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.SCENARIOSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.testSuiteCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="testRunCount"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && (canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.RUNSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testruns-count count-padding">{{ dataItem.testRunCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="milestoneCount"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && (canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.VERSIONSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item test-milestones-count count-padding">{{ dataItem.milestoneCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="reportCount"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && (canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.TESTREPORTSCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item test-reports-count count-padding">{{ dataItem.reportCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="casesCount"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && (canAccess_feature_AccessTestrepo) && isTestTrailEnable"
+        [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.TESTCASESCOUNT' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.casesCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+
+      <kendo-grid-column field="auditsCount" *ngIf="canAccess_feature_ViewAudits" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.AUDITS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="conductsCount" *ngIf="canAccess_feature_ViewAudits" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.CONDUCTS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.conductsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="auditReportsCount" *ngIf="canAccess_feature_ViewAudits" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.AUDITREPORTS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditReportsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="auditQuestionsCount" *ngIf="canAccess_feature_ViewAudits" [width]="120">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'AUDIT.QUESTIONS' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span class="badge-item testsuites-count count-padding">{{ dataItem.auditQuestionsCount }}</span>
+        </ng-template>
+      </kendo-grid-column>
+
+      <kendo-grid-column field="isSprintsConfiguration" [filterable]="false"
+        *ngIf="isSprintsEnable && canAccess_feature_ViewProjectsInAudits" [width]="140">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.ENABLESPRINTS' | translate }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <span *ngIf=" dataItem?.isSprintsConfiguration">
+            Yes
+          </span>
+          <span *ngIf="! dataItem?.isSprintsConfiguration">
+            No
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="createdDateTime" [filterable]="false" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.CREATEDDATETIME' | translate }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" fxFlex>
+              {{ dataItem?.createdDateTime | date: 'mediumDate' }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="projectStartDate" [filterable]="false" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTSTARTDATE' | translate | softLabelsPipe : softLabels }}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" fxFlex>
+              {{ dataItem?.projectStartDate | date: 'mediumDate' }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="projectEndDate" [filterable]="false" [width]="160">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          {{ 'PROJECTS.PROJECTENDDATE' | translate | softLabelsPipe : softLabels}}
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row">
+            <span class="hide-content-overflow" fxFlex>
+              {{ dataItem?.projectEndDate | date: 'mediumDate' }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column [filterable]="false" [width]="120"
+        *ngIf="canAccess_feature_ViewProjectsInAudits && !isForDialog && ((!isArchived && ((canAccess_feature_ArchiveProject) || (canAccess_feature_AddProject))) || (isArchived && (canAccess_feature_UnarchiveProject)))">
+        <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+          <a class="k-link">{{ 'TESTMANAGEMENT.ACTIONS' | translate | softLabelsPipe : softLabels }}</a>
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div (click)="$event.stopPropagation()">
+            <button *ngIf="!(dataItem.isArchived) && (canAccess_feature_AddProject)" class="text-center"
+              title="{{ 'PROJECTS.EDITTHEPROJECT' | translate }}" [satPopoverAnchorFor]="editProjectPopover"
+              #configurationEditPopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();editProject(dataItem,configurationEditPopover)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button *ngIf="!isArchived && (canAccess_feature_ArchiveProject)" class="text-center"
+              title="{{ 'PROJECTS.ARCHIVEPROJECT' | translate }}" [satPopoverAnchorFor]="archivePopover"
+              #configurationArchivePopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();archiveProject(dataItem,configurationArchivePopover)" mat-icon-button>
+              <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+              <mat-icon class="mr-05" style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button *ngIf="isArchived && (canAccess_feature_UnarchiveProject)" class="text-center"
+              title="{{ 'PROJECTS.UNARCHIVEPROJECT' | translate }}" [satPopoverAnchorFor]="archivePopover"
+              #configurationArchivePopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();archiveProject(dataItem,configurationArchivePopover)" mat-icon-button>
+              <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+              <mat-icon class="mr-05" style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+    </kendo-grid>
+    <div [ngClass]="{'k-i-loading': anyOperationInProgress$ | async}"></div>
+  </div>
+</ng-container>
+<sat-popover #archivePopover verticalAlign="below" hasBackdrop horizontalAlign="end">
+  <app-pm-component-project-archive *ngIf="archiveProjectId" [projectId]="projectSearchResult.projectId"
+    [isArchived]="projectSearchResult.isArchived" [timeStamp]="projectSearchResult.timeStamp"
+    [projectName]="projectSearchResult.projectName" (closeArchiveDialog)="closeArchiveDialog()">
+  </app-pm-component-project-archive>
+</sat-popover>
+
+<sat-popover #editProjectPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+  scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'PROJECTS.EDITPROJECT'|translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <app-pm-component-createproject *ngIf="isEditProject" [projectId]="projectSearchResult.projectId"
+      [isSprintsEnable]="isSprintsEnable" (closePopup)="closeProjectDialog()">
+    </app-pm-component-createproject>
+  </mat-card>
+</sat-popover>
+
+<app-common-message-box
+  *ngIf="!canAccess_feature_ViewProjects && !canAccess_feature_AccessAudits && !isAuditsEnable && !fromAuditMenu"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+<app-common-message-box
+  *ngIf="!canAccess_feature_ViewProjectsInAudits && !canAccess_feature_ViewAudits && !isAuditsEnable && fromAuditMenu"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+
+<div fxFlex="100" [hidden]="isForDialog">
+  <sat-popover #createPopover backdropClass="backdrop-color" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" [autoFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+          {{ 'PROJECTS.CREATEPROJECT' | translate | softLabelsPipe : softLabels }}
+        </div>
+      </mat-card-title>
+      <app-pm-component-createproject *ngIf="openProjectForm" [clearCreateForm]="clearCreateForm"
+        [isSprintsEnable]="isSprintsEnable" (closePopup)="closeDialog()"></app-pm-component-createproject>
+    </mat-card>
+  </sat-popover>
+</div>

@@ -1,0 +1,128 @@
+<mat-card class="custom-box mb-0 mt-03 p-0">
+    <mat-progress-bar color="primary" mode="indeterminate"
+        *ngIf="(anyOperationInProgress$ | async) || (reOrderOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div class="p-0 m-0 audits-category-question-list fit-content-audit-question-list" id="style-1">
+        <div class="p-0 audits-category-questions" *ngIf="loadAuditRelatedData && isAuditLoaded">
+            <div class="testsuite-description">
+                <div class="ml-05 pull-right" fxLayout="row">
+                    <div class="mt-05 mr-05" fxFlex>
+                        <span class="pull-right">
+                            <fa-icon *ngIf="categorySelected" style="cursor: pointer;"
+                                matTooltip="{{'TESTMANAGEMENT.CLICKHERETOADVANCESEARCH' | translate}}" icon="filter"
+                                class="ml-1 mat-color-accent filter-operation" (click)="filterOpen = !filterOpen">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </div>
+                <div class="p-05" fxLayout="row" *ngIf="isAuditLoaded">
+                    <div class="column">
+                        <div>
+                            <span>
+                                <b>
+                                    <span class="word-break user-select-text testsuite-text"
+                                        matTooltip="{{'AUDIT.AUDITNAME' | translate | softLabelsPipe :softLabels}}">{{selectedAudit.auditName}}
+                                    </span>
+                                </b>
+                                <span class="ml-02 audit-description" *ngIf="selectedAudit.auditDescription &&
+                                                                    selectedAudit.auditDescription.length > 0">
+                                    (<span class="word-break user-select-text"
+                                        [innerHTML]="selectedAudit.auditDescription">
+                                    </span>)
+                                </span>
+                            </span>
+                        </div>
+                        <div class="p-05">
+                            <mat-chip disableRipple matRipple class="mr-08" *ngIf="tagNames">
+                                <b>{{'APP.TAGS' | translate}}:&nbsp;</b>
+                                {{ tagNames }}
+                            </mat-chip>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <questions-filter *ngIf="filterOpen" [selectedCategoryData]="categorySelected.auditCategoryId"
+                [isHierarchical]="isHierarchical" [isAuditVersion]="selectedAudit.auditVersionId">
+            </questions-filter>
+            <div *ngIf="!(anyOperationInProgress$ | async)">
+                <mat-card *ngIf="loadAuditCategoryRelatedData != null && !loadAuditCategoryRelatedData"
+                    class="p-0 mt-05 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05">
+                            <p *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived"
+                                class="m-0">
+                                {{'AUDIT.THREEARENOCATEGORIESAVILABLEINAUDIT' | translate | softLabelsPipe :softLabels}}
+                            </p>
+                            <p *ngIf="!canAccess_entityType_feature_AddOrUpdateAuditCategory || isAuditArchived"
+                                class="m-0">
+                                {{'AUDIT.NOTHREEARENOCATEGORIESAVILABLEINAUDIT' | translate | softLabelsPipe :softLabels}}
+                            </p>
+                        </div>
+                    </div>
+                </mat-card>
+                <div *ngIf="loadAuditCategoryRelatedData">
+                    <div *ngIf="!isHierarchical">
+                        <div class="ml-1 mt-05 testsuite-text" fxLayout="row" *ngIf="isAuditCategoryLoaded">
+                            <span *ngIf="!categoryName" class="word-break user-select-text"
+                                matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{categorySelected.auditCategoryName}}</span>
+                            <span *ngIf="categoryName" class="word-break user-select-text"
+                                matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{categoryName}}</span>
+                            <span matTooltip="{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}"
+                                class="ml-05 badge-item test-case-count-number">{{questionsCount}}</span>
+                        </div>
+                        <div *ngIf="isAuditCategoryLoaded">
+                            <div class="ml-1">
+                                <span
+                                    *ngIf="!categoryDescription && categorySelected.auditCategoryDescription != null && categorySelected.auditCategoryDescription.length > 0"
+                                    class="section-description word-break user-select-text mb-05"
+                                    [innerHTML]="categorySelected.auditCategoryDescription"></span>
+                                <span *ngIf="categoryDescription"
+                                    class="section-description word-break user-select-text mb-05"
+                                    [innerHTML]="categoryDescription"></span>
+                            </div>
+                        </div>
+                        <mat-card-content class="p-0 mb-0" *ngIf="isAuditCategoryLoaded">
+                            <mat-list class="compact-list mb-05">
+                                <mat-divider class="mat-divider-position">
+                                </mat-divider>
+                                <!-- <mat-list-item *ngFor="let question of sampleList" -->
+                                <mat-list-item *ngFor="let question of (versionQuestions$ | async)"
+                                    style="line-height: 45px; height: 45px !important;">
+                                    <question-version-case class="full-width" (click)="handleClick(question)"
+                                        (questionPreview)="getQuestionPreviewDetails($event)"
+                                        [selectedAudit]="selectedAudit"
+                                        [questionSelected]="question.questionId === selectedQuestionId"
+                                        [questionDetails]="question" [allQuestionsSelect]="selection">
+                                    </question-version-case>
+                                </mat-list-item>
+                            </mat-list>
+                        </mat-card-content>
+                    </div>
+                    <div class="mt-1" *ngIf="isHierarchical && loadHierarchicalQuestions">
+                        <hierarchical-version-questions (questionPreview)="getQuestionPreviewDetails($event)"
+                            [hierarchicalData]="hierarchicalCategoryData" [questionsData]="(versionQuestions$ | async)"
+                            [selectedAudit]="selectedAudit" [selectedQuestion]="questionFromPreview"
+                            [allQuestionsSelect]="selection">
+                        </hierarchical-version-questions>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <mat-card *ngIf="isAuditLoaded == false" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+            <div fxLayout="row" fxFlex="100">
+                <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                    <p class="m-0">
+                        {{'AUDIT.SELECTAUDITTOVIEWCONTENTS' | translate}}
+                    </p>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+</mat-card>

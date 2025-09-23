@@ -1,0 +1,88 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageDocumentTemplates">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow p-05">
+                        {{'DOCUMENTMANAGEMENT.DOCUMENTTEMPLATES' | translate | titlecase}}
+                    </span>
+                </div>
+                <button mat-icon-button class="pull-right"
+                    matTooltip="{{'USERSTORYTYPES.CLICKHERETOCREATEBRANCH' | translate }}"
+                    [satPopoverAnchorFor]="upsertDocumentTemplatePopover"
+                    #upsertDocumentTemplatePopUp="satPopoverAnchor"
+                    (click)="createDocumentTemplatePopupOpen(upsertDocumentTemplatePopUp);">
+                    <fa-icon icon="plus" class="filter mat-color-accent">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="no-drag" fxLayout="column">
+        <div>
+            <kendo-grid class="full-width" [data]="templatesListData" [pageSize]="state.take" [skip]="state.skip"
+                [sort]="sort" [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                [loading]="isAnyOperationIsInprogress" (pageChange)="pageChange($event)" [scrollable]="true"
+                [style]="{'width': '1000px'}" (sortChange)="sortChange($event)">
+                <kendo-grid-column [width]="600" field="templateName" title="{{'DOCUMENTMANAGEMENT.TEMPLATENAME' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">
+                            {{ dataItem.templateName }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column [width]="100" title="{{'ACTIONS' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">
+                            <fa-icon icon="cog" style="cursor: pointer;" class="mat-color-accent"
+                                matTooltip="Generate report" (click)="generateReport(dataItem)"></fa-icon>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #upsertDocumentTemplatePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">Upload template
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05 custom-height" id="style-1">
+            <mat-form-field class="full-width">
+                <input matInput [formControl]="templateName" placeholder="Template name" required>
+            </mat-form-field>
+            <div class="custom-dropzone dropzone-height" ngx-dropzone (change)="filesSelected($event)"
+                [accept]="allowedFileTypes" [maxFileSize]="maxFileSize" [disabled]="isAnyOperationIsInprogress">
+                <ngx-dropzone-label>
+                    <span>{{'DOCUMENTMANAGEMENT.DRAGANDDROPFILESHERE' | translate}}</span>
+                </ngx-dropzone-label>
+                <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+                    (removed)="onRemove(f)">
+                    <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">
+                        {{ setLabelNameForDropzone(f.name) }}
+                    </ngx-dropzone-label>
+                </ngx-dropzone-preview>
+            </div>
+            <div class="text-center mt-1">
+                <button mat-raised-button color="primary" class="mr-1" [disabled]="isAnyOperationIsInprogress"
+                    (click)="uploadFiles()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertDocumentTemplatePopup()" type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

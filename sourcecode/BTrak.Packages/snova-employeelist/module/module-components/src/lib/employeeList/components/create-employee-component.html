@@ -1,0 +1,350 @@
+<mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="initial">
+            {{'HRMANAGAMENT.ADDEMPLOYEE' | translate | softLabelsPipe : softLabels}}</div>
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="!initial">
+            {{'HRMANAGAMENT.EDITEMPLOYEE' | translate | softLabelsPipe : softLabels}}</div>
+    </mat-card-title>
+    <form [formGroup]="userForm" novalidate #formDirective="ngForm" (submit)="upsertEmployee()">
+        <div  id="style-1" class="goal-create-height p-1">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="15px" fxLayoutGap.xs="0px">
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('firstName')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="firstName" matInput removeSpecialCharacters
+                            placeholder="{{'HRMANAGAMENT.FIRSTNAME' | translate}}"
+                            (keyup)="removeSpecialCharacterForFirstName()" [required]="getRequired('firstName')">
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('firstName').hasError('required') && userForm.get('firstName').touched">{{'HRMANAGAMENT.PLEASEENTERFIRSTNAME' | translate}}
+                            </span>
+                            <span
+                                *ngIf="userForm.get('firstName').hasError('maxlength')">{{'HRMANAGAMENT.FIRSTNAMECANNOTEXCEED50CHARACTERS' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-error>
+                        <span
+                            *ngIf="isAllowSpecialCharacterForFirstName == false">{{ 'HRMANAGAMENT.FIRSTNAMECANNOTSTARTWITHSPECIALCHARACTERS' | translate }}</span>
+                    </mat-error>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('surName')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="surName" matInput removeSpecialCharacters
+                            placeholder="{{'HRMANAGAMENT.LASTNAME' | translate}}"
+                            (keyup)="removeSpecialCharacterForLastName()" [required]="getRequired('surName')">
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('surName').hasError('required') && userForm.get('surName').touched">{{'HRMANAGAMENT.PLEASEENTERLASTNAME' | translate}}
+                            </span>
+                            <span
+                                *ngIf="userForm.get('surName').hasError('maxlength')">{{'HRMANAGAMENT.LASTNAMECANNOTEXCEED50CHARACTERS' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-error>
+                        <span
+                            *ngIf="isAllowSpecialCharacterForLastName == false">{{ 'HRMANAGAMENT.LASTNAMECANNOTSTARTWITHSPECIALCHARACTERS' | translate }}</span>
+                    </mat-error>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('email')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="email" matInput (keyup)="onKey($event)"
+                            placeholder="{{'HRMANAGAMENT.EMAIL' | translate}}" [required]="getRequired('email')">
+                        <mat-error>
+                            <span *ngIf="userForm.get('email').hasError('required') && userForm.get('email').touched">
+                                {{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}} </span>
+                            <span
+                                *ngIf="userForm.get('email').hasError('pattern') && !userForm.get('email').hasError('maxlength')">
+                                {{'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate}} </span>
+                            <span
+                                *ngIf="userForm.get('email').hasError('maxlength')">{{'HRMANAGAMENT.EMAILCANNOTEXCEED50CHARACTERS' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('mobileNo')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="mobileNo" matInput
+                            placeholder="{{'HRMANAGAMENT.MOBILENUMBER' | translate}}" mobileNumber autocomplete="off" [required]="getRequired('mobileNo')">
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('mobileNo').hasError('required') && userForm.get('mobileNo').touched">
+                                {{'HRMANAGAMENT.PLEASEENTERNUMBER' | translate}}</span>
+                            <span
+                                *ngIf="userForm.get('mobileNo').hasError('maxlength')">{{'HRMANAGAMENT.MOBILENUMBERCANNOTEXCEED20CHARACTERS' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('employeeNumber')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="employeeNumber" matInput
+                            placeholder="{{'HRMANAGAMENT.EMPLOYEENUMBER' | translate | softLabelsPipe : softLabels}}"
+                            [required]="getRequired('employeeNumber')">
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('employeeNumber').hasError('required') && userForm.get('employeeNumber').touched">
+                                {{'HRMANAGAMENT.PLEASEENTEREMPLOYEENUMBER' | translate | softLabelsPipe : softLabels}}</span>
+                            <span
+                                *ngIf="userForm.get('employeeNumber').hasError('maxlength')">{{'HRMANAGAMENT.SHOULDNOTEXCEED50CHARACTERS' | translate | softLabelsPipe : softLabels}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('roleIds')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="roleIds" [compareWith]="compareSelectedRolesFn"
+                            placeholder="{{'HRMANAGAMENT.ROLE' | translate}}" [required]="getRequired('roleIds')" multiple
+                            (selectionChange)="getSelectedRoles()">
+                            <mat-select-trigger>
+                                {{selectedRoles}}
+                            </mat-select-trigger>
+                            <mat-option [value]="0" #allSelected (click)="toggleAllRolesSelected()">
+                                Select all
+                            </mat-option>
+                            <mat-option *ngFor="let role of (selectRolesListData$ | async)" [value]="role.roleId"
+                                (click)="toggleGoalStatusPerOne($event)">
+                                {{role.roleName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('roleIds').hasError('required') && userForm.get('roleIds').touched">
+                                {{'USERSTORY.PLEASESELECTROLE' | translate}}</span></mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('designationId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="designationId"
+                            placeholder="{{'HRMANAGAMENT.DESIGNATION' | translate}}" [required]="getRequired('designationId')">
+                            <mat-option value="option"
+                                *ngFor="let designation of (selectDesignationDropDownListData$ | async)"
+                                [value]="designation.designationId">
+                                {{designation.designationName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('designationId').hasError('required') && userForm.get('designationId').touched">
+                                {{'HRMANAGAMENT.SELECTDESIGNATION' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('departmentId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="departmentId"
+                            placeholder="{{'HRMANAGAMENT.DEPARTMENT' | translate}}" [required]="getRequired('departmentId')">
+                            <mat-option *ngFor="let department of selectDepartmentDropDownListData$ | async"
+                                [value]="department.departmentId">
+                                {{department.departmentName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('departmentId').hasError('required') && userForm.get('departmentId').touched">
+                                {{'HRMANAGAMENT.SELECTDEPARTMENT' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('currencyId')">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{'HRMANAGAMENT.CURRENCY' | translate}}" formControlName="currencyId"
+                        [required]="getRequired('currencyId')">
+                            <mat-option *ngFor="let currency of currencyList$ | async" [value]="currency.currencyId">
+                                {{currency.currencyName}}</mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('currencyId').hasError('required') && userForm.get('currencyId').touched">
+                                {{'PLEASESELECTCURRENCYDETAILS' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('employmentStatusId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="employmentStatusId"
+                            placeholder="{{'HRMANAGAMENT.EMPLOYMENTSTATUS' | translate}}" [required]="getRequired('employmentStatusId')">
+                            <mat-option value="option"
+                                *ngFor="let employmentStatus of (selectEmploymentStatusDropDownListData$ | async)"
+                                [value]="employmentStatus.employmentStatusId">
+                                {{employmentStatus.employmentStatusName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('employmentStatusId').hasError('required') && userForm.get('employmentStatusId').touched">
+                                {{'HRMANAGAMENT.SELECTEMPLOYMENTSTATUS' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('branchId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="branchId" [(ngModel)]="branchp"
+                            placeholder="{{'HRMANAGAMENT.BRANCH' | translate}}"
+                            (selectionChange)="branchChanged($event.value)" [required]="getRequired('branchId')">
+                            <mat-option value="option" *ngFor="let branch of branchList$ | async"
+                                [value]="branch.branchId">
+                                {{branch.branchName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('branchId').hasError('required') && userForm.get('branchId').touched">
+                                {{'HRMANAGAMENT.SELECTBRANCH' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('shiftTimingId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="shiftTimingId"
+                            (selectionChange)="ShiftTiming($event.value)"
+                            placeholder="{{'HRMANAGAMENT.SHIFTTIMING' | translate}}" [required]="getRequired('shiftTimingId')">
+                            <mat-option value="selectNone">{{'HRMANAGAMENT.SELECTNONE' | translate}}
+                            </mat-option>
+                            <mat-option value="option"
+                                *ngFor="let employmentShift of (selectEmployeeShiftDropDownListData$ | async ) | shiftBranchFilter : branchp"
+                                [value]="employmentShift.shiftTimingId">
+                                {{employmentShift.shift}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('shiftTimingId').hasError('required') && userForm.get('shiftTimingId').touched">{{'ROSTER.PLEASESELECTSHIFT' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('jobCategoryId')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="jobCategoryId"
+                            placeholder="{{'HRMANAGAMENT.JOBCATEGORY' | translate}}" [required]="getRequired('jobCategoryId')">
+                            <mat-option value="option" *ngFor="let jobCategory of jobCategoryList$ | async"
+                                [value]="jobCategory.jobCategoryId">
+                                {{jobCategory.jobCategoryName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('jobCategoryId').hasError('required') && userForm.get('jobCategoryId').touched">
+                                {{'HRMANAGAMENT.SELECTJOBCATEGORY' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('dateOfJoining')">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="dateOfJoining"
+                            [min]="minDate" placeholder="{{'HRMANAGAMENT.JOINEDDATE' | translate}}" [required]="getRequired('dateOfJoining')"
+                            autocomplete="off">
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('dateOfJoining').hasError('required') && userForm.get('dateOfJoining').touched">
+                                {{'HRMANAGAMENT.PLEASESELECTJOININGDATE' | translate}}</span>
+                            <span
+                                *ngIf="userForm.get('dateOfJoining').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('timeZoneId')">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{'HRMANAGAMENT.TIMEZONE' | translate}}" formControlName="timeZoneId" [required]="getRequired('timeZoneId')">
+                            <mat-option *ngFor="let timeZone of timeZoneList$ | async" [value]="timeZone.timeZoneId">
+                                {{timeZone.timeZoneTitle}}</mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('timeZoneId').hasError('required') && userForm.get('timeZoneId').touched">
+                                {{'HRMANAGAMENT.PLEASESELECTTIMEZONE' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100">
+                    <mat-form-field class="full-width" *ngIf="getHide('multipleBranches')">
+                        <mat-select formControlName="multipleBranches"
+                            placeholder="{{'HRMANAGAMENT.ENTITY' | translate}}" [required]="getRequired('multipleBranches')" multiple>
+                            <mat-option value="option" *ngFor="let entity of entities" [value]="entity.id">
+                                {{entity.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('multipleBranches').hasError('required') && userForm.get('multipleBranches').touched">
+                                {{'HRMANAGAMENT.ENTITY' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" *ngIf="getHide('ipNumber')">
+                    <mat-form-field class="full-width">
+                        <input formControlName="ipNumber" matInput placeholder="IP number" [required]="getRequired('ipNumber')" >
+                    </mat-form-field>
+                    <mat-error>
+                        <span
+                            *ngIf="userForm.get('ipNumber').hasError('required') && userForm.get('ipNumber').touched">
+                            {{'IPADDRESSES.REQUIREDERROR' | translate}}</span>
+                    </mat-error>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex.xs="100" *ngIf="getHide('businessUnitIds')">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="businessUnitIds" [compareWith]="compareSelectedRolesFn"
+                            placeholder="{{'BUSINESSUNIT.SELECTBUSINESSUNIT' | translate}}" multiple
+                            (selectionChange)="getSelectedBusinessUnits()" [required]="getRequired('businessUnitIds')">
+                            <mat-select-trigger>
+                                {{selectedBusinessUnits}}
+                            </mat-select-trigger>
+                            <mat-option [value]="0" #businessUnitsSelected (click)="toggleAllBusinessUnitsSelected()">
+                                Select all
+                            </mat-option>
+                            <mat-option *ngFor="let businessUnit of businessUnitsList" [value]="businessUnit.businessUnitId"
+                                (click)="toggleBusinessUnitsPerOne()">
+                                {{businessUnit.businessUnitName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="userForm.get('businessUnitIds').hasError('required') && userForm.get('businessUnitIds').touched">
+                                {{'BUSINESSUNIT.SELECTBUSINESSUNIT' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="45" fxLayoutGap="15px" fxFlex="30" *ngIf="getHide('isActive')">
+                    <mat-checkbox formControlName="isActive" (click)="$event.stopPropagation();"
+                        class="mb-1 checkbox-text mr-1" [required]="getRequired('isActive')">
+                        {{'USERMANAGEMENT.ISACTIVE' | translate}}</mat-checkbox>
+                </div>
+            </div>   
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isFormLoading"></mat-progress-bar>
+               <div *ngIf="!isFormLoading&&isFormExist">
+                   <formio #formio [form]="formSrc" (submit)="onSubmit($event.data)" [submission]="formData"
+                   [style.pointer-events]="isFormReadonly ? 'none' : ''" [refresh]="submitTrigger"  style="height: 90%;">
+                   </formio>
+               </div>
+        </div>
+        <div class="text-center mb-1 prl-1">
+            <mat-error>
+                <span
+                    *ngIf="formioNotSubmit">
+                    {{'EMPLOYEEFIELDS.PLEASESUBMITALLMANDATORYFIELDS' | translate}}</span>
+            </mat-error>
+            <button mat-raised-button color="primary" type="submit" *ngIf="initial"
+                [disabled]="(upsertEmployeeInProgress$ | async) || isAllowSpecialCharacterForFirstName == false  || isAllowSpecialCharacterForLastName == false"
+                class="mr-05" (click)="$event.stopPropagation()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertEmployeeInProgress$ | async">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon> {{'ADD' | translate}}
+            </button>
+            <button mat-raised-button color="primary" type="submit"
+                [disabled]="(upsertEmployeeInProgress$ | async)" class="mr-05"
+                (click)="$event.stopPropagation()" *ngIf="!initial">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="upsertEmployeeInProgress$ | async">
+                </mat-progress-bar>
+                <fa-icon icon="pen" class="mr-05"></fa-icon>{{'HRMANAGAMENT.UPDATE' | translate}}
+            </button>
+            <button mat-raised-button type="reset" (click)="closePopover()"
+                [disabled]="upsertEmployeeInProgress$ | async">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+    </form>
+</mat-card>

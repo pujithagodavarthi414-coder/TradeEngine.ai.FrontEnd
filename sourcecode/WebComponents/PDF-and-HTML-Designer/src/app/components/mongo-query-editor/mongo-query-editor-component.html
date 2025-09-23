@@ -1,0 +1,229 @@
+<ng-template #addDataSourceDialog let-data>
+    <div mat-dialog-content class="project-dialogContent" id="style-1">
+        <div style="position: relative;">
+        <button class="close-button" (click)="closeAddDataSourceDialog()">
+            <span>&times;</span>
+        </button>
+        </div>
+        <h3 class="pdf-designer-theme-color mb-4 text_align_center">Add Data Source</h3>
+        <hr class="hr-line-2">
+
+        <form [formGroup]="addDataSourceForm" novalidate #formDirective="ngForm"
+            (submit)="addDataSourceForm.valid && saveDataSource() ; saveDataSourceClicked=true">
+            <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column" fxLayoutGap.xs="0px">
+                <div>
+                    <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                        <label fxFlex="35" class="margin-bottom-5" for="name"><b>Data Source Name : </b>
+                        </label>
+                        <input #addDataSourceFirstField fxFlex="65" type="text" autocomplete="off" class="form-control"
+                            id="name" formControlName="dataSource" required>
+                    </div>
+                    <div *ngIf="(addDataSourceForm.controls.dataSource.touched || saveDataSourceClicked)  && addDataSourceForm.controls.dataSource.errors?.required"
+                        fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                        <div fxFlex="35" class="margin-bottom-5">
+                        </div>
+                        <span fxFlex="65" class="validation-error">Data source name is
+                            required</span>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                        <label fxFlex="35" class="margin-bottom-5" for="mongoQuery"><b>Mongo Query : </b></label>
+                        <textarea fxFlex="65" class="form-control" id="mongoQuery" formControlName="mongoQuery"
+                            style="width:600px" rows="8" required></textarea>
+                    </div>
+                    <div *ngIf="(addDataSourceForm.controls.mongoQuery.touched || saveDataSourceClicked)  && addDataSourceForm.controls.mongoQuery.errors?.required"
+                        fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                        <div fxFlex="35" class="margin-bottom-5" for="mongoQuery"></div>
+                        <span fxFlex="65" class="validation-error">Mongo Query is
+                            required</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 mb-3"><b>Parameters : </b></div>
+            <table class="table">
+                <thead>
+                    <tr fxLayout="row">
+                        <th fxFlex="42">Parameter name</th>
+                        <th fxFlex="42">Parameter type</th>
+                        <th fxFlex="16"> <span>Actions</span>
+                            <span class="mongo-query-add-params-text"
+                                (click)="addDataSourceForm.valid && openMongoQueryParams()">
+                                <i class="fa fa-plus-circle pdf-designer-theme-color" title="Add parameters"></i></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of mongoQueryParams;let i = index">
+                        <td fxFlex="42" data-name="" class="hide-content-overflow" title="{{item.name}}">{{item.name}}
+                        </td>
+                        <td fxFlex="42" data-name="" class="hide-content-overflow" title="{{item.type}}">{{item.type}}
+                        </td>
+                        <td fxFlex="16" data-name=""><span class="">
+                                <i class="fa fa-edit designer-menu-action-icons" title="Edit" aria-hidden="true"
+                                    (click)="editMongoParamtype(item , i)"></i>
+                                <i class="fa fa-trash designer-menu-action-icons" title="Delete" aria-hidden="true"
+                                    (click)="archiveMongoParamtype(i)"></i>
+                            </span> </td>
+                    </tr>
+                </tbody>
+
+            </table>
+            <div class="mt-3 mb-3"> <b>Designer dummy values : </b></div>
+            <table class="table">
+                <thead>
+                    <tr fxLayout="row">
+                        <th fxFlex="42">Parameter name</th>
+                        <th fxFlex="42">Parameter value</th>
+                        <th fxFlex="16"> Actions
+                            <span class="mongo-query-add-params-text" (click)="openMongoQueryDummyValues()">
+                                <i class="fa fa-plus-circle pdf-designer-theme-color"
+                                    title="Add dummy values"></i></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr fxLayout="row" *ngFor="let item of mongoQueryDummyValues;let i = index">
+                        <td fxFlex="42" data-name="" class="hide-content-overflow" title="{{item.name}}">{{item.name}}
+                        </td>
+                        <td fxFlex="42" data-name="" class="hide-content-overflow" title="{{item.value}}">{{item.value}}
+                        </td>
+                        <td fxFlex="16" data-name=""><span class="">
+                                <i class="fa fa-edit designer-menu-action-icons" title="Edit" aria-hidden="true"
+                                    (click)="editmongoQueryDummyValues(item , i )"></i>
+                                <i class="fa fa-trash designer-menu-action-icons" title="Delete" aria-hidden="true"
+                                    (click)="archivemongoQueryDummyValues( i )"></i>
+                            </span> </td>
+                    </tr>
+                </tbody>
+
+            </table>
+            <!-- <div style="float:left;margin:8px 24px 2px 8px">
+        <button mat-button mat-raised-button (click)="closeAddDataSourceDialog()">
+            CANCEL
+        </button>
+        </div> -->
+            <div class="mongo-query-button-container">
+                <button type="submit" mat-flat-button class="m-3 mb-2 hover-button pdf-save-designer-button"
+                    [ngStyle]="{'cursor': (!addDataSourceForm.valid? 'not-allowed':'pointer')}">
+                    <div class="bottom-margin-negative">
+                        <span>
+                            <span *ngIf="editDataSourceId==null" class="mongo-query-btn-font-weight">Save</span>
+                            <span *ngIf="editDataSourceId!=null" class="mongo-query-btn-font-weight">Update</span>
+                        </span>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</ng-template>
+<ng-template #mongoParamTypes>
+    <div>
+        <div style="position: relative;">
+        <button class="close-button" (click)="closeMongoQueryParams()">
+            <span>&times;</span>
+        </button>
+        </div>
+        <h3 class="pdf-designer-theme-color mb-4 text_align_center">
+            Adding Parameters</h3>
+        <form [formGroup]="addMongoQueryParamsForm" novalidate #formDirective="ngForm"
+            (submit)="addMongoQueryParamsForm.valid && saveMongoQueryParamsForm();saveMongoQueryParamsFormClicked=true">
+            <!-- <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column" fxLayoutGap.xs="0px"> -->
+            <div class="m-3">
+                <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                    <label fxFlex="35" class="margin-bottom-5" for="name"><b>Parameter Name : </b></label>
+                    <input #addParameterFirstField fxFlex="65" type="text" autocomplete="off" class="form-control"
+                        id="name" formControlName="parameterName" required>
+                </div>
+                <div *ngIf="(addMongoQueryParamsForm.controls.parameterName.touched || saveMongoQueryParamsFormClicked)  && addMongoQueryParamsForm.controls.parameterName.errors?.required"
+                    fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                    <div fxFlex="35" class="margin-bottom-5">
+                    </div>
+                    <span fxFlex="65" class="validation-error">Parameter
+                        name is required</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                    <label fxFlex="35" class="margin-bottom-5" for="type"><b>Parameter Type : </b></label>
+                    <select fxFlex="65" class="form-control" id="type" formControlName="parameterType" required>
+                        <option *ngFor="let item of mongoDataTypes" [value]="item">{{item}}</option>
+                    </select>
+                </div>
+                <div *ngIf="(addMongoQueryParamsForm.controls.parameterType.touched || saveMongoQueryParamsFormClicked)  && addMongoQueryParamsForm.controls.parameterType.errors?.required"
+                    fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                    <div fxFlex="35" class="margin-bottom-5">
+                    </div>
+                    <span fxFlex="65" class="validation-error">Parameter
+                        type is required</span>
+                </div>
+            </div>
+            <!-- </div> -->
+            <div class="mongo-query-button-container">
+                <button type="submit" mat-flat-button
+                    [ngStyle]="{'cursor': (!addMongoQueryParamsForm.valid? 'not-allowed':'pointer')}"
+                    class="m-3 mb-2 hover-button pdf-save-designer-button">
+                    <div class="bottom-margin-negative">
+                        <span>
+                            <span *ngIf="editMongoParamtypeIndex==null" class="mongo-query-btn-font-weight">Save</span>
+                            <span *ngIf="editMongoParamtypeIndex!=null"
+                                class="mongo-query-btn-font-weight">Update</span>
+                        </span>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</ng-template>
+<ng-template #mongoParamValues>
+    <div>
+        <div style="position: relative;">
+        <button class="close-button" (click)="closeMongoQueryDummyValues()">
+            <span>&times;</span>
+        </button>
+        </div>
+        <h3 class="pdf-designer-theme-color mb-4 text_align_center">
+            Adding Dummy Values</h3>
+        <form [formGroup]="addMongoQueryDummyParamsForm" novalidate #formDirective="ngForm"
+            (submit)="addMongoQueryDummyParamsForm.valid && saveMongoQueryDummyParamsForm();saveMongoQueryDummyParamsFormClicked=true">
+            <!-- <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column" fxLayoutGap.xs="0px"> -->
+            <div class="m-3">
+                <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                    <label fxFlex="35" class="margin-bottom-5" for="name"><b>Parameter Name : </b></label>
+                    <input #addParameterTypeFirstField fxFlex="65" type="text" autocomplete="off" class="form-control"
+                        id="name" formControlName="parameterName" required>
+                </div>
+                <div *ngIf="(addMongoQueryDummyParamsForm.controls.parameterName.touched || saveMongoQueryDummyParamsFormClicked)  && addMongoQueryDummyParamsForm.controls.parameterName.errors?.required"
+                    fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                    <div fxFlex="35" class="margin-bottom-5">
+                    </div>
+                    <span fxFlex="65" class="validation-error">Parameter
+                        name is required</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="start center" class="form-group template-sm-margin">
+                    <label fxFlex="35" class="margin-bottom-5" for="value"><b>Parameter Value : </b></label>
+                    <input fxFlex="65" type="text" autocomplete="off" class="form-control" id="value"
+                        formControlName="parameterValue" required>
+                </div>
+                <div *ngIf="(addMongoQueryDummyParamsForm.controls.parameterValue.touched || saveMongoQueryDummyParamsFormClicked)  && addMongoQueryDummyParamsForm.controls.parameterValue.errors?.required"
+                    fxLayout="row" fxLayoutAlign="start start" class="form-group template-sm-margin">
+                    <div fxFlex="35" class="margin-bottom-5">
+                    </div>
+                    <span fxFlex="65" class="validation-error">Parameter
+                        value is required</span>
+                </div>
+            </div>
+            <!-- </div> -->
+            <div class="mongo-query-button-container">
+                <button type="submit" mat-flat-button
+                    [ngStyle]="{'cursor': (!addMongoQueryDummyParamsForm.valid? 'not-allowed':'pointer')}"
+                    class="m-3 mb-2 hover-button pdf-save-designer-button">
+                    <div class="bottom-margin-negative">
+                        <span>
+                            <span *ngIf="editmongoQueryDummyValueIndex==null"
+                                class="mongo-query-btn-font-weight">Save</span>
+                            <span *ngIf="editmongoQueryDummyValueIndex!=null"
+                                class="mongo-query-btn-font-weight">Update</span>
+                        </span>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</ng-template>

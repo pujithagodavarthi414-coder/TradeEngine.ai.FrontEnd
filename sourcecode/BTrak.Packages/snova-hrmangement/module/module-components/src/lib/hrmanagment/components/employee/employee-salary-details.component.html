@@ -1,0 +1,158 @@
+<div class="m-0 p-0 full-height"
+    *ngIf="((canAccess_feature_ViewEmployeeSalaryDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )">
+    <mat-card class="p-0 m-0 canteen-manage" fxLayout="column">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                    {{'HRMANAGAMENT.SALARY' | translate | titlecase}}
+                </div>
+                <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+                    fxLayoutAlign="end center">
+                    <mat-form-field ngClass.xs="full-width">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button
+                        *ngIf="((canAccess_feature_AddOrUpdateEmployeeSalaryDetails) && permission) ||  (canAccess_feature_CanEditOtherEmployeeDetails)"
+                        mat-icon-button matTooltip="{{'HRMANAGAMENT.ADDSALARYDETAILS' | translate}}"
+                        (click)="openDialog(null)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{'SEARCH' | translate}}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+    </mat-card>
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [rows]="employeeSalaryDetailsList$ | async" [columnMode]="'force'" [scrollbarH]="true"
+                       [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true"
+                       [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+                       (sort)="onSort($event)" (page)='setPage($event)' [loadingIndicator]="employeeSalaryDetailsLoading$ | async"
+                       [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.PAYGRADE' | translate}}" sortable="true" prop="payGradeName">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.payGradeName}}">{{ row?.payGradeName }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.STARTDATE' | translate}}" [flexGrow]="1" prop="startDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.startDate | date: "dd-MMM-yyyy" }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.ENDDATE' | translate}}" [flexGrow]="1" prop="endDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.endDate | date: "dd-MMM-yyyy" }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.SALARYCOMPONENT' | translate}}" sortable="true"
+                                  prop="salaryComponent">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.salaryComponent}}">{{ row?.salaryComponent }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.PAYFREQUENCY' | translate}}" sortable="true"
+                                  prop="payFrequencyName">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMPLOYEEMEMBERSHIP.CURRENCY' | translate}}" sortable="true"
+                                  prop="currencyName">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.TOTALSALARY' | translate}}" sortable="true" prop="amount">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.NETPAYAMOUNT' | translate}}" sortable="true" prop="netPayAmount">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.PAYROLLTEMPLATE' | translate}}" sortable="true" prop="payrollName"
+            *ngIf="isAccessPayRollTemplate">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'TAXSLABS.TAXCALCULATIONTYPE' | translate }}" [flexGrow]="1" [sortable]="true"
+               prop="taxCalculationTypeName" matTooltip="taxCalculationTypeName">
+            </ngx-datatable-column>
+            <!-- <ngx-datatable-column name="{{'EMPLOYEEIMMIGRATIONDETAILS.COMMENTS' | translate}}" sortable="true"
+        prop="comments">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+        </ng-template>
+    </ngx-datatable-column> -->
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [sortable]="false"
+                                  *ngIf="((canAccess_feature_AddOrUpdateEmployeeSalaryDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <button class="text-center" matTooltip="{{'HRMANAGAMENT.EDITSALARY' | translate}}"
+                            (click)=" openDialog(row)" mat-icon-button #removeAllBtn>
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" matTooltip="{{'HRMANAGAMENT.DELETESALARY' | translate}}"
+                            (click)=" getSalaryDetailsId(row,deleteSalaryDetailsPopover)"
+                            [satPopoverAnchorFor]="deleteSalaryDetails" #deleteSalaryDetailsPopover="satPopoverAnchor"
+                            mat-icon-button>
+                        <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<mat-card class="p-0 m-0 edit_employee full-height"
+    *ngIf="!(((canAccess_feature_ViewEmployeeSalaryDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails))">
+    <mat-card-title class="data-table-header drag-handler">
+        <div class="p-1" fxLayout="row wrap">
+            <div fxFlex>
+                {{'HRMANAGAMENT.SALARY' | translate}}
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content>
+        <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+        </app-common-message-box>
+    </mat-card-content>
+</mat-card>
+
+<sat-popover #deleteSalaryDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'HRMANAGAMENT.DELETESALARYDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <div class="card-content p-1">
+            <div class="text-center mb-1">{{'HRMANAGAMENT.AREYOUSUREWANTTODELETE' | translate}}
+            </div>
+            <div fxLayoutAlign="space-around center">
+                <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+                    (click)="deleteSalaryDetail();"><i class="fa fa-check"></i>{{'YES' | translate}}</button>
+                <button type="button" mat-button mat-raised-button (click)="cancelSalaryDetails()"><i
+                        class="fa fa-times"></i>{{'NO' | translate}}</button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>

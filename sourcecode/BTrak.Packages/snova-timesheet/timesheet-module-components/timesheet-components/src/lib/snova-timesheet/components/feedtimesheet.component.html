@@ -1,0 +1,530 @@
+<ng-container *ngIf="canAccess_feature_AddOrUpdateTimesheetentry">
+  <div class="p-0 feed_timesheet">
+    <mat-card-title class="text-center" *ngIf="feedtimesheeteditpopup">
+      <div class="mat-bg-primary p-05"> {{'FEEDTIMESHEET.FEEDTIMESHEETTITLE'|translate}} </div>
+    </mat-card-title>
+    <mat-card-title class="text-center" *ngIf="absentpopup">
+      <div class="mat-bg-primary p-05"> {{'FEEDTIMESHEET.ADDABSENCERESON'|translate}} </div>
+    </mat-card-title>
+    <mat-card-title class="text-center" *ngIf="permissionpopup">
+      <div class="mat-bg-primary p-05"> {{'FEEDTIMESHEET.ADDPERMISSION'|translate}} </div>
+    </mat-card-title>
+    <mat-card-title class="" *ngIf="!feedtimesheeteditpopup && !absentpopup && !permissionpopup">
+      <div fxLayout="row" class="p-05" fxLayout.xs="column" fxLayoutGap.xs="10px">
+        <div fxFlex>
+          {{'FEEDTIMESHEET.FEEDTIMESHEETTITLE'|translate}}
+        </div>
+        <div fxFlex="50" fxFlex.xs="100" fxFlex.gt-xl="33.3" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="space-between center">
+          <span>{{'FEEDTIMESHEET.ISABSENT'|translate}}&nbsp; </span>
+          <mat-slide-toggle class="mr-1 archive-switch" (change)="clickIsAbsent()" [(ngModel)]="isAbsent">
+          </mat-slide-toggle>
+          <span *ngIf="canAccess_feature_AddPermission">{{'FEEDTIMESHEET.PERMISSION'|translate}}&nbsp;
+          </span>
+          <mat-slide-toggle *ngIf="canAccess_feature_AddPermission" (change)="clickPermission()"
+            class="archive-switch mr-1" [(ngModel)]="isPresent">
+          </mat-slide-toggle>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <!-- <form [formGroup]="timeSheetForm" #formDirective="ngForm" novalidate (submit)="(timeSheetForm.valid && saveTimeSheet() && !feedtimesheeteditpopup && !absentpopup && !permissionpopup) || ((feedtimesheeteditpopup || absentpopup || permissionpopup) && saveTimeSheet())"> -->
+      <form [formGroup]="timeSheetForm" #formDirective="ngForm" novalidate (submit)="saveTimeSheet()">
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px"
+          *ngIf="!feedtimesheeteditpopup && !absentpopup && !permissionpopup">
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="mr-05 full-width">
+              <input type="text" formControlName="userId"
+                placeholder="{{'FEEDTIMESHEET.EMPLOYEENAME'|translate | softLabelsPipe : softLabels}}" matInput
+                [(ngModel)]="searchEmployee" (input)="searchByEmployee()" [matAutocomplete]="auto" autocomplete="off"
+                trim>
+              <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="(employeeLoading$ | async)"></i>
+              <span class="close_icon" *ngIf="searchEmployee && !(employeeLoading$ | async)">
+                <span
+                 *ngIf="!searchEmployee">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchEmployee" class="icon-button custom-auto-close-timesheet" aria-hidden="false"
+                  (click)="closeSearchEmployee()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                (optionSelected)="employeeSelected($event.option.value)">
+                <mat-option *ngFor="let person of  employeeList$|async" [value]="person.id">
+                  <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.fullName}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error>
+                <span
+                  *ngIf="timeSheetForm.get('userId').hasError('required') && timeSheetForm.get('userId').touched">{{'FEEDTIMESHEET.SELECTEMPLOYEEALERT'|translate
+                  | softLabelsPipe : softLabels}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="mr-05 full-width">
+              <input formControlName="date" matInput [matDatepicker]="picker" [max]="maxDate" [(ngModel)]="selectedDate"
+                placeholder="{{'FEEDTIMESHEET.SELECTDATE'|translate}}" (click)="picker.open()" autocomplete="off"
+                [readonly]="true" (dateChange)="tableVisible()">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error>
+                <span *ngIf="timeSheetForm.get('date').hasError('required') && timeSheetForm.get('date').touched">
+                  {{'FEEDTIMESHEET.SELECTDATEALERT'|translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div *ngIf="isAbsent" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="leaveTypeId" placeholder="{{'FEEDTIMESHEET.SELECTREASON'|translate}}">
+                <mat-option [value]="reason.leaveTypeId" *ngFor="let reason of leaveTypeModelList">
+                  {{reason.leaveTypeName}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span
+                  *ngIf="timeSheetForm.get('leaveTypeId').hasError('required') && timeSheetForm.get('leaveTypeId').touched">{{'FEEDTIMESHEET.PLEASESELECTREASON'|translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="leaveSessionId" placeholder="{{'FEEDTIMESHEET.SELECTSESSION'|translate}} ">
+                <mat-option [value]="session.leaveSessionId" *ngFor="let session of leaveSessionsList">
+                  {{session.leaveSessionName}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span
+                  *ngIf="timeSheetForm.get('leaveSessionId').hasError('required') && timeSheetForm.get('leaveSessionId').touched">{{'FEEDTIMESHEET.PLEASESELECTSESSION'|translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="full-width">
+              <textarea class="absence-reason" matInput placeholder="{{'FEEDTIMESHEET.ABSENCEREASON'|translate}}"
+                formControlName="reasonForAbsent"></textarea>
+              <mat-error>
+                <span
+                  *ngIf="timeSheetForm.get('reasonForAbsent').hasError('required') && timeSheetForm.get('reasonForAbsent').touched">{{'FEEDTIMESHEET.PLEASESELECTABSENCEREASON'|translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div *ngIf="isPresent" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <mat-form-field class="full-width permission-time" style="margin-top: 0px !important;">
+              <input formControlName="duration" matInput placeholder="{{'PERMISSIONSSREGISTER.DURATION' | translate}}"
+                aria-label="24hr format" [ngxTimepicker]="duration" [format]="24" readonly (click)="durationTimeShow();"
+                [(ngModel)]="durationTimepicker" />
+              <ngx-material-timepicker #duration [cancelBtnTmpl]="durationCancelBtn" [confirmBtnTmpl]="confirmBtn">
+              </ngx-material-timepicker>
+              <span class="close-icon-padding close_icon pull-right" style="top: 22px !important;">
+                <mat-icon *ngIf="durationTimepicker" class="icon-button" aria-hidden="false"
+                  (click)="closeDurationTime()" style="cursor:pointer">close</mat-icon>
+              </span>
+              <mat-error>
+                <span
+                  *ngIf="timeSheetForm.get('duration').hasError('required') && timeSheetForm.get('duration').touched">{{'FEEDTIMESHEET.PLEASESPECIFYDURATION'
+                  | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+            <ng-template #durationCancelBtn>
+              <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closeDurationTime()">
+                {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+            </ng-template>
+          </div>
+          <div fxFlex fxFlex.gt-xl="33.3">
+            <div fxLayout="row wrap">
+              <div fxFlex="95">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{'FEEDTIMESHEET.SELECTREASON' | translate}}"
+                    formControlName="permissionReasonId">
+                    <mat-option [value]="reason.id" *ngFor="let reason of permissionReasonList">
+                      {{reason.permissionReason}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span
+                      *ngIf="timeSheetForm.get('permissionReasonId').hasError('required') && timeSheetForm.get('permissionReasonId').touched">{{'FEEDTIMESHEET.PLEASESELECTREASON'|translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="3" fxFlexOffset="3px" matTooltip="{{'FEEDTIMESHEET.ADDNEWREASON' | translate}}">
+                <fa-icon icon="plus" class="mat-bg-primary add-reason " [satPopoverAnchorFor]="addPermissionPopover"
+                  (click)="addPermissionPopover.open();"></fa-icon>
+              </div>
+            </div>
+          </div>
+          <div fxFlex fxFlex.gt-xl="33.3" class="p-2">
+            <mat-checkbox formControlName="isMorning" class="mb-1 mr-1 late-permission checkbox-text">
+              {{'FEEDTIMESHEET.ISMORNINGLATE'|translate}}</mat-checkbox>
+          </div>
+        </div>
+
+        <div *ngIf="showFeedTimeSheetPage" fxLayout="column">
+          <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+            <div fxLayout="row" fxFlex fxFlex.gt-xl="33.3">
+              <mat-form-field class="full-width">
+                <!-- <input formControlName="inTime" matInput placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}"
+                  aria-label="24hr format" [ngxTimepicker]="fullTime" [format]="24" readonly (click)="intimeshow();"
+                  [(ngModel)]="intimepicker" />
+                <ngx-material-timepicker #fullTime [cancelBtnTmpl]="intimecancelBtn" [confirmBtnTmpl]="confirmBtn">
+                </ngx-material-timepicker> -->
+                <input [min]="minDateTime" formControlName="inTime" matInput [owlDateTimeTrigger]="intimeDatePicker"
+                  [owlDateTime]="intimeDatePicker" aria-label="24hr format"
+                  placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}" [(ngModel)]="intimepicker">
+                <owl-date-time [startAt]="intimeshow()" #intimeDatePicker></owl-date-time>
+                <span class="close-icon-padding close_icon pull-right">
+                  <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false" (click)="closeintime()"
+                    style="cursor:pointer">close</mat-icon>
+                </span>
+              </mat-form-field>
+              <ng-template #intimecancelBtn>
+                <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closeintime()">
+                  {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+              </ng-template>
+            </div>
+
+            <div fxFlex fxFlex.gt-xl="33.3">
+              <mat-form-field class="full-width">
+                <!-- <input matInput formControlName="lunchBreakStartTime"
+                  placeholder="{{'FEEDTIMESHEET.SELECTINLUNCHBREAK'|translate}} " aria-label="24hr format"
+                  [ngxTimepicker]="fullTime1" [format]="24" readonly (click)="lunchstarttimeshow();"
+                  [(ngModel)]="lunchstarttimepicker" />
+                <ngx-material-timepicker #fullTime1 [cancelBtnTmpl]="lunchstartcancelBtn" [confirmBtnTmpl]="confirmBtn">
+                </ngx-material-timepicker> -->
+                <input [min]="minDateTime" formControlName="lunchBreakStartTime" matInput
+                  [owlDateTimeTrigger]="lunchStartDatePicker" [owlDateTime]="lunchStartDatePicker"
+                  placeholder="{{'FEEDTIMESHEET.SELECTINLUNCHBREAK'|translate}}" [(ngModel)]="lunchstarttimepicker">
+                <owl-date-time [startAt]="lunchstarttimeshow()" #lunchStartDatePicker></owl-date-time>
+                <span class="close-icon-padding close_icon pull-right">
+                  <mat-icon *ngIf="lunchstarttimepicker" class="icon-button" aria-hidden="false"
+                    (click)="closelunchstarttime()" style="cursor:pointer">close</mat-icon>
+                </span>
+              </mat-form-field>
+              <ng-template #lunchstartcancelBtn>
+                <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closelunchstarttime()">
+                  {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+              </ng-template>
+            </div>
+
+            <div fxFlex fxFlex.gt-xl="33.3">
+              <mat-form-field class="full-width">
+                <!-- <input formControlName="lunchBreakEndTime" matInput
+                  placeholder="{{'FEEDTIMESHEET.SELECTINLUNCHBREAKEND'|translate}}" aria-label="24hr format"
+                  [ngxTimepicker]="fullTime2" [format]="24" readonly (click)="lunchendtimeshow();"
+                  [(ngModel)]="lunchendtimepicker" />
+                <ngx-material-timepicker #fullTime2 [cancelBtnTmpl]="lunchendcancelBtn" [confirmBtnTmpl]="confirmBtn">
+                </ngx-material-timepicker> -->
+                <input [min]="minDateTime" formControlName="lunchBreakEndTime" matInput
+                  [owlDateTimeTrigger]="lunchEndDatePicker" [owlDateTime]="lunchEndDatePicker"
+                  placeholder="{{'FEEDTIMESHEET.SELECTINLUNCHBREAKEND'|translate}}" [(ngModel)]="lunchendtimepicker">
+                <owl-date-time [startAt]="lunchendtimeshow()" #lunchEndDatePicker></owl-date-time>
+                <span class="close-icon-padding close_icon pull-right">
+                  <mat-icon *ngIf="lunchendtimepicker" class="icon-button" aria-hidden="false"
+                    (click)="closelunchendtime()" style="cursor:pointer">close</mat-icon>
+                </span>
+              </mat-form-field>
+              <ng-template #lunchendcancelBtn>
+                <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closelunchendtime()">
+                  {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+              </ng-template>
+            </div>
+          </div>
+
+          <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+
+            <div fxFlex fxFlex.gt-xl="33.3">
+              <mat-form-field class="full-width">
+                <!-- <input formControlName="outTime" matInput placeholder="{{'FEEDTIMESHEET.SELECTOUTTIME'|translate}}"
+                  aria-label="24hr format" [ngxTimepicker]="fullTime3" [format]="24" readonly
+                  (click)="finishtimeshow();" [(ngModel)]="finishtimepicker" />
+                <ngx-material-timepicker #fullTime3 [cancelBtnTmpl]="finishtimecancelBtn" [confirmBtnTmpl]="confirmBtn">
+                </ngx-material-timepicker> -->
+                <input [min]="minDateTime" formControlName="outTime" matInput [owlDateTimeTrigger]="FinishDatePicker"
+                  [owlDateTime]="FinishDatePicker" placeholder="{{'FEEDTIMESHEET.SELECTOUTTIME'|translate}}"
+                  [(ngModel)]="finishtimepicker">
+                <owl-date-time [startAt]="finishtimeshow()" #FinishDatePicker></owl-date-time>
+                <span class="close-icon-padding close_icon pull-right">
+                  <mat-icon *ngIf="finishtimepicker" class="icon-button" aria-hidden="false" (click)="closefinishtime()"
+                    style="cursor:pointer">close</mat-icon>
+                </span>
+              </mat-form-field>
+              <ng-template #finishtimecancelBtn>
+                <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closefinishtime()">
+                  {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+              </ng-template>
+            </div>
+
+            <div fxFlex fxFlex.gt-xl="66">
+              <mat-form-field class="full-width">
+                <!-- <input placeholder="{{'TIMEZONE.SELECTUSERTIMEZONE'|translate}}" matInput [matAutocomplete]="tagsAuto"
+                  #matTagInput (keyup)="searchTimeZone($event.target.value)">
+
+                <mat-autocomplete #tagsAuto="matAutocomplete" [displayWith]="displayTimeZoneFn"
+                  (optionSelected)="timeZoneSelected($event)">
+                  <mat-option *ngFor="let timeZone of filteredTimeZones " [value]="timeZone">
+                    {{timeZone.timeZoneTitle}}
+                  </mat-option>
+                </mat-autocomplete> -->
+
+                <mat-select formControlName="timeZoneId" placeholder="{{'TIMEZONE.SELECTUSERTIMEZONE'|translate}}"
+                  (selectionChange)="timeZoneSelected($event.value)" required>
+                  <mat-option [value]="timeZone.timeZoneId" *ngFor="let timeZone of timeZones">
+                    {{timeZone.timeZoneTitle}}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="timeSheetForm.get('timeZoneId').hasError('required') && timeSheetForm.get('timeZoneId').touched">
+                    {{ 'TIMEZONE.USERTIMEZONEISREQUIRED' | translate}}
+                  </span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- <div fxFlex.xs="100" fxFlex="19.3" class="p-2">
+              <mat-checkbox formControlName="isNextDay" class="checkbox-text next-day" [(ngModel)]="nextDay">
+                {{'FEEDTIMESHEET.NEXTDAY'|translate}}</mat-checkbox>
+            </div> -->
+          </div>
+
+          <ng-template #confirmBtn>
+            <p class="feedtimesheet-datepicker-button">{{'PROJECT.OK' | translate}}</p>
+          </ng-template>
+        </div>
+
+        <div class="text-center mt-02 mb-05">
+          <button *ngIf="feedtimesheeteditpopup" mat-raised-button color="primary" class="mr-05"
+            [disabled]="checkDisabled()" (click)="$event.stopPropagation()">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingTimeSheetInProgress">
+            </mat-progress-bar>
+            <fa-icon icon="check" class="mr-05"></fa-icon> {{'FEEDTIMESHEET.SUBMIT'|translate}}
+          </button>
+          <button *ngIf="!feedtimesheeteditpopup" mat-raised-button color="primary" class="mr-05"
+            [disabled]="checkPermissionDisabled()" (click)="$event.stopPropagation()">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingTimeSheetInProgress">
+            </mat-progress-bar>
+            <fa-icon icon="check" class="mr-05"></fa-icon> {{'FEEDTIMESHEET.SUBMIT'|translate}}
+          </button>
+          <button mat-button mat-raised-button
+            (click)="$event.stopPropagation(); initializeTimeSheetForm(); closepopup(); false"
+            [disabled]="savingTimeSheetInProgress">
+            <fa-icon icon="times" class="mr-05"></fa-icon>
+            <span
+              *ngIf="feedtimesheeteditpopup || absentpopup || permissionpopup">{{'FEEDTIMESHEET.CANCEL'|translate}}</span>
+            <span
+              *ngIf="!feedtimesheeteditpopup && !absentpopup && !permissionpopup">{{'FEEDTIMESHEET.CLEAR'|translate}}</span>
+          </button>
+        </div>
+      </form>
+      <div class="activity-data filter-margin" *ngIf="isVisible" id="style-1" style="height: 170px;">
+        <ngx-datatable class="btrak" [rows]="breaks" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35"
+          [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements" [offset]="page.pageNumber"
+          [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)" (page)='setPage($event)'
+          [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+          [loadingIndicator]="isAnyOperationIsInprogress">
+          <ngx-datatable-column name="{{'FEEDTIMESHEET.BREAKINTIME'|translate}}" sortable="true" prop="dateFrom"
+            minWidth="200">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <div *ngIf="row?.dateFrom">{{ row?.dateFrom | timeZoneData : "HH:mm" }} <span
+                  matTooltip="{{row.breakInTimeZone }}" matTooltipShowDelay="500">{{ row.breakInAbbreviation }}</span>
+              </div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'FEEDTIMESHEET.BREAKOUTTIME'|translate}}" sortable="true" prop="dateTo"
+            minWidth="200">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <div *ngIf="row?.dateFrom">{{ row?.dateTo | timeZoneData : "HH:mm"}} <span
+                  matTooltip="{{row.breakOutTimeZone }}" matTooltipShowDelay="500">{{ row.breakOutAbbreviation }}</span>
+              </div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{ 'EDIT' | translate}}" [sortable]="false" minWidth="100">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <button class="text-center" matTooltip="{{'FEEDTIMESHEET.EDITBREAKINBREAKOUTTIMINGS'|translate}}"
+                (click)="editBreakDetails(row,upsertBreakPopUp)" [satPopoverAnchorFor]="upsertBreakPopover"
+                #upsertBreakPopUp="satPopoverAnchor" mat-icon-button>
+                <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="">
+            <ng-template let-column="column" ngx-datatable-header-template>
+              <button class="custom-float-right" matTooltip="{{'FEEDTIMESHEET.ADDBREAKINANDBREAKOUTTIMINGS'|translate}}"
+                [satPopoverAnchorFor]="upsertBreakPopover" #upsertBreakPopUp="satPopoverAnchor"
+                (click)="createBreakPopupOpen(upsertBreakPopUp);clearForm()">
+                <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+      <div class="activity-data filter-margin" *ngIf="permissionpopup" id="style-1" style="height: 170px;">
+        <ngx-datatable class="btrak" [rows]="permissionListdata" [columnMode]="'force'" [headerHeight]="35"
+          [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="pagePermission.totalElements"
+          [offset]="pagePermission.pageNumber" [limit]="pagePermission.size" (page)='setPage($event)'
+          [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+          [loadingIndicator]="isAnyOperationIsInprogress">
+          <ngx-datatable-column name="{{'PERMISSIONSSREGISTER.DURATION'|translate}}" [sortable]="true" prop="duration" minWidth="200">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <div *ngIf="row?.duration">{{row.duration.toString().split(":")[0]+"h " }}
+                {{row.duration.toString().split(":")[1]+"m" }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'TIMESHEETSUBMISSION.REASON'|translate}}" [sortable]="true" prop="reasonName" minWidth="200">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <div *ngIf="row?.reasonName">{{ row?.reasonName }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'FEEDTIMESHEET.ISMORNINGLATE'|translate}}" [sortable]="false" prop="isMorning" minWidth="200">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <div *ngIf="row?.isMorning"> {{ 'YES' | translate }} </div>
+              <div *ngIf="!row?.isMorning"> {{ 'NO' | translate }} </div>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </mat-card-content>
+  </div>
+
+  <sat-popover #addPermissionPopover backdropClass="backdrop-color" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" [autoFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="mat-bg-primary p-05"> {{'FEEDTIMESHEET.ADDPERMISSIONREASONTITLE'|translate}} </div>
+      </mat-card-title>
+      <form [formGroup]="permissionReasonForm" novalidate
+        (submit)="permissionReasonForm.valid && savePermissionReason()">
+        <div class="card-content p-05">
+          <mat-form-field (click)="$event.stopPropagation();" class="full-width">
+            <input formControlName="permissionReason" matInput
+              placeholder="{{'FEEDTIMESHEET.ENTERPERMISSION'|translate}}">
+            <mat-error>
+              <span
+                *ngIf="permissionReasonForm.get('permissionReason').hasError('required') && permissionReasonForm.get('permissionReason').touched">{{'FEEDTIMESHEET.PERMISSIONREASONTEXT'|translate}}
+              </span>
+              <span
+                *ngIf="permissionReasonForm.get('permissionReason').hasError('maxlength')">{{'FEEDTIMESHEET.PERMISSIONREASONMAXLENGTH'
+                | translate}}</span>
+            </mat-error>
+          </mat-form-field>
+          <div class="text-center">
+            <button mat-raised-button color="primary" class="mr-05"
+              [disabled]="!permissionReasonForm.valid || savePermissionInProgress" (click)="$event.stopPropagation();">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savePermissionInProgress">
+              </mat-progress-bar>
+              <fa-icon icon="plus" class="mr-05"></fa-icon> {{'FEEDTIMESHEET.ADD'|translate}}
+            </button>
+            <button mat-raised-button (click)="closePermissionReasonForm()" [disabled]="savePermissionInProgress">
+              <fa-icon icon="times" class="mr-05"></fa-icon> {{'FEEDTIMESHEET.CANCEL'|translate}}
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #upsertBreakPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{breakEdit}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="pr-1 pl-1">
+        <form [formGroup]="breakForm" #formDirective="ngForm" novalidate
+          (submit)="breakForm.valid && upsertBreakDetails()">
+          <div fxLayout="column">
+            <mat-form-field class="full-width feed_timesheet">
+              <!-- <input formControlName="breakInTime" matInput placeholder="{{'FEEDTIMESHEET.BREAKINTIME'|translate}}"
+                aria-label="24hr format" [ngxTimepicker]="fullTime4" [format]="24" readonly
+                (click)="breakstarttimeshow();" [(ngModel)]="breakstarttimepicker" />
+              <ngx-material-timepicker #fullTime4 [cancelBtnTmpl]="breakstartcancelBtn" [confirmBtnTmpl]="confirmBtn">
+              </ngx-material-timepicker> -->
+              <input [min]="minDateTime" formControlName="breakInTime" matInput
+                [owlDateTimeTrigger]="BreakStartDatePicker" [owlDateTime]="BreakStartDatePicker"
+                placeholder="{{'FEEDTIMESHEET.BREAKINTIME'|translate}}" [(ngModel)]="breakstarttimepicker">
+              <owl-date-time [startAt]="breakstarttimeshow()" #BreakStartDatePicker></owl-date-time>
+              <span class="close-icon-padding close_icon pull-right">
+                <mat-icon *ngIf="breakstarttimepicker" class="icon-button" aria-hidden="false"
+                  (click)="closebreakstarttime()" style="cursor:pointer">close</mat-icon>
+              </span>
+            </mat-form-field>
+            <ng-template #breakstartcancelBtn>
+              <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;">
+                {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+            </ng-template>
+
+            <mat-form-field class="full-width feed_timesheet">
+              <!-- <input formControlName="breakOutTime" matInput placeholder="{{'FEEDTIMESHEET.BREAKOUTTIME'|translate}}"
+                aria-label="24hr format" [ngxTimepicker]="fullTime5" [format]="24" readonly
+                (click)="breakendtimeshow();" [(ngModel)]="breakendtimepicker" />
+              <ngx-material-timepicker #fullTime5 [cancelBtnTmpl]="breakendcancelBtn" [confirmBtnTmpl]="confirmBtn">
+              </ngx-material-timepicker> -->
+              <input [min]="minDateTime" formControlName="breakOutTime" matInput
+                [owlDateTimeTrigger]="BreakEndDatePicker" [owlDateTime]="BreakEndDatePicker"
+                placeholder="{{'FEEDTIMESHEET.BREAKOUTTIME'|translate}}" [(ngModel)]="breakendtimepicker">
+              <owl-date-time [startAt]="breakendtimeshow()" #BreakEndDatePicker></owl-date-time>
+              <span class="close-icon-padding close_icon pull-right">
+                <mat-icon *ngIf="breakendtimepicker" class="icon-button" aria-hidden="false"
+                  (click)="closebreakendtime()" style="cursor:pointer">close</mat-icon>
+              </span>
+            </mat-form-field>
+            <mat-form-field class="full-width  feed_timesheet">
+              <mat-select formControlName="timeZoneId" placeholder="{{'TIMEZONE.SELECTUSERTIMEZONE'|translate}}"
+                required>
+                <mat-option [value]="timeZone.timeZoneId" *ngFor="let timeZone of timeZones">
+                  {{timeZone.timeZoneTitle}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="breakForm.get('timeZoneId').hasError('required') && breakForm.get('timeZoneId').touched">
+                  {{ 'TIMEZONE.USERTIMEZONEISREQUIRED' | translate}}
+                </span>
+              </mat-error>
+            </mat-form-field>
+            <ng-template #breakendcancelBtn>
+              <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;">
+                {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+            </ng-template>
+
+            <ng-template #confirmBtn>
+              <p class="feedtimesheet-datepicker-button">{{'FEEDTIMESHEET.OK' | translate}}</p>
+            </ng-template>
+
+            <div class="text-center">
+              <button mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!breakForm.valid || (savingTimeSheetInProgress)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingTimeSheetInProgress">
+                </mat-progress-bar>
+                <span *ngIf="true">
+                  <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+                </span>
+                <span *ngIf="false">
+                  <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                </span>
+              </button>
+              <button mat-button mat-raised-button (click)="closePopover();(false)"
+                [disabled]="(savingTimeSheetInProgress)">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</ng-container>
+
+<app-common-message-box *ngIf="!canAccess_feature_AddOrUpdateTimesheetentry"
+  textToDisplay="{{ 'FEEDTIMESHEET.ALERTMESSAGE' | translate }}">
+</app-common-message-box>

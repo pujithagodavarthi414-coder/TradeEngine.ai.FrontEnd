@@ -1,0 +1,189 @@
+<div class="full-height" *ngIf="(canAccess_feature_ViewBadgesAssignedToEmployee)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span *ngIf="(isAssign == false)" class="hide-content-overflow"
+                        matTooltip="{{'BADGE.BADGESACHIEVED' | translate }}">
+                        {{'BADGE.BADGESACHIEVED' | translate | titlecase }}
+                    </span>
+                    <span *ngIf="(isAssign == true)" class="hide-content-overflow"
+                        matTooltip="{{'BADGE.AWARDABADGE' | translate }}">
+                        {{'BADGE.AWARDABADGE' | translate | titlecase }}
+                    </span>
+                </div>
+                <div fxFlex="45px" *ngIf="(canAccess_feature_CanAssignBadgeToEmployee) && (isAssign == false)"
+                    class="search_goalinput ml-1">
+                    <button mat-icon-button matTooltip="{{ 'BADGE.AWARDABADGE' | translate }}"
+                        (click)="aggignBadgePopupOpen();clearForm()">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+    </mat-card>
+
+    <div class="no-drag">
+        <div class="m-0 p-0" *ngIf="isAssign == false && badges.length > 0">
+            <mat-list-item *ngFor="let badge of (badges)">
+                <mat-card class="project-card status-report-card p-05 custom-widget-grid-title-a">
+                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                        <div fxFlex="150px" [matTooltip]="badge.description">
+                            <app-avatar [name]="badge.badgeName | removeSpecialCharacters"
+                                [src]="badge.imageUrl | fetchSizedAndCachedImage: '130':''" [isRound]="false"
+                                size="110">
+                            </app-avatar>
+                        </div>
+                        <div fxFlex class="mr-1">
+                            <div fxLayout="row wrap" fxLayoutGap="2px">
+                                <div fxFlex class="testsuite-title-overflow">
+                                    <span class="testsuites-on-hover" [matTooltip]="badge.badgeName"
+                                        matTooltipClass="tooltip-overflow"><b>{{badge.badgeName}}</b>
+                                    </span>
+                                </div>
+                                <div fxFlex="25px" *ngIf="(canAccess_feature_CanAssignBadgeToEmployee)">
+                                    <fa-icon class="float-right icons-visible-a  mat-color-accent"
+                                        matTooltip="{{ 'BADGE.REMOVEBADGE' | translate }}"
+                                        [satPopoverAnchorFor]="deleteBadgePopover" #deleteBadgePopUp="satPopoverAnchor"
+                                        (click)="deleteBadgePopUpOpen(badge,deleteBadgePopUp);$event.stopPropagation();"
+                                        icon="trash">
+                                    </fa-icon>
+                                </div>
+                            </div>
+                            <div fxLayout="row">
+                                <div fxFlex class="" (mouseover)="checkTitleTooltipStatus(badge.badgeDescription)">
+                                    <p class="mat-small mb-05 app-badgecomment-overflow" #description
+                                        [matTooltip]="showTitleTooltip ? badge.badgeDescription : ''"
+                                        matTooltipClass="tooltip-overflow" matTooltipShowDelay="200">
+                                        {{badge.badgeDescription}}</p>
+                                </div>
+                            </div>
+                            <div fxLayout="row wrap">
+                                <div fxFlex=100 class="hide-content-overflow">
+                                    <span class="pull-right mat-body-1">
+                                        <div class="icon-button" fxLayout="row">
+                                            <div class="mt-02">
+                                                <b>{{ 'BADGE.AWARDEDBY' | translate }}</b>&nbsp;-&nbsp;
+                                            </div>
+                                            <div
+                                                *ngIf="badge.assignedByProfileImage != null && badge.assignedByProfileImage != ''">
+                                                <app-avatar
+                                                    [src]="badge.assignedByProfileImage | fetchSizedAndCachedImage: '30':''"
+                                                    [isRound]="true" size="30">
+                                                </app-avatar>
+                                            </div>
+                                            <div
+                                                *ngIf="badge.assignedByProfileImage == null || badge.assignedByProfileImage == ''">
+                                                <app-avatar [name]="badge.assignedBy | removeSpecialCharacters"
+                                                    [isRound]="true" size="30">
+                                                </app-avatar>
+                                            </div>
+                                            <span class="mt-02 hide-content-overflow" fxFlex>
+                                                &nbsp;{{ badge.assignedBy }}
+                                            </span>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </mat-card>
+            </mat-list-item>
+        </div>
+        <mat-card *ngIf="!isAnyOperationIsInprogress && isAssign == false && badges.length == 0"
+            class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+            <div fxLayout="row" fxFlex="100">
+                <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                    <p class="m-0">{{'BADGE.NOBADGESNOUND' | translate }}</p>
+                </div>
+            </div>
+        </mat-card>
+        <div class="m-1 p-0" *ngIf="isAssign == true">
+            <mat-card-content class="P-05">
+                <form [formGroup]="badgeForm" #formDirective="ngForm" novalidate
+                    (submit)="badgeForm.valid && AssignBadge()">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="badgeId" placeholder="{{ 'BADGE.BADGETITLE' | translate }}"
+                                required>
+                                <mat-option [value]="mainBadge.badgeId" *ngFor="let mainBadge of badgesList">
+                                    {{ mainBadge.badgeName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="badgeForm.get('badgeId').hasError('required') && badgeForm.get('badgeId').touched">
+                                {{ 'BADGE.BADGEISREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="badgeDescription" rows="2"
+                                placeholder="{{ 'BADGE.DESCRIPTION' | translate }}"></textarea>
+                            <mat-error *ngIf="badgeForm.get('badgeDescription').hasError('maxlength')">
+                                {{ 'BADGE.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="assignedTo" placeholder="{{ 'BADGE.AWARDTO' | translate }}"
+                                multiple required>
+                                <app-select-all [model]="badgeForm.get('assignedTo')" [values]="employeeIds">
+                                </app-select-all>
+                                <mat-option [value]="employee.employeeId" *ngFor="let employee of employees">
+                                    {{ employee.nickName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="badgeForm.get('assignedTo').hasError('required') && badgeForm.get('assignedTo').touched">
+                                {{ 'BADGE.ASSIGNEISREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="mt-1" fxLayoutAlign="center center">
+                        <button mat-raised-button color="primary" class="mr-1" [disabled]="!(badgeForm.valid)">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertBadgePopup()" type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </div>
+    </div>
+
+    <!--Delete Badge dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteBadgePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">{{ 'BADGE.REMOVEBADGE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1">
+                    {{ 'BADGE.REMOVEBADGEFOREMPLOYEE' | translate }}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteBadge();" *ngIf="!isArchived">
+                        <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'DELETE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteBadgeDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Delete Badge dialog-->
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewBadgesAssignedToEmployee) "
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,184 @@
+<div class="full-height p-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip="{{ 'PERFORMANCE.PERFORMANCEREPORT' | translate | titlecase }}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{ 'PERFORMANCE.PERFORMANCEREPORT' | translate | titlecase }} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="searchFilter">
+                    {{ 'ACTIVITYTRACKER.SEARCH' | translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="entityFilter">
+                    {{ 'ASSETS.ENTITY' | translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="userFilter">
+                    {{ 'PERFORMANCE.EMPLOYEE' | translate }}</button>
+            </mat-menu>
+            <mat-menu #entityFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}"
+                                [(ngModel)]="selectedEntity" (selectionChange)="entityValues($event.value,$event)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                                    {{entity.name}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #userFilter>
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate}}"
+                                [(ngModel)]="employeeId" (selectionChange)="getEmployee($event.value,$event)">
+                                <mat-select-trigger>
+                                    {{employeeName}}
+                                </mat-select-trigger>
+                                <mat-option value="0">All</mat-option>
+                                <mat-option *ngFor="let employee of employeeList" value="option" [value]="employee.id">
+                                    <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                                        [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" src="{{employee.profileImage}}"
+                                        *ngIf="employee.profileImage">
+                                    {{employee.fullName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #searchFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <div fxLayout="row">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+                                    (input)="getAllPerformances()">
+                            </mat-form-field>
+                            <span class="close_icon mr-05">
+                                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+                                    (click)="$event.stopPropagation;closeSearch()" style="cursor:pointer">
+                                    close</mat-icon>
+                            </span>
+                        </div>
+                    </div>
+                </mat-card>
+            </mat-menu>
+        </div>
+    </mat-card-title>
+
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+            <b>Search:&nbsp;</b>
+            {{ searchText }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearchFilter()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="employeeName">
+            <b>Employee name:&nbsp;</b>
+            {{ employeeName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="getEmployee('0',null)">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="entityName">
+            <b>Entity name:&nbsp;</b>
+            {{ entityName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="entityValues('0',null)">
+            </fa-icon>
+        </mat-chip>
+    </div>
+    <div class="no-drag p-05" *ngIf="data">
+        <kendo-grid #grid [data]="gridData" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort" [scrollable]="true" 
+            [group]="state.group" [sortable]="true" [pageable]="true"
+            [groupable]="{ showFooter: false, enabled: false }" (dataStateChange)="dataStateChange($event)">
+
+            <kendo-grid-column field="performanceName" title="{{ 'PERFORMANCE.PERFORMANCE' | translate }}" [width]="200">                
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row" (click)="goToUserProfile(dataItem.ofUserId)">
+                        <div *ngIf="dataItem.OfUserImage != null && dataItem.OfUserImage != ''">
+                            <app-avatar [src]="dataItem.OfUserImage | fetchSizedAndCachedImage: '30':''"
+                                [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div *ngIf="dataItem.OfUserImage == null || dataItem.OfUserImage == ''">
+                            <app-avatar [name]="dataItem.ofUserName | removeSpecialCharacters" [isRound]="true"
+                                size="30"></app-avatar>
+                        </div>
+                        <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.ofUserName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.performanceName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="configurationName"
+                title="{{ 'TIMECONFIGURATIONSETTINGS.CONFIGURATIONNAME' | translate }}" [width]="500">
+            </kendo-grid-column>
+            <kendo-grid-column field="submittedByName" title="{{ 'PERFORMANCE.REVIEWBY' | translate}}" [width]="200">
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row" (click)="goToUserProfile(dataItem.submittedBy)">
+                        <div *ngIf="dataItem.submittedByImage != null && dataItem.submittedByImage != ''">
+                            <app-avatar [src]="dataItem.submittedByImage | fetchSizedAndCachedImage: '30':''"
+                                [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div *ngIf="dataItem.submittedByImage == null || dataItem.submittedByImage == ''">
+                            <app-avatar [name]="dataItem.submittedByName | removeSpecialCharacters" [isRound]="true"
+                                size="30"></app-avatar>
+                        </div>
+                        <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.submittedByName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.submittedByName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdDateTime" title="{{ 'PERFORMANCE.STARTEDON' | translate }}" [width]="150">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.createdDateTime | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm'  }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="latestModificationOn" title="{{ 'PERFORMANCE.CLOSEDON' | translate }}" [width]="150">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.latestModificationOn | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm'  }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="status" title="{{ 'STATUS' | translate }}" [width]="150"></kendo-grid-column>
+            <kendo-grid-command-column title="{{'PERFORMANCE.PREVIEWFORM' | translate}}" [width]="80">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="eye"
+                        matTooltip="{{ 'PERFORMANCE.PREVIEWFORM' | translate}}"
+                        (click)="openAddNewConfiguration(dataItem,false)"></fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+            <kendo-grid-excel fileName="Performance-Reports.xlsx"></kendo-grid-excel>
+        </kendo-grid>
+        <div *ngIf="isAnyOperationIsInProgress" class="k-i-loading"></div>
+        <app-common-message-box *ngIf="!data" textToDisplay="No data to display">
+        </app-common-message-box>
+    </div>
+    <app-common-message-box *ngIf="!isAnyOperationIsInProgress && !data" textToDisplay="{{'NODATAFOUND' | translate}}">
+    </app-common-message-box>
+</div>

@@ -1,0 +1,65 @@
+<div (click)="$event.stopPropagation()" style="width: 300px;">
+  <mat-card-title class="text-center">
+    <div class="card-title-text p-05 mat-bg-primary">{{'COMPONENTS.ADDCOMPONENT'|translate}}</div>
+  </mat-card-title>
+  <form [formGroup]="projectFeatureForm" #formDirective="ngForm" novalidate
+    (submit)="projectFeatureForm.valid && saveProjectFeature()">
+    <div class="card-content p-05">
+
+      <mat-form-field class="full-width">
+        <input formControlName="projectFeatureName" matInput placeholder="{{'COMPONENTS.ENTERCOMPONENTNAME'|translate}}"
+          (keypress)="omitSpecialChar($event)" (keyup)="removeSpecialCharacter()" trim required />
+        <mat-error>
+          <span *ngIf="
+            projectFeatureForm.get('projectFeatureName').hasError('required') &&
+              projectFeatureForm.get('projectFeatureName')
+                .touched
+            ">{{'COMPONENTS.PLEASEENTERCOMPONENTNAME'|translate}} </span>
+          <span *ngIf="
+              projectFeatureForm
+                .get('projectFeatureName')
+                .hasError('maxlength')
+            ">{{'COMPONENTS.COMPONENTNAMECANNOTEXCEED250CHARACTERS'|translate}} </span>
+        </mat-error>
+      </mat-form-field>
+      <mat-error>
+        <span
+          *ngIf="!isAllowSpecialCharacter">{{ 'COMPONENTS.COMPONENTNAMECANNOTSTARTWITHSPECIALCHARACTERS' | translate }}</span>
+      </mat-error>
+
+      <mat-form-field class="full-width">
+        <mat-select formControlName="projectFeatureResponsiblePersonId"
+          (selectionChange)="getResponsiblePerson($event.value)"
+          placeholder="{{'ASSETS.SELECTEMPLOYEENAME'|translate | softLabelsPipe : softLabels}}">
+          <mat-select-trigger *ngIf="selectedMember">
+            {{selectedMember}}
+          </mat-select-trigger>
+          <mat-select-trigger *ngIf="!selectedMember">
+            {{'COMPONENTS.SELECT' | translate}}
+          </mat-select-trigger>
+          <mat-option [value]="0">{{'COMPONENTS.SELECTNONE'|translate}}</mat-option>
+          <mat-option value="option" *ngFor="let user of (allUsers$ | async)" [value]="user.id">
+            <app-avatar class="employee_img" *ngIf="!user.profileImage" [name]="user.fullName | removeSpecialCharacters"
+              [isRound]="true" size="30"></app-avatar>
+            <img class="employee_img" *ngIf="user.profileImage"
+              [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.fullName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="text-center">
+        <button type="submit" mat-raised-button color="primary" class="mr-05"
+          [disabled]="!projectFeatureForm.valid ||(anyOperationInProgress$ | async) "
+          (click)="$event.stopPropagation()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon icon="plus" class="mr-05"></fa-icon>
+          {{'ADD'|translate}}
+        </button>
+        <button type="button" mat-button mat-raised-button (click)="closeFeatureDialog()"
+          [disabled]="(anyOperationInProgress$ | async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon>{{'CANCEL'|translate}}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

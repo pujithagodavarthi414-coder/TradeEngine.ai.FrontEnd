@@ -1,0 +1,181 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageBugPriority && isBugBoardEnable">
+  <mat-card class="p-0 canteen-manage m-0 ">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span class="hide-content-overflow" matTooltip="{{ 'BUGPRIORITY.BUGPRIORITYTITLE' | translate | titlecase }}"
+            matTooltipPosition="right">{{ 'BUGPRIORITY.BUGPRIORITYTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="280px" class="search_goalinput ml-1 mr-1" fxLayoutAlign="end center">
+          <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-form-field class="full-width">
+              <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                [(ngModel)]="searchText" (input)="filterByName($event)">
+            </mat-form-field>
+          </div>
+          <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+            style="right: 0px !important">
+            <span *ngIf="!searchText"></span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div>
+    <div class="activity-data no-drag pagination-move-left">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="100" [rows]="bugpriorities" [loadingIndicator]="isAnyOperationIsInprogress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column minWidth="150" name="{{ 'BUGPRIORITY.PRIORITYNAME' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="priorityName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.priorityName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'BUGPRIORITY.COLOR' | translate }}" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div [ngStyle]="{ 'background' : row.color }" style="width:100px;">
+              &nbsp;
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'BUGPRIORITY.ORDER' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="order">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.order }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'BUGPRIORITY.DESCRIPTION' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="description">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div [matTooltip]="row?.description">
+              {{ row?.description }}
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'BUGPRIORITY.EDITBUGPRIORITYTITLE' | translate }}" *ngIf="!isArchived"
+              [satPopoverAnchorFor]="upsertBugPriorityPopover" #upsertBugPriorityPopUp="satPopoverAnchor"
+              (click)="editBugPriority(row,upsertBugPriorityPopUp)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+
+    <!--Edit bug-priority dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertBugPriorityPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <div fxFlex="400px">
+        <mat-card class="p-0 mr-0">
+          <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary mb-1">
+              {{ 'BUGPRIORITY.EDITBUGPRIORITYTITLE' | translate }}</div>
+          </mat-card-title>
+          <mat-card-content class="P-05">
+            <form [formGroup]="bugPriorityForm" #formDirective="ngForm" novalidate
+              (submit)="bugPriorityForm.valid && upsertBugPriority(formDirective)">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="priorityName"
+                  placeholder="{{ 'BUGPRIORITY.BUGPRIORITYNAMEPLACEHOLDER' | translate }}" required>
+                <mat-error *ngIf="bugPriorityForm.get('priorityName').hasError('maxlength')">
+                  {{ 'BUGPRIORITY.MAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="bugPriorityForm.get('priorityName').hasError('required') && bugPriorityForm.get('priorityName').touched">
+                  {{ 'BUGPRIORITY.NAMEREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width status-color">
+                <input formControlName="color" matInput placeholder="{{ 'BUGPRIORITY.BUGSTATUSCOLOR' | translate }}"
+                  [(colorPicker)]="color" [cpPosition]="'top'" [style.background]="color"
+                  (colorPickerChange)="bugPriorityForm.get('color').setValue($event)" [value]="color" required />
+                <mat-error
+                  *ngIf="bugPriorityForm.get('color').hasError('required') && bugPriorityForm.get('color').touched">
+                  {{ 'BUGPRIORITY.COLORREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <input matInput formControlName="description" placeholder="{{ 'BUGPRIORITY.DESCRIPTION' | translate }}"
+                  required [errorStateMatcher]="matcher">
+                <mat-error *ngIf="bugPriorityForm.get('description').hasError('maxlength')">
+                  {{ 'BUGPRIORITY.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="bugPriorityForm.get('description').hasError('required') && bugPriorityForm.get('description').touched">
+                  {{ 'BUGPRIORITY.DESCRIPTIONREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              <div class="mt-1 text-center">
+                <button mat-raised-button color="primary" class="mr-1"
+                  [disabled]="!bugPriorityForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button type="button" (click)="closeUpsertBugPriorityPopup(formDirective)">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </sat-popover>
+    <!--Edit bug-priority dialog-->
+
+    <!--Delete bug-priority dialog-->
+    <sat-popover backdropClass="backdrop-color" #archiveBugPriorityPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isArchived">
+            {{ 'BUGPRIORITY.ARCHIVEBUGPRIORITY' | translate }} </div>
+          <div class="card-title-text mb-1" *ngIf="isArchived">
+            {{ 'BUGPRIORITY.UNARCHIVEBUGPRIORITY' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="!isArchived">
+            {{ 'BUGPRIORITY.ARCHIVEBUGPRIORITYTEXT' | translate }}
+          </div>
+          <div class="card-content mb-1" *ngIf="isArchived">
+            {{ 'BUGPRIORITY.UNARCHIVEBUGPRIORITYTEXT' | translate }}
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center">
+            <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteBugPriorityType();">
+              <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteBugPriorityType();">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeArchiveBugPriorityTypeDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete bug-priority dialog-->
+  </div>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_ManageBugPriority && isBugBoardEnable"
+  textToDisplay="{{ 'BUGPRIORITY.PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+
+<app-common-message-box *ngIf="!isBugBoardEnable"
+  textToDisplay="{{ 'PROJECTS.PLEASECONFIGUREBUGSETTINGS' | translate }}">
+</app-common-message-box>

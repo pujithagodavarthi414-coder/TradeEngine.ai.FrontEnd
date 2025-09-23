@@ -1,0 +1,742 @@
+<div fxLayout="row wrap" fxFlex class="pl-1 mb-05 superagile-userstory_title" *ngIf="isDataExists">
+    <!--breadcrumb-->
+    <ng-container *ngIf="breadcrumb && breadcrumb?.length > 0">
+        <div fxLayout="row wrap" fxFlex="45" fxLayoutAlign="start center" *ngIf="breadcrumb && breadcrumb?.length > 0">
+            <span *ngFor="let folder of (breadcrumb);let i = index" class="mt-05">
+                <span (click)="goTo(folder.folderId)" *ngIf="i >= 0"
+                    [ngClass]="(breadcrumb)?.length != (i + 1) ? 'icon-button mat-color-accent' : ''">{{folder.folderName  | softLabelsPipe :softLabels}}</span>
+                <fa-icon class="rotate-icon ml-05 mr-05" icon="chevron-right"
+                    *ngIf="(breadcrumb)?.length != (i + 1) && i >= 0"></fa-icon>
+            </span>
+        </div>
+    </ng-container>
+    <!--breadcrumb-->
+    <span fxFlex fxLayoutAlign="start center" class="mat-color-accent">
+        <h3>{{folderName | softLabelsPipe :softLabels}}</h3>
+    </span>
+    <!--Menu icons-->
+    <div fxFlex fxLayoutAlign="end center">
+        <ng-container *ngIf="isEnabled && selectedParentFolderId">
+            <div *ngIf="(!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview)"
+                [ngStyle]="{  'background':isEditorVisible ? 'none' : ''}">
+                <fa-icon class="icon-button mr-1 mat-color-accent fa-lg" icon="edit" style="float: right;"
+                    *ngIf="!isEditorVisible && description != null"
+                    matTooltip="{{'DOCUMENTMANAGEMENT.EDITDESCRIPTION' | translate}}"
+                    (click)="isEditorVisible = !isEditorVisible">
+                </fa-icon>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="isEnabled && selectedParentFolderId">
+            <div *ngIf="(!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview)"
+                [ngStyle]="{ 'background':isEditorVisible ? 'none' : ''}">
+                <fa-icon class="icon-button mr-1 mat-color-accent fa-lg" icon="times" style="float: right;"
+                    *ngIf="isEditorVisible && description != null" matTooltip="{{'CANCEL' | translate}}"
+                    (click)="closeDescriptionEditor()">
+                </fa-icon>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="permissionToUpload && canAccess_feature_UploadFiles">
+            <button fxFlex="40px" mat-icon-button matTooltip="{{'DOCUMENTMANAGEMENT.UPLOADFILES' | translate}}"
+                [satPopoverAnchorFor]="fileUploadDropzonePopover" #fileUploadDropzonePopup="satPopoverAnchor"
+                (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+                <fa-icon icon="file-upload" class="filter mat-color-accent fa-lg"></fa-icon>
+            </button>
+        </ng-container>
+        <ng-container *ngIf="permissionToUpload && canAccess_feature_CreateFolder">
+            <button fxFlex="40px" mat-icon-button matTooltip="{{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}"
+                [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+                (click)="addUpsertFolderPopup(upsertFolderPopup)" class="pr-05"
+                [ngStyle]="{ 'margin-right': filesAndFoldersList && filesAndFoldersList.length > 0 ? '' : '1.5rem' }">
+                <mat-icon class="icon-button mat-color-accent">create_new_folder</mat-icon>
+            </button>
+        </ng-container>
+        <ng-container *ngIf="!isGrid && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+            <button fxFlex="40px" mat-icon-button (click)="viewChange(true)" matTooltip="{{'GRIDVIEW' | translate}}"
+                style="margin-right: 1.5rem;">
+                <mat-icon class="icon-button mat-color-accent">grid_on</mat-icon>
+            </button>
+        </ng-container>
+        <ng-container *ngIf="isGrid && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+            <button fxFlex="40px" mat-icon-button (click)="viewChange(false)" matTooltip="{{'TABLEVIEW' | translate}}"
+                style="margin-right: 1.5rem;">
+                <mat-icon class="icon-button mat-color-accent">list</mat-icon>
+            </button>
+        </ng-container>
+    </div>
+    <!--Menu icons-->
+</div>
+
+<div fxLayout="row" id="style-1" class="full-width" *ngIf="isDataExists"
+    [ngClass]="isFromDocumentsApp ? 'full-height' : (isFromGoals ? 'document-content-goals' : (isFromAudits ? 'document-audit-content' : (isFromConducts ? 'documents-conducts-content' : (isFromConductUnique ? 'documents-conduct-unique-content' : 'document-content'))))">
+    <div fxFlex="27px" class="ml-05 mt-03" *ngIf="showTreeView && isTreeviewPinned">
+        <div class='custom-label veritcal-label'>
+            <div class='custom-label-content' (click)="pinTreeView()">
+                {{'DOCUMENTMANAGEMENT.TREESTRUCTURE' | translate}} <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+                        [ngClass]="{'rotate-icon-down': isTreeviewPinned}">
+                    </fa-icon>
+                </span>
+            </div>
+        </div>
+    </div>
+    <as-split direction="horizontal" unit="percent" gutterSize="5">
+        <as-split-area order="1" size="20" minSize="20" [visible]="!isTreeviewPinned" class="document-tree-panel-color">
+            <div fxFlex class="document-tree document-tree-panel-color"
+                [ngClass]="isFromDocumentsApp ? 'full-height' : ''" id="style-1">
+                <div fxLayout="row wrap">
+                    <div *ngIf="!isFromDocumentsApp">
+                        <ng-container *ngIf="permissionToUpload && canAccess_feature_UploadFiles">
+                            <button fxFlex="40px" mat-icon-button
+                                matTooltip="{{'DOCUMENTMANAGEMENT.UPLOADFILES' | translate}}"
+                                [satPopoverAnchorFor]="fileUploadDropzonePopover"
+                                #fileUploadDropzonePopup="satPopoverAnchor"
+                                (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+                                <fa-icon icon="file-upload" class="filter mat-color-accent fa-lg"></fa-icon>
+                            </button>
+                        </ng-container>
+                        <ng-container *ngIf="permissionToUpload && canAccess_feature_CreateFolder">
+                            <button fxFlex="40px" mat-icon-button
+                                matTooltip="{{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}"
+                                [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+                                (click)="addUpsertFolderPopup(upsertFolderPopup)">
+                                <mat-icon class="icon-button mat-color-accent">create_new_folder</mat-icon>
+                            </button>
+                        </ng-container>
+                        <ng-container *ngIf="!isGrid && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+                            <button fxFlex="40px" mat-icon-button class="mr-05" (click)="isGrid = !isGrid"
+                                matTooltip="{{'GRIDVIEW' | translate}}">
+                                <mat-icon class="icon-button mat-color-accent">grid_on</mat-icon>
+                            </button>
+                        </ng-container>
+                        <ng-container *ngIf="isGrid && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+                            <button fxFlex="40px" mat-icon-button class="mr-05" (click)="isGrid = !isGrid"
+                                matTooltip="{{'TABLEVIEW' | translate}}">
+                                <mat-icon class="icon-button mat-color-accent">list</mat-icon>
+                            </button>
+                        </ng-container>
+                    </div>
+                    <div fxFlex fxLayoutGap="10px" fxLayoutAlign="start center"
+                        *ngIf="showTreeView && !isTreeviewPinned">
+                        <fa-icon icon="expand-alt" class="mat-color-accent fa-lg ml-05" *ngIf="!isTreeviewExpanded"
+                            matTooltip="{{'DOCUMENTMANAGEMENT.EXPANDALL' | translate}}" style="cursor: pointer;"
+                            (click)="isToExpandTreeview(true)">
+                        </fa-icon>
+                        <fa-icon icon="compress-alt" class="mat-color-accent fa-lg ml-05" *ngIf="isTreeviewExpanded"
+                            matTooltip="{{'DOCUMENTMANAGEMENT.COLLAPSEALL' | translate}}" style="cursor: pointer;"
+                            (click)="isToExpandTreeview(false)">
+                        </fa-icon>
+                    </div>
+                    <div fxFlex fxLayoutAlign="end center" class="pull-right mr-05"
+                        *ngIf="showTreeView && !isTreeviewPinned">
+                        <span class="document-pin-close">
+                            <mat-icon class="icon-button cursor-pointer mat-color-accent" (click)="pinTreeView()"
+                                aria-hidden="false">
+                                push_pin</mat-icon>
+                        </span>
+                        <!-- <fa-icon matTooltip="{{ 'EXPENSEMANAGEMENT.CLOSE' | translate}}" icon="times"
+                            (click)="pinTreeView()" style="cursor: pointer;">
+                        </fa-icon> -->
+                    </div>
+                </div>
+                <div *ngIf="showTreeView"
+                    [ngClass]="isFromDocumentsApp ? '' : (isFromGoals ? 'document-tree-view-panel-height-goals' : (isFromConductUnique ? 'document-conduct-unique-tree-view-panel-height' : (isFromConducts ? 'document-conducts-tree-view-panel-height' : 'document-tree-view-panel-height')))"
+                    id="style-1">
+                    <my-document-tree-view [userStoryId]="userStoryId" [filesInput]="filesInput" (fileDetailsLength)="fileDetailsLength($event)"
+                        [selectedFolderId]="selectedBreadcrumbFolderId" [isFileUploadCompleted]="isFileUploadCompleted"
+                        (deleteFolderDetails)="deletedFolderDetails($event)" (fileDelete)="fileDeleteCompleted()"
+                        [isFolderUploadCompleted]="isFolderUploadCompleted" [isTreeviewExpanded]="isTreeviewExpanded"
+                        (fileDetails)="selectedFileDetailsPreview($event)" (fileRename)="fileRenameCompleted($event)"
+                        [updatedFileId]="updatedFileId" [updatedFolderId]="updatedFolderId"
+                        [isFromDocumentsApp]="isFromDocumentsApp" [deletedFileId]="deletedFileId"
+                        [deletedFolderId]="deletedFolderId" (fileOrFolderMoved)="getFoldersAndFiles()"
+                        (isSubFolder)="getFoldersAndFiles()" (folderDelete)="folderDeleteCompleted()"
+                        (parentFolderId)="setParentFolderId($event)" [storeDetails]="selectedstoreDetails"
+                        [permissionToUpload]="permissionToUpload">
+                    </my-document-tree-view>
+                </div>
+            </div>
+        </as-split-area>
+        <as-split-area order="2" size="80" minSize="50"
+            [ngClass]="isFromDocumentsApp ? '' : 'document-description-height'">
+
+            <div class="folders-files-list-height" id="widget-scroll-id">
+                <div fxFlex id="style-1" class="flex-div-btn"
+                    [ngClass]="isFromDocumentsApp ? '' : (isFromAudits ? 'document-list-audits-panel-height' : (isFromConducts ? 'documents-list-conducts-panel-height' : (isFromConductUnique ? 'documents-list-conduct-unique-panel-height' : 'document-list-panel-height')))">
+                    <!--Description-->
+                    <ng-container *ngIf="isEnabled && selectedParentFolderId">
+                        <div fxFlex
+                            *ngIf="(!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview)"
+                            class="p-05 flex-row-dir-app" [ngStyle]="{  'background':isEditorVisible ? 'none' : ''}">
+                            <!-- <fa-icon class="icon-button mr-1 mat-color-accent" icon="edit" style="float: right;"
+                            *ngIf="!isEditorVisible && description != null"
+                            (click)="isEditorVisible = !isEditorVisible">
+                        </fa-icon> -->
+                            <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                                <div *ngIf="description && !isEditorVisible" [innerHTML]="description | sanitizeHtml">
+                                </div>
+                            </div>
+                            <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                                <span *ngIf="description == null && !isEditorVisible" style="cursor: pointer;"
+                                    class="description-text" (click)="isEditorVisible = !isEditorVisible">
+                                    <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                                </span>
+                            </div>
+                            <div *ngIf="isEditorVisible">
+                                <div class="full-width custom-input">
+                                    <editor class="dfree-header custom-logtime-comment"
+                                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" [init]="initSettings"
+                                        placeholder="Description" menubar="false" background="white"
+                                        (onBlur)="handleDescriptionEvent($event)" [(ngModel)]="description">
+                                    </editor>
+                                </div>
+                                <div class="text-center">
+                                    <button mat-button mat-raised-button class="mat-primary mr-1"
+                                        (click)="handleDescriptionEvent($event)" type="button">
+                                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                                    </button>
+                                    <button mat-button mat-raised-button (click)="closeDescriptionEditor()"
+                                        type="button">
+                                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <!--Description-->
+
+                    <!--Grid view-->
+                    <ng-container
+                        *ngIf="isGrid && (!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview) && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+                        <div fxLayout=" row wrap" class="document-view" id="widget-scroll-id">
+                            <ng-container *ngIf="filesAndFoldersList && filesAndFoldersList.length > 0">
+                                <div fxFlex="150px" class="p-05" *ngFor="let file of filesAndFoldersList">
+                                    <span [matMenuTriggerFor]="fileMenu" [matMenuTriggerData]="{file: file}"
+                                        #fileMenuTrigger="matMenuTrigger"></span>
+                                    <span [matMenuTriggerFor]="folderMenu" [matMenuTriggerData]="{folder: file}"
+                                        #folderMenuTrigger="matMenuTrigger"></span>
+                                    <div fxLayout="column" fxLayoutAlign="space-between center"
+                                        (contextmenu)="file.isFolder ? openFolderMenu($event, folderMenuTrigger) : openFileMenu($event, fileMenuTrigger)">
+                                        <mat-icon *ngIf="!file.isFolder"
+                                            class="file-or-folder-icon icon-button mat-color-accent">
+                                            insert_drive_file</mat-icon>
+                                        <mat-icon *ngIf="file.isFolder" (click)="navigateGrid(file)"
+                                            class="file-or-folder-icon icon-button mat-color-accent">
+                                            folder</mat-icon>
+                                        <span class="file-or-folder-name-align"
+                                            [matTooltip]="file.name">{{setLabelNameForDropzone(file.name)}}</span>
+                                    </div>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </ng-container>
+                    <!--Grid view-->
+
+                    <!--Table view-->
+                    <ng-container
+                        *ngIf="!isGrid && (!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview) && (filesAndFoldersList && filesAndFoldersList.length > 0)">
+                        <div class="activity-data document-view">
+                            <ng-container>
+                                <kendo-grid [data]="filesListGridData" [pageSize]="state1.take" [skip]="state1.skip"
+                                    [sort]="state1.sort" [filter]="state1.filter" [sortable]="true" [pageable]="true"
+                                    [scrollable]="true" [filterable]="false"
+                                    (dataStateChange)="dataStateChangeFiles($event)" (cellClick)="navigate($event)"
+                                    [selectable]="true">
+                                    <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+                                        pagerItems="{{'ITEMS' | translate}}" pagerOf="{{'OF' | translate}}">
+                                    </kendo-grid-messages>
+                                    <kendo-grid-column field="name" title="{{'HRMANAGAMENT.NAME' | translate}}"
+                                        [width]="450">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <div *ngIf="!dataItem.isFolder">
+                                                <fa-icon class="icon-button mr-05 mat-color-accent" icon="file">
+                                                </fa-icon><span
+                                                    [matTooltip]="dataItem.fileName">{{ dataItem.name }}</span>
+                                            </div>
+                                            <div *ngIf="dataItem.isFolder">
+                                                <fa-icon class="icon-button mr-05 mat-color-accent" icon="folder">
+                                                </fa-icon><span
+                                                    [matTooltip]="dataItem.folderName">{{ dataItem.name }}</span>
+                                            </div>
+                                        </ng-template>
+                                    </kendo-grid-column>
+                                    <kendo-grid-column width="100" field="createdDateTime"
+                                        title="{{'DOCUMENTMANAGEMENT.DATECREATED' | translate}}">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <div *ngIf="dataItem.createdDateTime !=null">
+                                                {{ dataItem.createdDateTime | date: "dd-MMM-yyyy" }}
+                                            </div>
+                                        </ng-template>
+                                    </kendo-grid-column>
+                                    <kendo-grid-column width="100" field="fileExtension"
+                                        title="{{'TESTMANAGEMENT.TYPE' | translate}}">
+                                    </kendo-grid-column>
+                                    <kendo-grid-column width="100" field="count"
+                                        title="{{'LICENSETYPE.COUNT' | translate}}">
+                                    </kendo-grid-column>
+                                    <kendo-grid-column width="100" field="size"
+                                        title="{{'DOCUMENTMANAGEMENT.SIZE' | translate}}">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <span *ngIf="!dataItem.isFolder"
+                                                [matTooltip]="dataItem.size | filesize">{{ dataItem.size | filesize }}</span>
+                                            <span *ngIf="dataItem.isFolder"
+                                                [matTooltip]="dataItem.size | filesize">{{ dataItem.size | filesize }}</span>
+                                        </ng-template>
+                                    </kendo-grid-column>
+                                    <kendo-grid-command-column width="100" *ngIf="isFromDocumentsApp && isReviewEnabled"
+                                        field="reviewedDateTime"
+                                        title="{{'DOCUMENTMANAGEMENT.REVIEWFILE' | translate}}">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <div
+                                                *ngIf="(canAccess_feature_ReviewFile) && !dataItem.isFolder && dataItem.name != null">
+                                                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text"
+                                                    mat-sm-chip
+                                                    *ngIf="dataItem.isToBeReviewed && (dataItem.reviewedDateTime == null)"
+                                                    [satPopoverAnchorFor]="reviewFilePopover"
+                                                    #reviewFilePopup="satPopoverAnchor"
+                                                    (click)="reviewFilePopupOpen(dataItem,reviewFilePopup);$event.stopPropagation()"
+                                                    [ngStyle]="{ 'backgroundColor':  'gray' }">
+                                                    {{'DOCUMENTMANAGEMENT.REVIEWFILE' | translate}}
+                                                </mat-chip>
+                                            </div>
+                                            <div
+                                                *ngIf="dataItem.reviewedDateTime != null && !dataItem.isFolder && dataItem.name != null">
+                                                <span
+                                                    [matTooltip]="dataItem.reviewedDateTime | date: 'mediumDate'">{{ dataItem.reviewedDateTime | date: 'mediumDate' }}
+                                                </span></div>
+                                        </ng-template>
+                                    </kendo-grid-command-column>
+                                    <kendo-grid-column width="100" *ngIf="isFromDocumentsApp && isReviewEnabled"
+                                        field="reviewedByUserName"
+                                        title="{{'DOCUMENTMANAGEMENT.REVIEWEDBY' | translate}}">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <span *ngIf="!dataItem.isFolder && dataItem.name != null"
+                                                [matTooltip]="dataItem.reviewedByUserName">{{ dataItem.reviewedByUserName }}</span>
+                                        </ng-template>
+                                    </kendo-grid-column>
+                                    <kendo-grid-command-column width="150" title="{{'ACTIONS' | translate}}">
+                                        <ng-template kendoGridCellTemplate let-dataItem>
+                                            <ng-container *ngIf="(dataItem.fileExtension == '.jpeg') || (dataItem.fileExtension == '.jpg') || (dataItem.fileExtension == '.png') || (dataItem.fileExtension == '.gif') || (dataItem.fileExtension == '.JPEG') || (dataItem.fileExtension == '.JPG') || (dataItem.fileExtension == '.PNG') || (dataItem.fileExtension == '.GIF')"> 
+                                                <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"
+                                                    matTooltip="{{'DOCUMENTMANAGEMENT.VIEWIMAGE' | translate}}"
+                                                    (click)="openPreview(dataItem);$event.stopPropagation()"></fa-icon>
+                                            </ng-container>
+                                        <ng-container *ngIf="(dataItem.fileExtension == '.pdf' || dataItem.fileExtension == '.PDF' )">
+                                           <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"
+                                               matTooltip="{{'DOCUMENTMANAGEMENT.VIEW' | translate}}"
+                                               (click)="previewPdfPopup(dataItem.filePath)"></fa-icon>
+                                           </ng-container> 
+                                           <ng-container *ngIf="( dataItem.fileExtension == '.csv'|| dataItem.fileExtension == '.CSV')">
+                                            <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"
+                                                matTooltip="{{'DOCUMENTMANAGEMENT.VIEW' | translate}}"
+                                                (click)="previewCsvPopup(dataItem.filePath)"></fa-icon>
+                                            </ng-container> 
+                                           <ng-container *ngIf="(dataItem.fileExtension == '.xls' || dataItem.fileExtension == '.xlsx' || dataItem.fileExtension == '.doc'|| dataItem.fileExtension == '.docx' ||
+                                           dataItem.fileExtension == '.XLS' || dataItem.fileExtension == '.XLSX' || dataItem.fileExtension == '.DOC'|| dataItem.fileExtension == '.DOCX')">
+                                           <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"
+                                               matTooltip="{{'DOCUMENTMANAGEMENT.VIEW' | translate}}"
+                                               (click)="previewOfficePopup(dataItem.filePath)"></fa-icon>
+                                           </ng-container> 
+ 
+                                             <ng-container
+                                                *ngIf="!((dataItem.fileExtension == '.jpeg') || (dataItem.fileExtension == '.jpg') || (dataItem.fileExtension == '.png') || (dataItem.fileExtension == '.gif') || (dataItem.fileExtension == '.JPEG') || (dataItem.fileExtension == '.JPG') || (dataItem.fileExtension == '.PNG') || (dataItem.fileExtension == '.GIF'))"> 
+                                                
+                                                <fa-icon *ngIf="!dataItem.isFolder && dataItem.name"
+                                                    class="icon-button mr-1 mat-color-accent" icon="download"
+                                                    matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILETEXT' | translate}}"
+                                                    (click)="downloadFile(dataItem);$event.stopPropagation()"></fa-icon>
+                                            </ng-container>
+                                            <fa-icon class="icon-button mr-1 mat-color-accent" icon="pen"
+                                                *ngIf="!dataItem.isFolder && (canAccess_feature_UploadFiles) && (permissionToUpload || isFromDocumentsApp)"
+                                                matTooltip="{{'DOCUMENTMANAGEMENT.RENAMEFILE' | translate}}"
+                                                [satPopoverAnchorFor]="renameFilePopover"
+                                                #renameFilePopup="satPopoverAnchor"
+                                                (click)="editFileNamePopupOpen(renameFilePopup,dataItem);$event.stopPropagation()">
+                                            </fa-icon>
+                                            <fa-icon class="icon-button mr-1 mat-color-accent" icon="edit"
+                                                matTooltip="{{'DOCUMENTMANAGEMENT.EDITFOLDER' | translate}}"
+                                                [satPopoverAnchorFor]="upsertFolderPopover"
+                                                *ngIf="dataItem.isFolder && canAccess_feature_CreateFolder && (permissionToUpload || isFromDocumentsApp)"
+                                                #upsertFolderPopup="satPopoverAnchor"
+                                                (click)="editUpsertFolderPopup(dataItem,upsertFolderPopup);$event.stopPropagation()">
+                                            </fa-icon>
+                                            <fa-icon class="icon-button mr-1 mat-color-accent" icon="copy"
+                                                *ngIf="!dataItem.isFolder"
+                                                matTooltip="{{'DOCUMENTMANAGEMENT.COPYTHELINK' | translate}}"
+                                                (click)="copyFileUrl(dataItem);$event.stopPropagation()"> 
+                                            </fa-icon>
+                                            <!-- <fa-icon class="icon-button mr-1 mat-color-accent" icon="file-signature"
+                                            *ngIf="dataItem.fileName && (canAccess_feature_InviteeForSignature)"
+                                            matTooltip="{{'DOCUMENTMANAGEMENT.INVITEEFORSIGNATURE' | translate}}"
+                                            (click)="inviteeForSignature(dataItem);$event.stopPropagation()">
+                                        </fa-icon> -->
+                                            <ng-container>
+                                                <fa-icon class="icon-button mat-color-accent" icon="trash"
+                                                    *ngIf="!dataItem.isFolder && (permissionToUpload || isFromDocumentsApp)"
+                                                    matTooltip="{{'DOCUMENTMANAGEMENT.DELETEFILE' | translate}}"
+                                                    [satPopoverAnchorFor]="deleteFilePopover"
+                                                    #deleteFilePopup="satPopoverAnchor"
+                                                    (click)="deleteFilePopupOpen(dataItem,deleteFilePopup);$event.stopPropagation()">
+                                                </fa-icon>
+                                                <fa-icon class="icon-button mat-color-accent" icon="trash"
+                                                    *ngIf="dataItem.isFolder && canAccess_feature_CreateFolder && (permissionToUpload || isFromDocumentsApp)"
+                                                    matTooltip="{{'DOCUMENTMANAGEMENT.DELETEFOLDER' | translate}}"
+                                                    #deleteFolderPopup="satPopoverAnchor"
+                                                    [satPopoverAnchorFor]="deleteFolderPopover"
+                                                    (click)="deleteFolderPopupOpen(dataItem,deleteFolderPopup);$event.stopPropagation()">
+                                                </fa-icon>
+                                            </ng-container>
+                                            <!-- <fa-icon class="icon-button ml-1 mat-color-accent fa-lg" icon="folder-plus"
+                                            matTooltip="{{'DOCUMENTMANAGEMENT.ADDSUBFOLDER' | translate}}"
+                                            [satPopoverAnchorFor]="upsertFolderPopover"
+                                            *ngIf="dataItem.isFolder && permissionToUpload && canAccess_feature_CreateFolder"
+                                            #upsertFolderPopup="satPopoverAnchor"
+                                            (click)="addFolderFromParent(dataItem,upsertFolderPopup);$event.stopPropagation()">
+                                        </fa-icon> -->
+                                        </ng-template>
+                                    </kendo-grid-command-column>
+                                    <!-- <ng-template kendoPagerTemplate let-totalPages="totalPages1"
+                                    let-currentPage="currentPage1">
+                                    <kendo-pager-prev-buttons *ngIf="pageable1"></kendo-pager-prev-buttons>
+                                    <kendo-pager-numeric-buttons *ngIf="pageable1" [buttonCount]="4">
+                                    </kendo-pager-numeric-buttons>
+                                    <kendo-pager-next-buttons *ngIf="pageable1"></kendo-pager-next-buttons>
+                                    <kendo-pager-info></kendo-pager-info>
+                                </ng-template> -->
+                                </kendo-grid>
+                            </ng-container>
+                        </div>
+                    </ng-container>
+                    <!--Table view-->
+
+                    <!--Upload buttons if file/folders not exist-->
+                    <div fxLayout="row" fxLayoutAlign="center center" fxLayout.xs="column" class="mt-1 flex-div-btn-center"
+                        *ngIf="(!isImagePreview && !isAudioPreview && !isPdfPreview && !isVideoPreview && !isOtherPreview) && (filesAndFoldersList && filesAndFoldersList.length == 0)">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            *ngIf="(permissionToUpload || isFromDocumentsApp) && canAccess_feature_UploadFiles"
+                            [satPopoverAnchorFor]="fileUploadDropzonePopover"
+                            #fileUploadDropzonePopup="satPopoverAnchor"
+                            (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+                            <fa-icon class="mr-05" icon="file-upload"></fa-icon>
+                            {{'DOCUMENTMANAGEMENT.UPLOADFILES' | translate}}
+                        </button>
+                        <button mat-raised-button color="primary" class="mr-1"
+                            *ngIf="(permissionToUpload || isFromDocumentsApp) && canAccess_feature_CreateFolder"
+                            [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+                            (click)="addUpsertFolderPopup(upsertFolderPopup)">
+                            <fa-icon class="mr-05" icon="plus"></fa-icon> {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+                        </button>
+                    </div>
+                    <!--Upload buttons if file/folders not exist-->
+
+                    <!--Files preview-->
+                    <ng-container>
+                        <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center center" *ngIf="isImagePreview">
+                            <!-- <app-common-message-box textToDisplay="{{'DOCUMENTMANAGEMENT.IMAGEOPENMESSAGE' | translate}}">
+                        </app-common-message-box>
+                        <fa-icon class="icon-button mr-1 mat-color-accent" icon="external-link-alt"
+                            style="float: right;" (click)="downloadFile(srcData);$event.stopPropagation()">
+                        </fa-icon> -->
+                            <img src="{{srcData?.filePath}}" alt="{{srcData?.fileName}}">
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center center" *ngIf="isOtherPreview">
+                            <app-common-message-box
+                                textToDisplay="{{'DOCUMENTMANAGEMENT.THISFILECANNOTBEPREVIEWEDCLICKHERETODOWNLOADIT' | translate}}">
+                            </app-common-message-box>
+                            <fa-icon class="icon-button mr-1 mat-color-accent" icon="download"
+                                matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILETEXT' | translate}}" style="float: right;"
+                                (click)="downloadFile(srcData);$event.stopPropagation()">
+                            </fa-icon>
+                        </div>
+                        <div *ngIf="isPdfPreview">
+                            <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center center">
+                                <app-common-message-box
+                                    textToDisplay="{{'DOCUMENTMANAGEMENT.CLICKHERETODOWNLOADIT' | translate}}">
+                                </app-common-message-box>
+                                <fa-icon class="icon-button mr-1 mat-color-accent" icon="download"
+                                    matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILETEXT' | translate}}"
+                                    style="float: right;" (click)="downloadFile(srcData);$event.stopPropagation()">
+                                </fa-icon>
+                            </div>
+                            <div id="style-1" class="pdf-height" *ngIf="srcData && srcData?.sanitizedFilePath">
+                                <embed type="application/pdf" [src]="srcData?.sanitizedFilePath"
+                                    class="full-width pdf-height">
+                            </div>
+                        </div>
+                        <div fxFlex fxLayoutAlign="center" *ngIf="isAudioPreview">
+                            <audio controls>
+                                <source src="{{srcData?.filePath}}">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                        <div *ngIf="isVideoPreview">
+                            <video controls autoplay class="full-width video-panel-height">
+                                <source src="{{srcData?.filePath}}">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    </ng-container>
+                    <!--Files preview-->
+
+                    <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center center" class="mt-1"
+                        *ngIf="(filesAndFoldersList && filesAndFoldersList.length > 0) || (isImagePreview || isAudioPreview || isPdfPreview || isVideoPreview || isOtherPreview)">
+                        <div class="text-hover"
+                            *ngIf="(permissionToUpload || isFromDocumentsApp) && canAccess_feature_UploadFiles">
+                            <a [satPopoverAnchorFor]="fileUploadDropzonePopover"
+                                #fileUploadDropzonePopup="satPopoverAnchor"
+                                (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">{{'DOCUMENTMANAGEMENT.UPLOADFILES' | translate}}</a>
+                        </div>
+                        <div class="text-hover"
+                            *ngIf="(permissionToUpload || isFromDocumentsApp) && canAccess_feature_CreateFolder">
+                            <a [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+                                (click)="addUpsertFolderPopup(upsertFolderPopup)">{{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </as-split-area>
+    </as-split>
+</div>
+
+<!--image preview-->
+<ng-container *ngIf="galleryImages && galleryImages.length > 0">
+    <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyPreviewGallery>
+    </ngx-gallery>
+</ng-container>
+<!--image preview-->
+
+<div *ngIf="loading" class="k-i-loading">
+</div>
+
+<!--Upload buttons if file/folders not exist-->
+<div fxLayout="row" fxLayoutAlign="center center" fxLayout.xs="column" class="mt-1" *ngIf="!isDataExists">
+    <app-common-message-box textToDisplay="{{'DOCUMENTMANAGEMENT.NOFILESALERTMESSAGE' | translate}}">
+    </app-common-message-box>
+</div>
+<div fxLayout="row" fxLayoutAlign="center center" fxLayout.xs="column" class="mt-1" *ngIf="!isDataExists">
+    <button mat-raised-button color="primary" class="mr-1"
+        *ngIf="(isFromDocumentsApp || permissionToUpload) && canAccess_feature_UploadFiles"
+        [satPopoverAnchorFor]="fileUploadDropzonePopover" #fileUploadDropzonePopup="satPopoverAnchor"
+        (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+        <fa-icon class="mr-05" icon="file-upload"></fa-icon>
+        {{'DOCUMENTMANAGEMENT.UPLOADFILES' | translate}}
+    </button>
+    <button mat-raised-button color="primary" class="mr-1"
+        *ngIf="(isFromDocumentsApp || permissionToUpload) && canAccess_feature_CreateFolder"
+        [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+        (click)="addUpsertFolderPopup(upsertFolderPopup)">
+        <fa-icon class="mr-05" icon="plus"></fa-icon> {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+    </button>
+</div>
+<!--Upload buttons if file/folders not exist-->
+
+<sat-popover #upsertFolderPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <app-document-component-add-folder [editFolderDetails]="editFolderDetails" [selectedStoreId]="selectedStoreId"
+        [selectedParentFolderId]="folderParentId ? folderParentId : selectedParentFolderId"
+        (closePopup)="closeUpsertFolderPopup($event)" [isFromDocumentsApp]="isFromDocumentsApp"
+        [folderReferenceId]="folderReferenceId" [folderReferenceTypeId]="folderReferenceTypeId">
+    </app-document-component-add-folder>
+</sat-popover>
+
+<sat-popover #deleteFolderPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" horizontalAlign="end">
+    <app-document-component-delete-folder-and-file [editFolderDetails]="editFolderDetails" [isFolder]="isFolder"
+        (closeDeletionPopup)="cancelFolderDelete($event)" [isFromDocumentsApp]="isFromDocumentsApp">
+    </app-document-component-delete-folder-and-file>
+</sat-popover>
+
+<sat-popover #deleteFilePopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" horizontalAlign="end">
+    <app-document-component-delete-folder-and-file [fileDetailsData]="fileDetailsData" [isFolder]="isFolder"
+        (closeDeletionPopup)="cancelFileDelete($event)" [isFromDocumentsApp]="isFromDocumentsApp">
+    </app-document-component-delete-folder-and-file>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #renameFilePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" [interactiveClose]="false" [autoFocus]="false" [restoreFocus]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                <span>
+                    {{'DOCUMENTMANAGEMENT.RENAMEFILE' | translate}}
+                </span>
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <form [formGroup]="uploadFileForm" #formDirective="ngForm" novalidate
+                (submit)="uploadFileForm.valid && upsertFileName()">
+                <div>
+                    <mat-form-field class="full-width">
+                        <input matInput formControlName="fileName"
+                            placeholder="{{'DOCUMENTMANAGEMENT.FILENAME' | translate}}" required trim>
+                        <mat-error *ngIf="uploadFileForm.get('fileName').hasError('maxlength')">
+                            {{'DOCUMENTMANAGEMENT.FILENAMEMAXLENGTHERROR' | translate}}</mat-error>
+                        <mat-error
+                            *ngIf="uploadFileForm.get('fileName').hasError('required') && uploadFileForm.get('fileName').touched">
+                            {{'DOCUMENTMANAGEMENT.FILENAMEREQUIREDERROR' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="text-center mt-1">
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!uploadFileForm.valid || isFileRenameInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isFileRenameInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertFilePopup()" type="button"
+                        [disabled]="isFileRenameInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #reviewFilePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                {{'DOCUMENTMANAGEMENT.REVIEWFILE' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1 mt-05 ">
+                {{'DOCUMENTMANAGEMENT.REVIEWCONFIRMATIONMESSAGE' | translate}}
+            </div>
+            <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                fxLayoutAlign.xs="center center">
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="reviewFile()" color="primary"
+                        [disabled]="isReviewInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isReviewInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> Yes
+                    </button>
+                </div>
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeReviewFilePopup()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<ng-template #previewPdfDialogComponent let-data>
+  <button class="close" mat-button mat-dialog-title (click)="closeDialog()" style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+        <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+        </fa-icon></button>
+     <embed type="application/pdf" [src]="pdf" class="full-width pdf-height">
+</ng-template>
+
+<ng-template #previewcsvDialogComponent let-data>
+  <button class="close" mat-button mat-dialog-title (click)="closeDialog()" style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+        <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+        </fa-icon></button>
+        <ngx-doc-viewer  url="{{csv}}"  viewer="google" style="width:100%;height:100%;"></ngx-doc-viewer>
+</ng-template>
+
+  <ng-template #previewofficeDialogComponent let-data>
+    <button class="close" mat-button mat-dialog-title (click)="closeDialog()" style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+        <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+        </fa-icon></button>
+    <ngx-doc-viewer  url="{{office}}"  viewer="office" style="width:100%;height:100%;"></ngx-doc-viewer>
+  </ng-template>
+
+<mat-menu #folderMenu="matMenu" [overlapTrigger]="false">
+    <ng-template matMenuContent let-folder="folder">
+        <ng-container
+            *ngIf="((canAccess_feature_EditStores) ? true : isUserStore) && storeDetails && !storeDetails.isCompany">
+            <button mat-menu-item [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+                (click)="editUpsertFolderPopup(folder,upsertFolderPopup);$event.stopPropagation()"
+                *ngIf="(permissionToUpload || isFromDocumentsApp)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="pen"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.RENAME' | translate}}</span>
+            </button>
+            <button mat-menu-item #deleteFolderPopup="satPopoverAnchor" [satPopoverAnchorFor]="deleteFolderPopover"
+                (click)="deleteFolderPopupOpen(folder,deleteFolderPopup);$event.stopPropagation()"
+                *ngIf="(permissionToUpload || isFromDocumentsApp)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="trash"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.DELETE' | translate}}</span>
+            </button>
+            <!-- <button mat-menu-item [satPopoverAnchorFor]="upsertFolderPopover"
+                *ngIf="folder.isFolder && permissionToUpload && canAccess_feature_CreateFolder"
+                #upsertFolderPopup="satPopoverAnchor"
+                (click)="addFolderFromParent(folder,upsertFolderPopup);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="folder-plus"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.ADDSUBFOLDER' | translate}}</span>
+            </button> -->
+        </ng-container>
+    </ng-template>
+</mat-menu>
+
+<mat-menu #fileMenu="matMenu" [overlapTrigger]="false">
+    <ng-template matMenuContent let-file="file">
+        <ng-container>
+            <button mat-menu-item *ngIf="(canAccess_feature_UploadFiles) && (permissionToUpload || isFromDocumentsApp)"
+                [satPopoverAnchorFor]="renameFilePopover" #renameFilePopup="satPopoverAnchor"
+                (click)="editFileNamePopupOpen(renameFilePopup,file);$event.stopPropagation()">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="pen"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.RENAMEFILE' | translate}}</span>
+            </button>
+        </ng-container>
+        <ng-container
+            *ngIf="(file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF')">
+            <button mat-menu-item (click)="openPreview(file)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.VIEWIMAGE' | translate}}</span>
+            </button>
+        </ng-container>
+        <ng-container
+            *ngIf="!((file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF'))">
+            <button mat-menu-item (click)="downloadFile(file)">
+                <fa-icon class="icon-button mr-1 mat-color-accent" icon="download"></fa-icon>
+                <span>{{'DOCUMENTMANAGEMENT.DOWNLOADFILETEXT' | translate}}</span>
+            </button>
+        </ng-container>
+        <button mat-menu-item (click)="copyFileUrl(file)">
+            <fa-icon class="icon-button mr-1 mat-color-accent" icon="copy"></fa-icon>
+            <span>{{'DOCUMENTMANAGEMENT.COPYTHELINK' | translate}}</span>
+        </button>
+        <button mat-menu-item [satPopoverAnchorFor]="deleteFilePopover" #deleteFilePopup="satPopoverAnchor"
+            (click)="deleteFilePopupOpen(file,deleteFilePopup);$event.stopPropagation()"
+            *ngIf="(permissionToUpload || isFromDocumentsApp)">
+            <fa-icon class="icon-button mr-1 mat-color-accent" icon="trash"></fa-icon>
+            <span>{{'DOCUMENTMANAGEMENT.DELETE' | translate}}</span>
+        </button>
+    </ng-template>
+</mat-menu>
+
+<sat-popover #fileUploadDropzonePopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closeUploadFilePopup(false)">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="m-1">
+            <ng-container>
+                <div class="m-1">
+                       <app-dropzone [userStoryId]="userStoryId" [moduleTypeId]="moduleTypeId" [referenceTypeId]="folderReferenceTypeId"
+                        [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                        [referenceId]="selectedParentFolderId ? selectedParentFolderId: folderReferenceId"
+                        [fileTypeReferenceId]="folderReferenceId"
+                        [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="false"
+                        (closeFilePopup)="closeUploadFilePopup(true)" [removeFiles]="removeFiles">
+                    </app-dropzone>
+                </div>
+            </ng-container>
+        </div>
+    </mat-card>
+</sat-popover>

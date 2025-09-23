@@ -1,0 +1,287 @@
+<div>
+    <mat-card class="filter-data p-0" style="height: calc(100vh - 50px);" id="style-1">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{ 'PURCHASE.PURCHASESHIPMENTEXECUTIONFORM' |
+                        translate }}</span>
+                </div>
+            </div>
+        </mat-card-title>
+        <form [formGroup]="shipmentForm" novalidate #formDirective="ngForm"
+            (submit)="shipmentForm.valid && saveShipmentDetails()" class="pl-1 pr-1">
+            <div fxLayout="column">
+                <div class="masonry-with-columns" fxLayoutAlign="space-between none">
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text-drop-down">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="counterPartyId"
+                                placeholder="{{ 'PURCHASE.COUNTERPARTYNAME' |  translate }}" required>
+                                <mat-option value="option" *ngFor="let client of clientData" [value]="client.clientId">
+                                    {{client.fullName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('counterPartyId').hasError('required') && shipmentForm.get('counterPartyId').touched">
+                                    {{ 'PURCHASE.PLEASESELECTCOUNTERPARTYNAME' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input formControlName="contractNumber" matInput
+                                placeholder="{{ 'CONTRACT.CONTRACTNUMBER' |  translate }}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('contractNumber').hasError('required') && shipmentForm.get('contractNumber').touched">{{
+                                    'CONTRACT.PLEASEENTERCONTRACTNUMBER' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="contractDateFrom" formControlName="contractDateFrom"
+                                (click)="contractDateFrom.open();" required
+                                placeholder="{{ 'CONTRACT.CONTRACTFROM' |  translate }}">
+                            <mat-datepicker-toggle matSuffix [for]="contractDateFrom"></mat-datepicker-toggle>
+                            <mat-datepicker #contractDateFrom></mat-datepicker>
+                            <mat-error class="P-06"
+                                *ngIf="shipmentForm.get('contractDateFrom').hasError('required') && shipmentForm.get('contractDateFrom').touched">
+                                {{ 'PAYROLL.STARTDATEREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="contractDateTo" (click)="contractDateTo.open();"
+                                [min]="shipmentForm.get('contractDateFrom').value" required
+                                formControlName="contractDateTo" placeholder="{{ 'CONTRACT.CONTRACTTO' |  translate }}">
+                            <mat-datepicker-toggle matSuffix [for]="contractDateTo"></mat-datepicker-toggle>
+                            <mat-datepicker #contractDateTo></mat-datepicker>
+                            <mat-error class="P-06"
+                                *ngIf="shipmentForm.get('contractDateTo').hasError('required') && shipmentForm.get('contractDateTo').touched">
+                                {{ 'PAYROLL.ENDDATEREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text-drop-down">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="productId" placeholder="{{ 'CONTRACT.PRODUCT' |  translate }}"
+                                required>
+                                <mat-option value="option" *ngFor="let product of productList"
+                                    [value]="product.productId">
+                                    {{product.productName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('productId').hasError('required') && shipmentForm.get('productId').touched">{{
+                                    'CONTRACT.PLEASESELECTPRODUCT' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text-drop-down">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="gradeId" placeholder="{{ 'CONTRACT.GRADE' |  translate }}"
+                                required>
+                                <mat-option value="option" *ngFor="let grade of gradeList" [value]="grade.gradeId">
+                                    {{grade.gradeName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('gradeId').hasError('required') && shipmentForm.get('gradeId').touched">{{
+                                    'CONTRACT.PLEASESELECTGRADE' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input formControlName="rateOrTon" matInput trim mask="separator.2" thousandSeparator=","
+                                placeholder="{{ 'PURCHASE.PRICE(USD/TON)' |  translate }}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('rateOrTon').hasError('required') && shipmentForm.get('rateOrTon').touched">{{
+                                    'PURCHASE.PLEASEENTERPRICE(USD/TON)' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input formControlName="shipmentNumber" matInput
+                                placeholder="{{ 'PURCHASE.SHIPMENTNUMBER' |  translate }}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('shipmentNumber').hasError('required') && shipmentForm.get('shipmentNumber').touched">{{
+                                    'PURCHASE.PLEASEENTERSHIPMENTNUMBER' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input formControlName="shipmentQuantity" matInput
+                                placeholder="{{ 'PURCHASE.SHIPMENTQUANTITY' |  translate }}" required mask="separator.3"
+                                thousandSeparator=","
+                                (keypress)="numberOnlyWithVal($event, shipmentForm.value.shipmentQuantity)">
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('shipmentQuantity').hasError('required') && shipmentForm.get('shipmentQuantity').touched">{{
+                                    'PURCHASE.PLEASEENTERSHIPMENTQUANTITY' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input formControlName="remaningQuantity" matInput trim mask="separator.2"
+                                thousandSeparator=","
+                                placeholder="{{ 'PURCHASE.REMAININGCONTRACTQUANTITY' |  translate }}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('remaningQuantity').hasError('required') && shipmentForm.get('remaningQuantity').touched">{{
+                                    'PURCHASE.PLEASEENTERREMAININGCONTRACTQUANTITY' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" class="disable-text">
+                        <mat-form-field class="full-width">
+                            <input formControlName="blQuantity" matInput
+                                placeholder="{{ 'PURCHASE.TOTALBLQUANTITY' |  translate }}" mask="separator.3"
+                                thousandSeparator=","
+                                (keypress)="numberOnlyWithVal($event, shipmentForm.value.shipmentQuantity)">
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('blQuantity').hasError('required') && shipmentForm.get('blQuantity').touched">{{
+                                    'PURCHASE.PLEASEENTERTOTALBLQUANTITY' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="vesselId"
+                                placeholder="{{ 'PURCHASE.VESSELNAME' |  translate }}">
+                                <mat-option value="option" *ngFor="let vessel of vesselData" [value]="vessel.vesselId">
+                                    {{vessel.vesselName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('vesselId').hasError('required') && shipmentForm.get('vesselId').touched">
+                                    {{ 'PURCHASE.PLEASESELECTVESSELNAME' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input formControlName="voyageNumber" matInput
+                                placeholder="{{ 'PURCHASE.VOYAGENUMBER' |  translate }}">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="portLoadId"
+                                placeholder="{{ 'PURCHASE.PORTOFLOADING' |  translate }}" required>
+                                <mat-option value="option" *ngFor="let port of portDetailList" [value]="port.id">
+                                    {{port.name}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('portLoadId').hasError('required') && shipmentForm.get('portLoadId').touched">{{
+                                    'PURCHASE.PLEASEENTERPORTOFLOADING' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="portDischargeId"
+                                placeholder="{{ 'PURCHASE.PORTOFDISCHARGE' |  translate }}" required>
+                                <mat-option value="option" *ngFor="let port of portDetailList" [value]="port.id">
+                                    {{port.name}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="shipmentForm.get('portDischargeId').hasError('required') && shipmentForm.get('portDischargeId').touched">{{
+                                    'PURCHASE.PLEASEENTERPORTOFDISCHARGE' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="etaDateForVessel" formControlName="etaDate"
+                                (click)="etaDateForVessel.open();"
+                                placeholder="{{ 'PURCHASE.ETADATEFORVESSEL' |  translate }}">
+                            <mat-datepicker-toggle matSuffix [for]="etaDateForVessel"></mat-datepicker-toggle>
+                            <mat-datepicker #etaDateForVessel></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                    </div>
+                </div>
+            </div>
+            <div class="text-center" style="margin-bottom: 15px;">
+                <button mat-button mat-raised-button type="submit" color="primary" class="mr-1"
+                    [disabled]="!shipmentForm.valid || (isInProgress)">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                    </mat-progress-bar>
+                    <span>
+                        <fa-icon class="mr-05" icon="save"></fa-icon>{{'SAVE' | translate }}
+                    </span>
+                    <!-- <span *ngIf="selectedEmployeeContactDetailsData">
+                    <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                  </span> -->
+                </button>
+            </div>
+        </form>
+        <div class="pr-1 pl-1" *ngIf="purchaseShipmentId">
+            <app-supplier-bl (reloadPurchaseForm)="getShipmentExecutionDetails();"></app-supplier-bl>
+        </div>
+        <div *ngIf="purchaseShipmentId">
+            <div fxLayout="column">
+                <div class="masonry-with-columns" fxLayoutAlign="space-between none">
+                    <div fxFlex="30" fxLayout="row" class="pl-4">
+                        <div fxFlex="58" style="padding-top: 21px;">
+                            <label><b>{{ 'PURCHASE.BILLOFENTRY/DUTYPAYMENTWORKASSIGNEDTO' | translate }}:</b> </label>
+                        </div>
+                        <div fxFlex="38">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="Employee" [(ngModel)]="selectedEmployeeUserId"
+                                    (selectionChange)="employeeSelection($event)">
+                                    <mat-option value="option" *ngFor="let employee of employeesList"
+                                        [value]="employee.userId">
+                                        {{employee.userName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxFlex="70" fxLayout="row" class="pl-4">
+                        <div fxFlex="15" style="padding-top: 21px;">
+                            <label><b>{{ 'PURCHASE.BILLOFENTRYFILINGDUEDATE' | translate }}:</b> </label>
+                        </div>
+                        <div fxFlex="20">
+                            <mat-form-field class="full-width">
+                                <input matInput [matDatepicker]="dueDate" [(ngModel)]="selectedDueDate"
+                                    (click)="dueDate.open();" placeholder="Select Date" (dateChange)="dueDateChange()">
+                                <mat-datepicker-toggle matSuffix [for]="dueDate"></mat-datepicker-toggle>
+                                <mat-datepicker #dueDate></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+</div>

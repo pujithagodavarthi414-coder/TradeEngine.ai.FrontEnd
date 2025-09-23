@@ -1,0 +1,33 @@
+export class LeaveFrequencyTypeModel {
+    leaveTypeId: string;
+    leaveFrequencyId: string;
+    frequencyId: string;
+    leaveTypeName: string;
+    leaveTypeShortName: string;
+    noOfLeaves: number;
+    totalCount: number;
+    dateFrom: Date;
+    dateTo: Date;
+    isArchived: boolean;
+    encashMentTypeId: string;
+    leaveFormulaId: string;
+    noOfDaysToBeIntimated: number;
+    isToCarryForward: boolean;
+    restrictionTypeId: string;
+    carryForwardLeavesCount: number;
+    payableLeavesCount: number;
+    isToIncludeHolidays: boolean;
+    isToRepeatInterval: boolean;
+    paymentTypeId: string;
+    isAutoApproval: boolean;
+    isEncashable: boolean;
+    isToRepeatTheInterval: boolean;
+    isPaid: boolean;
+    leaveFrequencyCount: number;
+    timeStamp: any;
+    leaveFrequencyTimeStamp: any;
+    employmentStatusId: string;
+    masterLeaveTypeId: string;
+    leaveTypeColor: string;
+    encashedLeavesCount: number;
+}

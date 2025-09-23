@@ -1,0 +1,160 @@
+<div *ngIf="( canAccess_feature_ManageLeaveSession)">
+  <div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+          <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{ 'LEAVESESSION.LEAVESESSIONSTITLE' | translate | titlecase }}">{{ 'LEAVESESSION.LEAVESESSIONSTITLE' | translate | titlecase }}</span>
+          </div>
+          <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+            <mat-form-field class="full-width">
+              <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                [(ngModel)]="searchText" (input)="filterByName($event)">
+            </mat-form-field>
+            <div fxFlex="20px">
+              <span class="close_icon mr-lg-n5" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+    <div class="custom-table-height" id="style-1" *ngIf="(canAccess_feature_ManageLeaveSession)">
+      <div class="activity-data pagination-move-left">
+        <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+          [limit]="10" [rows]="leaveSessions" [loadingIndicator]="isAnyOperationIsInprogress"
+          [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+          <ngx-datatable-column name="{{ 'LEAVESESSION.LEAVESESSIONNAME' | translate }}" [flexGrow]="1"
+            [sortable]="true" prop="leaveSessionName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.leaveSessionName }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button class="text-center" title="{{'LEAVESESSION.EDITLEAVESESSION' | translate}}"
+                *ngIf="!isArchivedTypes" (click)="editLeaveSession(row,upsertLeaveSessionPopUp)"
+                [satPopoverAnchorFor]="upsertLeaveSessionPopover" #upsertLeaveSessionPopUp="satPopoverAnchor"
+                mat-icon-button>
+                <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+
+              <!-- <button class="text-center" title="{{'LEAVESESSION.ARCHIVELEAVESESSIONTITLE' | translate}}"
+            *ngIf="!isArchivedTypes" (click)="deleteLeaveSessionPopUpOpen(row,deleteLeaveSessionPopUp)"
+            [satPopoverAnchorFor]="deleteLeaveSessionPopover" #deleteLeaveSessionPopUp="satPopoverAnchor"
+            mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'LEAVESESSION.UNARCHIVELEAVESESSIONTITLE' | translate}}"
+            *ngIf="isArchivedTypes" [satPopoverAnchorFor]="deleteLeaveSessionPopover"
+            #deleteLeaveSessionPopUp="satPopoverAnchor"
+            (click)="deleteLeaveSessionPopUpOpen(row,deleteLeaveSessionPopUp)" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button> -->
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+
+      <!-- <div class="floating-right-fab-button" *ngIf="!isArchivedTypes">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{'LEAVESESSION.CREATELEAVESESSIONTOOLTIP' | translate}}"
+        [satPopoverAnchorFor]="upsertLeaveSessionPopover" #upsertLeaveSessionPopUp="satPopoverAnchor"
+        (click)="createLeaveSession(upsertLeaveSessionPopUp);clearForm()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div> -->
+
+      <!--Edit Leave Session dialog-->
+      <sat-popover backdropClass="backdrop-color" #upsertLeaveSessionPopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+          <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+              {{ leaveSessionEdit }}</div>
+          </mat-card-title>
+          <mat-card-content class="P-05">
+            <form [formGroup]="leaveSessionForm" #formDirective="ngForm" novalidate
+              (submit)="leaveSessionForm.valid && upsertLeaveSession(formDirective)">
+              <div>
+                <mat-form-field>
+                  <input matInput formControlName="leaveSessionName"
+                    placeholder="{{ 'LEAVESESSION.LEAVESESSIONNAME' | translate }}" required>
+                  <mat-error *ngIf="leaveSessionForm.get('leaveSessionName').hasError('maxlength')">
+                    {{ 'LEAVESESSION.MAXLENGTHERROR' | translate }}</mat-error>
+                  <mat-error
+                    *ngIf="leaveSessionForm.get('leaveSessionName').hasError('required') && leaveSessionForm.get('leaveSessionName').touched">
+                    {{ 'LEAVESESSION.REQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              </div>
+              <div class="mt-1">
+                <button mat-raised-button color="primary" class="mr-1"
+                  [disabled]="!leaveSessionForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertLeaveSessionPopup(formDirective)"
+                  type="button">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </sat-popover>
+      <!--Edit Leave Session dialog-->
+
+      <!--Delete Leave Session dialog-->
+      <sat-popover backdropClass="backdrop-color" #deleteLeaveSessionPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+          <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+              {{ 'LEAVESESSION.ARCHIVELEAVESESSIONTITLE' | translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+              {{ 'LEAVESESSION.UNARCHIVELEAVESESSIONTITLE' | translate }}</div>
+          </mat-card-title>
+          <mat-card-content>
+            <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+              {{ 'LEAVESESSION.ARCHIVELEAVESESSIONTEXT' | translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="isArchivedTypes">
+              {{ 'LEAVESESSION.UNARCHIVELEAVESESSIONTEXT' | translate }}
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            <div class="text-center">
+              <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+                [disabled]="isAnyOperationIsInprogress" (click)="deleteLeaveSession();">
+                <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+              </button>
+              <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+                [disabled]="isAnyOperationIsInprogress" (click)="deleteLeaveSession();">
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeDeleteLeaveSessionDialog();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </sat-popover>
+      <!--Delete Leave Session dialog-->
+    </div>
+  </div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_ManageLeaveSession)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

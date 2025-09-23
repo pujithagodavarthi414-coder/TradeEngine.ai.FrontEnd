@@ -1,0 +1,207 @@
+<div class="sprint-board custom-box p-0 m-0 user-card" id="style-1" >
+    <div  fxLayout="column">
+    <mat-progress-bar color="primary" mode="indeterminate"
+        *ngIf="(upsertSprintIsInProgress$|async) || (sprintUserStoryMovingIsInProgress$ | async)">
+    </mat-progress-bar>
+    <div fxFlex *ngIf="(canAccess_entityType_feature_ViewSprints) && isSprintsEnable">
+        <mat-card-content class="p-0  mb-0" #sprintsScroll infiniteScroll
+            [infiniteScrollDisabled]="(sprintsOperationInProgress$ | async)"
+            [infiniteScrollDistance]="sprintScrollDistance" [scrollWindow]="false"
+            [infiniteScrollThrottle]="sprintScrollThrottle" (scrolled)="onSprintsScrollDown()" id="style-1">
+            <div fxLayout="row wrap" class="full-width mt-05"
+                *ngIf="(sprintsOperationInProgress$|async) && sprintModel.pageNumber <= 1">
+                <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+                    <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+                        <div fxFlex="92" fxFlexOffset="10px">
+                            <div fxLayout="row p-05">
+
+                                <div fxFlex="39">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlex="1" fxFlexOffset="28">
+                                    <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlexOffset="6" fxFlex="13">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div *ngFor="let sprint of (sprints$|async)">
+                <div fxLayout="row wrap">
+                    <div fxFlex="100">
+                        <app-sprint-summary [sprint]="sprint" [showHeader]="showHeader && (sprintId == sprint.sprintId)"
+                            [selectedSprintId]="highLightSprintSelected(sprint.sprintId)"
+                            [treeStructure]="checkisTreeStructureEnabledForSprints(sprint)"
+                            (toggleTreeStructure)="toggleTreeStructure($event)"
+                            (selectedSprint)="selectedSprintId($event)"
+                            (saveMultipleUserStories)="saveMultipleUserStoriesEvent($event)">
+                        </app-sprint-summary>
+                    </div>
+                    <div fxFlex fxFlexOffset="1.5%" [hidden]="!(sprint.sprintId == sprintId && showUserStories)"
+                        class="full-width mb-05">
+                        <app-sprint-workitems-list *ngIf="sprint.sprintId == sprintId && sprintSearchCriteriaModel"
+                            [userStoryModel]="userStoryModel" [sprintSearchCriteriaModel]="sprintSearchCriteriaModel"
+                            [isBacklog]=true [sprint]="sprint" [isSprintUserStories]="true"
+                            (selectedUserStoryEvent)="selectedUserStoryEvent($event)"
+                            (selectedUserStoriesString)="showHeaderDetails($event)">
+                        </app-sprint-workitems-list>
+                        <div>
+                            <div fxFlex="80" fxLayoutAlign="center center" class="custom-dragdrop" *ngIf="canAccess_entityType_feature_CanMoveGoalWorkitemIntoSprints"
+                                dragula="sprintUserStories" [(dragulaModel)]="userStories" [attr.data-goalId]="sprintId"
+                                [ngStyle]="{ 'pointer-events': (sprintUserStoryMovingIsInProgress$ | async)  ? 'none' : '' }">
+                                <span fxLayoutAlign="center center" class="custom-drag-items-text"
+                                    *ngIf="!selectedDropId">{{'SPRINTS.PLANASPRINTBYDRAGGINGTHEWORKITEMS' | translate | softLabelsPipe : softLabels}}</span>
+                            </div>
+                        </div>
+
+                        <app-pm-component-create-userstory *ngIf="(canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem)" [sprintId]="sprintId" [goalStatusId]="goal.goalStatusId">
+                        </app-pm-component-create-userstory>
+                    </div>
+
+                </div>
+            </div>
+            <div class="m-1" *ngIf="(sprintsOperationInProgress$ | async) && sprintModel.pageNumber >1">
+                <div class="cs-loader">
+                    <div class="cs-loader-inner">
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                    </div>
+                </div>
+            </div>
+        </mat-card-content>
+    </div>
+
+    <app-pm-component-superagile-board [goal]="goal"
+        (searchUserStoriesBasedOnUserStoryName)="searchUserStoriesWithName($event)"
+        (searchUserStoriesBasedOnGoalName)="searchUserStoriesBasedOnGoalName($event)"
+        (searchUserStoriesBasedOnTags)="searchUserStoriesBasedOnTags($event)"
+        (selectedOwnerUserId)="selectedOwnerUserId($event)"
+        (selectedUserStoryTypeList)="selectedUserStoryTypeList($event)">
+    </app-pm-component-superagile-board>
+    <mat-card-content class="p-0 goalstatus user-story goalstatus-backlog mb-0" #scrollMe infiniteScroll
+        [infiniteScrollDisabled]="(anyOperationInProgress$ | async)" [infiniteScrollDistance]="scrollDistance"
+        [scrollWindow]="false" [infiniteScrollThrottle]="throttle" (scrolled)="onScrollDown()" id="style-1"
+        [ngClass]="{ 'goalstatus-height' : (isVisible)}">
+        <mat-list class="compact-list p-0">
+            <div fxLayout="row wrap" class="full-width mt-05"
+                *ngIf="(anyOperationInProgress$|async) && userStorySearchCriteria.pageNumber <= 1">
+                <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+                    <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+                        <div fxFlex="92" fxFlexOffset="10px">
+                            <div fxLayout="row p-05">
+
+                                <div fxFlex="39">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlex="1" fxFlexOffset="28">
+                                    <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlexOffset="6" fxFlex="13">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div *ngIf="!(anyOperationInProgress$ | async) && (userStories$ | async)?.length == 0">
+                    <app-common-message-box *ngIf="!(loadingEntityFeaturesinProgress$|async)"
+                        textToDisplay="{{ 'USERSTORY.USERSTORIESSNOTFOUND' | translate | softLabelsPipe : softLabels }}">
+                    </app-common-message-box>
+                </div>
+                <div dragula="sprintUserStories" [(dragulaModel)]="userStories" [attr.data-goalId]="goal.goalId"
+                    [ngStyle]="{ 'pointer-events': (sprintUserStoryMovingIsInProgress$ | async)  ? 'none' : '' }">
+                    <div class="user-story-list"
+                        *ngFor="let userStory of (userStories$ | async | sortByComponent:'order')"
+                        [attr.data-goalId]="userStory.goalId ? userStory.goalId : userStory.sprintId"
+                        [attr.data-userStoryId]="userStory.userStoryId"
+                        [ngStyle]="{ 'pointer-events': (sprintUserStoryMovingIsInProgress$ | async)  ? 'none' : '' }">
+                        <div fxLayout="row wrap">
+                            <div fxFlex="100"
+                                [ngStyle]="{ 'pointer-events': (sprintUserStoryMovingIsInProgress$ | async)  ? 'none' : '' }">
+                                <gc-userstory-summary class="full-width" [userStory]="userStory"
+                                    [userStoryChecked]="userStoryChecked" [isDeadlinedispaly]="isDeadlinedispaly"
+                                    [isArchivedGoal]="isArchivedGoal" [allUserStorieSelected]="allUserStorieSelected"
+                                    [userStorySelected]="highLightSelectedUserStory(userStory.userStoryId)"
+                                    [isSubTasksPage]=false [isAllGoalsPage]="false" [isUserStoriesPage]=true
+                                    [isSprintView]=true [page]="true" [isAddUserStory] = "(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                                    [treeStructure]="checkisTreeStructureEnabled(userStory.userStoryId)"
+                                    [goalReplanId]="goalReplanId"
+                                    (selectedToggleEvent)="selectedSprintUserStoryEvent($event)"
+                                    (selectUserStory)="selectedUserStory($event)">
+                                </gc-userstory-summary>
+                            </div>
+                            <div fxFlex fxFlexOffset="1.5%"
+                                [hidden]="!(userStory.userStoryId == userStoryId && showSubChilds)">
+                                <div *ngIf="userStory.subUserStoriesList && userStory.subUserStoriesList.length > 0"
+                                    class="subuserstory-list">
+
+                                    <div
+                                        *ngFor="let userStorySubTask of (userStory.subUserStoriesList | sortByComponent:'order')">
+                                        <gc-userstory-summary class="full-width" [userStory]="userStorySubTask"
+                                            [userStoryChecked]="userStoryChecked" [isArchivedGoal]="isArchivedGoal"
+                                            [allUserStorieSelected]="allUserStorieSelected" [isSubTasksPage]=false
+                                            [treeStructure]="checkisTreeStructureEnabled(userStorySubTask.userStoryId)"
+                                            [userStorySelected]="highLightSelectedUserStory(userStorySubTask.userStoryId)"
+                                            [isAllGoalsPage]="false" [isSprintView]=true [isUserStoriesPage]=true
+                                            [page]="true" [goalReplanId]="goalReplanId" [isAddUserStory] = "(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                                            [isDeadlinedispaly]="isDeadlinedispaly"
+                                            (selectUserStory)="selectedUserStory($event)">
+                                        </gc-userstory-summary>
+                                    </div>
+
+                                </div>
+                                <app-pm-component-create-userstory
+                                    *ngIf="(canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem)"
+                                    [goalId]="goal.goalId" [goalStatusId]="goal.goalStatusId"
+                                    [userStoryId]="userStory.userStoryId" (openNewUserStory)="openNewUserStory($event)">
+                                </app-pm-component-create-userstory>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div></div>
+        </mat-list>
+        <div class="m-1" *ngIf="(anyOperationInProgress$ | async) && userStorySearchCriteria.pageNumber >1">
+            <div class="cs-loader">
+                <div class="cs-loader-inner">
+                    <label> ●</label>
+                    <label> ●</label>
+                    <label> ●</label>
+                    <label> ●</label>
+                    <label> ●</label>
+                    <label> ●</label>
+                </div>
+            </div>
+        </div>
+    </mat-card-content>
+
+    <div class="add-userstory"
+        *ngIf="(canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem)">
+        <app-pm-component-create-userstory [goalId]="goal.goalId" [goalStatusId]="goal.goalStatusId" [isBacklog] = true
+            (openNewUserStory)="openNewUserStory($event)">
+        </app-pm-component-create-userstory>
+    </div>
+</div>
+</div>

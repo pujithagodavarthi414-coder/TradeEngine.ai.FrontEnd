@@ -1,0 +1,171 @@
+<div class="m-0 p-0 full-height"
+    *ngIf="(canAccess_feature_ViewEmployeeIdentificationDetails) || (canAccess_feature_CanEditOtherEmployeeDetails)">
+    <mat-card class="p-0 canteen-manage m-0" fxLayout="column">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                    {{'HRMANAGAMENT.LICENCEDETAILS' | translate | titlecase}}
+                </div>
+                <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+                    fxLayoutAlign="end center">
+                    <mat-form-field ngClass.xs="full-width">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button
+                        *ngIf="((canAccess_feature_AddOrUpdateEmployeeIdentificationDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)"
+                        mat-icon-button matTooltip="{{'HRMANAGAMENT.ADDLICENCEDETAILS' | translate}}"
+                        (click)="editLicenceDetailsId(null,editLicenceDetailsPopover)"
+                        [satPopoverAnchorFor]="addLicenceDetails" #editLicenceDetailsPopover="satPopoverAnchor">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{'SEARCH' | translate}}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+    </mat-card>
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [rows]="employeeLicenceDetailsList$ | async" [columnMode]="'force'" [scrollbarH]="true"
+            [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true"
+            [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+            (sort)="onSort($event)" (page)='setPage($event)' [loadingIndicator]="employeeLicenceDetailsLoading$ | async"
+            [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.LICENCENUMBER' | translate}}" prop="licenceNumber">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.LICENCETYPE' | translate}}" prop="licenceType">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    {{value}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.ISSUEDDATE' | translate}}" prop="licenceIssuedDate">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <div *ngIf="row.licenceIssuedDate != null">{{ row.licenceIssuedDate | date: "dd-MMM-yyyy"  }}</div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.EXPIRYDATE' | translate}}" prop="licenceExpiryDate">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <div *ngIf="row.licenceExpiryDate != null">{{ row.licenceExpiryDate | date: "dd-MMM-yyyy"  }}</div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [sortable]="false"
+                *ngIf="((canAccess_feature_AddOrUpdateEmployeeIdentificationDetails)&& permission) || (canAccess_feature_CanEditOtherEmployeeDetails) || (canAccess_feature_CanCreateReminders)">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <button class="text-center" matTooltip="{{'HRMANAGAMENT.EDITLICENCEDETAILS' | translate}}"
+                        (click)="editLicenceDetailsId(row,editLicenceDetailsPopover)"
+                        *ngIf="((canAccess_feature_AddOrUpdateEmployeeIdentificationDetails)&& permission) || (canAccess_feature_CanEditOtherEmployeeDetails)"
+                        [satPopoverAnchorFor]="addLicenceDetails" #editLicenceDetailsPopover="satPopoverAnchor"
+                        mat-icon-button>
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button *ngIf="(canAccess_feature_CanCreateReminders)" class="text-center"
+                        matTooltip="{{'REMINDER.VIEWANDREMINDER' | translate}}" (click)="addReminder(row,true)"
+                        mat-icon-button>
+                        <fa-icon icon="calendar-week" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" matTooltip="{{'HRMANAGAMENT.DELETELICENCEDETAILS' | translate}}"
+                        (click)="getLicenceDetailsId(row,deleteLicenceDetailsPopover)"
+                        *ngIf="((canAccess_feature_AddOrUpdateEmployeeIdentificationDetails)&& permission) || (canAccess_feature_CanEditOtherEmployeeDetails)"
+                        [satPopoverAnchorFor]="deleteLicenceDetails" #deleteLicenceDetailsPopover="satPopoverAnchor"
+                        mat-icon-button>
+                        <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<mat-card class="p-0 m-0 edit_employee full-height"
+    *ngIf="!((canAccess_feature_ViewEmployeeIdentificationDetails) || (canAccess_feature_CanEditOtherEmployeeDetails))">
+    <mat-card-title class="data-table-header drag-handler">
+        <div class="p-1" fxLayout="row wrap">
+            <div fxFlex>
+                {{'HRMANAGAMENT.LICENCEDETAILS' | translate}}
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content>
+        <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+        </app-common-message-box>
+    </mat-card-content>
+</mat-card>
+
+<!-- <ng-container
+*ngIf="(canAccess_feature_AddOrEditCustomFieldsForHrManagement$ | async)">
+    <div class="floating-right-fab-button">
+        <div class="handle">
+            <button mat-fab color="accent" matTooltip="{{'HRMANAGAMENT.ADDCUSTOMFIELDS' | translate}}"
+                (click)="openCustomForm()">
+                <mat-icon> add </mat-icon>
+            </button>
+        </div>
+    </div>
+</ng-container> -->
+
+<!-- <ng-floating-action-menu placement="br" effect="mfb-slidein" iconClass='add' activeIconClass='clear' toggle="hover"
+    mainButtonClass="mat-bg-accent" *ngIf="((canAccess_feature_AddOrUpdateEmployeeLicenceDetails$ | async) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails$ | async )">
+    <li>
+        <ng-floating-action-button iconClass='add' iconType='mat-icon' [satPopoverAnchorFor]="addLicenceDetails"
+            #editLicenceDetailsPopover="satPopoverAnchor" label="{{'HRMANAGAMENT.ADDLICENCEDETAILS' | translate}}"
+            customClass="mat-bg-old-lace" (click)="addLicenceDetail(editLicenceDetailsPopover)">
+        </ng-floating-action-button>
+    </li>
+    <li
+        *ngIf="((canAccess_feature_AddOrUpdateEmployeeBankDetails$ | async)  && isPermission) || (canAccess_feature_CanEditOtherEmployeeDetails$ | async )">
+        <ng-floating-action-button iconClass='add' iconType='mat-icon'
+            label="{{'HRMANAGAMENT.ADDCUSTOMFIELDS' | translate}}" customClass="mat-bg-unbleached-silk"
+            (click)="openCustomForm()">
+        </ng-floating-action-button>
+    </li>
+</ng-floating-action-menu> -->
+
+<sat-popover #addLicenceDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center" horizontalAlign="center">
+    <mat-card class="p-0 mr-0" *ngIf="isLicence">
+        <app-hr-component-add-licence-details [selectedEmployeeId]="employeeId" [isPermission]="permission"
+            [editLicenceDetailsData]="editLicenceDetailsData" (closePopup)="closeUpsertLicenceDetailsPopover()">
+        </app-hr-component-add-licence-details>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteLicenceDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'HRMANAGAMENT.DELETELICENCEDETAILS' | translate}}</div>
+        </mat-card-title>
+        <div class="card-content p-1">
+            <div class="text-center mb-1">{{'HRMANAGAMENT.AREYOUSUREWANTTODELETE' | translate}}
+            </div>
+            <div fxLayoutAlign="space-around center">
+                <button type="button" mat-button mat-raised-button class="mr-05" color="primary" class="mr-1"
+                    (click)="deleteLicenceDetail()"><i class="fa fa-check"></i>{{'YES' | translate}}</button>
+                <button type="button" mat-button mat-raised-button (click)="cancelLicenceDetails()"><i
+                        class="fa fa-times"></i>{{'NO' | translate}}</button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<ng-template #reminderDialogComponent1 let-data>
+    <reminder-dialog [data]=[data]></reminder-dialog>
+</ng-template>

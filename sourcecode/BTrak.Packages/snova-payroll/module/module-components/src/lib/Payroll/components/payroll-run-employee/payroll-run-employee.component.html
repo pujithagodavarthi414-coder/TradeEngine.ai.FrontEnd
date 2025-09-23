@@ -1,0 +1,74 @@
+<div fxLayout="row" fxLayoutGap="10px" *ngIf="canAccess_feature_PayrollRunEmployee" class="mt-05 mb-05">
+  <div class="float-right" fxFlex="50" fxFlex-sm="50">
+    <h3 class="ml-05">{{'PAYROLL.PAYROLLSUMMARY' | translate}} <span *ngIf="payrollStartDate">
+        {{payrollStartDate | date: "dd-MMM-yyyy"}} to
+        {{payrollEndDate | date: "dd-MMM-yyyy"}}</span></h3>
+  </div>
+  <div class="float-right" fxFlex="40" fxFlex-sm="40">
+    <span class="pull-right mr-05 mt-05"><input type="checkbox" [(ngModel)]="netPayDifferentEmployees"
+        (click)="changeNetPayDifferentEmployees($event)" />
+      {{'PAYROLL.NETPAYDIFFERENTEMPLOYEESONLY' | translate}}</span>
+  </div>
+  <div fxFlex="10" fxFlex-sm="10">
+    <button mat-raised-button color="primary" type="button" (click)="backClicked()" class="float-right mr-05 pr-05 pl-05"
+      style="height: fit-content !important;">
+      <fa-icon icon="arrow-left"></fa-icon>
+      {{ 'PAYROLL.GOTOBACK' | translate }}
+    </button>
+  </div>
+</div>
+<div class="activity-data ml-05 mr-05" *ngIf="canAccess_feature_PayrollRunEmployee">
+  <kendo-grid [data]="gridView" [resizable]="true" [filterable]="true" [pageSize]="state.take" id="payrollrunemployees"
+    [skip]="state.skip" [filter]="state.filter" [sort]="state.sort" [sortable]="true" [pageable]="true"
+    (dataStateChange)="dataStateChange($event)" [rowClass]="rowCallback">
+    <kendo-grid-column field="userName" title="{{'PAYROLL.EMPLOYEENAME' | translate}}" width="280">
+      <ng-template kendoGridCellTemplate let-dataItem>
+        <span fxFlex="35px" style="display: inline-table;cursor: pointer;" (click)="goToProfile(dataItem.userId)">
+          <app-avatar [name]="dataItem.userName | removeSpecialCharacters" [src]="dataItem.profileImage"
+            [isRound]="true" size="30">
+          </app-avatar>
+        </span>
+        <span>{{dataItem.userName}}</span>
+      </ng-template>
+    </kendo-grid-column>
+    <kendo-grid-column field="modifiedPreviousMonthPaidAmount"
+      title="{{'PAYROLL.PREVIOUSMONTHPAIDAMOUNT' | translate}}" width="150">
+    </kendo-grid-column>
+    <kendo-grid-column field="modifiedActualPaidAmount" title="{{'PAYROLL.NETPAYFORTHEMONTH' | translate}}" width="150">
+    </kendo-grid-column>
+    <kendo-grid-column field="modifiedLoanAmountRemaining" title="{{'PAYROLL.LOANAMOUNTREMAINING' | translate}}" width="120">
+    </kendo-grid-column>
+    <kendo-grid-column field="totalWorkingDays" title="{{'PAYROLL.TOTALWORKINGDAYS' | translate}}" width="120">
+    </kendo-grid-column>
+    <kendo-grid-column field="effectiveWorkingDays" title="{{'PAYROLL.EFFECTIVEWORKEDDAYS' | translate}}" width="120">
+    </kendo-grid-column>
+    <kendo-grid-column field="lossOfPay" title="{{'PAYROLL.LOSSOFPAY' | translate}}" width="120">
+    </kendo-grid-column>
+    <kendo-grid-column field="isHold" title="{{'PAYROLL.HOLDINGPAY' | translate}}" [filterable]="false" width="120">
+      <ng-template kendoGridCellTemplate let-dataItem>
+        <input type="checkbox"
+          [disabled]="((dataItem.payrollStatusName != 'Generated') && (dataItem.payrollStatusName != 'Rejected'))"
+          kendoCheckBox [(ngModel)]="dataItem.isHold" (click)="updatePayrollEmployeeStatus(dataItem)" />
+      </ng-template>
+    </kendo-grid-column>
+    <kendo-grid-column width="120">
+      <ng-template kendoGridCellTemplate let-dataItem>
+        <button mat-icon-button type="button" matTooltip="{{'PAYROLL.VIEWPAYSLIP' | translate}}"
+          (click)="selectedRow(dataItem,'View')">
+          <fa-icon class="icon-button mat-color-accent" icon="eye"></fa-icon>
+        </button>
+        <span *ngIf="(canAccess_feature_EditPayslip)">
+          <button *ngIf="dataItem.payrollStatusName != 'Paid' && dataItem.payrollStatusName != 'Rejected' 
+          && dataItem.payrollStatusName != 'Approved'" mat-icon-button type="button"
+            matTooltip="{{'PAYROLL.EDITPAYSLIP' | translate}}" (click)="selectedRow(dataItem,'Edit')">
+            <fa-icon class="icon-button mat-color-accent" icon="edit"></fa-icon>
+          </button>
+        </span>
+      </ng-template>
+    </kendo-grid-column>
+  </kendo-grid>
+  <div *ngIf="anyOperationInProgress" class="k-i-loading"></div>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_PayrollRunEmployee"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

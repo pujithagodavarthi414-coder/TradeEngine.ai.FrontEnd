@@ -1,0 +1,158 @@
+<div *ngIf="(canAccess_feature_FoodItemsList)" class="full-height">
+  <!-- <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayoutGap="5px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+        <div fxFlex class="card-title-text p-05 ml-05" fxLayoutAlign="start center">
+          {{'CANTEEN.FOODITEMSLIST' | translate}}
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchFoodItemList()">
+          </mat-form-field>
+          <span class="food-list-close">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" *ngIf="entities?.length > 1">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="entities?.length > 1">
+          <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu"
+            matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" class="mr-05 ml-02"
+          *ngIf="buttonEnable && (canAccess_feature_AddOrUpdateFoodItem) && (canAccess_feature_FoodItemsList)">
+          <mat-icon mat-icon-button class="custom-widget-icon  mr-05 mt-lg-n3"
+            matTooltip="{{'CANTEEN.ADDFOODITEM'|translate}}" [satPopoverAnchorFor]="addNewFoodItemPopover"
+            #addFoodItemPopover="satPopoverAnchor" (click)="addFoodItemPopupOpen(addFoodItemPopover)">fastfood
+          </mat-icon>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card> -->
+
+  <mat-card class="p-0 m-0 canteen-manage">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+        <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+          {{'CANTEEN.FOODITEMSLIST' | translate | titlecase}}
+        </div>
+        <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxFlex.xs="10" fxLayoutAlign.xs="center center"
+          fxLayoutAlign="end center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchFoodItemList()">
+          </mat-form-field>
+          <span class="food-list-close">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+          <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu"
+            matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}" *ngIf="entities?.length > 1">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+          <button mat-icon-button
+            *ngIf="buttonEnable && (canAccess_feature_AddOrUpdateFoodItem) && (canAccess_feature_FoodItemsList)"
+            class="custom-widget-icon  mr-05 mt-lg-n3 p-02" matTooltip="{{'CANTEEN.ADDFOODITEM'|translate}}"
+            [satPopoverAnchorFor]="addNewFoodItemPopover" #addFoodItemPopover="satPopoverAnchor"
+            (click)="addFoodItemPopupOpen(addFoodItemPopover)">
+            <mat-icon class="custom-widget-icon">fastfood</mat-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+      <mat-form-field (click)="$event.stopPropagation()">
+        <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+          (selectionChange)="entityValues($event.value)">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+  </mat-menu>
+
+  <div class="activity-data m-0 app-height-search-2" id="style-1">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [rows]="foodItemsListRecords$ | async" [columnMode]="'force'" [headerHeight]="35"
+      [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+      [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+      [loadingIndicator]="foodItemListGridSpinner$ | async" (sort)="onSort($event)" (page)='setPage($event)'
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <!-- [messages]="{emptyMessage:('HRMANAGAMENT.NOFOODITEMSMESSAGE' | translate), totalMessage: 'TOTAL' | translate}"> -->
+      <ngx-datatable-column minWidth="150" name="{{'CANTEEN.ITEMNAME' | translate}}" sortable="true" prop="foodItemName">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div class="hide-content-overflow" matTooltip="{{value}}" matTooltipClass="tooltip-overflow"
+            matTooltipPosition='below'>{{value}}</div>
+          <!-- <span matTooltip=" {{value}}" class="hide-content-overflow" matTooltipClass="tooltip-overflow">
+          {{value}}
+        </span> -->
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'CANTEEN.ITEMPRICE' | translate}}" sortable="true" prop="price">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{value}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'CANTEEN.ADDEDON' | translate}}" sortable="true" prop="itemAddedDate">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div *ngIf="row.itemAddedDate != null"> <span
+              matTooltip="{{row.itemAddedDate | date: 'dd-MMM-yyyy' }}">{{ row.itemAddedDate | date: "dd-MMM-yyyy"  }}
+            </span></div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [sortable]="false" [flexGrow]="1"
+        *ngIf="(canAccess_feature_AddOrUpdateFoodItem)">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'CANTEEN.EDITCANTEENFOODITEM' | translate}}"
+            [satPopoverAnchorFor]="upsertFoodItemPopover" #upsertFoodItemPopUp="satPopoverAnchor"
+            (click)="upsertFoodItemPopUpOpen(row,upsertFoodItemPopUp);openEditFoodItem()" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover #upsertFoodItemPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false" [interactiveClose]="false"
+    scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="p-0 mr-0">
+      <app-hr-component-add-canteen-food-item [CanteenFoodItemDetails]="CanteenFoodItemDetails" *ngIf="isEditFoodItem"
+        (closeAddFoodItemPopover)="closeAddFoodItemPopover()"></app-hr-component-add-canteen-food-item>
+    </mat-card>
+  </sat-popover>
+
+  <!-- Add Food Item Popup Start-->
+  <sat-popover #addNewFoodItemPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false" [interactiveClose]="false"
+    scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="p-0 mr-0">
+      <app-hr-component-add-canteen-food-item *ngIf="isAddFoodItem" (closeAddFoodItemPopover)="closeAddFoodPopover()">
+      </app-hr-component-add-canteen-food-item>
+    </mat-card>
+  </sat-popover>
+  <!-- Add Food Item Popup End-->
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_FoodItemsList)"
+  textToDisplay="{{'LOGTIMEREPORT.PERMISSION' | translate}}">
+</app-common-message-box>

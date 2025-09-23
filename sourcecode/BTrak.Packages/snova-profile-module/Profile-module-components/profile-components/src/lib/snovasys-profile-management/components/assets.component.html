@@ -1,0 +1,81 @@
+<app-common-message-box *ngIf="!(canAccess_feature_AssignAssetsToEmployee) && !(roleFeaturesIsInProgress$|async)"
+    textToDisplay="{{ 'PRODUCTIVITYDASHBOARD.PERMISSION' | translate }}">
+</app-common-message-box>
+<div *ngIf="(canAccess_feature_AssignAssetsToEmployee)" id="as-1">
+  <div fxLayout="row" fxLayoutAlign="end start" *ngIf="(canAccess_feature_AssignAssetsToEmployee)">
+    <button mat-icon-button (click)="printAssets()" [disabled]="loading"
+      matTooltip="{{'ASSETS.PRINTASSETS' | translate | titlecase}}">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading">
+      </mat-progress-bar>
+      <fa-icon class="mat-color-accent" icon="download" id="as-2"></fa-icon>
+    </button>
+  </div>
+  <mat-card class="p-0">
+    <mat-card-content class="p-0" fxLayout="column">
+      <div class="activity-data pagination-move-left" [ngClass]="applyHeight ? 'my-assets-scroll' : ''">
+        <ngx-datatable class="btrak assets-area" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+          [externalPaging]="true" [limit]="page.size" [rows]="assetsAllocatedToMeData" [offset]="page.pageNumber"
+          (sort)="onSort($event)" (page)='setPage($event)' [loadingIndicator]="gettingAssetsInProgress"
+          [sorts]="[{prop: 'assetName', dir: 'asc'}]" [externalSorting]="true" [count]="page.totalElements"
+          [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+          <ngx-datatable-column name="{{'MYPROFILE.ASSETNAME' | translate}}" [flexGrow]="1" prop="assetName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.assetName }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'ASSETS.ASSETCODE' | translate}}" [flexGrow]="1" prop="assetNumber">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.assetNumber }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'ASSETS.ASSIGNEDTO' | translate}}" [flexGrow]="1" prop="assignedToEmployeeName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.assignedToEmployeeName }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'MYPROFILE.ASSIGNEDBY' | translate}}" [flexGrow]="1"
+            prop="approvedByEmployeeName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.approvedByEmployeeName }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'MYPROFILE.ASSIGNDATE' | translate}}" [flexGrow]="1" prop="assignedDateFrom">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <div *ngIf="row.assignedDateFrom != null">{{ row?.assignedDateFrom | date: "dd-MMM-yyyy" }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'MYPROFILE.ISAPPROVEDBYME' | translate}}" [flexGrow]="1" [sortable]="false">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span class="asset-badge mat-bg-primary" *ngIf="!row.isSelfApproved" style="cursor: pointer;"
+                (click)="getCheckBoxChecked(row,assetPopover)" [satPopoverAnchorFor]="assetsPopover"
+                #assetPopover="satPopoverAnchor">{{'ASSETS.TAKETHEASSET' | translate}}</span>
+              <span class="asset-badge mat-bg-accent"
+                *ngIf="row.isSelfApproved">{{'ASSETS.ACCEPTED' | translate}}</span>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <sat-popover #assetsPopover verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1">
+            {{'ASSETS.APPROVEASSET' | translate}}
+        </div>
+    </mat-card-title>
+    <mat-card-content>
+        <div class="card-content mb-1">
+          {{'ASSETS.AREYOUSURETOTAKERESPOSIBILITYOFASSET' | translate}}
+        </div>
+      <div class="text-center">
+        <button type="button" mat-button mat-raised-button class="mr-05" color="primary" (click)="approveAsset()"><i
+            class="fa fa-check"></i>{{'ASSETS.ACCEPT' | translate}}</button>
+        <button type="button" mat-button mat-raised-button (click)="declineAsset()"><i
+            class="fa fa-times mb-05"></i>{{'ASSETS.DECLINE' | translate}}</button>
+      </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>

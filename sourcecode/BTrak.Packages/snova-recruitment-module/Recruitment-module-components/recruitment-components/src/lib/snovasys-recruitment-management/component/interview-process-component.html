@@ -1,0 +1,280 @@
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="openClosingPopup()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<div style="position: relative;" id="style-1">
+  <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign.xs="center center" fxLayoutGap="10px">
+  </div>
+  <div class="text-center mat-bg-primary">
+    <div class="card-title-text p-05"> {{ 'INTERVIEWPROCESS.TITLE' | translate }}
+    </div>
+  </div>
+
+
+  <div fxLayout="start center">
+    <div fxFlex="100">
+      <form [formGroup]="jobAssignForm" novalidate #jobAssignFormDirective="ngForm">
+        <div class="card-content p-05 mt-05" fxLayout="row" fxLayoutAlign="space-around center">
+          <div fxFlex="90">
+            <mat-form-field style="width: 100% !important;">
+              <mat-select formControlName="interviewProcessId"
+                (selectionChange)="UpsertInterviewJobConfiguration($event.value);"
+                placeholder="{{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}" [(ngModel)]="selectedId" required>
+                <mat-select-trigger>
+                  {{selectedInterviewProcess}}
+                </mat-select-trigger>
+                <mat-option [value]="interviews.interviewProcessId" *ngFor="let interviews of interviewProcess"
+                  (click)="UpsertInterviewJobConfiguration($event.value);">
+                  {{interviews.interviewProcessName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-error
+              *ngIf="jobAssignForm.get('interviewProcessId').hasError('required') && jobAssignForm.get('interviewProcessId').touched">
+              {{ 'INTERVIEWPROCESS.INTERVIEWPROCESSREQUIRED' | translate }}
+            </mat-error>
+          </div>
+          <div class="color-search mt-05 ml-08 mr-05" fxFlex="22px" fxLayoutAlign="end center"
+            *ngIf="canAccess_feature_AddInterviewProcess">
+            <fa-icon icon="plus" aria-hidden="false" aria-label="add" class="filter mat-color-accent goal-cursor"
+              matTooltip="{{ 'INTERVIEWPROCESS.ADDPROCESSTOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="addInterviewPopover" #addInterviewPopUp="satPopoverAnchor"
+              (click)="createInterviewProcess(addInterviewPopUp); clearAddInterviewFormPopup()">
+            </fa-icon>
+          </div>
+        </div>
+
+        <div fxLayout='column'>
+          <div fxFlex="100" fxLayout="row" style="cursor: pointer">
+            <div fxFlex="30" class="ml-05" style="font-size: 16px; font-weight: 400;color: #313030d9;">
+              {{ 'INTERVIEWPROCESS.STAGE' | translate }}
+            </div>
+            <div fxFlex="70" fxlayout="row" fxLayoutAlign="space-around center">
+              <div fxFlex="45" style="font-size: 16px; font-weight: 400;color: #313030d9;">
+                {{ 'INTERVIEWPROCESS.ISPHONE' | translate }}
+              </div>
+              <div fxFlex="50" style="font-size: 16px; font-weight: 400;color: #313030d9;">
+                {{ 'INTERVIEWPROCESS.ISVIDEO' | translate }}
+              </div>
+            </div>
+          </div>
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+          </mat-progress-bar>
+          <div style="height: 250px !important; overflow: auto;" id="style-1">
+            <div dragula="reOrderItems" [(dragulaModel)]="interviewProcessConfiguration"
+              [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+              <div class="user-story-list" *ngFor="let interviewProcessConfiguration of interviewProcessConfiguration"
+                [attr.data-userStoryStatusId]="interviewProcessConfiguration.interviewProcessConfigurationId"
+                [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+
+                <div fxLayout="row wrap">
+                  <div fxFlex="100" [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+                    <div fxLayout="row" class="userstory-summary superagile-summary">
+                      <div fxFlex="100" fxLayout="row" style="height: 38px;">
+                        <div fxFlex="30" class="ml-05" style="align-self: center" display="">
+                          <mat-chip fxFlex="25" mat-sm-chip
+                            [style.backgroundColor]="interviewProcessConfiguration.color">
+                          </mat-chip>
+                          <span class="allgoals_txt" matTooltip="{{ interviewProcessConfiguration.interviewTypeName }}"
+                            matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow">
+                            {{interviewProcessConfiguration.interviewTypeName}}
+                          </span>
+                        </div>
+                        <div fxFlex="70" fxlayout="row" fxLayoutAlign="space-around center">
+                          <div fxFlex="45">
+                            <mat-slide-toggle class="mr-1 archive-switch"
+                              matTooltip="{{ 'INTERVIEWPROCESS.ISPHONE' | translate }}" [disabled]="true"
+                              (change)="OnClickPhone($event,interviewProcessConfiguration)"
+                              [checked]="interviewProcessConfiguration.isPhoneCalling"></mat-slide-toggle>
+                          </div>
+                          <div fxFlex="50">
+                            <mat-slide-toggle class="mr-1 archive-switch"
+                              matTooltip="{{ 'INTERVIEWPROCESS.ISVIDEO' | translate }}" [disabled]="true"
+                              (change)="OnClickVideo($event,interviewProcessConfiguration)"
+                              [checked]="interviewProcessConfiguration.isVideoCalling"></mat-slide-toggle>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <app-common-message-box
+                *ngIf="!(isAnyOperationIsInprogress) && (!interviewProcessConfiguration || interviewProcessConfiguration.length == 0)"
+                textToDisplay="{{'NODATATODISPLAY'|translate}}">
+              </app-common-message-box>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<sat-popover #addInterviewPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+  <mat-card class="filter-data p-0" fxFlex="320px">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'INTERVIEWPROCESS.INTERVIEWPROCESSTITLE' | translate }}
+      </div>
+    </mat-card-title>
+    <form [formGroup]="addInterviewForm" novalidate #formDirective="ngForm"
+      (submit)="formDirective.valid && UpsertInterviewProcess(formDirective)">
+      <div class="card-content p-05 mt-05">
+        <div class="card-content p-05 mt-05">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+            <input matInput formControlName="interviewProcessName"
+              placeholder="{{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}" required />
+            <mat-error *ngIf="addInterviewForm.get('interviewProcessName').hasError('maxlength')">
+              {{ 'INTERVIEWPROCESS.INTERVIEWPROCESSMAX' | translate }}</mat-error>
+            <mat-error
+              *ngIf="addInterviewForm.get('interviewProcessName').hasError('required') && addInterviewForm.get('interviewProcessName').touched">
+              {{ 'INTERVIEWPROCESS.INTERVIEWPROCESSFIELDREQUIRED' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="card-content p-05 mt-05" fxLayout="row" fxLayoutAlign="space-around center">
+          <div fxFlex="90">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="interviewTypeId" [compareWith]="compareSelectedInterviewTypesFn"
+                placeholder="{{ 'INTERVIEWTYPES.INTERVIEWTYPENAME' | translate }}" multiple>
+                <mat-option #allInterviewsSelected (click)="toggleAllInterviewTypesSelection()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="interviewType.interviewTypeId"
+                  *ngFor="let interviewType of interviewTypes; let i = index" #allInterviewsSelected
+                  (click)="toggleInterviewTypesPerOne()">
+                  {{ interviewType.interviewTypeName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-error>
+              <span
+                *ngIf="!addInterviewForm.get('interviewTypeId').valid &&addInterviewForm.get('interviewTypeId').touched">
+                {{ 'INTERVIEWPROCESS.PLEASESELECTINTERVIEWTYPES' | translate }}</span>
+            </mat-error>
+          </div>
+          <div class="color-search mt-05 ml-08 mr-05" fxFlex="22px" fxLayoutAlign="end center"
+            *ngIf="canAccess_feature_ManageInterviewType">
+            <fa-icon icon="plus" aria-hidden="false" aria-label="add" class="filter mat-color-accent goal-cursor"
+              matTooltip="{{ 'INTERVIEWTYPES.CREATEINTERVIEWTYPETOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertInterviewTypePopover" #upsertInterviewTypePopUp="satPopoverAnchor"
+              (click)="createInterviewType(upsertInterviewTypePopUp); clearAddInterviewTypeFormPopup()">
+            </fa-icon>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mb-1 mt-05">
+        <button mat-raised-button color="primary" class="mr-05" type="submit"
+          [disabled]="!addInterviewForm.valid||isAnyOperationIsInprogress">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeAddInterviewFormPopup(formDirective)" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #upsertInterviewTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ interviewTypeTitle }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="interviewTypeForm" #interviewTypeFormDirective="ngForm" novalidate
+        (submit)="interviewTypeForm.valid && UpsertInterviewType(interviewTypeFormDirective)">
+        <div fxLayout='column'>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="interviewTypeName"
+              placeholder="{{'INTERVIEWTYPES.INTERVIEWTYPENAME' | translate }}" required>
+            <mat-error *ngIf="interviewTypeForm.get('interviewTypeName').hasError('maxlength')">
+              {{ 'INTERVIEWTYPES.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="interviewTypeForm.get('interviewTypeName').hasError('required') && interviewTypeForm.get('interviewTypeName').touched">
+              {{ 'INTERVIEWTYPES.NAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+            <mat-select formControlName="roleId" placeholder="{{'INTERVIEWTYPES.ROLE' | translate }}" multiple>
+              <mat-option #allRolesSelected (click)="toggleAllRolesSelection()" [value]="0">
+                {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+              <mat-option [value]="role.roleId" *ngFor="let role of roleList; let i = index" #allInterviewsSelected
+                (click)="toggleRolePerOne()">
+                {{ role.roleName }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="interviewTypeForm.get('roleId').hasError('required') && interviewTypeForm.get('roleId').touched">
+              {{ 'INTERVIEWTYPES.ROLENAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <input formControlName="color" matInput placeholder="{{ 'INTERVIEWTYPES.COLOR' | translate }}"
+              [(colorPicker)]="color" [cpPosition]="'top'" [style.background]="color"
+              (colorPickerChange)="interviewTypeForm.get('color').setValue($event)" [value]="color" required />
+            <mat-error
+              *ngIf="interviewTypeForm.get('color').hasError('required') && interviewTypeForm.get('color').touched">
+              {{ 'HIRINGSTATUS.COLORMAXLENGTHERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-radio-group formControlName="selectType" fxLayout="row">
+            <mat-radio-button class="mr-1" *ngFor="let op of list" [value]="op.id" (click)="onClick(op.id)">{{ op.name |
+              translate }}</mat-radio-button>
+          </mat-radio-group>
+          <div *ngIf="!isEdit && isFromExists">
+            <div *ngFor="let result of resultstore">
+              <span class="customfield-name hide-content-overflow goal-cursor" matTooltip="{{ result.formName }}"
+                matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow">
+
+                {{ result.formName }}</span>
+              <fa-icon icon="trash" (click)="deleteFormComponent(result)" style="cursor: pointer;"
+                class="mat-color-accent pull-right"></fa-icon>
+              <fa-icon icon="edit" (click)="editFormComponent(result)" style="cursor: pointer;"
+                class="mat-color-accent pull-right mr-08"></fa-icon>
+            </div>
+          </div>
+
+          <br />
+          <div fxFlex="100" fxFlex.gt-sm="45" fxLayout="row wrap" class="ml-1">
+            <button mat-raised-button type="button" class="mr-1" (click)="openCustomForm();$event.stopPropagation()">
+              <fa-icon icon="plus" class="mr-05" matTooltip="{{'INTERVIEWTYPES.FEEDBACKFORM'|translate}}"
+                class="filter mat-color-accent">
+              </fa-icon>
+              <span class="mr-05">
+                {{'INTERVIEWTYPES.FEEDBACKFORM'| translate}}
+              </span>
+            </button>
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!interviewTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertInterviewTypePopUpPopup(interviewTypeFormDirective)"
+            type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<ng-template #customFormsComponent let-data>
+  <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)"
+    (submitFormComponent)="submitFormComponent($event)"></app-custom-form-component>
+</ng-template>

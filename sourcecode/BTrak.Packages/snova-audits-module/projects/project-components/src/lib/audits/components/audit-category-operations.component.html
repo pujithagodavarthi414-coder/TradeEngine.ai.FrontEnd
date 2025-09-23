@@ -1,0 +1,102 @@
+<div fxLayout="row wrap">
+    <div fxFlex="15px" fxLayoutAlign="start" *ngIf="isChildsPresent">
+        <span>
+            <a class="caret-right-space" *ngIf="!treeStructure">
+                <fa-icon class="caret-size gray-icon" icon="caret-right" (click)="showTreeView()"></fa-icon>
+            </a>
+            <a class="mr-05" *ngIf="treeStructure">
+                <fa-icon class="caret-size gray-icon" icon="caret-down" (click)="hideTreeView()"></fa-icon>
+            </a>
+        </span>
+    </div>
+    <div fxFlex class="mr-05" class="text-overflow-wrap" [ngStyle]="{ 'background-color': isCategorySelectedOrNot ? '#e1f0ff' : '',
+    'padding': isCategorySelectedOrNot ? '3px' : '',
+    'border-radius': isCategorySelectedOrNot ? '3px' : '' }" (click)="getAuditQuestions()" #categoryName
+        (mouseover)="checkTitleTooltipStatus()">
+        <span>
+            <fa-icon class="mr-05 icon-primary" icon="folder" (click)="$event.stopPropagation();treeView()"></fa-icon>
+            <!-- <span [matTooltip]="showTitleTooltip ? auditCategory.auditCategoryName : ''" matTooltipShowDelay="300">
+                {{auditCategory.auditCategoryName}}
+            </span> -->
+            <span matTooltip="{{auditCategory.auditCategoryName}}" matTooltipShowDelay="400">
+                {{auditCategory.auditCategoryName}}
+            </span>
+        </span>
+    </div>
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !(auditCategory.categoryLevel > 4) && !isAuditArchived">
+        <a class="ml-05" matTooltip="{{'AUDIT.ADDSUBCATEGORY' | translate}}" [satPopoverAnchorFor]="addCategory"
+            #addCategoryPopover="satPopoverAnchor" (click)="openCategoryPopOver(addCategoryPopover)">
+            <fa-icon icon="plus"></fa-icon>
+        </a>
+    </div>
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived">
+        <a class="ml-05" matTooltip="{{'AUDIT.EDITCATEGORY' | translate}}" [satPopoverAnchorFor]="addCategory"
+            #editCategoryPopover="satPopoverAnchor" (click)="editAuditCategory(editCategoryPopover)">
+            <fa-icon icon="edit"></fa-icon>
+        </a>
+    </div>
+    <!-- *ngIf="(canAccess_entityType_feature_DeleteScenarioSection$ | async)" -->
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAuditCategory && !isAuditArchived">
+        <a class="ml-05" matTooltip="{{'AUDIT.DELETECATEGORY' | translate}}" [satPopoverAnchorFor]="deleteCategory"
+            #deleteCategoryPopover="satPopoverAnchor" (click)="openDeleteCategoryPopOver(deleteCategoryPopover)">
+            <fa-icon icon="trash"></fa-icon>
+        </a>
+    </div>
+</div>
+
+<!--------add Section dialog------>
+<sat-popover #addCategory hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div *ngIf="!isEditCategory" class="card-title-text p-05"> {{'AUDIT.ADDCATEGORY' | translate}}
+            </div>
+            <div *ngIf="isEditCategory" class="card-title-text p-05"> {{'AUDIT.EDITCATEGORY' | translate}}
+            </div>
+        </mat-card-title>
+        <audit-category-add-or-edit *ngIf="loadCategory" [selectedAudit]="selectedAudit" [auditCategory]="auditCategory"
+            [isCategoryEdit]="isEditCategory" (closeCategory)="closeCategoryDialog()">
+        </audit-category-add-or-edit>
+    </mat-card>
+</sat-popover>
+<!--------add Section dialog------>
+
+<!--Delete Section dialog-->
+<sat-popover #deleteCategory hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1"
+                *ngIf="auditCategory.isArchived == false || auditCategory.isArchived == null">
+                {{'AUDIT.AREYOUSURETODELETECATEGORY' | translate}}
+            </div>
+            <!-- <div class="card-content mb-1"
+                *ngIf="!(auditCategory.isArchived == false || auditCategory.isArchived == null)">
+                {{'AUDIT.AREYOUSURETOUNARCHICVECATEGORY' | translate}}
+            </div> -->
+            <div class="text-center">
+                <button class="mr-05" mat-button mat-raised-button [disabled]="disableCategoryDelete" color="primary"
+                    (click)="removeCategory()"
+                    *ngIf="auditCategory.isArchived == false || auditCategory.isArchived == null">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableCategoryDelete">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <!-- <button class="mr-05" mat-button mat-raised-button [disabled]="disableCategoryDelete" color="primary"
+                    (click)="removeCategory()"
+                    *ngIf="!(auditCategory.isArchived == false || auditCategory.isArchived == null)">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'AUDIT.UNARCHIVE' | translate}}
+                </button> -->
+                <button mat-button mat-raised-button (click)="closeDeleteCategoryDialog()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete Section dialog-->

@@ -1,0 +1,191 @@
+<div class="full-height">
+  <mat-card class="p-0 m-0 custom-box">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row wrap">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text">Spent Time Report
+          <!-- <div class="search-box">
+        <input class="s-box" type="text" name="search" placeholder="Search" [(ngModel)]="SearchText"
+          (input)="Search(SearchText)">
+        <a class="s-btn">
+          <i class="fa fa-search"></i>
+        </a>
+      </div> -->
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button type="submit" mat-icon-button class="pull-right" [satPopoverAnchorFor]="spentTimeFilter" hasBackdrop
+            (click)="spentTimeFilter.open()">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+  </mat-card>
+
+  <sat-popover #spentTimeFilter   hasBackdrop  [interactiveClose]="true"
+    scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+
+    <mat-card class="filter-data p-0"> 
+      <div class="text-left p-1">
+        <div fxLayout="row wrap">
+          <div fxFlex="100" fxLayout="column ">
+            <mat-form-field>
+              <mat-select 
+              placeholder="{{projectText  | softLabelsPipe : softLabels}}" [(ngModel)]="projectId"
+                (selectionChange)="GetSpentTimeByProject($event.value)">
+                <mat-option [value]="0">All</mat-option>
+                <mat-option *ngFor="let project of projectslist" [value]="project.projectId">
+                  {{project.projectName}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field (click)="$event.stopPropagation()" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+
+          <div fxFlex="100" fxFlex.gt-sm="33" fxLayout="column ">
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="33" fxLayout="column ">
+
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxFlex="100" fxLayout="column ">
+            <mat-checkbox [checked]="checkedIsUser" #user [(ngModel)]="checkedIsUser"
+              (change)="SearchByUser(checkedIsUser)" name="User">User
+            </mat-checkbox>
+          </div>
+          <div fxFlex="100" fxLayout="column" *ngIf="user.checked">
+            <mat-form-field>
+              <mat-select placeholder="Select filter" [(ngModel)]="userDescription"
+                (selectionChange)="GetEmployeeList($event.value)">
+                <mat-option *ngFor="let value of userFilter" [value]="value">
+                  {{value}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxLayout="column" *ngIf="user.checked && showEmployee">
+            <mat-form-field>
+              <mat-select placeholder="Select Employee" [(ngModel)]="userId"
+                (selectionChange)="GetEmployeeChange($event.value)">
+                <mat-option [value]="person.id" *ngFor="let person of EmployeeList">
+                  <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                  </app-profile-avatar>
+                  <img class="employee_img" src="{{person.profileImage}}"
+                    *ngIf="person.profileImage">{{person.fullName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxFlex="100" fxLayout="column ">
+            <mat-checkbox [checked]="checkedIsHour" #hours [(ngModel)]="checkedIsHour"
+              (change)="SearchByHour(checkedIsHour)" name="Hours">Hours
+            </mat-checkbox>
+          </div>
+          <div fxFlex="100" fxLayout="column" *ngIf="hours.checked">
+            <mat-form-field>
+              <mat-select #hoursdesc placeholder="Select hours Criteria" [(ngModel)]="hourDescription"
+                (selectionChange)="showHours($event.value)">
+                <mat-option [value]="value" *ngFor="let value of hoursFilter">
+                  {{value}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxLayout="column">
+            <mat-form-field *ngIf="hours.checked && showhourFrom">
+              <input matInput placeholder="Hours From" [(ngModel)]="selectedHourFrom">
+            </mat-form-field>
+            <mat-form-field *ngIf="hours.checked && showhourTo">
+              <input matInput placeholder="Hours To" [(ngModel)]="selectedHourTo">
+            </mat-form-field>
+
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxFlex="100" fxLayout="column ">
+            <mat-checkbox [checked]="checkedIsDate" #date [(ngModel)]="checkedIsDate"
+              (change)="SearchByDate(checkedIsDate)" name="Date" (change)="0">Date
+            </mat-checkbox>
+          </div>
+          <div fxFlex="100" fxLayout="column " *ngIf="date.checked">
+            <mat-form-field>
+              <mat-select placeholder="Select Criteria" [(ngModel)]="datedescription"
+                (selectionChange)="showDates($event.value)">
+                <mat-option [value]="value" *ngFor="let value of dateFilter">
+                  {{value}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxLayout="column " *ngIf="date.checked">
+            <mat-form-field *ngIf="showDatepicker1">
+              <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateFrom" placeholder="Select From Date">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field *ngIf="showDatepicker2">
+              <input matInput [matDatepicker]="picker1" [(ngModel)]="selectedDateTo" placeholder="Select To Date">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field *ngIf="dayselect">
+              <input matInput placeholder="Days" [(ngModel)]="days">
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+
+          <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="GetSpentTimeByFilter()">
+              <fa-icon icon="check" class="mr-05"></fa-icon> Apply
+            </button>
+            <button mat-button mat-raised-button (click)="ClearFilters()">
+              <fa-icon icon="broom" class="mr-05"></fa-icon> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </sat-popover>
+
+  <div class="activity-data m-0 no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+      [limit]="10" [rows]="spentTimereportList" [externalPaging]="true" [count]="count" [offset]="spentTimePageNumber"
+      [limit]="10" [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [externalSorting]="true">
+      <ngx-datatable-column name="{{'FEEDBACKS.USERNAME' | translate}}" [flexGrow]="1" prop="projectName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.projectName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'DATE' | translate }}" [flexGrow]="1" prop="goalName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.goalShortName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{workItemText | softLabelsPipe : softLabels}}" [flexGrow]="1" prop="userStoryName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.userStoryName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'USERDETAIL.SPENTTIME' | translate }}" [flexGrow]="1" prop="dependency Name">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.dependencyName }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

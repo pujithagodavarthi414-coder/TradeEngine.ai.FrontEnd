@@ -1,0 +1,383 @@
+<div *ngIf="(canAccess_feature_AddOrUpdateAsset)">
+    <mat-card class="p-0">
+        <mat-card-title class="data-table-header" *ngIf="editForm">
+            <div fxLayout="row wrap">
+                <div fxFlex="calc(100% - 100px)" class="card-title-text p-05 ml-05" fxLayoutAlign="start center">
+                    {{'ASSETS.EDITASSET' | translate}}
+                </div>
+                <div fxFlex="90px" fxLayoutAlign="end center">
+                    <ng-container *ngIf="(canAccess_feature_AssetComment)">
+                        <button mat-icon-button matTooltip="{{'ASSETS.ADDCOMMENT' | translate}}"
+                            [satPopoverAnchorFor]="commentPopover" (click)="commentPopover.open()">
+                            <fa-icon class="mat-color-accent" icon="comment"></fa-icon>
+                        </button>
+                    </ng-container>
+                    <ng-container *ngIf="(canAccess_feature_MarkDamagedAssest) && !assetDetails.isWriteOff">
+                        <button mat-icon-button matTooltip="{{'ASSETS.MARKDAMAGE' | translate}}"
+                            [satPopoverAnchorFor]="writeoffPopover" (click)="writeoffPopover.open()">
+                            <fa-icon class="mat-color-accent" icon="house-damage"></fa-icon>
+                        </button>
+                    </ng-container>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <mat-card-content class="p-1">
+            <form [formGroup]="assetDetailsForm" novalidate
+                (submit)="assetDetailsForm.valid && saveAssetDetails(buttonType)">
+                <div class="card-content">
+                    <div style="height: calc(100vh - 300px);" id="style-1">
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="assetNumber" (keypress)="omitSpecialChar($event)"
+                                    placeholder="{{'ASSETS.ASSETCODE' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('assetNumber').hasError('required') && assetDetailsForm.get('assetNumber').touched">
+                                        {{'ASSETS.PLEASEENTERASSETCODE' | translate}}
+                                    </span>
+                                    <span *ngIf="assetDetailsForm.get('assetNumber').hasError('maxlength')">
+                                        {{'ASSETS.ASSETCODESHOULDNOTEXCEED50CHARACTERS' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="assetName" [(ngModel)]="assetValue"
+                                    (keypress)="omitSpecialChar($event)" (keyup)="changeValidators()"
+                                    placeholder="{{'ASSETS.ASSETNAME' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('assetName').hasError('required') && assetDetailsForm.get('assetName').touched">
+                                        {{'ASSETS.PLEASEENTERASSETNAME' | translate}}
+                                    </span>
+                                    <span *ngIf="assetDetailsForm.get('assetName').hasError('maxlength')">
+                                        {{'ASSETS.ASSETNAMESHOULDNOTEXCEED50CHARACTERS' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex>
+                                    <mat-form-field class="full-width">
+                                        <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}"
+                                            formControlName="productDetailsId" required>
+                                            <mat-option value="option"
+                                                *ngFor="let product of productDetailsList$ | async"
+                                                [value]="product.productDetailsId">
+                                                {{product.productName}}<span
+                                                    *ngIf="product.manufacturerCode">({{product.manufacturerCode}})</span>
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="assetDetailsForm.get('productDetailsId').hasError('required') && assetDetailsForm.get('productDetailsId').touched">
+                                                {{'ASSETS.PLEASESELECTAPRODUCT' | translate}}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3px" *ngIf="(canAccess_feature_AddOrUpdateProduct)">
+                                    <mat-icon aria-hidden="false" aria-label="add" class="mat-bg-primary plus_icon"
+                                        [satPopoverAnchorFor]="addNewProductDetails"
+                                        (click)="addNewProductDetails.open()">
+                                        add
+                                    </mat-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <input matInput [matDatepicker]="picker" (click)="picker.open()"
+                                    placeholder="{{'ASSETS.PURCHASEDDATE' | translate}}" formControlName="purchasedDate"
+                                    [max]="maxDate" (input)="startDate()" (dateChange)="startDate()" required
+                                    autocomplete="off" [min]="minDate">
+                                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('purchasedDate').hasError('matDatepickerMax')">{{'ASSETS.PLEASESELECTVAILDDATE' | translate}}</span>
+                                    <span *ngIf="assetDetailsForm.get('purchasedDate').hasError('required')">
+                                        {{'ASSETS.PLEASESELECTPURCHASEDDATE' | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('purchasedDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                    placeholder="{{'ASSETS.ASSIGNEDDATE' | translate}}"
+                                    formControlName="assignedDateFrom" [max]="maxDate" [min]="minDateForEndDate"
+                                    disabled={{endDateBool}} readOnly="true" autocomplete="off">
+                                <mat-datepicker-toggle matSuffix [for]="picker1" disabled={{endDateBool}}>
+                                </mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('assignedDateFrom').hasError('matDatepickerMax')">{{'ASSETS.PLEASESELECTVAILDDATE' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'ASSETS.APPROVEDBY' | translate}}"
+                                    formControlName="approvedByUserId" required
+                                    (selectionChange)="getApprovedByEmployee($event.value)">
+                                    <mat-select-trigger>
+                                        {{approvedMember}}
+                                    </mat-select-trigger>
+                                    <mat-option value="option" *ngFor="let emp of selectUserDropDownListData$ | async"
+                                        [value]="emp.id">
+                                        <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                                            <div fxFlex="7" class="mr-1">
+                                                <app-avatar matTooltip="{{ emp.fullName }}"
+                                                    [name]="emp.fullName | removeSpecialCharacters"
+                                                    [src]="emp.profileImage" [isRound]="true" size="30">
+                                                </app-avatar>
+                                            </div>
+                                            <div fxFlex="86">
+                                                <p class="mat-body-2">
+                                                    {{emp.fullName}}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="!assetDetailsForm.get('approvedByUserId').valid && assetDetailsForm.get('approvedByUserId').touched">
+                                        {{'ASSETS.PLEASESELECTAPPROVEDBY' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'ASSETS.ASSIGNEDTO' | translate}}"
+                                    formControlName="assignedToEmployeeId" required
+                                    (selectionChange)="getassignedToEmployee($event.value)">
+                                    <mat-select-trigger>
+                                        {{assignedMember}}
+                                    </mat-select-trigger>
+                                    <mat-option value="option" *ngFor="let emp of selectUserDropDownListData$ | async"
+                                        [value]="emp.id">
+                                        <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                                            <div fxFlex="7" class="mr-1">
+                                                <app-avatar matTooltip="{{ emp.fullName }}"
+                                                    [name]="emp.fullName | removeSpecialCharacters"
+                                                    [src]="emp.profileImage" [isRound]="true" size="30">
+                                                </app-avatar>
+                                            </div>
+                                            <div fxFlex="84">
+                                                <p class="mat-body-2">
+                                                    {{emp.fullName}}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('assignedToEmployeeId').hasError('required') && assetDetailsForm.get('assignedToEmployeeId').touched">
+                                        {{'ASSETS.PLEASESELECTASSIGNEDTO' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <input matInput min="0" formControlName="cost"
+                                    placeholder="{{'ASSETS.COST' | translate}}" mobileNumber required
+                                    autocomplete="off">
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('cost').hasError('required') && assetDetailsForm.get('cost').touched">{{'ASSETS.PLEASEENTERCOST' | translate}}</span>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('cost').hasError('min')">{{'ASSETS.COSTSHOULDBEGREATERTHANOREQUALTO0' | translate}}</span>
+                                    <span *ngIf="assetDetailsForm.get('cost').hasError('max')">
+                                        {{'ASSETS.SHOULDNOTEXCEED16DIGITS' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'ASSETS.SELECTCURRENCY' | translate}}"
+                                    formControlName="currencyId" required>
+                                    <mat-option *ngFor="let currency of currencyList$ | async"
+                                        [value]="currency.currencyId">
+                                        {{currency.currencyName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('currencyId').hasError('required') && assetDetailsForm.get('currencyId').touched">
+                                        {{'ASSETS.PLEASESELECTCURRENCY' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                            <div fxFlex="3" fxFlexOffset="3px" *ngIf="(canAccess_feature_AddOrUpdateProduct)">
+                                <mat-icon aria-hidden="false" aria-label="add" class="mat-bg-primary plus_icon"
+                                    [satPopoverAnchorFor]="addNewCurrencyDetails"
+                                    (click)="addNewCurrencyDetails.open()">
+                                    add
+                                </mat-icon>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'ASSETS.BRANCH' | translate}}" formControlName="branchId"
+                                    (selectionChange)="branchSelected($event.value);emptySeatingId()" required>
+                                    <mat-option [value]="branch.branchId" *ngFor="let branch of (branchList$ | async)">
+                                        {{ branch.branchName }}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('branchId').hasError('required') && assetDetailsForm.get('branchId').touched">
+                                        {{'ASSETS.PLEASESELECTBRANCH' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'ASSETS.SEATCODE' | translate}}" formControlName="seatingId"
+                                    (selectionChange)="seatCodeSelected($event.value)">
+                                    <mat-option [value]="seat.seatingId" *ngFor="let seat of (locationList$ | async)">
+                                        {{ seat.seatCode }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width" *ngIf="isRequired && isMACApplicable">
+                                <input matInput formControlName="assetUniqueNumber" (keypress)="omitSpecialChar($event)"
+                                    placeholder="{{'ASSETS.ASSETUNIQUENUMBER' | translate}}" [required]="isRequired"
+                                    autocomplete="off" mask="AA-AA-AA-AA-AA-AA">
+                                <mat-error>
+                                    <span
+                                        *ngIf="assetDetailsForm.get('assetUniqueNumber').hasError('required') && assetDetailsForm.get('assetUniqueNumber').touched">
+                                        {{'ASSETS.PLEASEENTERASSETUNIQUENUMBER' | translate}}
+                                    </span>
+                                    <span *ngIf="assetDetailsForm.get('assetUniqueNumber').hasError('maxlength')">
+                                        {{'ASSETS.ASSETUNIQUESHOULDNOTEXCEED12CHARACTERS' | translate}}
+                                    </span>
+                                    <span *ngIf="assetDetailsForm.get('assetUniqueNumber').hasError('minlength')">
+                                        {{'ASSETS.ASSETUNIQUENUMBERSHOULDNOTBETHAN12CHARACTERS' | translate}}
+                                    </span>
+                                    <span *ngIf="assetDetailsForm.get('assetUniqueNumber').hasError('pattern')">
+                                        {{'ASSETS.ASSETUNIQUENUMBERSHOULDNOTCONTAINSPECIALCHARACTERS' | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayoutGap="15px">
+                        <div fxFlex.gt-xl="15">
+                            <mat-checkbox name="agreed" formControlName="isVendor">
+                                {{'ASSETS.VENDORPRODUCT' | translate}}
+                            </mat-checkbox>
+                        </div>
+                        <div fxFlex.gt-xl="15">
+                            <mat-checkbox name="agreed" formControlName="isEmpty">
+                                {{'ASSETS.ISAVAILABLE' | translate}}
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                    <div *ngIf = "customFieldsLength > 0">
+                        <app-custom-field-component [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                            [referenceId]="referenceId" [assetReferenceId]="assetReferenceId" [isFromAssets]=true [reload]="isreload"
+                            [isEditFieldPermission]="(canAccess_feature_CanSubmitCustomFieldsForHrManagement)"
+                            (emitCustomFieldsLength)="getCustomFieldLength($event)">
+                        </app-custom-field-component>
+                    </div>
+                    </div>
+                    <div fxLayoutAlign="center center" fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="10px"
+                        fxLayoutGap="15px" *ngIf="!editForm">
+                        <button type="submit" [disabled]="!assetDetailsForm.valid || (anyOperationInProgress$ | async)"
+                            mat-button mat-raised-button color="primary"
+                            matTooltip="{{'ASSETS.SAVEASSETANDGOTOLISTOFASSETSPAGE' | translate}}"
+                            (click)="saveAssetDetails('Save')">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="savingAssetInProgress$ | async">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{'ASSETS.SAVE' | translate}}
+                        </button>
+                        <button type="submit" [disabled]="!assetDetailsForm.valid || (anyOperationInProgress$ | async)"
+                            mat-button mat-raised-button color="primary"
+                            matTooltip="{{'ASSETS.SAVEASSETANDCLEARFORM' | translate}}"
+                            (click)="saveAssetDetails('SaveAndClear')">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="saveAssetAndClearInProgress$ |async">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="pen"></fa-icon>{{'ASSETS.SAVEANDCREATENEW' | translate}}
+                        </button>
+                        <button mat-button mat-raised-button matTooltip="{{'ASSETS.CLEARASSETSFORM' | translate}}"
+                            (click)="closeAssetsForm();false" [disabled]="(anyOperationInProgress$ | async)">
+                            <fa-icon class="mr-05" icon="undo"></fa-icon>{{'ASSETS.CLEAR' | translate}}
+                        </button>
+                        <button mat-button mat-raised-button matTooltip="{{'ASSETS.GOTOLISTOFASSETS' | translate}}"
+                            (click)="gotoAllAssets()">
+                            <fa-icon class="mr-05" icon="landmark"></fa-icon>{{'ASSETS.BACK' | translate}}
+                        </button>
+                    </div>
+                    <div class="text-right" *ngIf="editForm">
+                        <button type="submit" [disabled]="!assetDetailsForm.valid || (anyOperationInProgress$ | async)"
+                            mat-button mat-raised-button color="primary" class="mr-1" (click)="saveAssetDetails('')">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="updateAssetInProgress$ | async">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="pen"></fa-icon>{{'ASSETS.UPDATE' | translate}}
+                        </button>
+                        <button mat-button mat-raised-button (click)="discardChanges()"
+                            [disabled]="updateAssetInProgress$ | async">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <sat-popover #addNewProductDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <app-am-component-product-details (closePopup)="closeProductDetails()"></app-am-component-product-details>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #writeoffPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <app-am-component-delete-asset (closePopup)="cancelDeletion()" [assetDetails]="assetDetails">
+        </app-am-component-delete-asset>
+    </sat-popover>
+
+    <sat-popover #commentPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <add-asset-comment (closePopup)="cancelComments()" [assetDetails]="assetDetails">
+        </add-asset-comment>
+    </sat-popover>
+
+    <sat-popover #addNewCurrencyDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <app-am-component-currency-details (closePopup)="cancelCurrency($event)">
+        </app-am-component-currency-details>
+    </sat-popover>
+
+</div>
+<app-common-message-box *ngIf="!( canAccess_feature_AddOrUpdateAsset)  && !(roleFeaturesIsInProgress$|async)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,156 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageInvoiceStatus">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow" 
+                     matTooltipClass="tooltipClass-mat" matTooltip="{{ 'TRADEINVOICE.TRADEINVOICESTATUS' |  translate }}">{{ 'TRADEINVOICE.TRADEINVOICESTATUS' |  translate }}</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center" style="padding-right: 38px;">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="100" [rows]="invoiceStatusList" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'TRADEINVOICE.INVOICESTATUSNAME' |  translate }}" [flexGrow]="1"
+                [sortable]="true" prop="invoiceStatusName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.invoiceStatusName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'TRADEINVOICE.INVOICESTATUSCOLOR' |  translate }}"
+                [flexGrow]="1" [sortable]="true" prop="invoiceStatusColor">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div [ngStyle]="{ 'background' : row.invoiceStatusColor }" style="width:100px;">
+                        &nbsp;
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center"
+                        [satPopoverAnchorFor]="invoiceStatusPopover" #invoiceStatusPopup="satPopoverAnchor"
+                        (click)="editInvoiceStatus(row,invoiceStatusPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" matTooltip="{{ 'TRADEINVOICE.EDITINVOICESTATUS' |  translate }}" matTooltipClass="tooltipClass-mat" style="cursor: pointer;" class="action-icon-color"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #invoiceStatusPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{invoiceStatus}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="invoiceStatusForm" #formDirective="ngForm" novalidate
+                    (submit)="invoiceStatusForm.valid && upsertInvoiceStatus(formDirective)">
+                    <div>
+                        <mat-form-field>
+                            <input matInput formControlName="invoiceStatusName" (keypress)="omit_special_char($event)"
+                                placeholder="{{ 'TRADEINVOICE.INVOICESTATUSNAME' |  translate }}" required>
+                            <mat-error *ngIf="invoiceStatusForm.get('invoiceStatusName').hasError('maxlength')">
+                                {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="invoiceStatusForm.get('invoiceStatusName').hasError('required') && invoiceStatusForm.get('invoiceStatusName').touched">
+                                {{ 'TRADEINVOICE.PLEASEENTERINVOICESTATUSNAME' |  translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width status-color mb-05">
+                            <input formControlName="invoiceStatusColor" matInput
+                                placeholder="{{ 'TRADEINVOICE.INVOICESTATUSCOLOR' |  translate }}" [(colorPicker)]="color"
+                                [cpPosition]="'top'" [style.background]="color"
+                                (colorPickerChange)="invoiceStatusForm.get('invoiceStatusColor').setValue($event)"
+                                [value]="color" required />
+                            <mat-error
+                                *ngIf="invoiceStatusForm.get('invoiceStatusColor').hasError('required') && invoiceStatusForm.get('invoiceStatusColor').touched">
+                                {{ 'TRADEINVOICE.PLEASESELECTINVOICESTATUSCOLOR' |  translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="mt-1">
+                        <button mat-raised-button color="primary" class="mr-1 glossy-button-button"
+                            [disabled]="!invoiceStatusForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertInvoiceStatusPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteInvoiceStatusPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isInvoiceStatusArchived">
+                    {{ 'TRADEINVOICE.ARCHIVEINVOICESTATUS' |  translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isInvoiceStatusArchived">
+                    {{ 'TRADEINVOICE.UNARCHIVEINVOICESTATUS' |  translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isInvoiceStatusArchived">
+                    {{ 'TRADEINVOICE.AREYOUSUREWANTTOARCHIVETHISINVOICESTATUS?' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isInvoiceStatusArchived">
+                    {{ 'TRADEINVOICE.AREYOUSUREWANTTOUNARCHIVETHISINVOICESTATUS?' |  translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="isInvoiceStatusArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteInvoiceStatus();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button class="glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="!isInvoiceStatusArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteInvoiceStatus();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteInvoiceStatusPopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageInvoiceStatus"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,221 @@
+<mat-card class="featurepadding" *ngIf="(canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers)">
+  <mat-card-title class="full-width member-header drag-handler">
+    <div fxLayout="row wrap">
+      <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+        <span fxFlex="100" class="hide-content-overflow">
+          {{'PROJECTS.MEMBERS'| translate | softLabelsPipe : softLabels}}({{ membersCount$ | async }})
+        </span>
+
+      </div>
+      <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+        fxLayoutAlign.xs="center center">
+        <mat-form-field class="full-width custom-searchbar mr-1">
+          <input matInput placeholder="{{ 'MEMBERS.SEARCHBYMEMBERNAME' | translate }} " [(ngModel)]="searchText" />
+        </mat-form-field>
+        <span class="close_icon mr-1" style="right:45px !important">
+          <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">close</mat-icon>
+        </span>
+        <button mat-icon-button color="accent" style="margin-top: 11px;"
+          *ngIf="(canAccess_entityType_feature_AddOrUpdateProjectMember || canAccess_entityType_feature_AddOrUpdateAuditProjectMember) 
+                        && (canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers)"
+          matTooltip="{{'USERSTORY.ADDPROJECTMEMBER'|translate | softLabelsPipe : softLabels}}"
+          [satPopoverAnchorFor]="projectMemberPopover" (click)="projectMemberPopover.open();createProjectMember()">
+          <fa-icon icon="plus" class="filter mat-color-accent">
+          </fa-icon>
+        </button>
+      </div>
+    </div>
+  </mat-card-title>
+</mat-card>
+<div fxLayout="row wrap"
+  *ngIf="(membersOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers)">
+  <div fxFlex="100" fxFlex.gt-sm="25" fxFlex.sm="50" *ngFor="let form of MembersLoop(membersLoaderNumber).fill(1)">
+    <mat-card class="loading-card project-dtl p-05">
+      <div fxLayout="row wrap" fxLayoutGap="5px">
+        <div fxFlex="13" fxFlex.md="20" fxFlex.gt-lg="20" class="img-bg loading-bg">
+          <div class="loading-image"></div>
+        </div>
+        <div fxFlex="74" fxFlex.md="76" fxFlex.gt-lg="76">
+          <p class="mat-body-1 empty-text loading-bg mb-05"></p>
+          <div fxFlex="100">
+            <p class="mat-small empty-text loading-bg"></p>
+          </div>
+          <div fxLayout="row">
+            <div fxFlex="75">
+              <p class="mat-small empty-text loading-bg"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>
+<div id="style-1" class="project-members-height">
+  <div>
+    <mat-card-content class="p-0">
+      <div *ngIf="
+      !(membersOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers) &&
+       (projectMembers$ | async | resultfilter: searchText:'memberName')
+         ?.length == 0
+     ">
+        <app-common-message-box textToDisplay="{{ 'MEMBERS.MEMBERSSNOTFOUND' | translate }}"></app-common-message-box>
+      </div>
+      <!-- updated card  -->
+      <div fxLayout="row wrap"
+        *ngIf="!(membersOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers)">
+        <div fxFlex="100" fxFlex.sm="50" fxFlex.gt-sm="25"
+          *ngFor="let projectMember of (projectMembers$ | async) | resultfilter: searchText:'memberName'">
+          <mat-card class="project-card p-05" (click)="selectedMember(projectMember.projectMember.id);$event.stopPropagation();">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex fxFlex="20">
+                <app-avatar fxHide fxHide.gt-lg="false"
+                  [name]="projectMember.projectMember.name | removeSpecialCharacters"
+                  [src]="projectMember.projectMember.profileImage | fetchSizedAndCachedImage: '80':''" [isRound]="false"
+                  size="80">
+                </app-avatar>
+                <app-avatar fxShow fxShow.gt-lg="false"
+                  [name]="projectMember.projectMember.name | removeSpecialCharacters"
+                  [src]="projectMember.projectMember.profileImage | fetchSizedAndCachedImage: '80':''" [isRound]="false"
+                  size="50">
+                </app-avatar>
+              </div>
+              <div class="m-0" fxFlex="78" fxFlex.md="77" fxFlex.sm="78" fxFlex.xs="76" fxLayout='column'>
+                <div fxLayout="row wrap">
+                  <div fxFlex="75">
+                    <a class="mat-body-1 person-name">
+                      {{ projectMember.projectMember.name }}
+                    </a>
+                  </div>
+                  <div fxFlex="23" fxLayoutAlign="end center">
+                    <div class="hide-icons">
+                      <fa-icon [satPopoverAnchorFor]="updateRolePopover" class="mr-05"
+                        *ngIf="(canAccess_entityType_feature_AddOrUpdateProjectMember || canAccess_entityType_feature_AddOrUpdateAuditProjectMember)"
+                        #membersEditPopup="satPopoverAnchor"
+                        (click)="$event.stopPropagation();UpdateRole(projectMember,membersEditPopup)" icon="edit"
+                        matTooltip="{{'MEMBERS.UPDATEROLE'|translate}}"></fa-icon>
+                      <fa-icon *ngIf="(canAccess_entityType_feature_ArchiveProjectMember || canAccess_entityType_feature_ArchiveAuditProjectMember)"
+                        [satPopoverAnchorFor]="deleteMemberPopover" #deleteMemberComponentPopover="satPopoverAnchor"
+                        (click)="deleteProjectMember(projectMember, deleteMemberComponentPopover);$event.stopPropagation();" icon="trash"
+                        matTooltip="{{'MEMBERS.DELETEMEMBER'|translate}} "></fa-icon>
+                    </div>
+                  </div>
+                </div>
+                <span fxFlex="100" class="mat-body-2" matTooltip=" {{projectMember.roleNames}}" *ngIf="projectMember.roleNames.length > 100">
+                  {{ projectMember.roleNames | slice:0:100 }}...
+                </span>
+                <span fxFlex="100" class="mat-body-2" matTooltip=" {{projectMember.roleNames}}" *ngIf="projectMember.roleNames.length < 100">
+                  {{ projectMember.roleNames | slice:0:100 }}
+                </span>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+        <sat-popover #updateRolePopover verticalAlign="below" [interactiveClose]="false" hasBackdrop
+          horizontalAlign="end" backdropClass="backdrop-color">
+          <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+              <div class="card-title-text mat-bg-primary p-05">
+                {{'MEMBERS.UPDATEROLE'|translate}}
+              </div>
+            </mat-card-title>
+            <form [formGroup]="projectMemberEditForm" #formDirective="ngForm" novalidate (submit)="
+              projectMemberEditForm.valid && UpdateProjectMember()
+            ">
+              <div class="card-content p-05">
+                <!-- <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <mat-select [compareWith]="compareSelectedRolesFn" formControlName="roles" multiple
+                  placeholder="{{'PROJECTS.SELECTROLE'|translate}}">
+                  <mat-option [value]="role.entityRoleId" *ngFor="let role of (allRoles$ | async)">
+                    {{ role.entityRoleName }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field> -->
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                  <mat-select placeholder="{{ 'PROJECTS.SELECTROLE' | translate }}" multiple required
+                    formControlName="roles" multiple [compareWith]="compareSelecteddaysFn"
+                    (selectionchange)="getSelectedRoles()">
+                    <mat-select-trigger>
+                      {{selectedRoles}}
+                    </mat-select-trigger>
+                    <mat-option [value]="0" #allRolesSelected (click)="toggleAllRolesSelected()">
+                      {{ 'PROJECTS.SELECTALL' | translate }}
+                    </mat-option>
+                    <mat-option [value]="role.entityRoleId" (click)="toggleUserPerOne()"
+                      *ngFor="let role of (allRoles$ | async)">{{ role.entityRoleName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="projectMemberEditForm.get('roles').hasError('required')">
+                    {{ 'USERSTORY.PLEASESELECTROLE' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <div class="text-center">
+                  <button class="mr-05" type="submit"
+                    [disabled]="!projectMemberEditForm.valid ||(anyOperationInProgress$ | async) " color="primary"
+                    mat-button mat-raised-button (click)="$event.stopPropagation()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                    </mat-progress-bar>
+                    <fa-icon icon="sync" class="mr-05"></fa-icon>{{'UPDATE'|translate}}
+                  </button>
+                  <button mat-button mat-raised-button (click)="closeEditMemberdialog();(false)"
+                    [disabled]="(anyOperationInProgress$ | async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>{{'CANCEL'|translate}}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </mat-card>
+        </sat-popover>
+        <sat-popover #deleteMemberPopover verticalAlign="below" hasBackdrop horizontalAlign="end"
+          backdropClass="backdrop-color">
+          <mat-card class="filter-data p-0">
+            <div>
+              <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                  {{'PROJECT.DELETEPROJECTMEMBERTEXT' | translate}}
+                </div>
+              </mat-card-title>
+              <div *ngIf="isProjectResponsiblePerson">
+                <div class="card-content p-05">
+                  <p>
+                    {{ 'PROJECT.DELETEPROJECTMEMBER' | translate | softLabelsPipe : softLabels}}
+                  </p>
+                  <div class="text-center">
+                    <button mat-button mat-raised-button color="primary" class="mr-05"
+                      (click)="deleteMemberPopover.close();false">
+                      <fa-icon icon="check"></fa-icon> {{ 'PROJECT.OK' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-content p-05" *ngIf="!isProjectResponsiblePerson">
+                <p>{{'PROJECT.DELETEPROJECTMEMBERTITLE'|translate}}</p>
+                <div class="text-center">
+                  <button mat-raised-button color="primary" class="mr-05" [disabled]="(anyOperationInProgress$ | async)"
+                    (click)="$event.stopPropagation(); deleteMember()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                    </mat-progress-bar>
+                    <fa-icon icon="trash" class="mr-05"></fa-icon> {{'PROJECT.DELETE'|translate}}
+                  </button>
+                  <button mat-button mat-raised-button (click)="deleteMemberPopoverClose()"
+                    [disabled]="(anyOperationInProgress$ | async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'PROJECT.CANCEL'|translate}}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </mat-card>
+        </sat-popover>
+      </div>
+    </mat-card-content>
+  </div>
+  <sat-popover #projectMemberPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+    scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+      <app-pm-component-add-projectmember *ngIf="loadprojectMember" [projectId]="projectId"
+        [clearProjectForm]="clearProjectMemberForm" (closePopup)="closeProjectMemberDialog()">
+      </app-pm-component-add-projectmember>
+    </mat-card>
+  </sat-popover>

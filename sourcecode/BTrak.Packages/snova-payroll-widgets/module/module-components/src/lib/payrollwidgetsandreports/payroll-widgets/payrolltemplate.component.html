@@ -1,0 +1,139 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManagePayrollTemplate)">
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{ 'PAYROLLTEMPLATE.PAYROLLTEMPLATETITLE' | translate | titlecase }}">{{ 'PAYROLLTEMPLATE.PAYROLLTEMPLATETITLE' | translate | titlecase }}</span>
+          </div>
+          <div fxFlex fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-slide-toggle [matTooltip]="(isArchivedTypes == false) ? ('PAYROLLTEMPLATE.SEEARCHIVEDITEMS' | translate) : ('PAYROLLTEMPLATE.SEEUNARCHIVEDITEMS' | translate)" class="mr-1 archive-switch"
+                [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes" (change)="getAllPayRollTemplates()"></mat-slide-toggle>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="full-width">
+                  <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                </mat-form-field>
+              </div>
+              <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <button mat-icon-button matTooltip="{{ 'PAYROLLTEMPLATE.CREATEPAYROLLTEMPLATETOOLTIP' | translate }}"
+                (click)="createPayRollTemplatePopupOpen();" *ngIf="!isArchivedTypes">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+              <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+  
+    <div class="activity-data no-drag">
+      <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="50" [rows]="payRollTemplates" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'PAYROLLTEMPLATE.PAYROLLNAME' | translate }}" [sortable]="true" prop="payRollName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.payRollName }}">{{ row?.payRollName }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PAYROLLTEMPLATE.PAYROLLSHORTNAME' | translate }}" [sortable]="true" prop="payRollShortName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.payRollShortName }}">{{ row?.payRollShortName }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+        <!-- <ngx-datatable-column name="{{ 'PAYROLLTEMPLATE.ISREPEATINFINITLY' | translate }}" [sortable]="true" prop="isRepeatInfinitly">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+              <span [matTooltip]="(row?.isRepeatInfinitly ? 'Yes' : 'No')">{{row?.isRepeatInfinitly ? "Yes" : "No"}}</span>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PAYROLLTEMPLATE.ISLASTWORKINGDAY' | translate }}" [sortable]="true" prop="islastWorkingDay">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span [matTooltip]="(row?.islastWorkingDay ? 'Yes' : 'No')">{{row?.islastWorkingDay ? "Yes" : "No"}}</span>
+          </ng-template>
+        </ngx-datatable-column>
+          <ngx-datatable-column name="{{ 'PAYROLLTEMPLATE.INFINITLYRUNDATE' | translate }}" [sortable]="true"
+          prop="infinitlyRunDate">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.infinitlyRunDate | date: 'dd-MMM-yyyy'}}">{{ row?.infinitlyRunDate  | date: "dd-MMM-yyyy" }}</span>
+          </ng-template>
+         </ngx-datatable-column> -->
+        <ngx-datatable-column name="{{ 'PAYROLLTEMPLATECONFIGURATION.CURRENCY' | translate }}" [sortable]="true"
+          prop="currencyName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.currencyName }}">{{ row?.currencyName }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'PAYROLLTEMPLATE.EDITPAYROLLTEMPLATE' | translate }}"
+              (click)="editPayRollTemplatePopupOpen(row)" *ngIf="!isArchivedTypes"
+              mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{ 'PAYROLLTEMPLATE.ARCHIVEPAYROLLTEMPLATE' | translate }}"
+              [satPopoverAnchorFor]="deletePayRollTemplatePopover" #deletePayRollTemplatePopUp="satPopoverAnchor"
+              (click)="deletePayRollTemplatePopUpOpen(row, deletePayRollTemplatePopUp)" *ngIf="!isArchivedTypes"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{ 'PAYROLLTEMPLATE.UNARCHIVEPAYROLLTEMPLATE' | translate }}"
+              [satPopoverAnchorFor]="deletePayRollTemplatePopover" #deletePayRollTemplatePopUp="satPopoverAnchor"
+              (click)="deletePayRollTemplatePopUpOpen(row, deletePayRollTemplatePopUp)" *ngIf="isArchivedTypes"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  
+    <!--Delete PAYROLLTEMPLATE dialog-->
+    <sat-popover backdropClass="backdrop-color" #deletePayRollTemplatePopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="isPayRollTemplateArchived">
+            {{ 'PAYROLLTEMPLATE.ARCHIVEPAYROLLTEMPLATETITLE' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="!isPayRollTemplateArchived">
+            {{ 'PAYROLLTEMPLATE.UNARCHIVEPAYROLLTEMPLATETITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="isPayRollTemplateArchived">
+            {{ 'PAYROLLTEMPLATE.ARCHIVEPAYROLLTEMPLATETEXT' | translate }}
+          </div>
+          <div class="card-content mb-1" *ngIf="!isPayRollTemplateArchived">
+            {{ 'PAYROLLTEMPLATE.UNARCHIVEPAYROLLTEMPLATETEXT' | translate }}
+          </div>
+          <div class="text-center">
+            <button class="mr-1" *ngIf="isPayRollTemplateArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deletePayRollTemplate();">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="!isPayRollTemplateArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deletePayRollTemplate();">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePayRollTemplateDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete PAYROLLTEMPLATE dialog-->
+    
+  </div>
+  <app-common-message-box *ngIf="!(canAccess_feature_ManagePayrollTemplate)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+  </app-common-message-box>

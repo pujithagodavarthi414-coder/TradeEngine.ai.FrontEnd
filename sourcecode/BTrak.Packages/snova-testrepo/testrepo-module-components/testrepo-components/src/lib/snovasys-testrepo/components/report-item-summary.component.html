@@ -1,0 +1,114 @@
+<mat-card class="report-item-padding" [ngStyle]="{ 'background-color': reportSelected == true ? '#e1f0ff' : '' }">
+    <mat-card-title>
+        <div fxLayout="row" fxLayoutGap="0px">
+            <div fxFlex class="report-title-overflow" #reportTitle (mouseover)="checkTitleTooltipStatus()">
+                <span class="reports-on-hover primary-text"
+                    [ngStyle]="{ 'font-weight': reportSelected == true ? 'bold' : '' }"
+                    [matTooltip]="showTitleTooltip ? reportData.testRailReportName : ''">
+                    {{reportData.testRailReportName}}
+                </span>
+            </div>
+            <div fxFlex="50px" fxLayoutAlign="end" class="mr-05">
+                <span class="milestone-count"
+                    matTooltip="{{'TESTMANAGEMENT.TOTALCASES' | translate}} - {{reportData.reportCasesCount}}
+                            , {{'TESTMANAGEMENT.UNTESTED' | translate}} - {{reportData.untestedCount}} ({{reportData.untestedPercent}}%)
+                            , {{'TESTMANAGEMENT.PASSED' | translate}} - {{reportData.passedCount}} ({{reportData.passedPercent}}%)
+                            , {{'TESTMANAGEMENT.BLOCKED' | translate}} - {{reportData.blockedCount}} ({{reportData.blockedPercent}}%)
+                            , {{'TESTMANAGEMENT.RETEST' | translate}} - {{reportData.retestCount}} ({{reportData.retestPercent}}%)
+                            , {{'TESTMANAGEMENT.FAILED' | translate}} - {{reportData.failedCount}} ({{reportData.failedPercent}}%)">
+                    {{reportData.passedPercent}}%
+                </span>
+            </div>
+        </div>
+    </mat-card-title>
+    <div fxLayout="row wrap" class="mt-05">
+        <div fxFlex="25px" class="report-display">
+            <app-avatar matTooltip="{{'TESTMANAGEMENT.CREATEDBY' | translate}} {{reportData.createdBy}}"
+                [name]="reportData.createdBy | removeSpecialCharacters" [src]="reportData.createdByProfileImage"
+                [isRound]="true" size="22">
+            </app-avatar>
+        </div>
+        <div fxFlex class="hide-content-overflow">
+            <span class="ml-05" matTooltip="{{reportData.createdDateTime | utcToLocalTime | date:'mediumDate'}}">
+                {{reportData.createdDateTime | utcToLocalTime | date:'mediumDate'}} </span>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center"
+            *ngIf="(canAccess_entityType_feature_SendReport) && reportData.pdfUrl">
+            <a class="reports-on-hover"
+                matTooltip="{{'TESTMANAGEMENT.DOWNLOADREPORT' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon icon="download" class="accent" (click)="$event.stopPropagation();downloadReport(reportData)">
+                </fa-icon>
+            </a>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center"
+            *ngIf="(canAccess_entityType_feature_SendReport) && reportData.pdfUrl">
+            <a class="reports-on-hover ml-05"
+                matTooltip="{{'TESTMANAGEMENT.SHAREREPORT' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon icon="share-square" [satPopoverAnchorFor]="shareReport"
+                    (click)="$event.stopPropagation();shareTestRailReport()"></fa-icon>
+            </a>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" *ngIf="(canAccess_entityType_feature_DeleteTestReport)">
+            <a class="reports-on-hover ml-05"
+                matTooltip="{{'TESTMANAGEMENT.DELETEREPORT' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon icon="trash" color="accent" [satPopoverAnchorFor]="deleteReport"
+                    (click)="$event.stopPropagation();deleteTestRailReport()">
+                </fa-icon>
+            </a>
+        </div>
+    </div>
+</mat-card>
+
+<sat-popover #deleteReport hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.AREYOUSUREDELETEREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableReportDelete"
+                    (click)="deleteSelectedReport(reportData)">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="deleteReport.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #shareReport hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.SHAREREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.YOUCANSHAREREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+            <div fxLayout="row wrap" class="mb-1">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'TESTMANAGEMENT.PLEASEENTERONEMAILPERLINE' | translate}}"
+                        [formControl]="reportMail"></textarea>
+                    <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}</mat-hint>
+                </mat-form-field>
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="validateMail() || disableReportShare" (click)="shareSelectedReport(reportData)">
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{'TESTMANAGEMENT.SHARE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="shareReport.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

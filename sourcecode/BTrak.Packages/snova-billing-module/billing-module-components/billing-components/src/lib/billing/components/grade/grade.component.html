@@ -1,0 +1,197 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageGrades">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow"
+                    matTooltip="{{ 'BILLINGGRADE.GRADES' |  translate }}">{{ 'BILLINGGRADE.GRADES' | translate }}</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="getAllGrades()">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button mat-icon-button matTooltip="{{ 'BILLINGGRADE.CREATEGRADE' |  translate }}"
+                        [satPopoverAnchorFor]="gradePopover" #gradePopup="satPopoverAnchor"
+                        (click)="createGrade(gradePopup);clearForm()" *ngIf="!isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="100" [rows]="gradeList" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'BILLINGGRADE.GRADENAME' |  translate }}" [flexGrow]="1"
+                [sortable]="true" prop="gradeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.gradeName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'PRODUCT.ProductName' | translate }}" [flexGrow]="1"
+                [sortable]="true" prop="gradeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.productName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="GST Code" [flexGrow]="1"
+                [sortable]="true" prop="gstCode">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.gstCode }}
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'BILLINGGRADE.EDITGRADE' |  translate }}"
+                        [satPopoverAnchorFor]="gradePopover" #gradePopup="satPopoverAnchor"
+                        (click)="editGrade(row,gradePopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <button class="text-center" title="{{ 'BILLINGGRADE.ARCHIVEGRADE' |  translate }}"
+                        [satPopoverAnchorFor]="deleteGradePopover" #deleteGradePopup="satPopoverAnchor"
+                        (click)="deleteGradePopUpOpen(row,deleteGradePopup)" *ngIf="!isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+
+                    <button class="text-center" title="{{ 'BILLINGGRADE.UNARCHIVEGRADE' |  translate }}"
+                        [satPopoverAnchorFor]="deleteGradePopover" #deleteGradePopup="satPopoverAnchor"
+                        (click)="deleteGradePopUpOpen(row,deleteGradePopup)" *ngIf="isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #gradePopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{grade}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="gradeForm" #formDirective="ngForm" novalidate
+                    (submit)="gradeForm.valid && upsertGrade(formDirective)">
+                    <div>
+                        <mat-form-field>
+                            <input matInput formControlName="gradeName" placeholder="Grade name" required>
+                            <mat-error *ngIf="gradeForm.get('gradeName').hasError('maxlength')">
+                                {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="gradeForm.get('gradeName').hasError('required') && gradeForm.get('gradeName').touched">
+                                {{ 'DESIGNATION.REQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="productId" placeholder="Product" required>
+                                <mat-option value="option" *ngFor="let product of productList"
+                                    [value]="product.productId">
+                                    {{product.productName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="gradeForm.get('productId').hasError('required') && gradeForm.get('productId').touched">Please
+                                    select product
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input formControlName="gstCode" matInput placeholder="GST Code" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="gradeForm.get('gstCode').hasError('required') && gradeForm.get('gstCode').touched">Please
+                                    enter GST Code
+                                </span>
+                            </mat-error>
+                            <mat-error *ngIf="gradeForm.get('gstCode').hasError('maxlength')">
+                                GST code should be 10 characters only</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="mt-1">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!gradeForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertGradePopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteGradePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isGradeArchived">
+                    {{ 'BILLINGGRADE.ARCHIVEGRADE' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isGradeArchived">
+                    {{ 'BILLINGGRADE.UNARCHIVEGRADE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isGradeArchived">
+                    {{ 'BILLINGGRADE.AREYOUSUREYOUWANTTOARCHIVETHISGRADE?' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isGradeArchived">
+                    {{ 'BILLINGGRADE.AREYOUSUREYOUWANTTOUNARCHIVETHISGRADE?' | translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isGradeArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteGrade();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button color="primary" *ngIf="!isGradeArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteGrade();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteGradePopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageGrades" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

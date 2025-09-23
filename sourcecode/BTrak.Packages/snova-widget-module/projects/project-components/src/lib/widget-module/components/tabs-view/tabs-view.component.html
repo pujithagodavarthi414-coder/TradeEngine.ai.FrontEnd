@@ -1,0 +1,523 @@
+<div fxLayout="row wrap" class="m-333 selected-dashboard">
+  <div fxLayoutAlign="start center" class="mr-1 tabs-selected auto-width" (click)="$event.stopPropagation()"
+    [formGroup]="workspaceSelect">
+    <mat-select [satPopoverAnchorFor]="addWorkspace" formControlName="selected" #workspacePopup="satPopoverAnchor"
+      [(ngModel)]="selectedWorkspaceId" (selectionChange)="selectedMatTab(workspacePopup,$event.value,true)">
+      <mat-optgroup *ngFor="let workspace of relatedWorkspaces" [label]="workspace.workspaceName">
+        <mat-option *ngFor="let wrk of workspace.children" [value]="wrk.workspaceId">
+          <fa-icon icon="chevron-right" class="mr-05 mat-color-accent"></fa-icon>
+          {{wrk.workspaceName}}
+        </mat-option>
+
+      </mat-optgroup>
+      <hr class="m-0">
+      <!-- <mat-option *ngFor="let workspace of (workspacesList$ | async); let i = index;" [value]="workspace.workspaceId">
+        <fa-icon *ngIf="workspacesList$[i-1]== workspace.parentId && i >0 &&  workspace.parentId == null"
+          icon="chevron-right" class="mr-05 mat-color-accent">
+        </fa-icon>
+
+        <fa-icon *ngIf="workspacesList$[i-1]== workspace.parentId && i >0 && workspace.parentId != null"
+          icon="minus-square" [ngClass]="{'d-none': wrk.parentId != workspace.parentId }"  class="mr-05 mat-color-accent">
+        </fa-icon>
+        {{workspace.workspaceName}}
+      </mat-option> -->
+      <hr class="m-0">
+      <mat-option value="0" *ngIf="(canAccess_feature_AddDashboard) && ((workspacesList$ | async)?.length > 0)">
+        <b>
+          <fa-icon icon="external-link-alt" class="mr-05 mat-color-accent">
+          </fa-icon>{{ 'APP.OPENDASHBOARDS' | translate }}
+        </b>
+      </mat-option>
+      <mat-option value="1" *ngIf="(canAccess_feature_AddDashboard)">
+        <b>
+          <fa-icon icon="plus-square" class="mr-05 mat-color-accent">
+          </fa-icon>{{ 'APP.ADDDASHBOARD' | translate }}
+        </b>
+      </mat-option>
+    </mat-select>
+
+    <fa-icon *ngIf="isAppsInDraft && (canAccess_feature_DragApps)" icon="exclamation-triangle"
+      [satPopoverAnchorFor]="publishWorkspace" #publishWorkspacePopover="satPopoverAnchor"
+      matTooltip="{{ 'APP.ADMINPUBLISHMESSAGE' | translate}}"
+      (click)="openPublishWorkspacePopover(publishWorkspacePopover)" class="mat-color-accent cursor-pointer ml-1">
+    </fa-icon>
+
+    <fa-icon icon="sliders-h" (click)="$event.stopPropagation()" [matMenuTriggerFor]="filterMenu"
+      class="mat-color-accent cursor-pointer ml-1 dashboard-options" style="display: block;"></fa-icon>
+    <mat-menu class="goal-options" #filterMenu="matMenu">
+
+      <button mat-menu-item (click)="openEditWorkspacePopover(selectedWorkspace,workspacePopup)"
+        matTooltip="{{ 'APP.EDIT' | translate}}" [satPopoverAnchorFor]="addWorkspace" #workspacePopup="satPopoverAnchor"
+        *ngIf="((selectedWorkspace?.canEdit) && (canAccess_feature_EditDashboard))" class="dashboard-options">
+        <fa-icon icon="edit" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.EDIT' | translate}}</span>
+      </button>
+
+      <button mat-menu-item [satPopoverAnchorFor]="hideWorkspace" #hideWorkspacePopover="satPopoverAnchor"
+        matTooltip="{{ 'APP.HIDEDASHBOARD' | translate}}"
+        (click)="openHideWorkspacePopover(hideWorkspacePopover,selectedWorkspace)"
+        *ngIf="(((workspacesList$ | async)?.length > 1) && (canAccess_feature_HideDashboard))">
+        <fa-icon icon="eye-slash" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.HIDEDASHBOARD' | translate}}</span>
+      </button>
+
+      <button mat-menu-item [satPopoverAnchorFor]="deleteWorkspace" #deleteWorkspacePopover="satPopoverAnchor"
+        matTooltip="{{ 'APP.DELETEDASHBOARDS' | translate}}"
+        (click)="openDeleteWorkspacePopover(deleteWorkspacePopover,selectedWorkspace)"
+        *ngIf="((workspacesList$ | async)?.length > 1) && (selectedWorkspace?.canDelete && (canAccess_feature_DeleteDashboard))">
+        <fa-icon icon="trash" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.DELETEDASHBOARDS' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="addWorkspace" #workspacePopup="satPopoverAnchor"
+        *ngIf="(canAccess_feature_AddDashboard)" matTooltip="{{ 'APP.ADDCHILDDASHBOARD' | translate}}"
+        (click)="selectedMatTab(workspacePopup,'2',true)">
+        <fa-icon icon="clone" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.ADDCHILDDASHBOARD' | translate}}</span>
+      </button>
+      <button mat-menu-item (click)="SaveAsDefaultPersistance(selectedWorkspaceId)"
+        matTooltip="{{ 'APP.SAVEASDEFAULT' | translate}}" *ngIf="(canAccess_feature_PublishAsDefault)">
+        <fa-icon icon="save" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.SAVEASDEFAULT' | translate}}</span>
+      </button>
+
+      <button mat-menu-item (click)="ResetToDefaultDashboardPersistance(selectedWorkspaceId)"
+        matTooltip="{{ 'APP.RESETTODEFAULT' | translate}}">
+        <fa-icon icon="history" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.RESETTODEFAULT' | translate}}</span>
+      </button>
+
+      <button mat-menu-item (click)="refreshDashboard(selectedWorkspaceId)"
+        matTooltip="{{ 'APP.RELOADDASHBOARD' | translate}}" *ngIf="((workspacesList$ | async)?.length > 1)">
+        <fa-icon icon="sync-alt" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.RELOADDASHBOARD' | translate }}</span>
+      </button>
+
+      <button mat-menu-item [satPopoverAnchorFor]="duplicateDashboard" #duplicateDashboardPopover="satPopoverAnchor"
+        *ngIf="(canAccess_feature_AddDashboard)" matTooltip="{{ 'APP.DUPLICATE' | translate}}"
+        (click)="openDuplicateDashboardPopover(duplicateDashboardPopover)">
+        <fa-icon icon="clone" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.DUPLICATE' | translate}}</span>
+      </button>
+
+      <button mat-menu-item (click)="$event.stopPropagation()" [matMenuTriggerFor]="defaultMenuType"
+        matTooltip="{{ 'APP.SETASDEFAULTDASHBOARD' | translate}}">
+        <fa-icon icon="bookmark" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.SETASDEFAULTDASHBOARD' | translate}}</span>
+      </button>
+
+    </mat-menu>
+
+    <mat-menu class="goal-options" #defaultMenuType="matMenu">
+      <button mat-menu-item (click)="SetDashboardAsDefault(selectedWorkspaceId, false)"
+        matTooltip="{{ 'APP.SETASDEFAULTDASHBOARDFORME' | translate}}">
+        <fa-icon icon="bookmark" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.SETASDEFAULTDASHBOARDFORME' | translate}}</span>
+      </button>
+
+      <button mat-menu-item (click)="SetDashboardAsDefault(selectedWorkspaceId, true)"
+        matTooltip="{{ 'APP.SETASDEFAULTDASHBOARDFORALL' | translate}}">
+        <fa-icon icon="bookmark" class="mat-color-accent mr-08"></fa-icon>
+        <span>{{'APP.SETASDEFAULTDASHBOARDFORALL' | translate}}</span>
+      </button>
+
+
+    </mat-menu>
+
+
+  </div>
+
+  <div fxFlex class="mr-1">
+    <app-cutom-tag-filter [selectedWorkspace]="selectedWorkspaceforFilter" [displayLocation]="1" *ngIf="filtersLoaded"
+      [selectedFormName]="selectedFormName" (customfilterApplied)="customfilterApplied($event)"
+      [dashboardGlobalData]="dashboardGlobalData">
+    </app-cutom-tag-filter>
+  </div>
+
+  <div fxFlex="2" fxFlex.md="3" fxFlex.lt-sm="6" fxFlex.lt-md="4" fxLayoutAlign="start center" class="dashboard-options"
+    *ngIf="((workspacesList$ | async)?.length > 0)" style="margin-right:34px !important"
+    [satPopoverAnchorFor]="shareWidgets" #shareWidgetsPopover="satPopoverAnchor"
+    (click)="shareWidgetsPopUpOpen(shareWidgetsPopover);clearDocForm();">
+    <button mat-icon-button matTooltip="Share dashboard">
+      <fa-icon icon="share-alt" class="mr-05" style="color:#2f3065;font-weight: 400;font-size: large;cursor: pointer;">
+      </fa-icon>
+    </button>
+  </div>
+
+  <div fxFlex="2" fxFlex.md="3" fxFlex.lt-sm="6" fxFlex.lt-md="4" fxLayoutAlign="start center" class="dashboard-options"
+    *ngIf="(canAccess_feature_DragApps) && ((workspacesList$ | async)?.length > 0)">
+    <fa-icon icon="store" matTooltip="{{ 'APP.APPSTORE' | translate}}" (click)="openSettings(false)"
+      class="mat-color-accent cursor-pointer"></fa-icon>
+  </div>
+
+  <div fxFlex="2" fxFlex.md="3" fxFlex.lt-sm="6" fxFlex.lt-md="4" fxLayoutAlign="start center" class="dashboard-options"
+    *ngIf="listView && ((workspacesList$ | async)?.length > 0)">
+    <fa-icon icon="bars" (click)="changeViewType()" matTooltip="{{ 'HORIZONTAL' | translate }}"
+      class="mat-color-accent cursor-pointer" [ngClass]="{'active': listView}"></fa-icon>
+  </div>
+
+  <div fxFlex="2" fxFlex.md="3" fxFlex.lt-sm="6" fxFlex.lt-md="4" fxLayoutAlign="start center" class="dashboard-options"
+    *ngIf="!listView && ((workspacesList$ | async)?.length > 0)">
+    <fa-icon icon="bars" (click)="changeViewType()" matTooltip="{{ 'VERTICAL' | translate }}"
+      class="mat-color-accent cursor-pointer kanban-icon-dashboard" [ngClass]="{'active': !listView}"></fa-icon>
+  </div>
+
+
+</div>
+<div class="p-0 m-0 gridster-list" *ngIf="((workspacesList$ | async)?.length > 0) && !listView" #widgettable>
+  <app-widgetsgridster [selectedApps]="selectedApps" [reloadDashboard]="reloadDashboard" [filterApplied]="filterApplied"
+    [dashboardFilters]="dashboardFilter" [selectedWorkspaceId]="selectedWorkspaceId" [isWidget]="true"
+    [dashboardGlobalData]="dashboardGlobalData" (appInserted)="appInserted($event)" [isImageConvert]="isImageConvert"
+    (convertedAllImages)="convertImages()" (emitFiles)="emitEvent($event)"
+    (emitSelectedWidgetsList)="selectedWidgetsList($event)">
+  </app-widgetsgridster>
+</div>
+
+<div class="p-0 m-0 gridster-list" *ngIf="((workspacesList$ | async)?.length > 0) && listView" id="widgettable">
+  <custom-apps-listview [selectedWorkspaceId]="selectedWorkspaceId" [selectedApps]="selectedAppForListView"
+    [dashboardFilters]="dashboardFilter" (appInserted)="appInserted($event)">
+  </custom-apps-listview>
+</div>
+
+<sat-popover backdropClass="backdrop-color" hasBackdrop #addWorkspace verticalAlign="below" horizontalAlign="end"
+  [interactiveClose]="false">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1" *ngIf="!workspaceId">
+        {{ 'APP.ADDDASHBOARDTITLE' | translate }}
+      </div>
+      <div class="card-title-text mat-bg-primary p-05 mb-1" *ngIf="workspaceId">
+        {{ 'APP.EDITDASHBOARD' | translate }}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="workspaceForm" novalidate #workspaceFormDirective="ngForm"
+        (submit)="workspaceForm.valid && upsertWorkspace($event)">
+        <div class="card-content">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="{{ 'HRMANAGAMENT.NAME' | translate}}*" formControlName="workspaceName" />
+            <mat-error
+              *ngIf="workspaceForm.get('workspaceName').hasError('required') && workspaceForm.get('workspaceName').touched ">
+              {{ 'APP.DASHBOARDNAMEREQUIRED' | translate }}
+            </mat-error>
+            <mat-error *ngIf="workspaceForm.get('workspaceName').hasError('maxlength')">
+              {{ 'APP.DASHBOARDNAMELENGTHEXCEED' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <textarea matInput formControlName="description" rows="2"
+              placeholder="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}"></textarea>
+            <mat-error
+              *ngIf="workspaceForm.get('description').hasError('maxlength') && workspaceForm.get('description').touched">
+              {{ 'APP.CUSTOMAPPDESCRIPTIONMAXLENGTHERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+            <mat-select formControlName="selectedRoles" placeholder="{{ 'WIDGETS.VIEWROLES' | translate }}" multiple
+              required>
+              <app-select-all [model]="workspaceForm.get('selectedRoles')" [values]="roleIds">
+              </app-select-all>
+              <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                {{ roles.roleName }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="workspaceForm.get('selectedRoles').hasError('required') && workspaceForm.get('selectedRoles').touched">
+              {{ 'APP.SELECTANYROLE' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <mat-select formControlName="editRoleIds" placeholder="{{ 'WIDGETS.EDITROLES' | translate }}" multiple>
+              <app-select-all [model]="workspaceForm.get('editRoleIds')" [values]="roleIds">
+              </app-select-all>
+              <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                {{ roles.roleName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <mat-select formControlName="deleteRoleIds" placeholder="{{ 'WIDGETS.DELETEROLES' | translate }}" multiple>
+              <app-select-all [model]="workspaceForm.get('deleteRoleIds')" [values]="roleIds">
+              </app-select-all>
+              <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                {{ roles.roleName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="full-width">
+            <mat-select formControlName="defaultView" placeholder="{{ 'APP.DEFAULTVIEW' | translate }}">
+              <mat-option [value]="false"> Horizontal View </mat-option>
+              <mat-option [value]="true"> Vertical View </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" type="submit"
+            [disabled]="!workspaceForm.valid || dashboardUpdateInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(upsertWorkspaceloading$ | async)">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button type="button" (click)="closeAddWorkspaceDialog(workspaceFormDirective)">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" hasBackdrop #shareWidgets verticalAlign="below" horizontalAlign="end"
+  [interactiveClose]="false">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        Share dashboard
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content">
+        <mat-form-field class="full-width">
+          <mat-select placeholder="Select widgets" multiple [(ngModel)]="selectedList"
+            (selectionChange)="getSelectWidgetForDashboard($event.value)">
+            <mat-option [value]="widget.customWidgetId" *ngFor="let widget of originalList">
+              {{ widget.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" type="submit"
+          (click)="openEmailConfigurationPopUp()">
+          <fa-icon class="mr-05" icon="share"></fa-icon> Share
+        </button>
+        <button mat-button mat-raised-button type="button" (click)="closeSharePopUp()">
+          <fa-icon class=" mr-05" icon="times"></fa-icon> Cancel
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteWorkspace hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        {{ 'APP.DASHBOARDDELETETEXT' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="accent" [disabled]="disableWorkspaceDelete"
+          (click)="deleteSelectedWorkspace()">
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'TESTMANAGEMENT.DELETE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteWorkspacePopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #publishWorkspace hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        {{ 'APP.ADMINPUBLISHCONFIRMATION' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="accent" [disabled]="disableWorkspacePublish"
+          (click)="SaveAsDefaultPersistance(selectedWorkspaceId)">
+          <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'CUSTOMAPPLICATION.PUBLISH' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closePublishWorkspacePopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #hideWorkspace hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        {{ 'APP.DASHBOARDHIDETEXT' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="accent" [disabled]="disableWorkspacehide"
+          (click)="hideSelectedWorkspace()">
+          <fa-icon class="mr-05" icon="eye-slash"></fa-icon> {{ 'APP.HIDE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeHideWorkspacePopover(false)">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'TESTMANAGEMENT.CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #duplicateDashboard hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'APP.DUPLICATE' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="duplicateForm" novalidate (submit)="duplicateForm.valid && insertDuplicateDashboard()">
+        <div class="card-content">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="{{ 'HRMANAGAMENT.NAME' | translate}}*" formControlName="dashboardName" />
+            <mat-error
+              *ngIf="duplicateForm.get('dashboardName').hasError('required') && duplicateForm.get('dashboardName').touched ">
+              {{ 'APP.DASHBOARDNAMEREQUIRED' | translate }}
+            </mat-error>
+            <mat-error *ngIf="duplicateForm.get('dashboardName').hasError('maxlength')">
+              {{ 'APP.DASHBOARDNAMELENGTHEXCEED' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" type="button"
+            (click)="insertDuplicateDashboard()" [disabled]="!duplicateForm.valid || disableDuplicateDashboard">
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button type="button" (click)="closeDuplicateDashbaordDialog()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<ng-template #emailConfigurationTemplate>
+  <mat-card class="filter-data p-0" id="style-1">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        Share Dashboard</div>
+    </mat-card-title>
+    <form [formGroup]="docForm" novalidate>
+      <div class="p-1">
+        <div fxLayout="row wrap" class="p-05 ">
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <mat-form-field class="full-width" fxFlex="100">
+                <mat-chip-list #chipList aria-label="Roles selection">
+                  <mat-chip *ngFor="let role of selectedEmailRoles" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeSelectedRole(role)" style="display: flex !important;">
+                    {{role.roleName}}
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                  </mat-chip>
+                  <input matInput placeholder="Select roles" #rolesInput required
+                    #autocompleteTrigger="matAutocompleteTrigger" formControlName="rolesInput" [matAutocomplete]="auto"
+                    [matChipInputFor]="chipList" [matAutocomplete]="auto"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="add($event)"
+                    (focus)="openAuto(autocompleteTrigger)">
+                </mat-chip-list>
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedRole($event.option.value)">
+                  <mat-option *ngFor="let roles of filteredRoles$ | async" [value]="roles.roleId">
+                    <mat-checkbox color="primary" style="padding: 0 12px;"
+                      [checked]="selectedEmailRoles.indexOf(roles) >= 0"></mat-checkbox>
+                    {{roles.roleName}}
+                  </mat-option>
+                </mat-autocomplete>
+                <mat-error>
+                  <span>
+                    Please select Role</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <mat-form-field class="full-width" fxFlex="100">
+                <mat-chip-list #userChipList aria-label="Users selection">
+                  <mat-chip *ngFor="let user of selectedToUsers" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeSelectedUser(user)" style="display: flex !important;">
+                    {{user.email}}
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                  </mat-chip>
+                  <input matInput placeholder="Select users" #userToInput required
+                    #userAutocompleteTrigger="matAutocompleteTrigger" formControlName="toInput"
+                    [matAutocomplete]="toAuto" [matChipInputFor]="userChipList" [matAutocomplete]="toAuto"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addToUser($event)"
+                    (focus)="openUserAuto(userAutocompleteTrigger)">
+                </mat-chip-list>
+                <mat-autocomplete #toAuto="matAutocomplete" (optionSelected)="selectedTo($event.option.value)">
+                  <mat-option *ngFor="let user of filteredToUsers$ | async" [value]="user.userId">
+                    <mat-checkbox color="primary" style="padding: 0 12px;"
+                      [checked]="selectedToUsers.indexOf(user) >= 0"></mat-checkbox>
+                    {{user.fullName}} ({{user.email}})
+                  </mat-option>
+                </mat-autocomplete>
+                <span *ngIf="isValidate" class="chip-error">
+                  Invalid email
+                </span>
+                <mat-error>
+                  <span>
+                    Please select To</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="subject" placeholder="Subject" required>
+                <mat-error>
+                  <span *ngIf="docForm.get('subject').hasError('required')">
+                    Please enter subject</span>
+                </mat-error>
+
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div fxFlex="100">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex>
+                <editor class="dfree-header custom-logtime-comment" [(ngModel)]="message"
+                  apiKey="ln50de3rdhw6h9ld2lutg00tj5g9xk14pp5m8dfy1b1s4nen" formControlName="message" [init]="config">
+                </editor>
+                <mat-error>
+                  <span *ngIf="docForm.controls['message'].hasError('required')">
+                    <b>*</b></span>
+                </mat-error>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-1">
+        <button class="mr-1" mat-raised-button color="primary" (click)="shareDashboard()" [disabled]="isLoading">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isLoading">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon>
+          Save
+        </button>
+        <button class="mr-1" mat-raised-button (click)="onNoClickShareEmail()" type="button" [disabled]="isLoading">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          Cancel
+        </button>
+      </div>
+
+    </form>
+  </mat-card>
+
+
+</ng-template>

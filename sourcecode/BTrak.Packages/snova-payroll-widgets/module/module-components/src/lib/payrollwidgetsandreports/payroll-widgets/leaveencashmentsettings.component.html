@@ -1,0 +1,289 @@
+<div class="full-height" *ngIf="(canAccess_feature_LeaveEncashmentSettings)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'LEAVEENCASHMENTSETTINGS.LEAVEENCASHMENTSETTINGSTITLE' | translate | titlecase }}">{{ 'LEAVEENCASHMENTSETTINGS.LEAVEENCASHMENTSETTINGSTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle [matTooltip]="isArchivedTypes == true? seeUnArchivedItems: seeArchivedItems"
+              class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+              (change)="getAllLeaveEncashmentSettings()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button
+              matTooltip="{{ 'LEAVEENCASHMENTSETTINGS.CREATELEAVEENCASHMENTSETTINGSTOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertLeaveEncashmentSettingsPopover"
+              #upsertLeaveEncashmentSettingsPopUp="satPopoverAnchor"
+              (click)="createLeaveEncashmentSettingsPopupOpen(upsertLeaveEncashmentSettingsPopUp);clearForm()"
+              *ngIf="!isArchivedTypes">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+      [rowHeight]="50" [limit]="50" [rows]="leaveEncashmentSettings" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}" [scrollbarH]="true">
+      <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate }}" [sortable]="true"
+        prop="branchName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.branchName }}">{{ row?.branchName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.PAYROLLCOMPONENTNAME' | translate }}" [sortable]="true"
+        prop="componentName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.payRollComponentName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.ISCTCTYPE' | translate }}" [sortable]="true"
+        prop="isCtcType">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row?.isCtcType ? "Yes" : "No"}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.PERCENTAGE' | translate }}" [sortable]="true"
+        prop="percentage">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.percentage }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate}}" sortable="true"
+        prop="activeFrom">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div *ngIf="row.activeFrom != null">{{ row.activeFrom | date: "dd-MMM-yyyy" }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'PAYROLLROLECONFIGURATION.ACTIVETO' | translate}}" sortable="true" prop="activeTo">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div *ngIf="row.activeTo != null">{{ row.activeTo | date: "dd-MMM-yyyy" }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'LEAVEENCASHMENTSETTINGS.EDITLEAVEENCASHMENTSETTINGS' | translate }}"
+            [satPopoverAnchorFor]="upsertLeaveEncashmentSettingsPopover"
+            #upsertLeaveEncashmentSettingsPopUp="satPopoverAnchor"
+            (click)="editLeaveEncashmentSettingsPopupOpen(row,upsertLeaveEncashmentSettingsPopUp)"
+            *ngIf="!isArchivedTypes" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{ 'LEAVEENCASHMENTSETTINGS.ARCHIVELEAVEENCASHMENTSETTINGS' | translate }}"
+            [satPopoverAnchorFor]="deleteLeaveEncashmentSettingsPopover"
+            #deleteLeaveEncashmentSettingsPopUp="satPopoverAnchor"
+            (click)="deleteLeaveEncashmentSettingsPopUpOpen(row, deleteLeaveEncashmentSettingsPopUp)"
+            *ngIf="!isArchivedTypes" mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+          <button class="text-center"
+            title="{{ 'LEAVEENCASHMENTSETTINGS.UNARCHIVELEAVEENCASHMENTSETTINGS' | translate }}"
+            [satPopoverAnchorFor]="deleteLeaveEncashmentSettingsPopover"
+            #deleteLeaveEncashmentSettingsPopUp="satPopoverAnchor"
+            (click)="deleteLeaveEncashmentSettingsPopUpOpen(row, deleteLeaveEncashmentSettingsPopUp)"
+            *ngIf="isArchivedTypes" mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!--Edit LEAVEENCASHMENTSETTINGS dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertLeaveEncashmentSettingsPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ leaveEncashmentSettingsTitle | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="leaveEncashmentSettingsForm" #formDirective="ngForm" novalidate
+          (submit)="leaveEncashmentSettingsForm.valid && upsertLeaveEncashmentSettings(formDirective)">
+          <div>
+            <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+              <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                    formControlName="branchId" required>
+                    <mat-option *ngFor="let branch of (branchList$ | async)" [value]="branch.branchId">
+                      {{ branch.branchName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error class="P-06"
+                    *ngIf="leaveEncashmentSettingsForm.get('branchId').hasError('required') && leaveEncashmentSettingsForm.get('branchId').touched">
+                    {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <!-- <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <mat-select formControlName="type"
+                    placeholder="{{'PAYROLLTEMPLATECONFIGURATION.SELECTTYPE'| translate }}" required
+                    (selectionChange)="changeType($event.value)">
+                    <mat-option [value]="0">
+                      {{ 'PAYROLLTEMPLATECONFIGURATION.AMOUNT' | translate }}
+                    </mat-option>
+                    <mat-option [value]="1">
+                      {{ 'PAYROLLTEMPLATECONFIGURATION.PERCENTAGE' | translate }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error class="P-06"
+                    *ngIf="leaveEncashmentSettingsForm.get('type').hasError('required') && leaveEncashmentSettingsForm.get('type').touched">
+                    {{ 'LEAVEENCASHMENTSETTINGS.TYPEISREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div> -->
+              <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{'LEAVEENCASHMENTSETTINGS.SELECTDEPENDENTTYPE'| translate }}"
+                    (selectionChange)="changeAmountType($event.value)" formControlName="dependentType" required>
+                    <mat-option [value]="0">
+                      {{ 'LEAVEENCASHMENTSETTINGS.PAYROLLCOMPONENTNAME' | translate }}
+                    </mat-option>
+                    <mat-option [value]="1">
+                      {{ 'LEAVEENCASHMENTSETTINGS.ISCTCTYPE' | translate }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error class="P-06"
+                    *ngIf="leaveEncashmentSettingsForm.get('dependentType').hasError('required') && leaveEncashmentSettingsForm.get('dependentType').touched">
+                    {{ 'LEAVEENCASHMENTSETTINGS.DEPENDENTTYPEISREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="48" *ngIf="leaveEncashmentSettingsForm.get('dependentType').value == 0">
+                <mat-form-field class="full-width">
+                  <mat-select formControlName="payRollComponentId"
+                    placeholder="{{'TAXALLOWANCE.PAYROLLCOMPONENTNAME' | translate}}">
+                    <mat-option [value]="payrollcomponent.payRollComponentId"
+                      *ngFor="let payrollcomponent of payRollComponents">
+                      {{payrollcomponent.componentName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <input type='number' max="100" matInput formControlName="value"
+                    placeholder="{{ 'LEAVEENCASHMENTSETTINGS.PERCENTAGE' | translate }}" required>
+                  <mat-error class="P-06"
+                    *ngIf="leaveEncashmentSettingsForm.get('value').hasError('required') && leaveEncashmentSettingsForm.get('value').touched">
+                    {{ 'LEAVEENCASHMENTSETTINGS.VALUEREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <span class="error-msg" *ngIf="leaveEncashmentSettingsForm.get('value').hasError('max')">
+                  {{'LEAVEENCASHMENTSETTINGS.VALUESHOULDBELESSTHANOREQUALTO100' | translate}}
+                </span>
+              </div>
+              <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <input matInput [matDatepicker]="picker" (click)="picker.open()"
+                    placeholder="{{'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate}}" formControlName="activeFrom"
+                    [min]="minDate"
+                    [max]="leaveEncashmentSettingsForm.get('activeTo').value" required autocomplete="off">
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                  <mat-error>
+                    <span
+                      *ngIf="leaveEncashmentSettingsForm.get('activeFrom').hasError('required') && leaveEncashmentSettingsForm.get('activeFrom').touched">
+                      {{'PAYROLLBRANCHCONFIGURATION.ACTIVEFROMREQUIRED' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="48">
+                <mat-form-field class="full-width">
+                  <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                    placeholder="{{'PAYROLLROLECONFIGURATION.ACTIVETO' | translate}}" formControlName="activeTo"
+                    [min]="leaveEncashmentSettingsForm.get('activeFrom').value" [readonly]="true"
+                    autocomplete="off">
+                  <mat-datepicker-toggle matSuffix [for]="picker1">
+                  </mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+            <div>
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            <div class="mt-1 text-center">
+              <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!leaveEncashmentSettingsForm.valid||isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertLeaveEncashmentSettingsPopup(formDirective)"
+                type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit COMAPN dialog-->
+
+  <!--Delete LEAVEENCASHMENTSETTINGS dialog-->
+  <sat-popover backdropClass="backdrop-color" #deleteLeaveEncashmentSettingsPopover hasBackdrop
+    backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isLeaveEncashmentSettingsArchived">
+          {{ 'LEAVEENCASHMENTSETTINGS.ARCHIVELEAVEENCASHMENTSETTINGSTITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isLeaveEncashmentSettingsArchived">
+          {{ 'LEAVEENCASHMENTSETTINGS.UNARCHIVELEAVEENCASHMENTSETTINGSTITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isLeaveEncashmentSettingsArchived">
+          {{ 'LEAVEENCASHMENTSETTINGS.ARCHIVELEAVEENCASHMENTSETTINGSTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isLeaveEncashmentSettingsArchived">
+          {{ 'LEAVEENCASHMENTSETTINGS.UNARCHIVELEAVEENCASHMENTSETTINGSTEXT' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="isLeaveEncashmentSettingsArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteLeaveEncashmentSettings();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="!isLeaveEncashmentSettingsArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteLeaveEncashmentSettings();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteLeaveEncashmentSettingsDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete LEAVEENCASHMENTSETTINGS dialog-->
+</div>
+<app-common-message-box
+  *ngIf="!(canAccess_feature_LeaveEncashmentSettings)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

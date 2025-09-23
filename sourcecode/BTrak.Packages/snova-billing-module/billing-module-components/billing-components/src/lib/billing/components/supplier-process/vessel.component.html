@@ -1,0 +1,156 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageVessels">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow"
+                    matTooltip="Vessels">Vessels</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived==true)?('SWITCHTOUNARCHIVE'|translate):('SWITCHTOARCHIVE'|translate)"
+                        class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="getAllVessels()">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button mat-icon-button matTooltip="{{ 'PURCHASE.CREATEVESSEL' |  translate }}"
+                        [satPopoverAnchorFor]="vesselPopover" #vesselPopup="satPopoverAnchor"
+                        (click)="createVessel(vesselPopup);clearForm()" *ngIf="!isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="100" [rows]="vesselList" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'PURCHASE.VESSELNAME' |  translate }}" [flexGrow]="1"
+                [sortable]="true" prop="vesselName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.vesselName }}
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'PURCHASE.EDITVESSEL' |  translate }}"
+                        [satPopoverAnchorFor]="vesselPopover" #vesselPopup="satPopoverAnchor"
+                        (click)="editVessel(row,vesselPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <button class="text-center" title="{{ 'PURCHASE.ARCHIVEVESSEL' |  translate }}"
+                        [satPopoverAnchorFor]="deleteVesselPopover" #deleteVesselPopup="satPopoverAnchor"
+                        (click)="deleteVesselPopUpOpen(row,deleteVesselPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+
+                    <button class="text-center" title="{{ 'PURCHASE.UNARCHIVEVESSEL' |  translate }}"
+                        [satPopoverAnchorFor]="deleteVesselPopover" #deleteVesselPopup="satPopoverAnchor"
+                        (click)="deleteVesselPopUpOpen(row,deleteVesselPopup)" *ngIf="isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #vesselPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{vessel}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="vesselForm" #formDirective="ngForm" novalidate
+                    (submit)="vesselForm.valid && upsertVessel(formDirective)">
+                    <div>
+                        <mat-form-field>
+                            <input matInput formControlName="vesselName" placeholder="Vessel name" required>
+                            <mat-error *ngIf="vesselForm.get('vesselName').hasError('maxlength')">
+                                {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="vesselForm.get('vesselName').hasError('required') && vesselForm.get('vesselName').touched">
+                                {{ 'DESIGNATION.REQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div class="mt-1">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!vesselForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertVesselPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteVesselPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isVesselArchived">
+                    {{ 'PURCHASE.ARCHIVEVESSEL' |  translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isVesselArchived">
+                    {{ 'PURCHASE.UNARCHIVEVESSEL' |  translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isVesselArchived">
+                    {{ 'PURCHASE.AREYOUSUREYOUWANTTOARCHIVETHISVESSEL?' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isVesselArchived">
+                    {{ 'PURCHASE.AREYOUSUREYOUWANTTOUNARCHIVETHISVESSEL?' |  translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isVesselArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteVessel();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button color="primary" *ngIf="!isVesselArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteVessel();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteVesselPopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageVessels" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

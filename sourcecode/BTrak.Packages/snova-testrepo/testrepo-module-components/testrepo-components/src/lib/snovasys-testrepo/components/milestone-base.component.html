@@ -1,0 +1,181 @@
+<mat-card class="p-0 custom-box" fxLayout="column" *ngIf="(mileStonesCount$ | async) > 0">
+  <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0" fxLayoutGap.xs="10px" class="data-table-header"
+    fxLayoutAlign="end center">
+    <div class="ml-1" fxFlex fxLayoutAlign="start center">
+      {{'TESTMANAGEMENT.VERSIONS' |translate | softLabelsPipe :softLabels}}
+      <span class="ml-05 badge-item test-milestones-count count-padding" style="line-height: 16px !important;">
+        {{ (mileStoneList$ | async | testrailName: searchText: 'milestone' | milestoneCompleted: isCompleted: 'milestone' | dateFilter : dateFrom : dateTo).length }}
+      </span>
+    </div>
+    <div fxFlex [hidden]="!isOpen" fxLayoutAlign="end center" class="filter-section">
+      <ul>
+        <li [ngClass]="{ 'active': searchText }" [satPopoverAnchorFor]="milestonetNamePopover" hasBackdrop
+          (click)="milestonetNamePopover.toggle()">
+          <a>
+            <mat-icon>arrow_drop_down</mat-icon>
+            {{'TESTMANAGEMENT.MILESTONENAME' | translate | softLabelsPipe : softLabels}}
+          </a>
+          <sat-popover #milestonetNamePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+            <mat-card class="filter-data">
+              <mat-form-field class="custom-searchbar">
+                <input matInput
+                  placeholder="{{'TESTMANAGEMENT.MILESTONENAME' | translate | softLabelsPipe : softLabels}}"
+                  [(ngModel)]="searchText" />
+              </mat-form-field>
+              <div class="close_icon clear-search mt-08 mr-05" style="top: 20px !important;">
+                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">close
+                </mat-icon>
+              </div>
+            </mat-card>
+          </sat-popover>
+        </li>
+        <li [ngClass]="{ 'active': (dateFrom || dateTo) }" [satPopoverAnchorFor]="datePopover" hasBackdrop
+          (click)="datePopover.toggle()">
+          <a>
+            <mat-icon>arrow_drop_down</mat-icon> {{'TESTMANAGEMENT.CREATEDDATE' | translate}}
+          </a>
+          <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+            <mat-card class="filter-data">
+              <div class="close_icon date_search ">
+                <mat-icon *ngIf="dateFrom || dateTo" class="icon-button" aria-hidden="false" (click)="closeDateFilter()"
+                  style="cursor:pointer">close</mat-icon>
+              </div>
+              <mat-form-field class="mr-1">
+                <mat-label> {{'TESTMANAGEMENT.DATEFROM' | translate}}</mat-label>
+                <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate" (click)="picker1.open()"
+                  readonly class="date-picker" [(ngModel)]="dateFrom" (dateChange)="changeDeadline(dateFrom,dateTo)">
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+              </mat-form-field>
+              <mat-form-field class="mr-1">
+                <mat-label> {{'TESTMANAGEMENT.TODATE' | translate}}</mat-label>
+                <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="dateFrom" [max]="maxDate"
+                  (click)="picker2.open()" readonly class="date-picker" [(ngModel)]="dateTo">
+                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
+              </mat-form-field>
+            </mat-card>
+          </sat-popover>
+        </li>
+        <li fxLayout="row wrap">
+          <span fxFlex fxLayoutAlign="start center">{{'TESTMANAGEMENT.COMPLETED' | translate}}:</span>
+          <span fxFlex="40px" class="ml-02">
+            <mat-slide-toggle [(ngModel)]="isCompleted" [checked]="isCompleted" fxLayoutAlign="center">
+            </mat-slide-toggle>
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div fxFlex="35px" fxLayoutAlign="end center" hasBackdrop *ngIf="(canAccess_entityType_feature_AddOrUpdateVersion)">
+      <a class="add-test-case" matTooltip="{{'TESTMANAGEMENT.ADDMILESTONE' | translate | softLabelsPipe : softLabels}}"
+        [satPopoverAnchorFor]="addMilestone" #addMilestonePopover="satPopoverAnchor"
+        (click)="openMileStoneDialog(addMilestonePopover)">
+        <fa-icon class="mr-05 add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+      </a>
+    </div>
+    <div fxFlex="40px" fxLayoutAlign="end center">
+      <button class="text-center" matTooltip="{{'TESTMANAGEMENT.CLICKHERETOADVANCESEARCH' | translate}}" mat-icon-button
+        (click)="filterClick()">
+        <fa-icon icon="filter" class="mat-color-accent">
+        </fa-icon>
+      </button>
+    </div>
+  </div>
+  <div fxFlex class="p-05" fxLayout="row">
+    <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+      <b>{{'HRMANAGAMENT.NAME' | translate}}:&nbsp;</b>
+      {{ searchText }}
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+      </fa-icon>
+    </mat-chip>
+    <mat-chip disableRipple matRipple class="mr-08" *ngIf="dateFrom || dateTo">
+      <b>{{'TESTMANAGEMENT.DATEFROM' | translate}}:&nbsp;</b>
+      {{ dateFrom | date: "dd-MMM-yyyy"}},&nbsp;
+      <b>{{'TESTMANAGEMENT.TODATE' | translate}}:&nbsp;</b>
+      {{ dateTo | date: "dd-MMM-yyyy"}}
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateFilter()">
+      </fa-icon>
+    </mat-chip>
+    <mat-chip disableRipple matRipple class="mr-08">
+      <b>{{'TESTMANAGEMENT.COMPLETED' | translate}}:&nbsp;</b>
+      <span *ngIf="isCompleted">
+        {{ 'PROJECTS.YES' | translate }}
+      </span>
+      <span *ngIf="!isCompleted">
+        {{ 'PROJECTS.NO' | translate }}
+      </span>
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeCompleted()">
+      </fa-icon>
+    </mat-chip>
+  </div>
+</mat-card>
+
+<div id="style-1" fxLayout="row wrap" *ngIf="(mileStonesCount$ | async) > 0 || fromCustomApp"
+  class="milestone-base-view">
+  <mat-card-content class="p-0 full-width">
+    <div fxLayout="row wrap" *ngIf="!(anyOperationInProgress$ | async)">
+      <app-testrail-component-milestoneview [viewMilestone]="milestone" fxFlex="100" class="milestone-view"
+        (mileStoneForEditing)="editMilestone($event);openMileStoneDialog(editMilestonePopover)"
+        [satPopoverAnchorFor]="editMilestoneComponent" #editMilestonePopover="satPopoverAnchor"
+        (refreshList)="getMileStonesList()" fxFlex.gt-md="25" fxFlex.md="33" fxFlex.sm="50"
+        [fromCustomApp]="fromCustomApp" [projectId]="projectId"
+        *ngFor="let milestone of (mileStoneList$ | async | testrailName: searchText: 'milestone' | milestoneCompleted: isCompleted: 'milestone' | dateFilter : dateFrom : dateTo); let i = index">
+      </app-testrail-component-milestoneview>
+      <mat-card
+        *ngIf="(mileStoneList$ | async | testrailName: searchText: 'milestone' | milestoneCompleted: isCompleted: 'milestone' | dateFilter : dateFrom : dateTo).length === 0"
+        class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+        <div fxLayout="row" fxFlex="100" class="p-05">
+          <fa-icon icon="info-circle"></fa-icon>
+          <p class="ml-1 m-0">{{'TESTMANAGEMENT.NOVERSIONSFOUND' | translate | softLabelsPipe : softLabels}}</p>
+        </div>
+      </mat-card>
+    </div>
+    <div fxLayout="row wrap" *ngIf="(anyOperationInProgress$ | async)">
+      <milestone-list-loading class="full-width" style="display: flex"></milestone-list-loading>
+    </div>
+  </mat-card-content>
+</div>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && (mileStonesCount$ | async) == 0
+      && (canAccess_entityType_feature_AddOrUpdateVersion)"
+  textToDisplay="{{'TESTMANAGEMENT.YOUDONTHAVEANYMILESTONESINTHEPROJECT' | translate | softLabelsPipe : softLabels}}">
+  <ng-template ng-message-tmp>
+    <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+      *ngIf="canAccess_entityType_feature_AddOrUpdateVersion" [satPopoverAnchorFor]="addMilestone"
+      #addMilestonePopover="satPopoverAnchor" (click)="openMileStoneDialog(addMilestonePopover)">
+      <fa-icon class="mr-05" icon="plus"></fa-icon>
+      {{'TESTMANAGEMENT.ADDMILESTONE' | translate | softLabelsPipe : softLabels}}
+    </button>
+  </ng-template>
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && (mileStonesCount$ | async) == 0
+      && !(canAccess_entityType_feature_AddOrUpdateVersion)"
+  textToDisplay="{{'TESTMANAGEMENT.NOYOUDONTHAVEANYMILESTONESINTHEPROJECT' | translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>
+
+<!-- <div class="floating-right-fab-button" *ngIf="canAccess_entityType_feature_AddOrUpdateVersion">
+  <div class="handle">
+    <button mat-fab color="accent"
+      matTooltip="{{'TESTMANAGEMENT.ADDMILESTONE' | translate | softLabelsPipe : softLabels}}"
+      [satPopoverAnchorFor]="addMilestone" #addMilestonePopover="satPopoverAnchor"
+      (click)="openMileStoneDialog(addMilestonePopover)">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div> -->
+
+<sat-popover #addMilestone [autoFocus]="false" [restoreFocus]="false" [interactiveClose]="false" hasBackdrop
+  scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end" backdropClass="backdrop-color">
+  <app-testrail-component-milestoneedit *ngIf="isVisibleAddMileStone" (refreshList)="getMileStonesList()"
+    (closePopover)="closeMileStoneDialog()">
+  </app-testrail-component-milestoneedit>
+</sat-popover>
+
+
+<sat-popover #editMilestoneComponent verticalAlign="below" [interactiveClose]="false" hasBackdrop horizontalAlign="end"
+  backdropClass="backdrop-color">
+  <app-testrail-component-milestoneedit [mileStoneToEdit]="mileStoneToEdit" (refreshList)="getMileStonesList()"
+    (closePopover)="closeMileStoneDialog()">
+  </app-testrail-component-milestoneedit>
+</sat-popover>

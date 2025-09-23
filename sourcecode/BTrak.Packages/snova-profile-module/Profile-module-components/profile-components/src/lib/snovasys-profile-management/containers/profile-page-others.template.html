@@ -1,0 +1,313 @@
+<div fxFlex fxLayout="row" *ngIf="!isEdit">
+    <div fxFlex="15">
+      <div fxLayoutAlign="center center" *ngIf="((!userDetails?.profileImage) && isExtension && permission)">
+        {{'HRMANAGAMENT.ALLOWEDEXTENSIONS' | translate}}</div>
+      <mat-error>
+        <div fxLayoutAlign="center center" *ngIf="isSize">{{'HRMANAGAMENT.SIZEANDEXTENSION' | translate}}</div>
+      </mat-error>
+      <mat-error>
+        <div fxLayoutAlign="center center" *ngIf="isValidation">
+          {{'HRMANAGAMENT.FILESHOULDBELESSTHAN10MB' | translate}}</div>
+      </mat-error>
+      <mat-error>
+        <div fxLayoutAlign="center center" *ngIf="((!isValidation) && (!isExtension) && (!isSize))">
+          {{'HRMANAGAMENT.PLEASEUPLOADALLOWEDEXTENSION' | translate}}</div>
+      </mat-error>
+      <div class="mb-1" fxLayoutAlign="center center">
+        <app-avatar [name]="userDetails?.fullName" [src]="userDetails?.profileImage | fetchSizedAndCachedImage: '125':''"
+          [isRound]="true" size="125">
+        </app-avatar>
+      </div>
+      <div class="profile-actions mb-1" fxLayoutAlign="center center" *ngIf="permission">
+        <button mat-button mat-raised-button color="primary"
+          [disabled]="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress"
+          matTooltip="{{'HRMANAGAMENT.UPLOADPHOTO' | translate}}" (click)="uploader.click()">
+          <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress">
+          </mat-progress-bar>{{'HRMANAGAMENT.UPLOAD' | translate}}
+        </button>
+        <input hidden #uploader type="file" mat-button mat-raised-button color="primary"
+          matTooltip="{{'HRMANAGAMENT.UPLOADPHOTO' | translate}}" class="mt-1 mb-1" value="upload"
+          accept=".jpeg,.jpg,.png,.webp" (change)=uploadEventHandler($event.target.files)>
+        <span fxFlex="8px"></span>
+        <button mat-button mat-raised-button *ngIf="userDetails?.profileImage"
+          [disabled]="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress"
+          matTooltip="{{'HRMANAGAMENT.REMOVEPHOTO' | translate}}"
+          (click)="removePhoto()">{{'HRMANAGAMENT.REMOVE' | translate}}</button>
+      </div>
+    </div>
+    <div fxFlex="85">
+      <form [formGroup]="profileDetailsForm" novalidate #formDirective="ngForm"
+        (submit)="profileDetailsForm.valid && saveProfileDetailsFormDetails()">
+        <div class="mobile-view-popover p-1">
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input formControlName="firstName" matInput placeholder="{{'HRMANAGAMENT.FIRSTNAME' | translate}}"
+                  required>
+                <mat-error>
+                  <span
+                    *ngIf="profileDetailsForm.get('firstName').hasError('required') && profileDetailsForm.get('firstName').touched">{{'HRMANAGAMENT.PLEASEENTERFIRSTNAME' | translate}}
+                  </span>
+                  <span
+                    *ngIf="profileDetailsForm.get('firstName').hasError('maxlength')">{{'HRMANAGAMENT.FIRSTNAMECANNOTEXCEED50CHARACTERS' | translate}}
+                  </span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input formControlName="surName" matInput placeholder="{{'HRMANAGAMENT.LASTNAME' | translate}}" required>
+                <mat-error>
+                  <span
+                    *ngIf="profileDetailsForm.get('surName').hasError('required') && profileDetailsForm.get('surName').touched">{{'HRMANAGAMENT.PLEASEENTERLASTNAME' | translate}}
+                  </span>
+                  <span
+                    *ngIf="profileDetailsForm.get('surName').hasError('maxlength')">{{'HRMANAGAMENT.LASTNAMECANNNOTEXCEED50CHARACTERS' | translate}}
+                  </span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="email" placeholder="{{'CLIENTS.EMAIL' | translate}}" required>
+                <mat-error>
+                  <span
+                    *ngIf="profileDetailsForm.get('email').hasError('required')">{{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}}</span>
+                  <span
+                    *ngIf="profileDetailsForm.get('email').hasError('email')">{{'CLIENTS.PLEASEENTERCORRECTEMAILFORMAT' | translate}}</span>
+                  <span
+                    *ngIf="profileDetailsForm.get('email').hasError('maxlength')">{{'CLIENTS.EMAILCANNOTEXCEED50CHARACTERS' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input type="text" matInput formControlName="mobileNo" mobileNumber
+                  placeholder="{{'CLIENTS.PHONENUMBER' | translate}}">
+                <mat-error>
+                  <span
+                    *ngIf="profileDetailsForm.get('mobileNo').hasError('maxlength')">{{'HRMANAGAMENT.MOBILENUMBERSHOULDNOTEXCEED20NUMBERS' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+         </div>
+        <div class="text-center mb-1">
+          <button mat-button mat-raised-button class="mr-05" color="primary" type="submit"
+            [disabled]="(UpdateOperationInProgress$ | async) || !profileDetailsForm.valid">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(UpdateOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="sync"></fa-icon>
+            {{'USERMANAGEMENT.UPDATEUSER' | translate}}
+          </button>
+          <button mat-button mat-raised-button class="mr-05" (click)="editUserDetails();false">
+            <fa-icon icon="times" class="mr-05" aria-hidden="true"></fa-icon> {{'CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <mat-card class="p-0 m-0" *ngIf="userDetails && isEdit">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row" fxLayout.xs="column">
+        <div fxFlex class="card-title-text p-05" fxLayoutAlign="start center">
+          Profile details
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button matTooltip="{{'HRMANAGAMENT.EDIT' | translate}}" (click)="editUserDetails()">
+            <fa-icon class="icon-button mat-color-accent mr-05" icon="edit"> </fa-icon>
+          </button>
+        </div>
+        <div fxLayoutAlign="end center" fxFlex="40px" fxFlex.xs="25px">
+          <button mat-icon-button matTooltip="{{'HRMANAGAMENT.CHANGEPASSWORD' | translate}}"
+            #updatePasswordPopover="satPopoverAnchor" [satPopoverAnchorFor]="updatePasswordPopup"
+            (click)="updatePassword(updatePasswordPopover)"
+            [disabled]="loading || (changePasswordOperationInProgress$ | async)">
+            <mat-progress-bar color="primary" mode="indeterminate"
+              *ngIf="loading || (changePasswordOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <fa-icon icon="key" class="mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05" fxFlex fxLayout="row">
+      <div fxFlex="15" fxLayoutAlign="center center">
+        <app-avatar [name]="userDetails?.fullName" [src]="userDetails?.profileImage | fetchSizedAndCachedImage: '125':''"
+          [isRound]="true" size="125">
+        </app-avatar>
+      </div>
+      <div class="masonry-with-columns" fxLayoutAlign="space-between none" *ngIf="userDetails" fxFlex="85">
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>First name</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54" class="hide-content-overflow">
+              <label matTooltip="{{userDetails.firstName}}">:&nbsp;{{userDetails.firstName}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Sur name</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54" class="hide-content-overflow">
+              <label matTooltip="{{userDetails.surName}}">:&nbsp;{{userDetails.surName}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Email</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.email}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Mobile number </b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.mobileNo}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Company name</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.companyName}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Company website</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.companyWebsite}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Street</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.street}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>City</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.city}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>State</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.state}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Zipcode</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.zipcode}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3">
+          <div fxLayout="row wrap">
+            <div fxFlex.xs="45" fxFlex.gt-lg="30" fxFlex="45">
+              <label><b>Country name</b></label>
+            </div>
+            <div fxFlex.xs="54" fxFlex.gt-lg="69" fxFlex="54">
+              <label>:&nbsp;{{userDetails.countryName}}</label>
+            </div>
+          </div>
+        </div>
+        <div fxFlex.lt-md="100" fxFlex.md="50" fxFlex.lg="50" fxFlex="33.3"></div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <sat-popover #updatePasswordPopup [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{'USERMANAGEMENT.CHANGEPASSWORD' | translate}}
+        </div>
+      </mat-card-title>
+      <form [formGroup]="changePasswordForm" novalidate #passwordFormDirective="ngForm"
+        (submit)="changePasswordForm.valid && changePassword()">
+        <div class="card-content p-05 mt-05">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+            <input matInput formControlName="newPassword" type="password"
+              placeholder="{{'USERMANAGEMENT.NEWPASSWORD' | translate}}" required>
+            <mat-error>
+              <span
+                *ngIf="changePasswordForm.get('newPassword').hasError('required') && changePasswordForm.get('newPassword').touched">
+                {{'USERMANAGEMENT.PLEASEENTERNEWPASSWORD' | translate}}</span>
+              <span
+                *ngIf="changePasswordForm.get('newPassword').hasError('pattern') && !(changePasswordForm.get('newPassword').hasError('maxlength'))">
+                {{'USERMANAGEMENT.PLEASEENTERVALIDPASSWORD' | translate}}</span>
+              <span *ngIf="changePasswordForm.get('newPassword').hasError('maxlength')">
+                {{'USERMANAGEMENT.NEWPASSWORDSHOULDNOTEXCEED250CHARACTERS' | translate}}</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width mt-1" (click)="$event.stopPropagation();">
+            <input matInput formControlName="confirmPassword" type="password" (blur)="passwordConfirmation()"
+              placeholder="{{'USERMANAGEMENT.CONFIRMPASSWORD' | translate}}" required>
+            <mat-error>
+              <span
+                *ngIf="changePasswordForm.get('confirmPassword').hasError('required') && changePasswordForm.get('confirmPassword').touched">
+                {{'USERMANAGEMENT.PLEASEENTERCONFIRMPASSWORD' | translate}}</span>
+              <span *ngIf="changePasswordForm.get('confirmPassword').hasError('maxlength')">
+                {{'USERMANAGEMENT.CONFIRMPASSWORDCANNOTEXCEED250CHARACTERS' | translate}}</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-error>
+            <span *ngIf="isPassword">{{'USERMANAGEMENT.PASSWORDSSHOULDMATCH' | translate}}</span>
+          </mat-error>
+        </div>
+        <div class="text-center mb-1 mt-05">
+          <button type="submit" mat-button mat-raised-button class="mr-05" color="primary"
+            [disabled]="(changePasswordOperationInProgress$ | async) || !changePasswordForm.valid || isPassword">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(changePasswordOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="edit"></fa-icon> {{'USERMANAGEMENT.CHANGE' | translate}}
+          </button>
+          <button mat-button mat-raised-button (click)="closePopup();false">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>

@@ -1,0 +1,157 @@
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<div class="full-height">
+  <mat-card class="p-0 canteen-manage m-0 ">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center"
+          matTooltip="{{ 'Form type' | translate | titlecase }}">
+          <span fxFlex="100" class="hide-content-overflow">{{ 'Form type' | translate |
+            titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchivedTypes== true) ? ('Switch to archive' | translate) : ('Switch to archive' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+              (change)="getAllFormTypes()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'Search' | translate}}" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'Create form type'|translate}}"
+              [satPopoverAnchorFor]="upsertFormTypePopover" #upsertFormTypePopUp="satPopoverAnchor"
+              (click)="createFormTypePopupOpen(upsertFormTypePopUp);clearForm()" *ngIf="!isArchivedTypes">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="formTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('No data to display' | translate), totalMessage: 'Total' | translate}">
+      <ngx-datatable-column name="{{'Form type name'|translate}}" [flexGrow]="1" [sortable]="true" prop="formTypeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.formTypeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'Actions'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" matTooltip="{{'Edit form type'|translate}}"
+            (click)="editFormTypePopupOpen(row,upsertFormTypePopUp)" [satPopoverAnchorFor]="upsertFormTypePopover"
+            #upsertFormTypePopUp="satPopoverAnchor" *ngIf="!isArchivedTypes" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" matTooltip="{{'Archive form type'|translate}}"
+            (click)="deleteFormTypePopUpOpen(row,deleteFormTypePopUp)" [satPopoverAnchorFor]="deleteFormTypePopover"
+            #deleteFormTypePopUp="satPopoverAnchor" *ngIf="!isArchivedTypes" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" matTooltip="{{'Unarchive form type'|translate}}"
+            (click)="deleteFormTypePopUpOpen(row,deleteFormTypePopUp)" [satPopoverAnchorFor]="deleteFormTypePopover"
+            #deleteFormTypePopUp="satPopoverAnchor" *ngIf="isArchivedTypes" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+
+<sat-popover backdropClass="backdrop-color" #upsertFormTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">
+        {{formtype}}</div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="FormTypeForm" #formDirective="ngForm" novalidate
+        (submit)="FormTypeForm.valid && upsertFormType(formDirective)">
+        <div>
+          <mat-form-field>
+            <input matInput formControlName="formTypeName" placeholder="{{'Form type name'|translate}}" required>
+            <mat-error *ngIf="FormTypeForm.get('formTypeName').hasError('maxlength')">
+              {{'Form type name length should not exceed 50 characters'|translate}}</mat-error>
+            <mat-error
+              *ngIf="FormTypeForm.get('formTypeName').hasError('required') && FormTypeForm.get('formTypeName').touched">
+              {{Form type name is required'|translate}}
+            </mat-error>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1">
+          <button mat-raised-button type="submit" color="primary" class="mr-1"
+            [disabled]="!FormTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'Save' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpserIFormTypePopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'Cancel' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #deleteFormTypePopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+        {{'Archive form type'|translate}}</div>
+      <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+        {{'Unarchive form type'|translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+        {{'Are you sure to archive the form type'|translate}}
+      </div>
+      <div class="card-content mb-1" *ngIf="isArchivedTypes">
+        {{'Are you sure to unarchive the form type'|translate}}
+      </div>
+      <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+      <div class="text-center">
+        <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteFormType();">
+          <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'Archive' | translate }}
+        </button>
+        <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteFormType();">
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'Yes' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteFormTypePopUp();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'Cancel' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

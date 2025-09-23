@@ -1,0 +1,66 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+                <div class="card-title-text full-width ml-05 p-0" fxFlex fxLayoutAlign="start center" fxFlex.xs="100"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxLayout="row wrap" fxFlex="80px" fxFlex.xs="100" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="space-around center">
+                    <button mat-icon-button *ngIf="formId" (click)="submitFormDetails()"
+                        matTooltip="{{ 'RESIDENT.EDITRESIDENTDETAILS' | translate }}">
+                        <fa-icon icon="edit" class="filter mat-color-accent mr-05">
+                        </fa-icon>
+                    </button>
+                    <button mat-icon-button matTooltip="{{ 'RESIDENT.ANALYTICSDASHBOARD' | translate }}" *ngIf="formId"
+                        [matMenuTriggerFor]="dashboardList">
+                        <fa-icon icon="chart-bar" class="filter mat-color-accent mr-05">
+                        </fa-icon>
+                    </button>
+                    <mat-menu #dashboardList="matMenu">
+                        <mat-form-field class="full-width p-05">
+                            <mat-label>{{ 'RESIDENT.DASHBOARDNAME' | translate }}</mat-label>
+                            <mat-select placeholder="{{ 'RESIDENT.DASHBOARDNAME' | translate }}"
+                                [(ngModel)]="selectedDashboard"
+                                (selectionChange)="navigateToAnalyticsDashboard($event.value)" required>
+                                <mat-option *ngFor="let selectedworkspace of workspaces"
+                                    [value]="selectedworkspace.workspaceId">
+                                    {{ selectedworkspace.workspaceName }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </mat-menu>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="p-05 mat-dialog-padding full-height" id="style-1">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isFormLoading"></mat-progress-bar>
+        <div fxLayout="column" fxLayoutGap="10px" *ngIf="!isFormLoading && formSrc">
+            <formio #formio [form]="formSrc" [submission]="formData" [readOnly]="true">
+            </formio>
+        </div>
+        <app-common-message-box *ngIf="!formSrc && !isFormLoading" textToDisplay="{{'NODATATODISPLAY'|translate}}">
+        </app-common-message-box>
+    </div>
+</div>
+
+<ng-template #genericApplicationComponent let-data>
+    <generic-application-form-popup [data]=[data] (submitFinished)="submitFinished()"></generic-application-form-popup>
+</ng-template>

@@ -1,0 +1,211 @@
+<app-common-message-box *ngIf="!(canAccess_feature_ViewForms)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+
+<mat-card class="p-0 canteen-manage m-0" *ngIf="(canAccess_feature_ViewForms)">
+  <mat-card-title class="full-width data-table-header drag-handler">
+    <div fxLayout="row wrap" fxLayout.xs="column">
+      <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+        <span fxFlex="100" class="hide-content-overflow">{{ 'GENERICFORM.CREATEDFORMS' | translate | titlecase }}</span>
+      </div>
+      <div fxFlex="230px" fxLayout="row" fxLayout.xs="column">
+        <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="start center">
+          <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-form-field class="full-width">
+              <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                [(ngModel)]="searchText" (input)="filterByName($event)">
+            </mat-form-field>
+          </div>
+          <span class="shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <span *ngIf="!searchText"></span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+          <button *ngIf="(canAccess_feature_AddOrUpdateForm) && (canAccess_feature_ViewForms)" mat-icon-button
+            matTooltip="{{ 'GENERICFORM.CREATEFORM' | translate }}" (click)="createOrEditForm(null)">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+</mat-card>
+<mat-card-content class="generic-form-content"
+  [ngClass]="dashboardId ? 'genericForm-scroll-height' : (fullHeight ? 'generic-form-full-height': 'generic-form-height')" id="widget-scroll-id">
+
+  <div *ngIf="(canAccess_feature_ViewForms)">
+    <div fxLayout="row wrap" *ngIf="isAnyOperationIsInprogress">
+      <div fxFlex="100" fxFlex.gt-sm="25" class="custom-card" *ngFor="let form of Arr(num).fill(1)">
+        <mat-card class="project-card project-dtl p-05">
+          <div fxLayout="row wrap" fxLayoutGap="5px">
+            <div fxFlex fxFlex="20" class="img-bg loading-bg">
+              <div class="img"></div>
+            </div>
+            <div fxFlex fxFlex="74">
+              <div fxLayout="row wrap" fxLayoutGap="2px">
+                <div fxFlex fxFlex="79"><a class="mat-body-1 empty-text loading-bg"></a></div>
+                <div fxFlex fxFlex="19" class="text-center"> </div>
+              </div>
+              <p class="mat-body-1 empty-text loading-bg"></p>
+              <p class="mat-small empty-text loading-bg"></p>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="(canAccess_feature_ViewForms)">
+    <div fxLayout="row wrap" *ngIf="!isAnyOperationIsInprogress">
+      <div fxFlex="100" fxFlex.gt-sm="25" *ngFor="let form of genericFormListDetails">
+        <mat-card class="project-card form-card p-05" [style.cursor]="isFromWizard ? 'pointer' : 'none'"
+          (click)="pickForm(form)" [ngClass]="{ 'selected-form' : isSelected(form.id) }">
+          <div fxLayout="row wrap" fxLayoutGap="5px">
+
+            <div class="cursor-pointer" fxFlex="100" fxFlex.xl="100" fxFlex.sm="100" fxFlex.md="100" fxFlex.xs="100">
+              <div fxLayout="row wrap" fxLayoutGap="2px">
+                <div fxFlex fxFlex="80">
+                  <a class="mat-body-1 generic-form-name" matTooltip="{{form.formName}}">{{form.formName}}</a>
+                </div>
+              </div>
+              <p class="mat-body-1 generic-form-type" matTooltip="{{ 'GENERICFORM.FORMTYPE' | translate }}">
+                {{form.formTypeName}}</p>
+              <p class="mat-small genric-form-created-date">
+                {{form.createdDateTime | date: "dd-MMM-yyyy"}}</p>
+              <div style="height: 25px; overflow: hidden !important;" class="custom-tags-details">
+                <div *ngIf="form.customApplicationNames && form.customApplicationNames.length > 0">
+                  <span *ngFor="let application of form.customApplicationNames | slice:0:2; " style="text-overflow: ellipsis;
+                  white-space: nowrap;" class="hide-content-overflow custom-widget-tag" matTooltip="{{ application }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{application}}
+                  </span>
+                  <span class="hide-content-overflow more-applications-indication"
+                    *ngIf="form.customApplicationNames.length > 2"
+                    (click)="openApplications(form.customApplicationNames);$event.stopPropagation();$event.preventDefault();"
+                    matTooltip="{{ 'GENERICFORM.MOREAPPLICATIONS' | translate }}" matTooltipClass="tooltip-overflow">
+                    <b>...</b>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <mat-icon class="more_vert" [satPopoverAnchorFor]="formMenu"
+              (click)="formMenu.toggle();$event.stopPropagation()">more_vert
+            </mat-icon>
+            <sat-popover #formMenu verticalAlign="below" hasBackdrop horizontalAlign="end">
+              <mat-card class="p-0">
+                <button mat-menu-item (click)="viewForm(form)"
+                  *ngIf="((canAccess_feature_ViewForms) || (canAccess_feature_AddOrUpdateForm)) && checkFormViewPermission(form)">
+                  <fa-icon aria-hidden="false" icon="eye" class="mr-05"></fa-icon> {{ 'VIEW' | translate }}
+                </button>
+                <button  mat-menu-item (click)="createOrEditForm(form.id)" *ngIf="(canAccess_feature_AddOrUpdateForm) && editFormViewPermission(form)">
+                  <fa-icon aria-hidden="false" icon="pen" class="mr-05"></fa-icon> {{ 'EDIT' | translate }}
+                </button>
+                <button mat-menu-item (click)="openDuplicateFormPopover(form, duplicateFormPopover)"
+                  *ngIf="(canAccess_feature_AddOrUpdateForm)" [satPopoverAnchorFor]="duplicateForm"
+                  #duplicateFormPopover="satPopoverAnchor" aria-hidden="false">
+                  <fa-icon icon="clone" class="mr-05"> </fa-icon> {{ 'DUPLICATE' | translate }}
+                </button>
+                <button mat-menu-item (click)="actionArchive(form,archiveFormPopover)"
+                  *ngIf="(canAccess_feature_ArchiveForm)" [satPopoverAnchorFor]="archiveForm"
+                  #archiveFormPopover="satPopoverAnchor" aria-hidden="false">
+                  <fa-icon icon="trash" class="mr-05"> </fa-icon> {{ 'DELETE' | translate }}
+                </button>
+              </mat-card>
+            </sat-popover>
+
+            <sat-popover #archiveForm verticalAlign="below" hasBackdrop horizontalAlign="end">
+              <mat-card class="filter-data p-1">
+                <p> {{ 'GENERICFORM.AREYOUSURETODELETEFORM' | translate }} </p>
+                <div class="text-center">
+                  <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveOrUnarchiveForm();">
+                    <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+                  </button>
+                  <button mat-button mat-raised-button (click)="closeArchivePopovers()" class="mr-1">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+                  </button>
+                </div>
+              </mat-card>
+            </sat-popover>
+          </div>
+        </mat-card>
+      </div>
+      <div *ngIf="!formsExisted" fxFlex fxLayoutAlign="center">
+        <app-common-message-box textToDisplay="{{ 'SEARCHRESULTSTEXT' | translate }}"></app-common-message-box>
+      </div>
+    </div>
+  </div>
+</mat-card-content>
+
+<sat-popover #duplicateForm hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'DUPLICATE' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="duplicateFormGroup" novalidate (submit)="duplicateFormGroup.valid && insertDuplicateForm()">
+        <div class="card-content">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="{{ 'GENERICFORM.FORMNAME' | translate}}*" formControlName="formName" />
+            <mat-error
+              *ngIf="duplicateFormGroup.get('formName').hasError('required') && duplicateFormGroup.get('formName').touched ">
+              {{ 'GENERICFORM.PLEASEFILLFORMNAME' | translate }}
+            </mat-error>
+            <mat-error *ngIf="duplicateFormGroup.get('formName').hasError('maxlength')">
+              {{ 'GENERICFORM.FORMNAMEEXCEED100CHARACTERS' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" type="button"
+            (click)="insertDuplicateForm()" [disabled]="!duplicateFormGroup.valid">
+            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'GENERICFORM.SAVEFORM' | translate }}
+          </button>
+          <button mat-button mat-raised-button type="button" (click)="closeDuplicateFormDialog()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+
+<ng-template #openApplicationsPopup let-data>
+  <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+      <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+  </div>
+  <div mat-dialog-content class="project-dialogContent" id="style-1">
+    <mat-card class="p-0 mb-0">
+      <mat-card-title class="text-center mat-bg-primary" style="position: sticky; top:0">
+        <div class="card-title-text mb-1">{{ 'SHELL.APPLICATIONS' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content style="height:calc(100vh - 117px)" id="style-1">
+        <mat-chip-list class="mat-chip-list-stacked">
+          <mat-chip *ngFor="let item of data.items" class="text-center" [ngStyle]="{cursor: 'pointer'}">
+            {{ item }}
+          </mat-chip>
+        </mat-chip-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</ng-template>
+
+<ng-template #formDialogComponent let-data>
+  <app-form-creator [data]=[data]></app-form-creator>
+</ng-template>
+
+
+<ng-template #viewFormDialogComponent let-data>
+  <app-viewform [data]=[data]></app-viewform>
+</ng-template>
+
+<ng-template #editFormDataDialogComponent let-data>
+  <app-form-creator [data]=[data]></app-form-creator>
+</ng-template>

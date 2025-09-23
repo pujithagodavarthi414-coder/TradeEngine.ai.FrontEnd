@@ -1,0 +1,231 @@
+<div class="p-0 m-0 full-height"
+  *ngIf="(canAccess_feature_ViewEmployeeShiftDetails) || (canAccess_feature_CanEditOtherEmployeeDetails)">
+  <div fxFlex="100" class="p-0 m-0 workFlow">
+    <mat-card class="p-0 canteen-manage m-0" fxLayout="column">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow">{{ 'HRMANAGAMENT.SHIFT' | translate | titlecase }}</span>
+          </div>
+          <div fxFlex="230px" fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="custom-searchbar">
+                  <div class="m-0 p-0" fxLayout="row">
+                    <div fxFlex class="m-0 p-0">
+                      <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                        [(ngModel)]="searchText" (input)="filterByName($event)">
+                      <span class="filters-close mr-05 mt-06" style="position: absolute; right: -2px;">
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                          style="cursor:pointer">close</mat-icon>
+                      </span>
+                    </div>
+                  </div>
+                </mat-form-field>
+              </div>
+              <button
+                *ngIf="(canAccess_feature_AddOrUpdateEmployeeShifts) ||  (canAccess_feature_CanEditOtherEmployeeDetails)"
+                mat-icon-button
+                matTooltip="{{'SHIFTTIMING.ADDEMPLOYEESHIFT' | translate  | softLabelsPipe : softLabels}}"
+                [satPopoverAnchorFor]="upsertEmployeeShiftPopover" #upsertEmployeeShiftPopup="satPopoverAnchor"
+                (click)="createEmployeeShift(upsertEmployeeShiftPopup)">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+      <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+          <b>{{'SEARCH' | translate}}:&nbsp;</b>
+          {{ searchText }}
+          <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+          </fa-icon>
+        </mat-chip>
+      </div>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingIndicator">
+    </mat-progress-bar>
+    <div class="activity-data m-0 no-drag" *ngIf="scrollbarH">
+      <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+        [limit]="100" [rows]="employeeShifts" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="scrollbarH"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{'SHIFTTIMING.SHIFTNAME'|translate}}" [sortable]="true" prop="exceptionDate">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.shiftName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'SHIFTTIMING.SHIFTACTIVEFROM'|translate}}" [sortable]="true" prop="startTime">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.activeFrom | date: "dd-MMM-yyyy"   }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'SHIFTTIMING.SHIFTACTIVETO'|translate}}" [sortable]="true" prop="endTime">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.activeTo | date: "dd-MMM-yyyy"   }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS' | translate}}" [sortable]="false">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <button class="text-center"
+              matTooltip="{{ 'SHIFTTIMING.EDITEMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}"
+              mat-icon-button [satPopoverAnchorFor]="upsertEmployeeShiftPopover"
+              #upsertEmployeeShiftPopup="satPopoverAnchor"
+              (click)="editEmployeeShiftPopupOpen(row,upsertEmployeeShiftPopup)"
+              *ngIf="(canAccess_feature_AddOrUpdateEmployeeShifts)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center"
+              matTooltip="{{ 'SHIFTTIMING.ARCHIVEEMPPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}"
+              mat-icon-button [satPopoverAnchorFor]="deleteEmlpoyeeShiftPopover"
+              #deleteEmployeeShiftPopUp="satPopoverAnchor"
+              (click)="deleteEmployeeShiftPopUpOpen(row,deleteEmployeeShiftPopUp)" mat-icon-button
+              *ngIf="(canAccess_feature_AddOrUpdateEmployeeShifts)">
+              <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center"
+              matTooltip="{{ 'SHIFTTIMING.VIEWEMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}"
+              mat-icon-button (click)="onEmployeeView(row);$event.stopPropagation();">
+              <fa-icon icon="eye" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+  <!-- <app-common-message-box *ngIf="!isHide" textToDisplay="{{'NODATATODISPLAY'|translate}}">
+  </app-common-message-box> -->
+</div>
+
+<mat-card class="p-0 m-0 edit_employee full-height"
+  *ngIf="!((canAccess_feature_ViewEmployeeShiftDetails) || (canAccess_feature_CanEditOtherEmployeeDetails ))">
+  <mat-card-title class="data-table-header drag-handler">
+    <div class="p-1" fxLayout="row wrap">
+      <div fxFlex>
+        {{ 'HRMANAGAMENT.SHIFT' | translate }}
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+  <mat-card-content>
+    <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+    </app-common-message-box>
+  </mat-card-content>
+</mat-card>
+
+<!-- <div class="floating-right-fab-button" *ngIf="!isHide">
+  <div class="handle" *ngIf="(canAccess_feature_AddOrUpdateEmployeeShifts$| async)">
+    <button mat-fab color="accent" matTooltip="{{'SHIFTTIMING.ADDEMPLOYEESHIFT' | translate  | softLabelsPipe : softLabels}}" [satPopoverAnchorFor]="upsertEmployeeShiftPopover"
+      #upsertEmployeeShiftPopup="satPopoverAnchor" (click)="createEmployeeShift(upsertEmployeeShiftPopup)">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div> -->
+
+<sat-popover backdropClass="backdrop-color" #deleteEmlpoyeeShiftPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">
+        {{ 'SHIFTTIMING.ARCHIVEEMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        {{ 'SHIFTTIMING.EMPLOYEESHIFTARCHIVETEXT' | translate | softLabelsPipe : softLabels}}
+      </div>
+      <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+      <div fxLayout.xs="column">
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="onSelect2()">
+            <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'DELETE' | translate }}
+          </button>
+
+          <button mat-button mat-raised-button (click)="closeDeleteEmployeeShiftDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #upsertEmployeeShiftPopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+  horizontalAlign="center">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div *ngIf="!isEdit" class="card-title-text  mat-bg-primary p-05 mb-1">
+        {{ 'SHIFTTIMING.EMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}
+      </div>
+      <div *ngIf="isEdit" class="card-title-text  mat-bg-primary p-05 mb-1">
+        {{ 'SHIFTTIMING.EDITEMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="employeeShiftForm" #formDirective="ngForm" novalidate
+        (submit)="employeeShiftForm.valid && dialogueBox()">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width" required>
+              <mat-select formControlName="shiftTimingId" placeholder="{{'HRMANAGAMENT.SHIFTTIMING' | translate}}">
+                <mat-option value="option" *ngFor="let employmentShift of selectEmployeeShiftDropDownListData$ | async"
+                  [value]="employmentShift.shiftTimingId">
+                  {{employmentShift.shift}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span
+                  *ngIf="employeeShiftForm.get('shiftTimingId').hasError('required') && employeeShiftForm.get('shiftTimingId').touched">
+                  {{'SHIFTTIMING.PLEASESELECTEMPLOYEESHIFT' | translate | softLabelsPipe : softLabels}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <!-- <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="activeFrom"
+                (input)="startDate()" (dateChange)="startDate()" [min]="registeredDateTime"
+                placeholder="{{'SHIFTTIMING.SHIFTACTIVEFROM' | translate}}" autocomplete="off"> -->
+              <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="activeFrom"
+                (input)="startDate()" (dateChange)="startDate()" 
+                placeholder="{{'SHIFTTIMING.SHIFTACTIVEFROM' | translate}}" autocomplete="off">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+              <mat-error>
+                <span
+                  *ngIf="employeeShiftForm.get('activeFrom').hasError('required') && employeeShiftForm.get('activeFrom').touched">
+                  {{'SHIFTTIMING.PLEASESELECTACTIVEFROM' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="picker2" (click)="picker2.open()" formControlName="activeTo"
+                [min]="minDateForEndDate" disabled={{endDateBool}} [readonly]="true"
+                placeholder="{{'SHIFTTIMING.SHIFTACTIVETO' | translate}}" autocomplete="off">
+              <mat-datepicker-toggle matSuffix [for]="picker2" disabled={{endDateBool}}></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="mt-1">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!employeeShiftForm.valid || isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeEmployeeShiftPopup()" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

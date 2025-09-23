@@ -1,0 +1,221 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageBadges)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'BADGE.BADGETITLE' | translate | titlecase }}">{{'BADGE.BADGETITLE' | translate | titlecase
+            }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getAllBadges()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'BADGE.CREATEBADGETOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertBadgePopover" #upsertBadgePopUp="satPopoverAnchor"
+              (click)="createBadgePopupOpen(upsertBadgePopUp)" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="badges" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="150" name="{{ 'BADGE.BADGENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="badgeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.badgeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'BADGE.DESCRIPTION' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="description">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div matTooltip="{{ row?.description }}">
+            {{ row?.description }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'BADGE.BADGELOGO' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="imageUrl">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <!-- <mat-label class="userstory-filepath">
+            <span class="icon-button" (click)="openPreview(row?.imageUrl,false)">
+              {{ row?.imageUrl }}
+            </span>
+          </mat-label> -->
+          <app-avatar (click)="openPreview(row?.imageUrl,false)"
+            [src]="row?.imageUrl | fetchSizedAndCachedImage: '130':''" [isRound]="false" size="110">
+          </app-avatar>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'BADGE.EDITBADGE' | translate }}" *ngIf="!isArchived" mat-icon-button
+            [satPopoverAnchorFor]="upsertBadgePopover" #upsertBadgePopUp="satPopoverAnchor"
+            (click)="editBadgePopupOpen(row,upsertBadgePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'BADGE.ARCHIVEBADGETITLE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deleteBadgePopover" #deleteBadgePopUp="satPopoverAnchor"
+            (click)="deleteBadgePopUpOpen(row,deleteBadgePopUp)">
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'BADGE.UNARCHIVEBADGETITLE' | translate }}" *ngIf="isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deleteBadgePopover" #deleteBadgePopUp="satPopoverAnchor"
+            (click)="deleteBadgePopUpOpen(row,deleteBadgePopUp)">
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertBadgePopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{badgeEdit}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05" style="max-width: 650px;">
+        <form [formGroup]="badgeForm" #formDirective="ngForm" novalidate
+          (submit)="badgeForm.valid && (files.length > 0 || imageUrl) && upsertBadge(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="badgeName" placeholder="{{ 'BADGE.BADGENAME' | translate }}" required>
+              <mat-error *ngIf="badgeForm.get('badgeName').hasError('maxlength')">
+                {{ 'BADGE.BADGENAMEMAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error *ngIf="badgeForm.get('badgeName').hasError('required') && badgeForm.get('badgeName').touched">
+                {{ 'BADGE.BADGENAMEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <textarea matInput formControlName="description" rows="2"
+                placeholder="{{ 'BADGE.DESCRIPTION' | translate }}"></textarea>
+              <mat-error *ngIf="badgeForm.get('description').hasError('maxlength')">
+                {{ 'BADGE.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+            </mat-form-field>
+            <div class="mb-05">
+              {{ 'BADGE.BADGELOGO' | translate }}* :
+            </div>
+            <div class="custom-hrm-dropzone" *ngIf="!imageUrl">
+              <div ngx-dropzone [multiple]="false" [accept]="'image/png,image/jpeg,image/jpg'"
+                class="custom-dropzone dropzone-height" ngx-dropzone (change)="filesSelected($event)">
+                <ngx-dropzone-label>
+                  <span>{{'DOCUMENTMANAGEMENT.DRAGANDDROPFILESHERE' | translate}}</span>
+                </ngx-dropzone-label>
+                <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+                  (removed)="onRemove(f)">
+                  <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">{{ f.name }}
+                    ({{ f.type }})
+                  </ngx-dropzone-label>
+                </ngx-dropzone-preview>
+              </div>
+            </div>
+            <div *ngIf="imageUrl">
+              <mat-label class="userstory-filepath">
+                <ng-container>
+                  <div fxLayout="row">
+                    <div fxFlex="15px" class="icon-button">
+                      <app-avatar (click)="openPreview(imageUrl,true)"
+                        [src]="imageUrl | fetchSizedAndCachedImage: '130':''" [isRound]="false" size="80">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex="90px" class="mt-1-05">
+                      <fa-icon icon="trash" class="mat-color-accent pull-right mr-05 goal-cursor"
+                        matTooltip="Delete file" (click)="deleteSelectedFile()">
+                      </fa-icon>
+                    </div>
+                  </div>
+                </ng-container>
+              </mat-label>
+              <ng-container *ngIf="galleryImages && galleryImages.length > 0">
+                <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyPreviewGallery></ngx-gallery>
+              </ng-container>
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1" fxLayoutAlign="center center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!((badgeForm.valid) && (files.length > 0 || imageUrl))">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertBadgePopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <ng-container *ngIf="galleryImages && galleryImages.length > 0">
+    <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyGallery></ngx-gallery>
+  </ng-container>
+
+  <!--Delete Badge dialog-->
+  <sat-popover backdropClass="backdrop-color" #deleteBadgePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'BADGE.ARCHIVEBADGETITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">{{ 'BADGE.UNARCHIVEBADGETITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'BADGE.ARCHIVEBADGETEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'BADGE.UNARCHIVEBADGETEXT' | translate }}
+        </div>
+        <mat-error class="pb-07" *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteBadge();" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteBadge();" *ngIf="isArchived">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteBadgeDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete Badge dialog-->
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageBadges)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

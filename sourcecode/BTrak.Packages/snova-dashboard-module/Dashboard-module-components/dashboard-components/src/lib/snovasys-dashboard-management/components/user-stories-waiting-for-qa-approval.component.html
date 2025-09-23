@@ -1,0 +1,288 @@
+<app-common-message-box *ngIf="!(canAccess_feature_WorkItemsWaitingForQaApproval)"
+  textToDisplay="{{'USERSTORIESWAITINGFORQAAPPROVAL.PERMISSION' | translate}}">
+</app-common-message-box>
+<div class="p-0 full-height" *ngIf="(canAccess_feature_WorkItemsWaitingForQaApproval)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0" fxLayoutGap.xs="10px">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span class="hide-content-overflow">
+            {{'USERSTORIESWAITINGFORQAAPPROVAL.USERSTORIESWAITINGFORQAAPPROVAL' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 8px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" style="cursor: pointer;">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="ownerUserId" (selectionChange)="getUserStoriesBasedOnownerUserId($event.value)">
+                <mat-option value="ALL">{{'USERSTORIESWAITINGFORQAAPPROVAL.ALL' | translate}}</mat-option>
+                <mat-option *ngFor="let employee of employeeList" value="option" [value]="employee.id">
+                  <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                    [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                  </app-avatar>
+                  <img class="employee_img" src="{{employee.profileImage}}" *ngIf="employee.profileImage">
+                  {{employee.fullName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder="{{'USERSTORIESWAITINGFORQAAPPROVAL.SELECTPROJECT' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="projectId" (selectionChange)="getUserStoriesBasedOnProject($event.value)">
+                <mat-option value="ALL">{{'USERSTORIESWAITINGFORQAAPPROVAL.ALL' | translate}}</mat-option>
+                <mat-option *ngFor="let project of projectsList | orderBy:'projectName':false:true"
+                  [value]="project.projectId">
+                  {{project.projectName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="(canAccess_feature_ManageAppFilters)">
+              <mat-select [(value)]="selectedFilterValue" (selectionChange)="changeFilterValue($event.value)">
+                <mat-option value="all">All</mat-option>
+                <mat-option value="reportingOnly">Reporting only</mat-option>
+                <mat-option value="mySelf">My self</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+        <!-- <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+          <button mat-menu-item [ngClass]="{ 'active': employeeFilterIsActive }"
+            [matMenuTriggerFor]="sortBy">{{'EMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': projectFilterIsActive }"
+            [matMenuTriggerFor]="project">{{'ADVANCEDSEARCH.PROJECT' | translate | softLabelsPipe : softLabels}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': showUserstoryOutsideQaDetailsFilterIsEnable }"
+            [matMenuTriggerFor]="isUserstoryforQa"> {{'USERSTORY.ISUSERSTORYFORQA'|translate | softLabelsPipe : softLabels}}</button>
+        </mat-menu>
+        <mat-menu #sortBy="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field class=" mr-1">
+                <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                  [(value)]="selectedEmployee" (selectionChange)="getUserStoriesBasedOnownerUserId($event.value)">
+                  <mat-option value="ALL">{{'USERSTORIESWAITINGFORQAAPPROVAL.ALL' | translate}}</mat-option>
+                  <mat-option *ngFor="let employee of employeeList" value="option" [value]="employee.id">
+                    <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                      [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                    </app-avatar>
+                    <img class="employee_img" src="{{employee.profileImage}}" *ngIf="employee.profileImage">
+                    {{employee.fullName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #project="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field>
+                <mat-select placeholder="{{'USERSTORIESWAITINGFORQAAPPROVAL.SELECTPROJECT' | translate | softLabelsPipe : softLabels}}"
+                  [(value)]="selectedValue" (selectionChange)="getUserStoriesBasedOnProject($event.value)">
+                  <mat-option value="ALL">{{'USERSTORIESWAITINGFORQAAPPROVAL.ALL' | translate}}</mat-option>
+                  <mat-option *ngFor="let project of projectsList | orderBy:'projectName':false:true"
+                    [value]="project.projectId">
+                    {{project.projectName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #isUserstoryforQa="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div class="ml-05 mr-05">
+              <mat-checkbox class="pt-1 ml-1 checkbox-text" [(ngModel)]="showGoalDetails"
+                (change)="getIsUserstoryOutsideOfQA(showGoalDetails)">
+                Is user story outside of QA</mat-checkbox>
+            </div>
+          </mat-card>
+        </mat-menu> -->
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+  </mat-progress-bar>
+  <div class="activity-data filter-margin m-0 app-height-search-2 paging-move" id="style-1">
+    <!-- <ngx-datatable #mydatatable class="btrak " [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35"
+      [rowHeight]="35" [rows]="userStoriesWaitingForQaApproval" [externalPaging]="true" [count]="count"
+      [offset]="pageNumber" [limit]="pageSize" (page)='setPage($event)' [scrollbarH]="true" [virtualization]="false"
+      (sort)="onSort($event)" [loadingIndicator]="anyOperationInProgress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column
+        name="{{'USERSTORIESWAITINGFORQAAPPROVAL.PROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+        [sortable]="true" [flexGrow]="1 ">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row.projectName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'USERSTORIESWAITINGFORQAAPPROVAL.GOAL' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" prop="Goal">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.goal }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        name="{{'USERSTORIESWAITINGFORQAAPPROVAL.SPRINT' | translate | softLabelsPipe : softLabels}}" [flexGrow]="1"
+        prop="Sprint">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.sprint }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        name="{{'USERSTORIESWAITINGFORQAAPPROVAL.USERSTORY' | translate | softLabelsPipe : softLabels}}" [flexGrow]="1"
+        [width]="550">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.userStory }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'USERSTORIESWAITINGFORQAAPPROVAL.DEPLOYEDDATETIME' | translate}}" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.deployedDateTime !=null" [ngStyle]="{ 'color' : row.status}" class="icon-button"
+            fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{row?.deployedDateTime | date: "dd-MMM-yyyy"  }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'USERSTORIESWAITINGFORQAAPPROVAL.DEVELOPERNAME' | translate}}" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="goToProfile(row.userId)">
+            <div *ngIf="row.userProfileImage != null && row.userProfileImage != ''">
+              <app-avatar [src]="row.userProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="row.userProfileImage == null || row.userProfileImage == ''">
+              <app-avatar [name]="row.developerName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.developerName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ row?.developerName }}
+            </span>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable> -->
+
+    <kendo-grid [data]="userStoriesWaitingForQaApproval" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+      [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false" [scrollable]="true"
+      [columnMenu]="true" (dataStateChange)="dataStateChange($event)"
+      (columnVisibilityChange)="onVisibilityChange($event)">
+      <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+        pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+      </kendo-grid-messages>
+      <kendo-grid-column field="projectName"
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.PROJECTNAME' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('projectName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.projectName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="goal"
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.GOAL' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('goal')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem?.goal }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="sprint"
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.SPRINT' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('sprint')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem?.sprint }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="userStory"
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.USERSTORY' | translate | softLabelsPipe : softLabels}}" width="800"
+        [hidden]="checkVisibility('userStory')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem?.userStory }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="deployedDateTime"
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.DEPLOYEDDATETIME' | translate}}" width="150"
+        [hidden]="checkVisibility('deployedDateTime')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.deployedDateTime !=null" [ngStyle]="{ 'color' : dataItem.status}" class="icon-button"
+            fxLayout="dataItem" (click)="navigateToUserStoriesPage(dataItem)"  matTooltip="{{dataItem?.deployedDateTimeZoneName}}">
+            {{dataItem?.deployedDateTime | date: "dd-MMM-yyyy"  }} 
+          <span class="timezone-name" *ngIf="(dataItem.deployedDateTime | covertTimeIntoUtcTime) != Offset"
+          >{{dataItem?.deployedDateTimeZoneAbbreviation}}
+          </span>
+        </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="developerName" 
+        title="{{'USERSTORIESWAITINGFORQAAPPROVAL.DEVELOPERNAME' | translate}}" width="150" 
+        [hidden]="checkVisibility('developerName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="goToProfile(dataItem.userId)">
+            <div *ngIf="dataItem.userProfileImage != null && dataItem.userProfileImage != ''">
+              <app-avatar [src]="dataItem.userProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="dataItem.userProfileImage == null || dataItem.userProfileImage == ''">
+              <app-avatar [name]="dataItem.developerName | removeSpecialCharacters" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{dataItem.developerName}}"
+              matTooltipShowDelay="400" fxFlex>
+              {{ dataItem?.developerName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+    </kendo-grid>
+  </div>
+</div>
+<ng-template #uniqueUserstoryDialogWaitingForQA let-data>
+  <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+</ng-template>

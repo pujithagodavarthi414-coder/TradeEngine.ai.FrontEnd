@@ -1,0 +1,595 @@
+<mat-card class="full-height p-0 custom-box m-0" *ngIf="isSprintsEnable" fxLayout="column">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                <span class="assets-comments"
+                    matTooltip="{{'SPRINTS.SPRINTACTIVITY' | translate | softLabelsPipe : softLabels | titlecase}}">
+                    {{'SPRINTS.SPRINTACTIVITY' | translate | softLabelsPipe : softLabels | titlecase}}
+                </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="projectId">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="projectId">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="nameSearch">
+                    {{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="includeView">
+                    {{'GOALACTIVITY.INCLUDEUSERSTORYVIEW' | translate | softLabelsPipe : softLabels}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="includeLog">
+                    {{'GOALACTIVITY.INCLUDELOGTIME' | translate}}</button>
+            </mat-menu>
+
+            <mat-menu #nameSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05 p-03">
+                        <mat-form-field>
+                            <mat-select
+                                placeholder="{{'WORKLOGGING.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                                [(ngModel)]="selectedEmployeeId" (selectionChange)="selectedEmployeesId($event.value)">
+                                <mat-option
+                                    *ngFor="let employee of (userStories$ | async | assigneeFilter: 'id':userStories | sortByComponent: 'ownerName')"
+                                    [value]="employee.ownerUserId">
+                                    <app-avatar class="employee_img" *ngIf="!employee.ownerProfileImage"
+                                        [name]="employee.ownerName | removeSpecialCharacters" [isRound]="true"
+                                        size="30"></app-avatar>
+                                    <img class="employee_img" *ngIf="employee.ownerProfileImage"
+                                        src="{{employee.ownerProfileImage}}">{{employee.ownerName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #includeView="matMenu">
+                <mat-card class="filter-data">
+                    <span
+                        class="mr-1">{{'GOALACTIVITY.INCLUDEUSERSTORYVIEW' | translate | softLabelsPipe : softLabels}}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isIncludeUserStory"
+                        (change)="getSprintAcTivity()"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #includeLog="matMenu">
+                <mat-card class="filter-data">
+                    <span class="mr-1">{{'GOALACTIVITY.INCLUDELOGTIME' | translate}}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isIncludeLogTime"
+                        (change)="getSprintAcTivity()"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="projectId">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="employeeName">
+            <b>{{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+            {{ employeeName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="selectedEmployeesId(null)">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08">
+            <b>{{'GOALACTIVITY.INCLUDEUSERSTORYVIEW' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+            {{ isIncludeUserStory }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearViewFilter()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08">
+            <b>{{'GOALACTIVITY.INCLUDELOGTIME' | translate}}:&nbsp;</b>
+            {{ isIncludeLogTime}}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearLogTimeFilter()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+    <mat-card-content class="p-0 no-drag goal-activity filter-height" id="widget-scroll-id">
+        <div *ngIf="!isAnyOperationIsInprogress">
+            <div *ngFor="let history of data" class="history-tab">
+                <div fxLayout="row wrap" class="p-1">
+                    <div mat-card-avatar fxFlex="40px" class="mr-05">
+                        <app-avatar [name]="history.userName | removeSpecialCharacters"
+                            [src]="history.profileImage | fetchSizedAndCachedImage: '40':''" [isRound]="true" size="40">
+                        </app-avatar>
+                    </div>
+                    <div fxLayout="row wrap" fxFlex="93%">
+                        <div fxFlex="100" fxLayout="row wrap">
+                            <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45"
+                                class="goal-activity-description">
+                                <b>{{history.userName}}</b>
+                            </div>
+                            <div fxFlex fxLayoutAlign="end start">
+                                <span class="pull-right">{{history.createdDateTime | timeago }}</span>
+                            </div>
+                        </div>
+                        <div fxFlex="100" class="goal-activity-description">
+                            <div *ngIf="history.keyValue =='UserStoryAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br><b>{{history.userName}}&nbsp;</b>
+                                {{'GOALACTIVITY.CREATEDUSERSTORY' | translate | softLabelsPipe : softLabels}}</div>
+                            <div *ngIf="history.keyValue =='UserStoryStatusChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br><b>{{history.userName}}&nbsp;</b>
+                                {{'GOALACTIVITY.MOVEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue =='DeadLineDateChanged'" class="assets-comments">
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.DEADLINEDATECHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.DEADLINETO' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate | softLabelsPipe : softLabels}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDDEADLINEDATE' | translate | softLabelsPipe : softLabels}}&nbsp;{{history.newValue}}
+                                    {{'GOALACTIVITY.TIMEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue =='EstimatedTimeAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;{{history.newValue}}h{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue =='EstimatedTimeRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;{{history.oldValue}}h{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue =='EstimatedTimeChanged'" class="assets-comments">
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.ESTIMATEDTIMECHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.ADDEDESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}h</b>{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue =='SprintEstimatedTimeAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDSPRINTESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;{{history.newValue}}h{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue =='SprintEstimatedTimeRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDSPRINTESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;{{history.oldValue}}h{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue =='SprintEstimatedTimeChanged'" class="assets-comments">
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.SPRINTESTIMATEDTIMECHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')">
+                                    {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                    <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.ADDEDSPRINTESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate | softLabelsPipe : softLabels}}
+                                </div>
+                            </div>
+                            <div *ngIf="(history.keyValue =='UserStoryNameChange')" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.USERSTORYNAMECHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue =='OwnerUserAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ASSIGNED' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue =='OwnerUserRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVED' | translate}}&nbsp;<b>{{history.oldValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue =='OwnerUserChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDASSIGNEEFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ASSIGNED' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue =='SprintAdded' || history.fieldName == 'SprintAdded'"
+                                class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.newValue}}<br><b>{{history.userName}}&nbsp;</b>
+                                {{'SPRINTS.ADDEDSPRINT' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintStartAndEndDateChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                {{'GOALACTIVITY.PROJECTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.projectName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.SPRINTSTARTEDWITHSTARTANDENDDATEFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserstoryArchived'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.ARCHIVEDTHEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserstoryUnArchived'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.UNARCHIVEDTHEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserstoryParked'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.PARKEDTHEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserstoryUnparked'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.UNPARKEDTHEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintNameChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}</b>&nbsp;{{'SPRINTS.SPRINTNAMECHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;
+                                <b
+                                    style="max-width:80%;">{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'DependencyUserAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.DEPENDENT' | translate}}&nbsp;<b>{{history.newValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'DependencyUserRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDDEPENDENT' | translate}}&nbsp;<b>{{history.oldValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'DependencyUserChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDDEPENDENCYUSERFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}</b>&nbsp;{{'GOALACTIVITY.DEPENDENT' | translate}}&nbsp;<b>{{history.newValue}}</b>
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'OrderChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ORDERCHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintDescriptionChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="!(history.newValue)">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.oldValue"></span></b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue) && (history.newValue)">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.oldValue"></span></b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.newValue"></span></b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.oldValue) && (history.newValue)" fxFlex fxLayout="row wrap"
+                                    class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.newValue"></span></b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintStartDateChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue)">
+                                    <b>{{history.userName}}&nbsp;</b>{{'SPRINTS.SPRINTSTARTDATECHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.oldValue)" fxFlex fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'SPRINTS.SPRINTSTARTDATEADDED' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue =='SprintEndDateChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue)">
+                                    <b>{{history.userName}}&nbsp;</b>{{'SPRINTS.SPRINTENDDATECHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.oldValue)" fxFlex fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'SPRINTS.SPRINTENDDATEADDED' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintBoardTypeChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHNAGEDTHEBOARDTYPEFROM' | translate}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintBoardTypeApiChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHNAGEDTHEBOARDTYPEAPIFROM' | translate}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintTestSuiteChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <span *ngIf="history.oldValue != 'null' && history.newValue != 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHNAGEDTHETESTSUITEFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </span>
+                                <span *ngIf="history.oldValue == 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDTESTUITETOSPRINT' | translate | softLabelsPipe : softLabels}}&nbsp; <b>{{history.newValue}}</b>
+                                </span>
+                                <span *ngIf="history.newValue == 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVETESTUITETOSPRINT' | translate | softLabelsPipe : softLabels}}&nbsp; <b>{{history.oldValue}}</b>
+                                </span>
+
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintVersionChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue) && history.newValue != 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEVERSIONFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.oldValue)" fxFlex fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDVERSION' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                                <span *ngIf="history.newValue == 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.VERSIONREMOVED' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>
+                                </span>
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryViewed'" class="assets-comments">
+                                <b>{{history.userName}}</b>{{'GOALACTIVITY.VIEWEDTHEUSERSTORY' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.userStoryOrSprintName}}&nbsp;</b>{{'GOALACTIVITY.VIEWEDTHEUSERSTORYEND' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryTypeChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEUSERSTORYTYPE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintResponsiblePersonChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue)">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDGOALRESPONSIBLEPERSON' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.oldValue)" fxFlex fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDSPRINTRESPONSIBLEPERSON' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintStatusChanged'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.SPRINTSTATUSCHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'MovedToSprint'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.MOVEDTHEUSERSTORYFROMSPRINT' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}&nbsp;</b>{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugPriorityAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDBUGPRIORITY' | translate}}&nbsp;<b>{{history.newValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugPriorityRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDBUGPRIORITY' | translate}}&nbsp;<b>{{history.oldValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugPriorityChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.BUGPRIOROTYCHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDBUGPRIORITY' | translate}}&nbsp;<b>{{history.newValue}}</b>
+                                </div>
+                                <div *ngIf="!history.newValue" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDBUGPRIORITY' | translate}}&nbsp;<b>{{history.newValue}}</b>
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugCausedUserAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDBUGCAUSEDUSER' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugCausedUserRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDBUGSCAUSEDUSER' | translate}}&nbsp;<b>{{history.oldValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugCausedUserChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') && history.newValue">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.BUGCAUSEDUSERCHANGEDFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDBUGCAUSEDUSER' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                                </div>
+                                <div *ngIf=" !history.newValue ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDBUGSCAUSEDUSER' | translate}}&nbsp;
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'ProjectFeatureAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDPROJECTFEATURE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'ProjectFeatureRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDPROJECTFEATURE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'ProjectFeatureChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') && history.newValue">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEPROJECTFEATURE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDPROJECTFEATURE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                                </div>
+                                <div *ngIf="!(history.newValue)" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDPROJECTFEATURE' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>{{'GOALACTIVITY.ASSIGNEEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'VersionNameAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDNEWVERSIONTOWORKITEM' | translate | softLabelsPipe : softLabels}}
+                            </div>
+                            <div *ngIf= "history.keyValue == 'VersionNameRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDVERSIONFROMWORKITEM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>
+                            </div>
+                            <div *ngIf="history.keyValue == 'VersionNameChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <span *ngIf="history.oldValue != 'null' && history.newValue">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEVERSIONFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </span>
+                                <span *ngIf="history.oldValue == 'null'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDNEWVERSIONTOWORKITEM' | translate | softLabelsPipe : softLabels}}
+                                </span>
+                                <span *ngIf="!history.newValue">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDVERSIONFROMWORKITEM' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                </span>
+                            </div>
+                            <div *ngIf="history.keyValue == 'TestSuiteSectionAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDSECTION' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'TestSuiteSectionRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDSECTION' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'TestSuiteSectionChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHESECTION' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDSECTION' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'RAGStatusChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.RAGSTATUSCHANGEDFROM' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.RAGSTATUSADDED' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStorySpentTime'" class="assets-comments">
+                                {{'GOALREPLANHISTORY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.SPENTTIME' | translate}}&nbsp;<b>{{history.newValue}}{{'GOALACTIVITY.HOUR' | translate}}</b>&nbsp;{{'GOALACTIVITY.SPENTTIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue =='Comment'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDCOMMENT' | translate}}&nbsp;<b><span
+                                        [innerHTML]="history.description"></span></b>{{'GOALACTIVITY.COMMENTEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryDescriptionAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDDESCRIPTION' | translate}}&nbsp;<b><span
+                                    class="goal-activity-text"
+                                    [innerHTML]="history.newValue"></span></b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryDescriptionRemoved'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDESCRIPTION' | translate}}&nbsp;<b><span
+                                    class="goal-activity-text"
+                                    [innerHTML]="history.oldValue"></span></b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryDescriptionChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.newValue=='null' || history.newValue == '')" fxFlex
+                                    fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.REMOVEDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.oldValue"></span></b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                                <div
+                                    *ngIf="(history.oldValue != 'null') && (history.newValue!='null' && history.newValue != '') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHEDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.oldValue"></span></b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.newValue"></span></b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue =='null' || (history.oldValue == ''))  " fxFlex
+                                    fxLayout="row wrap" class="assets-comments">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDDESCRIPTION' | translate}}&nbsp;<b><span
+                                            class="goal-activity-text"
+                                            [innerHTML]="history.newValue"></span></b>{{'GOALACTIVITY.DESCRIPTIONEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'GoalChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.MOVEDTHEUSERSTORYFROMGOAL' | translate | softLabelsPipe : softLabels}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryTagChanged'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <div *ngIf="(history.oldValue != 'null') ">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.CHANGEDTHETAGFROM' | translate}}&nbsp;<b>{{history.oldValue}}</b>&nbsp;{{'GOALACTIVITY.TO' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.DEADLINEEND' | translate}}
+                                </div>
+                                <div *ngIf="(history.oldValue=='null')" fxFlex fxLayout="row wrap">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDTAG' | translate}}&nbsp;<b>{{history.newValue}}</b>{{'GOALACTIVITY.TIMEEND' | translate}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStorySubTaskAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDUSERSTORYSUBTASK' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                <b> &nbsp;{{history.newValue}}</b> &nbsp;{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDUSERSTORYBUG' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                <b> &nbsp;{{history.newValue}}</b> &nbsp;{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'BugUnlink'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.UNLINKBUG' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                <b> &nbsp;{{history.newValue}}</b> &nbsp;{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryLinkAdded'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrSprintName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.ADDEDLINKEDUSERSTORY' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                <b> &nbsp;{{history.newValue}}</b> &nbsp;{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'UserStoryUnLinked'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.userStoryOrGoalName}}<br>
+                                <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.UNLINKEDLINKEDUSERSTORY' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                <b>{{history.newValue}}</b> &nbsp;{{'GOALACTIVITY.TIMEEND' | translate}}
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintDeleted'" class="assets-comments">
+                                {{'GOALACTIVITY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.projectName}}<br>
+                                <div *ngIf="history.newValue == 'Yes'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.SPRINTDELETED' | translate | softLabelsPipe : softLabels}}
+                                </div>
+                            </div>
+                            <div *ngIf="history.keyValue == 'SprintCompleted'" class="assets-comments">
+                                {{'SPRINTS.SPRINTNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;{{history.projectName}}<br>
+                                <div *ngIf="history.newValue == 'Yes'">
+                                    <b>{{history.userName}}&nbsp;</b>{{'GOALACTIVITY.SPRINTCOMPLETED' | translate | softLabelsPipe : softLabels}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="isAnyOperationIsInprogress">
+            <div *ngFor="let item of [1,2,3,4,5,6,7]">
+                <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+                    <div mat-card-avatar fxFlex="5" fxFlex.md="7" fxFlex.gt-lg="7" fxFlex.xs="13">
+                        <span class="app-user-img"><img class="employee_img"
+                                src="../../../../assets/images/faces/18.png"></span>
+                    </div>
+                    <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                        <div fxLayout="row" fxLayoutGap="5px">
+                            <div fxFlex="85" fxFlex.gt-xs="80">
+                                <div fxFlex="25">
+                                    <p class="mat-body-1 empty-text loading-bg"></p>
+                                </div>
+                                <div fxFlex="75" class="text-center"> </div>
+                            </div>
+                            <div fxFlex="15">
+                                <p class="mat-body-1 empty-text loading-bg"></p>
+                            </div>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="5px">
+                            <div fxFlex="50">
+                                <p class="mat-body-1 empty-text loading-bg"></p>
+                            </div>
+                            <div fxFlex="50" class="text-center"> </div>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="5px">
+                            <div fxFlex="70">
+                                <p class="mat-body-1 empty-text loading-bg"></p>
+                            </div>
+                            <div fxFlex="30" class="text-center"> </div>
+                        </div>
+                    </div>
+                </div>
+                <mat-divider></mat-divider>
+            </div>
+        </div>
+        <div class="p-1" *ngIf="sprintId && !data">{{'NODATATODISPLAY' | translate}}</div>
+        <div class="p-1" *ngIf="!sprintId && !data">
+            <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+                <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+                {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+            </span>
+        </div>
+    </mat-card-content>
+    <mat-paginator *ngIf="(totalCount > 25) && !(isAnyOperationIsInprogress)" [length]="totalCount"
+        [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="pageSizeOptions" (page)="setPageEvent($event)">
+    </mat-paginator>
+</mat-card>
+
+
+<app-common-message-box *ngIf="!isSprintsEnable" textToDisplay="{{'PROJECTS.PLEASECONFIGURESPRINTSETTINGS'|translate}}">
+</app-common-message-box>

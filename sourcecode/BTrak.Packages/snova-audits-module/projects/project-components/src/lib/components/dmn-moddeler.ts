@@ -1,0 +1,47 @@
+
+  const  dmnModdeler ={
+    "name": "Camunda",
+    "uri": "http://camunda.org/schema/1.0/dmn",
+    "prefix": "camunda",
+    "xml": {
+      "tagAlias": "lowerCase"
+    },
+    "associations": [],
+    "types": [
+      {
+        "name": "Decision",
+        "isAbstract": true,
+        "extends": [
+          "dmn:Decision"
+        ],
+        "properties": [
+          {
+            "name": "versionTag",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "historyTimeToLive",
+            "isAttr": true,
+            "type": "String"
+          }
+        ]
+      },
+      {
+        "name": "InputClause",
+        "extends": [
+          "dmn:InputClause"
+        ],
+        "properties": [
+          {
+            "name": "inputVariable",
+            "isAttr": true,
+            "type": "String"
+          }
+        ]
+      }
+    ],
+    "emumerations": [ ]
+  };
+
+  export default dmnModdeler;

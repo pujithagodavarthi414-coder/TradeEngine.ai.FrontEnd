@@ -1,0 +1,121 @@
+<!-- <mat-card class="p-0">
+    <div fxLayout="row" class="m-1">
+        <div fxFlex="25px" fxLayoutAlign="start center">
+            <a (click)="navigatetocustomwidgets()">
+                <fa-icon icon="arrow-left" matTooltip="{{ 'APP.GOBACKTOCUSTOMAPPSLIST' | translate }}"></fa-icon>
+            </a>
+        </div>
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text">
+            {{ 'APP.ADDCUSTOMAPP' | translate }}</div>
+    </div>
+</mat-card> -->
+<mat-card id="style-1" style="height: calc(100vh - 160px);" class="p-0 m-0">
+    <mat-card-content class="p-0">
+        <div fxFlex fxLayout="row wrap">
+            <div fxFlex="50">
+                <div class="p-0 ml-1 mr-1">
+                    <form [formGroup]="htmlForm" novalidate (submit)="htmlForm.valid && previewHtml()">
+                        <div fxLayout="row" fxLayoutGap="10px">
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="customHtmlAppName"
+                                        placeholder="{{ 'APP.APPNAME' | translate }}" required>
+                                    <mat-error
+                                        *ngIf="htmlForm.get('customHtmlAppName').hasError('required') && htmlForm.get('customHtmlAppName').touched">
+                                        {{ 'APP.CUSTOMHTMLAPPREQUIRED' | translate }}
+                                    </mat-error>
+                                    <mat-error
+                                        *ngIf="htmlForm.get('customHtmlAppName').hasError('maxlength') && htmlForm.get('customHtmlAppName').touched">
+                                        {{ 'APP.CUSTOMHTMLAPPNAMEMAXLENGTHERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="selectedRoleIds" [compareWith]="compareSelectedRolesFn"
+                                        placeholder="{{ 'USERMANAGEMENT.ROLE' | translate }}" multiple required>
+                                        <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown"
+                                            #allSelected (click)="toggleRolesPerOne()">
+                                            {{ roles.roleName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="htmlForm.get('selectedRoleIds').hasError('required') && htmlForm.get('selectedRoleIds').touched">
+                                        {{ 'APP.SELECTANYROLE' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="moduleIds" [compareWith]="compareSelectedModuleFn"
+                                        placeholder="{{ 'APP.MODULEPLACEHOLDER' | translate }}" multiple required>
+                                        <mat-option #allModuleSelected (click)="toggleAllModuleSelected()" [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <mat-option [value]="module.moduleId" *ngFor="let module of modulesDropDown"
+                                            #allModuleSelected (click)="toggleModulePerOne()">
+                                            {{ module.moduleName | translate | softLabelsPipe :softLabels}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="htmlForm.get('moduleIds').hasError('required') && htmlForm.get('moduleIds').touched">
+                                        {{ 'APP.SELECTANYMODULE' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="description" rows="3"
+                                placeholder="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}"></textarea>
+                            <mat-error
+                                *ngIf="htmlForm.get('description').hasError('maxlength') && htmlForm.get('description').touched">
+                                {{ 'APP.CUSTOMAPPDESCRIPTIONMAXLENGTHERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <div fxLayout="row" fxLayoutGap="10px">
+                            <div fxFlex="100">
+                                <custom-app-component-tags [referenceId]="customHtmlAppId" [isFromCustomApp]=true [tagsModel] = "tagModel" [isFromHtmlApp] = true
+                                    (getCustomTags)="getTagsList($event)"></custom-app-component-tags>
+                            </div>
+                        </div>
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="htmlCode" rows="20" (keyup)="previewHtml()"
+                                placeholder="{{ 'APP.HTMLCODE' | translate }}" required></textarea>
+                            <mat-error
+                                *ngIf="htmlForm.get('htmlCode').hasError('required') && htmlForm.get('htmlCode').touched">
+                                {{ 'APP.HTMLCODEISREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <div *ngIf="htmlForm.valid">
+                            <app-fm-component-html-app-drop-zone (filePath)="filePath($event)"
+                                [fileUrl]="scriptFilePath">
+                            </app-fm-component-html-app-drop-zone>
+                        </div>
+                        <div class="mt-05">
+                            <button class="pull-right mr-1" mat-raised-button (click)="previewHtml()"
+                                [disabled]="!htmlForm.valid || isAnyOperationIsInprogress" type="button">
+                                {{ 'APP.PREVIEW' | translate }}
+                            </button>
+                            <button class="pull-right mr-1" mat-raised-button (click)="upsertCustomHtmlApp()"
+                                color="primary" [disabled]="!htmlForm.valid || isAnyOperationIsInprogress">
+                                <fa-icon class="mr-05" icon="check"></fa-icon>
+                                {{ 'SAVE' | translate }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div fxFlex="50">
+                <mat-card class="p-0" style="height: calc(100vh - 175px); overflow: auto;">
+                    <mat-card-title class="text-center">
+                        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'APP.PREVIEW' | translate }}
+                        </div>
+                    </mat-card-title>
+                    <div #htmlContentLoader></div>
+                    <!-- <iframe [attr.id]="iFrame ? id : ''" *ngIf="id" frameborder="0" style="width: 100%;height: 92%; overflow-x:auto"></iframe> -->
+                </mat-card>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

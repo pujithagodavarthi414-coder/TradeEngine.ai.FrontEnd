@@ -1,0 +1,232 @@
+<div>
+    <div class="activity-data projects-list-grid bl-table-height">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow" matTooltip="{{ 'BLSUPPLIER.BL' |  translate }}">
+                        {{'BLSUPPLIER.BL' | translate}}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="getAllBlDetails()">
+                        </mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input matInput [(ngModel)]="searchText"
+                                    placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    (input)="filterByName($event)" />
+                            </mat-form-field>
+                        </div>
+                        <span class="mr-1 shift-timing-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button mat-icon-button matTooltip="{{ 'BLSUPPLIER.CREATEBL' |  translate }}"
+                            (click)="editBlPopupOpen(null)" *ngIf="!isArchived">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+                </div>
+            </div>
+        </mat-card-title>
+        <kendo-grid [data]="supplierListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+            [pageSize]="state.take" [sort]="state.sort" [sortable]="true" [pageable]="true"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="blNumber" title="{{'BLSUPPLIER.BLNUMBER' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column field="blDate" title="{{'BLSUPPLIER.BLDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    {{ dataItem.blDate | date: 'dd-MMM-yyyy' }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="blQuantity" title="{{'BLSUPPLIER.BLQUANTITY(MT)' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.blQuantity | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="consignee" title="{{'BLSUPPLIER.CONSGNEE' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column field="consigner" title="{{'BLSUPPLIER.CONSGNER' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column field="notifyParty" title="{{'BLSUPPLIER.NOTIFY' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column field="packingDetails" title="{{'BLSUPPLIER.PACKING' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column width="100" title="{{'BLSUPPLIER.DOCUMENT' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="{{'BLSUPPLIER.DOCUMENT' | translate}}"
+                        *ngIf="dataItem.receipts?.length > 0"
+                        (click)="showReceiptsPopupOpen(dataItem,showReceiptsPopUp);$event.stopPropagation();"
+                        [satPopoverAnchorFor]="showReceiptsPopover" #showReceiptsPopUp="satPopoverAnchor"
+                        mat-icon-button>
+                        <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                        <span>({{receiptsCount(dataItem)}})</span>
+                    </button>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}" [width]="340">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" title="{{ 'BLSUPPLIER.EDITBL' |  translate }}" mat-icon-button
+                        (click)="editBlPopupOpen(dataItem)" *ngIf="!isArchived">
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'BLSUPPLIER.INDOCUMENT' |  translate }}" mat-icon-button
+                        *ngIf="!isArchived" (click)="openDocument(dataItem,'initial')">
+                        <fa-icon icon="file-alt" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <!-- <button class="text-center" title="{{ 'BLSUPPLIER.FNDOCUMENT' |  translate }}" mat-icon-button
+                        *ngIf="!isArchived" (click)="openDocument(dataItem,'final')">
+                        <fa-icon icon="file" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button> -->
+                    <!-- <button class="text-center" title="Share Intial Documents" mat-icon-button
+                        #documentPopover="satPopoverAnchor" [satPopoverAnchorFor]="documentShare"
+                        (click)="$event.stopPropagation();openDocumentPopup(dataItem,documentPopover, true)"
+                        *ngIf="!isArchived">
+                        <fa-icon icon="share" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="Share Final Documents" mat-icon-button
+                        #documentPopover="satPopoverAnchor" [satPopoverAnchorFor]="documentShare"
+                        (click)="$event.stopPropagation();openDocumentPopup(dataItem,documentPopover, false)"
+                        *ngIf="!isArchived">
+                        <fa-icon icon="share" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button> -->
+
+                    <button class="text-center" title="{{ 'BLSUPPLIER.ARCHIVEBL' |  translate }}"
+                        [satPopoverAnchorFor]="deletecontractPopover" #deleteContractPopup="satPopoverAnchor"
+                        (click)="deleteContractPopUpOpen(dataItem,deleteContractPopup)" *ngIf="!isArchived"
+                        mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'BLSUPPLIER.UNARCHIVEBL' |  translate }}"
+                        [satPopoverAnchorFor]="deletecontractPopover" #deleteContractPopup="satPopoverAnchor"
+                        (click)="deleteContractPopUpOpen(dataItem,deleteContractPopup)" *ngIf="isArchived"
+                        mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                    <button class="text-center" title="Click here to add bill of entry details" mat-icon-button
+                        (click)="stageTwoBlPopupOpen(dataItem)" *ngIf="!isArchived">
+                        <fa-icon icon="file-invoice" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+</div>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deletecontractPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="isBlArchived">
+                {{ 'BLSUPPLIER.ARCHIVEBL' | translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="!isBlArchived">
+                {{ 'BLSUPPLIER.UNARCHIVEBL' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="isBlArchived">
+                {{ 'BLSUPPLIER.AREYOUSUREYOUWANTTOARCHIVETHISBL?' | translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="!isBlArchived">
+                {{ 'BLSUPPLIER.AREYOUSUREYOUWANTTOUNARCHIVETHISBL' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isBlArchived"
+                    [disabled]="isInProgress" (click)=" deleteShipBl();">
+                    <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button color="primary" *ngIf="!isBlArchived" [disabled]="isInProgress"
+                    (click)=" deleteShipBl();">
+                    <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closedeleteContractPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #documentShare hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                {{documentText}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05" style="width: 300px;">
+            <div style="max-height: calc(100vh - 620px);" id="style-1">
+                <div fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="CHA Name" (selectionChange)="employeeSelection($event)">
+                            <mat-option value="option" *ngFor="let client of clientData" [value]="client.userId">
+                                {{client.fullName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    (click)="shareDocuments(dataItem, isIntialDocuments)"
+                    [disabled]="!selectedChaUserId || shareDocumentsLoading">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="shareDocumentsLoading">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> Share and Assign
+                </button>
+                <button mat-button mat-raised-button (click)="closeSendEmailPopover()"
+                    [disabled]="shareDocumentsLoading">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<!-- file display -->
+<sat-popover backdropClass="backdrop-color" #showReceiptsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0 expense-recipts-width">
+        <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+            <div fxFlex class="text-center">
+                {{'BLSUPPLIER.DOCUMENT' | translate}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center">
+                <span class="inline_edit_close_btn" (click)="closeReceiptsPopup()">
+                    <fa-icon icon="times"></fa-icon>
+                </span>
+            </div>
+        </div>
+        <mat-card-content class="p-05 mobile-view-popover">
+            <div *ngIf="galleryImages && galleryImages.length > 0">
+                <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+            </div>
+            <div fxLayout="column" fxLayoutGap="0">
+                <div fxLayout="row wrap" class="p-05" fxLayoutGap="5px" *ngFor="let file of receiptsPdfForAnOrder">
+                    <span fxFlex="15px">
+                        <fa-icon icon="file" class="icon-button mat-color-accent" (click)="downloadFile(file.filePath)">
+                        </fa-icon>
+                    </span>
+                    <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button"
+                        [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+                        (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

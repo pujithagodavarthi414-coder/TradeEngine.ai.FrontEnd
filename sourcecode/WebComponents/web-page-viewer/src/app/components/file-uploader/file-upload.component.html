@@ -1,0 +1,123 @@
+
+<div fxLayout="column">
+  <div class="form-group has-feedback formio-component formio-component-textarea formio-component-textArea2 "
+    style="position: relative;" *ngIf="isDescriptionRequired">
+    <label class="control-label" style="">Description</label>
+    <textarea [(ngModel)]="description" type="text" class="form-control" lang="en" rows="3" *ngIf="!disableds"></textarea>
+    <textarea [(ngModel)]="description" type="text" class="form-control" lang="en" rows="3" *ngIf="disableds" readonly></textarea>
+  </div>
+  <div class="custom-dropzone" ngx-dropzone (change)="filesSelected($event)" [accept]="fileExtensions"
+    [maxFileSize]="maxFileSize" [disabled]="(anyOperationInProgress)||disableds">
+    <ngx-dropzone-label>
+      <span class="fileSelector"><i class="fa fa-cloud-upload"></i> Drop files to attach, or <span style="text-decoration: underline; color: #337ab7!important;">browse</span>
+      </span>
+    </ngx-dropzone-label>
+    <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+      (removed)="onRemove(f)">
+      <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">{{ f.name }} ({{ f.type }})
+      </ngx-dropzone-label>
+    </ngx-dropzone-preview>
+  </div>
+  <mat-progress-bar color="primary" mode="determinate" [value]="progressValue" *ngIf="progressValue > 0">
+  </mat-progress-bar>
+  <div *ngIf="progressValue > 0">
+    {{progressValue | number : '1.0-2'}}% Completed (Uploading {{fileCounter}} of {{fileNames.length}} files)
+  </div>
+  <div class="mt-05" fxLayoutAlign="center end">
+    <button mat-button mat-raised-button class="glossy-button-button" color="primary" (click)="saveFiles()" *ngIf="filesPresent"
+      [disabled]="((anyOperationInProgress) || progressValue > 0)">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress)">
+      </mat-progress-bar>
+      <fa-icon class="mr-05" icon="save"></fa-icon><span style="color: #fff !important;">Upload</span>
+    </button>
+    <button class="ml-1" mat-button mat-raised-button (click)="removeAllFiles();" [disabled]="(anyOperationInProgress)"
+      *ngIf="filesPresent">
+      <fa-icon class="mr-05" icon="times"></fa-icon>Clear
+    </button>
+  </div>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(getFilesInProgress)">
+  </mat-progress-bar>
+  <ul class="list-group list-group-striped" *ngIf="tableViews">
+    <li class="list-group-item list-group-header hidden-xs hidden-sm">
+      <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-2"><strong>File Name</strong></div>
+        <div class="col-md-2" *ngIf="isDescriptionRequired"><strong>Description</strong></div>
+        <div class="col-md-2"><strong>Size</strong></div>
+        <div class="col-md-2"><strong>Actions</strong></div>
+      </div>
+    </li>
+    <div style="max-height: 300px; overflow: auto;" id="style-1">
+    <li class="list-group-item list-group-header hidden-xs hidden-sm" *ngFor="let file of (uploadedFiles)">
+      <div class="row">
+        <div class="col-md-1">
+          <fa-icon icon="times" class="mat-color-accent pull-right mr-05 goal-cursor" *ngIf="!disableds"
+            matTooltip="Remove file" (click)="deleteSelectedFile(file)">
+          </fa-icon>
+        </div>
+        <div class="col-md-2" style=" overflow: hidden !important; white-space:nowrap !important; text-overflow: ellipsis !important;">
+          <!-- matTooltip="{{file?.fileName? file?.fileName :file?.filePath}}" matTooltipClass="tooltip-overflow" -->
+          <span style="text-decoration: underline; color: #337ab7!important; cursor: pointer; " (click)="downloadFile(file)">
+            {{file.fileName? file.fileName :file.filePath}}</span></div>
+            <!-- matTooltip="{{ file?.description }}" matTooltipClass="tooltip-overflow" -->
+            <div class="col-md-2 overme" *ngIf="isDescriptionRequired"><p class="title">{{file.description}}</p></div>
+        <div class="col-md-2">{{ calculateFileSizeinKB(file.fileSize) | number : '1.0-0'}} KB</div>
+        <div>
+              <fa-icon class="icon-button mr-1 mat-color-accent" style="cursor: pointer" icon="eye" *ngIf="(file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF')" matTooltip="Preview Image"
+                (click)="openPreview(file);$event.stopPropagation()"></fa-icon>
+            
+              <fa-icon class="icon-button mr-1 mat-color-accent" style="cursor: pointer" icon="eye" matTooltip="Preview Pdf" *ngIf="(file.fileExtension == '.pdf' || file.fileExtension == '.PDF' )"
+                (click)="previewPdfPopup(file.filePath)"></fa-icon>
+            
+              <fa-icon class="icon-button mr-1 mat-color-accent" style="cursor: pointer" *ngIf="( file.fileExtension == '.csv'|| file.fileExtension == '.CSV')" icon="eye" matTooltip="Preview CSV"
+                (click)="previewCsvPopup(file.filePath)"></fa-icon>
+            
+              <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye" style="cursor: pointer" matTooltip="Preview file" *ngIf="(file.fileExtension == '.xls' || file.fileExtension == '.xlsx' || file.fileExtension == '.doc'|| file.fileExtension == '.docx' ||
+              file.fileExtension == '.XLS' || file.fileExtension == '.XLSX' || file.fileExtension == '.DOC'|| file.fileExtension == '.DOCX')"
+                (click)="previewOfficePopup(file.filePath)"></fa-icon>
+            
+
+              <fa-icon class="icon-button mr-1 mat-color-accent" icon="download" style="cursor: pointer"
+                matTooltip="Download file" (click)="downloadFile(file);$event.stopPropagation()"></fa-icon>
+
+            <fa-icon class="icon-button mr-1 mat-color-accent" icon="copy" matTooltip="Copy file link" style="cursor: pointer"
+              (click)="copyFileUrl(file);$event.stopPropagation()">
+            </fa-icon>
+        </div>
+        </div>
+    </li>
+  </div>
+  </ul>
+</div>
+
+<!--image preview-->
+<ng-container *ngIf="galleryImages && galleryImages.length > 0">
+  <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyPreviewGallery>
+  </ngx-gallery>
+</ng-container>
+
+<ng-template #previewPdfDialogComponent let-data>
+  <button class="close" mat-button mat-dialog-title (click)="closeDialog()"
+    style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+    <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+    </fa-icon>
+  </button>
+  <embed type="application/pdf" [src]="pdf" class="full-width pdf-height">
+</ng-template>
+<ng-template #previewcsvDialogComponent let-data>
+  <button class="close" mat-button mat-dialog-title (click)="closeDialog()"
+    style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+    <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+    </fa-icon>
+  </button>
+  <ngx-doc-viewer url="{{csv}}" viewer="google" style="width:100%;height:100%;"></ngx-doc-viewer>
+</ng-template>
+
+<ng-template #previewofficeDialogComponent let-data>
+  <button class="close" mat-button mat-dialog-title (click)="closeDialog()"
+    style="position: inherit;top: 0;right: 0;padding: 2px;line-height: 3px;min-width: auto;">
+    <fa-icon class="project-dialog ng-fa-icon" icon="times" ng-reflect-icon-prop="times">
+    </fa-icon>
+  </button>
+  <ngx-doc-viewer url="{{office}}" viewer="office" style="width:100%;height:100%;"></ngx-doc-viewer>
+</ng-template>

@@ -1,0 +1,31 @@
+export class TaxAllowanceModel{
+     taxAllowanceId: string; 
+     taxAllowanceName: string; 
+     taxAllowanceTypeId: string; 
+     isPercentage: boolean; 
+     maxAmount: number;  
+     percentageValue: number;  
+     parentId: string;  
+     payRollComponentId: string;  
+     componentId: string; 
+     fromDate: Date;
+     toDate: Date; 
+     onlyEmployeeMaxAmount: number;   
+     metroMaxPercentage: number;   
+     lowestAmountOfParentSet: boolean;   
+     taxAllowanceTypeName: string; 
+     payRollComponentName: string;  
+     componentName: string;  
+     parentName: string;  
+     timeStamp:any;
+     totalCount: number;   
+     isArchived: boolean;
+     type: number;
+     name: string;
+     isMainPage: boolean; 
+     countryId: string; 
+     countryName: string;  
+     modifiedOnlyEmployeeMaxAmount: string;  
+     modifiedMaxAmount: string;
+     employeeId:string;  
+}

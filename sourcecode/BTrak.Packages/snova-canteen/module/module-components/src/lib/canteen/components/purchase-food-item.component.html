@@ -1,0 +1,72 @@
+<mat-card-title class="text-center">
+  <div class="card-title-text mat-bg-primary p-05">{{'CANTEEN.PURCHASEFOODITEM' | translate}}
+  </div>
+</mat-card-title>
+<div class="max-width-style">
+<form [formGroup]="addCanteenPurchaseItemForm" #formDirective="ngForm" novalidate (submit)="addCanteenPurchaseItemForm.valid && upsertCanteenPurchaseItem(formDirective)">
+  <div class="card-content p-05">
+    <div formArrayName="addPurchaseItemElement"
+      *ngFor="let item of addCanteenPurchaseItemForm.get('addPurchaseItemElement')['controls']; let i = index;">
+      <div [formGroupName]="i" style="display: flex">
+        <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+          <div fxFlex="100" fxFlex.gt-sm="47%">
+            <mat-form-field class="full-width">
+              <input type="text" placeholder="{{'CANTEEN.PLEASEENTERFOODITEMNAME' | translate }}" aria-label="Number" matInput
+                (keyup)="sample($event,i)" formControlName="itemsFilter" [matAutocomplete]="auto" placeholder="{{'CANTEEN.PLEASEENTERFOODITEMNAME' | translate }}" required>
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)" (optionSelected)='selectedFoodItem($event.option.value,i)'>
+                <mat-option *ngFor="let item of filteredItems | async"
+                  [value]="item">
+                  {{item.foodItemName}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error>
+                <span
+                  *ngIf="item.get('itemsFilter').hasError('required') && item.get('itemsFilter').touched">{{'CANTEEN.PLEASESELECTAFOODITEM' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxLayout="row wrap" fxLayoutGap="10px" fxFlex="100" fxFlex.gt-sm="calc(50%-10px)">
+            <div fxFlex="calc(100% - 60px)">
+              <mat-form-field class="full-width">
+                <input type="number" matInput min="1" formControlName="quantity"
+                  placeholder="{{'CANTEEN.ITEMCOUNT' | translate}}" digitOnly autocomplete="off" required>
+                <mat-error>
+                    <span
+                    *ngIf="item.get('quantity').hasError('max') && item.get('quantity').touched">{{'CANTEEN.QUANTITYSHOULDBELESSTHAN10' | translate}}</span>
+                  <span
+                    *ngIf="item.get('quantity').hasError('required') && item.get('quantity').touched">{{'CANTEEN.PLEASEENTERQUANTITY' | translate}}</span>
+                  <span
+                    *ngIf="item.get('quantity').hasError('min')">{{'CANTEEN.QUANTITYSHOULDBEGREATERTHANZERO' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50px" fxLayoutAlign="end none" fxLayoutGap="10px">
+              <mat-icon fxFlex="20px"
+                *ngIf="checkCondition(i)" aria-hidden="false"
+                aria-label="true" class="mat-bg-primary plus_icon"
+                matTooltip="{{'CANTEEN.ADDFIELDTOPURCHASEITEM' | translate}}" (click)="addItem()"> add </mat-icon>
+              <mat-icon fxFlex="20px" *ngIf="checkLength()"
+                aria-hidden="false" aria-label="true" class="mat-bg-primary plus_icon"
+                matTooltip="{{'CANTEEN.DELETEFOODITEMFIELD' | translate}}" (click)="removeItemAtIndex(i)"> clear
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="text-center mb-1">
+    <button type="submit"
+      [disabled]="!addCanteenPurchaseItemForm.valid || (upsertCanteenPurchaseItemInProgress$ | async)" mat-button
+      mat-raised-button color="primary" class="mr-1">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertCanteenPurchaseItemInProgress$ | async">
+      </mat-progress-bar>
+      <fa-icon class="mr-05" icon="credit-card"></fa-icon>{{'CANTEEN.PURCHASE' | translate}}
+    </button>
+    <button mat-button mat-raised-button type="button" (click)="closePurchaseItemForm()"
+      [disabled]="upsertCanteenPurchaseItemInProgress$ | async">
+      <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANTEEN.CANCEL' | translate}}
+    </button>
+  </div>
+</form>
+</div>

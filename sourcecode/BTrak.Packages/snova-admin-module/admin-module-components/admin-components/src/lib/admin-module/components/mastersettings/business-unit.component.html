@@ -1,0 +1,154 @@
+<div class="mat-card-fx-col">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text full-width p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'BUSINESSUNIT.BUSINESSUNIT' | translate }}">
+                        {{ 'BUSINESSUNIT.BUSINESSUNIT' | translate }}</span>
+                </div>
+                <div fxLayoutAlign="end center">
+                    <fa-icon icon="plus" class="pr-1 fa-lg filter mat-color-accent"
+                        matTooltip="{{'BUSINESSUNIT.ADDNEWBUSINESSUNIT' | translate}}"
+                        *ngIf="canAccess_feature_AddOrEditBusineesUnit"
+                        (click)="createBusinessUnitPopupOpen(AddBusinessUnitsPopup,null)" style="cursor: pointer;"
+                        [satPopoverAnchorFor]="AddBusinessUnitsPopover" #AddBusinessUnitsPopup="satPopoverAnchor">
+                    </fa-icon>
+                    <fa-icon class="pr-1 fa-lg filter mat-color-accent" icon="expand-alt"
+                        matTooltip="{{'BUSINESSUNIT.EXPANDALL' | translate}}"
+                        *ngIf="isExpandAll && treeviewData && canAccess_feature_ViewBusineesUnit"
+                        (click)="expandTreeview(true)" style="cursor: pointer;">
+                    </fa-icon>
+                    <fa-icon class="pr-1 fa-lg filter mat-color-accent" icon="compress-alt"
+                        matTooltip="{{'BUSINESSUNIT.COLLAPSEALL' | translate}}"
+                        *ngIf="!isExpandAll && treeviewData && canAccess_feature_ViewBusineesUnit"
+                        (click)="expandTreeview(false)" style="cursor: pointer;">
+                    </fa-icon>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+
+    <div fxFlex fxLayoutAlign="center center" *ngIf="treeviewData && canAccess_feature_ViewBusineesUnit">
+        <kendo-treeview [nodes]="treeviewData" kendoTreeViewExpandable kendoTreeViewHierarchyBinding
+            childrenField="children" class="company-hierarchical-tree tree-height full-width"
+            [(expandedKeys)]="expandKeys" kendoTreeViewExpandable [expandBy]="'businessUnitName'"
+            kendoTreeViewDragAndDrop id="style-1" kendoTreeViewDragAndDropEditing (nodeDrop)="handleDrop($event)">
+            <ng-template kendoTreeViewNodeTemplate let-dataItem>
+                <div fxLayout="row" class="mr-2">
+                    <div fxFlex class="pr-1 pl-1 company-details-size">{{dataItem.businessUnitName}}
+                        <mat-chip [selectable]="false" [removable]="false" *ngIf="dataItem.employeeNames" class="p-03">
+                            <span class="hide-content-overflow">
+                                {{dataItem.employeeNames}}
+                            </span>
+                        </mat-chip>
+                    </div>
+                    <div fxFlex="125px" fxLayoutAlign="end center">
+                        <fa-icon icon="plus" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'BUSINESSUNIT.ADD' | translate}}"
+                            *ngIf="canAccess_feature_AddOrEditBusineesUnit"
+                            (click)="createBusinessUnitPopupOpen(AddBusinessUnitsPopup,dataItem)"
+                            style="cursor: pointer;" [satPopoverAnchorFor]="AddBusinessUnitsPopover"
+                            #AddBusinessUnitsPopup="satPopoverAnchor">
+                        </fa-icon>
+                        <fa-icon icon="edit" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'BUSINESSUNIT.EDIT' | translate}}"
+                            (click)="editBusinessUnitPopupOpen(AddBusinessUnitsPopup,dataItem)" style="cursor: pointer;"
+                            *ngIf="canAccess_feature_AddOrEditBusineesUnit"
+                            [satPopoverAnchorFor]="AddBusinessUnitsPopover" #AddBusinessUnitsPopup="satPopoverAnchor">
+                        </fa-icon>
+                        <fa-icon icon="trash" class="pr-1 fa-lg fi.lter mat-color-accent"
+                            matTooltip="{{'BUSINESSUNIT.DELETE' | translate}}"
+                            (click)="deleteBusinessUnitPopupOpen(DeleteBusinessUnitPopup,dataItem)"
+                            *ngIf="canAccess_feature_DeleteBusineesUnit"
+                            [satPopoverAnchorFor]="DeleteBusinessUnitPopover" style="cursor: pointer;"
+                            #DeleteBusinessUnitPopup="satPopoverAnchor"></fa-icon>
+                    </div>
+                </div>
+            </ng-template>
+        </kendo-treeview>
+    </div>
+</div>
+<sat-popover backdropClass="backdrop-color" #AddBusinessUnitsPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+    horizontalAlign="center">
+    <mat-card class="p-0 mr-0" fxFlex="450px">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">{{'BUSINESSUNIT.ADDDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="businessUnitDetailsForm" #formDirective="ngForm" novalidate
+                (submit)="businessUnitDetailsForm.valid && upsertBusinessUnitDetails(formDirective)">
+                <div class="form-group">
+                    <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="businessUnitName"
+                                placeholder="{{'BUSINESSUNIT.PLEASEPROVIDENAME' | translate}}" required>
+                            <mat-error *ngIf="businessUnitDetailsForm.get('businessUnitName').hasError('maxlength')">
+                                {{'BUSINESSUNIT.BUSINESSUNITNAMEMAXLENGTHERROR' | translate}}
+                            </mat-error>
+                            <mat-error
+                                *ngIf="businessUnitDetailsForm.get('businessUnitName').hasError('required') && businessUnitDetailsForm.get('businessUnitName').touched">
+                                {{'BUSINESSUNIT.BUSINESSNAMEREQUIREDERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column" *ngIf= "showEmployeeDropDown">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="selectedEmployeeIds"
+                                placeholder="{{ 'STATUSREPORT.SELECTEMPLOYEES' | translate }}" multiple>
+                                <app-select-all [model]="businessUnitDetailsForm.get('selectedEmployeeIds')"
+                                    [values]="allEmployeeIds">
+                                </app-select-all>
+                                <mat-option [value]="employee.employeeId" *ngFor="let employee of employees">
+                                    {{ employee.nickName }}
+                                </mat-option>
+                            </mat-select>
+                            <!-- <mat-error
+                                *ngIf="businessUnitDetailsForm.get('selectedEmployeeIds').hasError('required') && businessUnitDetailsForm.get('selectedEmployeeIds').touched">
+                                {{'BUSINESSUNIT.BUSINESSNAMEREQUIREDERROR' | translate}}
+                            </mat-error> -->
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="mt-1 text-center mb-05">
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!businessUnitDetailsForm.valid||isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeBusinessUnitDetailsPopup(formDirective)"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #DeleteBusinessUnitPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{'BUSINESSUNIT.DELETEBUSINESSUNIT' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{'BUSINESSUNIT.DELETECONFIRMATIONMESSAGE' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteBusinessUnit();">
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletBusinessUnitPopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

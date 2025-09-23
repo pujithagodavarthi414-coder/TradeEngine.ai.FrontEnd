@@ -1,0 +1,230 @@
+<div class="full-height" *ngIf="canAccess_feature_ProfessionalTaxRanges">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'TAXRANGE.TITLE' | translate | titlecase }}">{{'TAXRANGE.TITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == false) ? ('TAXRANGE.SEEARCHIVEDITEMS' | translate) : ('TAXRANGE.SEEUNARCHIVEDITEMS' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="filterTaxRanges()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'TAXRANGE.TITLE' | translate }}"
+              [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+              (click)="createTaxRangePopupOpen(upsertPayGradePopUp);clearForm()">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="professionaTaxRanges" [scrollbarH]="true"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="150" name="{{ 'TAXRANGE.FROMRANGE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="modifiedFromRange">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedFromRange }}">{{ row?.modifiedFromRange }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'TAXRANGE.TORANGE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="modifiedToRange">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedToRange }}">{{ row?.modifiedToRange }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'TAXRANGE.TAXAMOUNT' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="modifiedTaxAmount">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedTaxAmount }}">{{ row?.modifiedTaxAmount }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'TAXRANGE.BRANCH' | translate }}" [sortable]="true" prop="branchName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.branchName }}">{{ row?.branchName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate}}" sortable="true"
+        prop="activeFrom">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div *ngIf="row.activeFrom != null">{{ row.activeFrom | date: "dd-MMM-yyyy" }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'PAYROLLROLECONFIGURATION.ACTIVETO' | translate}}" sortable="true" prop="activeTo">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div *ngIf="row.activeTo != null">{{ row.activeTo | date: "dd-MMM-yyyy" }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="Actions" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'TAXRANGE.EDITPROFESSIONALTAXRANGE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+            (click)="editTaxRangePopupOpen(row,upsertPayGradePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{'TAXRANGE.DELETEPROFESSIONALTAXRANGE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deletePayGradeePopover" #deletePayGradePopUp="satPopoverAnchor"
+            (click)="deleteTaxRangePopUpOpen(row,deletePayGradePopUp)">
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+          <button class="text-center" title="{{'TAXRANGE.UNARCHIVEPROFESSIONALTAXRANGE' | translate }}"
+            *ngIf="isArchived" [satPopoverAnchorFor]="deletePayGradeePopover" #deletePayGradePopUp="satPopoverAnchor"
+            (click)="deleteTaxRangePopUpOpen(row,deletePayGradePopUp)" mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertPayGradePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex="450px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{payGradeEdit}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="payGradeForm" #formDirective="ngForm" novalidate (submit)="upsertTaxRange(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input type="number" matInput formControlName="fromRange"
+                placeholder="{{ 'TAXRANGE.FROMRANGE' | translate }}" required (input)='changeValue()'>
+              <mat-error
+                *ngIf="payGradeForm.get('fromRange').hasError('required') && payGradeForm.get('fromRange').touched">
+                {{ 'TAXRANGE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input type="number" matInput formControlName="toRange" placeholder="{{ 'TAXRANGE.TORANGE' | translate }}"
+                (input)='changeValue()'>
+              <mat-error
+                *ngIf="payGradeForm.get('toRange').hasError('required') && payGradeForm.get('toRange').touched">
+                {{ 'TAXRANGE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input type="number" matInput formControlName="taxAmount"
+                placeholder="{{ 'TAXRANGE.TAXAMOUNT' | translate }}" required>
+              <mat-error
+                *ngIf="payGradeForm.get('taxAmount').hasError('required') && payGradeForm.get('taxAmount').touched">
+                {{ 'TAXRANGE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                formControlName="branchId" required (selectionChange)="changeValue()">
+                <mat-option *ngFor="let branch of (branches)" [value]="branch.branchId">
+                  {{ branch.branchName }}
+                </mat-option>
+              </mat-select>
+              <mat-error class="P-06"
+                *ngIf="payGradeForm.get('branchId').hasError('required') && payGradeForm.get('branchId').touched">
+                {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="picker" (click)="picker.open()"
+                placeholder="{{'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate}}" formControlName="activeFrom"
+                [max]="payGradeForm.get('activeTo').value" required autocomplete="off">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error>
+                <span
+                  *ngIf="payGradeForm.get('activeFrom').hasError('required') && payGradeForm.get('activeFrom').touched">
+                  {{'PAYROLLBRANCHCONFIGURATION.ACTIVEFROMREQUIRED' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                placeholder="{{'PAYROLLROLECONFIGURATION.ACTIVETO' | translate}}" formControlName="activeTo"
+                [min]="payGradeForm.get('activeFrom').value" [readonly]="true" autocomplete="off">
+              <mat-datepicker-toggle matSuffix [for]="picker1">
+              </mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 text-center mb-05">
+            <button mat-raised-button color="primary" class="mr-1" type="submit"
+              [disabled]="!payGradeForm.valid||isAnyOperationIsInprogress || isDuplicateValue">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertTaxRangePopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <!--Delete PayGrade dialog-->
+  <sat-popover backdropClass="backdrop-color" #deletePayGradeePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'TAXRANGE.DELETEPROFESSIONALTAXRANGE' | translate }}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">{{ 'TAXRANGE.UNARCHIVEPROFESSIONALTAXRANGE' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'TAXRANGE.ARCHIVEPROFESSIONALTAXRANGETEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'TAXRANGE.UNARCHIVEPROFESSIONALTAXRANGETEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deletePayGrade();" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deletePayGrade();" *ngIf="isArchived">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteTaxRangePopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete PayGrade dialog-->
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ProfessionalTaxRanges)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

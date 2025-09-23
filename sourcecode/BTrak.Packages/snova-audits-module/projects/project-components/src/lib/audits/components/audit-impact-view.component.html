@@ -1,0 +1,173 @@
+<div [ngClass]="{'full-height': canAccess_feature_ViewAuditImpact}">
+    <mat-card class="p-0 m-0 time-sheet">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0">
+                <div fxFlex fxFlex.xs="100" fxLayoutAlign="start center" fxLayoutAlign.xs="center center">
+                    <div class="card-title-text p-05">{{'AUDIT.AUDITIMPACT' | translate | softLabelsPipe :softLabels}}
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="mr-05">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' |translate | softLabelsPipe :softLabels) : ('SWITCHTOARCHIVE' |translate | softLabelsPipe :softLabels)"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="changeArchiveCategory(isArchived)">
+                    </mat-slide-toggle>
+                </div>
+                <div class="h-75" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px" fxLayoutAlign="end center"
+                *ngIf="canAccess_feature_AddOrUpdateAuditImpact && canAccess_feature_ViewAuditImpact">
+                    <button mat-icon-button color="primary" matTooltip=" {{'AUDIT.ADDAUDITIMPACT' | translate | softLabelsPipe :softLabels}}"
+                        [satPopoverAnchorFor]="editImpactPopover" #editImpactPopUp="satPopoverAnchor"
+                        (click)="$event.stopPropagation();openAddPopover(editImpactPopUp)">
+                        <fa-icon class="mat-color-accent icon-button" icon="plus"></fa-icon>
+                    </button>
+                </div>
+                <div class="mr-05 search_goalinput row-wrap" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px"
+                *ngIf="canAccess_feature_ViewAuditImpact">
+                    <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                    <span class="custom_close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer"> 
+                            close</mat-icon>
+                    </span>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="full-height" *ngIf="canAccess_feature_ViewAuditImpact">
+            <kendo-grid [data]="impacts" [sortable]="true" [pageable]="false" [filterable]="false"
+                [selectable]="false" [sort]="sort" (sortChange)="sortChange($event)">
+                <kendo-grid-column field="impactName" title="{{'AUDIT.IMPACTNAME' | translate | softLabelsPipe :softLabels}}"
+                    [style]="{'cursor':'default'}">
+                </kendo-grid-column>
+                <kendo-grid-column field="description" title="{{'AUDIT.DESCRIPTION' | translate | softLabelsPipe :softLabels}}"
+                    [style]="{'cursor':'default'}">
+                </kendo-grid-column>
+                <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate | softLabelsPipe :softLabels }}"
+                *ngIf="canAccess_feature_AddOrUpdateAuditImpact">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <button *ngIf="!isArchived" class="text-center mr-05" title="{{' AUDIT.EDITAUDITIMPACT' | translate | softLabelsPipe :softLabels}}"
+                            mat-icon-button [satPopoverAnchorFor]="editImpactPopover"
+                            #editImpactPopUp="satPopoverAnchor" (click)="editImpact(dataItem,editImpactPopUp)">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveAuditImpact) && !isArchived"
+                        class="text-center" title="{{ 'AUDIT.ARCHIVEIMPACT' | translate | softLabelsPipe :softLabels }}"
+                        [satPopoverAnchorFor]="deleteCatgeory" #deleteCategoryPopover="satPopoverAnchor"
+                        (click)="$event.stopPropagation();deleteCategoryItem(dataItem,deleteCategoryPopover)"
+                        mat-icon-button>
+                        <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                    </button>
+                    <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveAuditImpact) && isArchived"
+                        class="text-center" title="{{ 'AUDIT.UNARCHIVEIMPACT' | translate | softLabelsPipe :softLabels }}"
+                        [satPopoverAnchorFor]="deleteCatgeory" #deleteCategoryPopover="satPopoverAnchor"
+                        (click)="$event.stopPropagation();deleteCategoryItem(dataItem,deleteCategoryPopover)"
+                        mat-icon-button>
+                        <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                    </button>
+                    </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+        <app-common-message-box *ngIf="!(canAccess_feature_ViewAuditImpact)"
+        textToDisplay="{{ 'PERMISSIONMESSAGE' | translate | softLabelsPipe :softLabels }}">
+    </app-common-message-box>
+    </mat-card>
+</div>
+
+<sat-popover #editImpactPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="filter-data p-0" style="width: 330px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                <span *ngIf="isEdit">
+                    {{ editImpactText | softLabelsPipe :softLabels }}
+                </span>
+                <span *ngIf="!isEdit">
+                    {{ addImpactText | softLabelsPipe :softLabels }}
+                </span>
+            </div>
+        </mat-card-title>
+        <form [formGroup]="impactForm" novalidate #formDirective="ngForm"
+            (submit)="impactForm.valid && upsertImpact()">
+            <div class="mobile-view-popover p-1">
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="100" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input formControlName="impactName" matInput required
+                                placeholder="{{'AUDIT.IMPACTNAME' | translate | softLabelsPipe :softLabels}}">
+                            <mat-error *ngIf="impactForm.get('impactName').hasError('required') &&
+                                     impactForm.get('impactName').touched">
+                                {{'AUDIT.PLEASEENTERIMPACTVALUE' | translate | softLabelsPipe :softLabels }}
+                            </mat-error>
+                            <mat-error *ngIf="impactForm.get('impactName').hasError('maxlength')">
+                                {{'AUDIT.IMPACTNAMEEXCEED50CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayout.xs="description" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="100" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input formControlName="description" matInput
+                                placeholder="{{'AUDIT.DESCRIPTION' | translate | softLabelsPipe :softLabels}}">
+                                <mat-error *ngIf="impactForm.get('description').hasError('maxlength')">
+                                    {{'AUDIT.IMPACTDESCRIPTIONEXCEED250CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                                </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mb-1 prl-1">
+                <button mat-raised-button color="primary" type="submit" class="mr-05"
+                    (click)="$event.stopPropagation()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertInProgress">
+                    </mat-progress-bar>
+                    <span *ngIf="isEdit"><fa-icon icon="save" class="mr-05" *ngIf="isEdit"></fa-icon> {{'SAVE' | translate}}</span>
+                    <span *ngIf="!isEdit"><fa-icon icon="plus" class="mr-05"></fa-icon> {{'AUDIT.ADD' | translate}}</span>
+                </button>
+                <button mat-raised-button (click)="closePopup()" type="reset">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteCatgeory hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar>
+            <div class="card-content p-05" *ngIf="!isArchived">
+                {{'AUDIT.AREYOUSUREWANTTOARCHIVEAUDITIMPACT' | translate | softLabelsPipe :softLabels}}
+            </div>
+            <div class="card-content p-05" *ngIf="isArchived">
+                {{'AUDIT.AREYOUSUREWANTTOUNARCHIVEAUDITIMPACT' | translate | softLabelsPipe :softLabels}}
+            </div>
+            <div class="text-center">
+                <button *ngIf="!isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeCategoryAtIndex(true)" [disabled]="deleteOperationIsInprogress">
+                    <mat-icon style="cursor: pointer;" class="mr-05">archive</mat-icon>
+                    {{'TESTCASETYPE.ARCHIVE' | translate}}
+                </button>
+                <button *ngIf="isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeCategoryAtIndex(false)" [disabled]="deleteOperationIsInprogress">
+                    <mat-icon style="cursor: pointer;" class="mr-05">unarchive</mat-icon>
+                    {{'TESTCASETYPE.UNARCHIVE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteCategoryDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

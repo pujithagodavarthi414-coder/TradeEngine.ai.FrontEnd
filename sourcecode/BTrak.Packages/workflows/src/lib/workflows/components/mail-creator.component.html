@@ -1,0 +1,296 @@
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<mat-card class="filter-data p-0">
+  <mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05">
+      Add Mail Alert</div>
+
+  </mat-card-title>
+  <form [formGroup]="mailForm" novalidate>
+    <div id="style-1" class="goal-create-height p-1">
+      <div fxLayout="row wrap" class="p-05 ">
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Form Name</div>
+            </div>
+            <div fxFlex="50" class="pt-1">
+              <mat-label>{{formname}}</mat-label>
+            </div>
+            <input matInput formControlName="id" hidden>
+            <!-- <mat-form-field class="full-width" fxFlex="50">
+                        <input matInput formControlName="formtypeName">
+                      </mat-form-field> -->
+          </div>
+        </div>
+
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Mail Alert Name *</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <input matInput formControlName="name">
+
+              <mat-error>
+                <span *ngIf="mailForm.get('name').hasError('required')">
+                  Mail Alert Name is required</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Roles for To *</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #chipList aria-label="Roles selection">
+                <mat-chip *ngFor="let role of selectedRoles" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedRole(role, 'To')" style="display: flex !important;">
+                  {{role.roleName}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select roles" #rolesInput #autocompleteTrigger="matAutocompleteTrigger"
+                  formControlName="rolesInput" [matAutocomplete]="auto" [matChipInputFor]="chipList"
+                  [matAutocomplete]="auto" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  (matChipInputTokenEnd)="add($event, 'To')" (focus)="openAuto(autocompleteTrigger, 'To')">
+              </mat-chip-list>
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event.option.value, 'To')">
+                <mat-option *ngFor="let roles of filteredRoles$ | async" [value]="roles.roleId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedRoles.indexOf(roles) >= 0"></mat-checkbox>
+                  {{roles.roleName}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error>
+                <span>
+                  Please select Role</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">To *</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #userChipList aria-label="Users selection">
+                <mat-chip *ngFor="let user of selectedToUsers" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedUser(user,'To')" style="display: flex !important;">
+                  {{user.email}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select users" #userToInput
+                  #userAutocompleteTrigger="matAutocompleteTrigger" formControlName="toInput" [matAutocomplete]="toAuto"
+                  [matChipInputFor]="userChipList" [matAutocomplete]="toAuto"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addToUser($event, 'To')"
+                  (focus)="openUserAuto(userAutocompleteTrigger, 'To')">
+              </mat-chip-list>
+              <mat-autocomplete #toAuto="matAutocomplete" (optionSelected)="selectedTo($event.option.value, 'To')">
+                <mat-option *ngFor="let user of filteredToUsers$ | async" [value]="user.userId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedToUsers.indexOf(user) >= 0"></mat-checkbox>
+                  {{user.fullName}} ({{user.email}})
+                </mat-option>
+              </mat-autocomplete>
+              <span *ngIf="isValidate" class="chip-error">
+                Invalid email
+              </span>
+              <mat-error>
+                <span>
+                  Please select To</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Roles for Cc</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #ccChipList aria-label="Roles selection">
+                <mat-chip *ngFor="let role of selectedCcRoles" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedRole(role,'Cc')" style="display: flex !important;">
+                  {{role.roleName}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select roles for Cc" #ccRolesInput
+                  #ccAutocompleteTrigger="matAutocompleteTrigger" formControlName="ccRolesInput"
+                  [matChipInputFor]="ccChipList" [matAutocomplete]="ccAuto"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="add($event,'Cc')"
+                  (focus)="openAuto(ccAutocompleteTrigger,'Cc')">
+              </mat-chip-list>
+              <mat-autocomplete #ccAuto="matAutocomplete" (optionSelected)="selected($event.option.value,'Cc')">
+                <mat-option *ngFor="let roles of filteredCcRoles$ | async" [value]="roles.roleId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedCcRoles.indexOf(roles) >= 0"></mat-checkbox>
+                  {{roles.roleName}}
+                </mat-option>
+              </mat-autocomplete>
+
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Cc</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #ccUserChipList aria-label="Users selection">
+                <mat-chip *ngFor="let user of selectedCcUsers" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedUser(user, 'Cc')" style="display: flex !important;">
+                  {{user.email}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select users for Cc" #userCcInput
+                  #ccUserAutocompleteTrigger="matAutocompleteTrigger" formControlName="ccInput"
+                  [matAutocomplete]="ccUserAuto" [matChipInputFor]="ccUserChipList"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addToUser($event, 'Cc')"
+                  (focus)="openUserAuto(ccUserAutocompleteTrigger, 'Cc')">
+              </mat-chip-list>
+              <mat-autocomplete #ccUserAuto="matAutocomplete" (optionSelected)="selectedTo($event.option.value, 'Cc')">
+                <mat-option *ngFor="let user of filteredCcUsers$ | async" [value]="user.userId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedCcUsers.indexOf(user) >= 0"></mat-checkbox>
+                  {{user.fullName}} ({{user.email}})
+                </mat-option>
+              </mat-autocomplete>
+
+            </mat-form-field>
+          </div>
+          <span *ngIf="isCcValidate" class="chip-error">
+            Invalid email
+          </span>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Roles for Bcc</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #bccChipList aria-label="Roles selection">
+                <mat-chip *ngFor="let role of selectedBccRoles" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedRole(role,'Bcc')" style="display: flex !important;">
+                  {{role.roleName}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select roles for Bcc" #bccRolesInput
+                  #bccAutocompleteTrigger="matAutocompleteTrigger" formControlName="bccRolesInput"
+                  [matChipInputFor]="bccChipList" [matAutocomplete]="bccAuto"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="add($event,'Bcc')"
+                  (focus)="openAuto(bccAutocompleteTrigger,'Bcc')">
+              </mat-chip-list>
+              <mat-autocomplete #bccAuto="matAutocomplete" (optionSelected)="selected($event.option.value,'Bcc')">
+                <mat-option *ngFor="let roles of filteredBccRoles$ | async" [value]="roles.roleId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedBccRoles.indexOf(roles) >= 0"></mat-checkbox>
+                  {{roles.roleName}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Bcc</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <mat-chip-list #bccUserChipList aria-label="Users selection">
+                <mat-chip *ngFor="let user of selectedBccUsers" [selectable]="selectable" [removable]="removable"
+                  (removed)="removeSelectedUser(user, 'Bcc')" style="display: flex !important;">
+                  {{user.email}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input matInput placeholder="Select users for Bcc" #userbccInput
+                  #bccUserAutocompleteTrigger="matAutocompleteTrigger" formControlName="bccInput"
+                  [matAutocomplete]="bccUserAuto" [matChipInputFor]="bccUserChipList"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addToUser($event, 'Bcc')"
+                  (focus)="openUserAuto(bccUserAutocompleteTrigger, 'Bcc')">
+              </mat-chip-list>
+              <mat-autocomplete #bccUserAuto="matAutocomplete"
+                (optionSelected)="selectedTo($event.option.value, 'Bcc')">
+                <mat-option *ngFor="let user of filteredBccUsers$ | async" [value]="user.userId">
+                  <mat-checkbox color="primary" style="padding: 0 12px;"
+                    [checked]="selectedBccUsers.indexOf(user) >= 0"></mat-checkbox>
+                  {{user.fullName}} ({{user.email}})
+                </mat-option>
+              </mat-autocomplete>
+              <span *ngIf="isBccValidate" class="chip-error">
+                Invalid email
+              </span>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="50">
+              <div class="pt-1">Is redirect from 
+                emails &nbsp;&nbsp; <mat-checkbox color="primary" formControlName="isDirectFromEmail"
+                  [(ngModel)]="isDirect"></mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Subject *</div>
+            </div>
+            <mat-form-field class="full-width" fxFlex="50">
+              <input matInput formControlName="subject">
+              <mat-error>
+                <span *ngIf="mailForm.get('subject').hasError('required')">
+                  subject is required</span>
+              </mat-error>
+
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxFlex="98">
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="30">
+              <div class="pt-1">Message *</div>
+            </div>
+            <div fxFlex="50">
+              <!-- <input matInput formControlName="message"> -->
+              <editor class="dfree-header custom-logtime-comment" apiKey="ln50de3rdhw6h9ld2lutg00tj5g9xk14pp5m8dfy1b1s4nen" formControlName="message" [init]="config.init">
+              </editor>
+              <mat-error>
+                <span *ngIf="mailForm.controls['message'].hasError('required')">
+                  <b>*</b></span>
+              </mat-error>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-05">
+      <button class="pull-right mr-1" mat-raised-button (click)="upsertMail()" color="primary"
+        [disabled]="!mailForm.valid">
+        <fa-icon class="mr-05" icon="check"></fa-icon>
+        Save
+      </button>
+      <button class="pull-right mr-1" mat-raised-button (click)="cancelMail()" [disabled]="!mailForm.valid"
+        type="button">
+        Cancel
+      </button>
+    </div>
+  </form>
+</mat-card>

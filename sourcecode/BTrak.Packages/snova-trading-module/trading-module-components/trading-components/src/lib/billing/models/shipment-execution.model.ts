@@ -1,0 +1,47 @@
+import { FinalDocumentsDescriptionsXml, InitialDocumentsDescriptionsXml } from "./payment-term.model";
+import { SearchCriteriaInputModelBase } from "./searchCriteriaInputModelBase";
+export class ShipmentExecutionModel extends SearchCriteriaInputModelBase {
+    contractQuantity: number;
+    remaningQuantity: number;
+    contractDateFrom: string;
+    contractDateTo: string;
+    contractNumber: string;
+    isArchived: boolean;
+    counterPartyId: string;
+    contractId: string;
+    productId: string;
+    gradeId: string;
+    price: any;
+    shipmentNumber: string;
+    shipmentQuantity: number;
+    remainingContractQuantity: number;
+    ShipmentBLId:string;
+    blQuantity: number;
+    vesselId: string;
+    voyageNumber: any;
+    portLoadId: string;
+    portDischargeId: string;
+    blSteps:any;
+    descriptions:any;
+    etaDate: any;
+    purchaseShipmentId: string;
+    PurchaseExecutionId: string;
+    PurchaseShipmentBLId:string;
+    fillDueDate: string;
+    timeStamp: any;
+    workEmployeeId: string;
+    product: string;
+    grade: string;
+    ConfoEntryDate:string;
+    purchaseExecutionId: string;
+    InitialDocumentsDescription: InitialDocumentsDescriptionsXml[];
+    FinalDocumentsDescription: FinalDocumentsDescriptionsXml[];
+    isSendNotification: boolean;
+    employeeId: string;
+    mobileNo: string;
+    employeeName: string;
+    employeeEmailId: string;
+    blNumber: string;
+    chaName: string;
+    chaEmail: string
+}

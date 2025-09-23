@@ -1,0 +1,354 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageExpenseBooking">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'EXPENSEBOOKING.EXPENSEBOOKINGS' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px">
+                    <button mat-icon-button matTooltip="{{ 'EXPENSEBOOKING.ADDNEWEXPENSEBOOKING' | translate }}"
+                        [satPopoverAnchorFor]="addExpenseBookingPopOver" #addExpenseBookingPopUp="satPopoverAnchor"
+                        (click)="openExpenseBookingPopUp(addExpenseBookingPopUp)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="expenseBookingModel.length > 0">
+        <kendo-grid [data]="expenseBookingModelList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isLoading"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="type" title="{{'EXPENSEBOOKING.EXPENSETYPE' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="entryDate" title="{{'EXPENSEBOOKING.ENTRYDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.entryDate | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="term" title="{{'ENTITYFORM.TERM' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="vendorName" title="{{'EXPENSEBOOKING.VENDORNAME' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="invoiceNo" title="{{'EXPENSEBOOKING.INVOICENO' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="siteName" title="{{'SOLARLOG.SITENAME' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="invoiceDate" title="{{'EXPENSEBOOKING.INVOICEDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.invoiceDate | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="invoiceValue" title="{{'EXPENSEBOOKING.INVOICEVALUE' | translate}}"></kendo-grid-column>
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="addExpenseBookingPopOver" #addExpenseBookingPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'EXPENSEBOOKING.EDITEXPENSEBOOKING' | translate}}"
+                        (click)="editExpenseBookingPopUp(dataItem,addExpenseBookingPopUp)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" [satPopoverAnchorFor]="archivegrdPopOver"
+                        #archiveExpenseBookingPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'EXPENSEBOOKING.ARCHIVEEXPENSEBOOKING' | translate}}"
+                        (click)="deleteExpenseBookingPopUp(dataItem,archiveExpenseBookingPopUp)" icon="trash">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag" *ngIf="!isLoading && expenseBookingModel.length === 0"
+        textToDisplay="{{'EXPENSEBOOKING.YOUDONTHAVEANYEXPENSEBOOKING' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addExpenseBookingPopOver" #addExpenseBookingPopUp="satPopoverAnchor"
+                (click)="openExpenseBookingPopUp(addExpenseBookingPopUp)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'EXPENSEBOOKING.ADDNEWEXPENSEBOOKING' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+</div>
+
+    <sat-popover [interactiveClose]="false" #addExpenseBookingPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+                <div class="card-title-text" *ngIf="!expenseBookingId">{{ 'EXPENSEBOOKING.CREATEEXPENSEBOOKING' |
+                    translate }}
+                </div>
+                <div class="card-title-text" *ngIf="expenseBookingId">{{ 'EXPENSEBOOKING.UPDATEEXPENSEBOOKING' |
+                    translate }}
+                </div>
+            </div>
+            <form [formGroup]="expenseBookingForm" novalidate #formDirective="ngForm" (submit)="upsertExpenseBooking(formDirective)">
+                <div id="style-1" class="goal-create-height p-1" style="height: 50vh;">
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'EXPENSEBOOKING.EXPENSETYPE' | translate}}</mat-label>
+                                <mat-select placeholder="{{'EXPENSEBOOKING.SELECTTYPE' | translate}}" (selectionChange)="getTypeSelected($event.value);"
+                                    formControlName="type" required>
+                                    <mat-option *ngFor="let type of types" [value]="type.name">
+                                        {{type.name}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="expenseBookingForm.get('type').hasError('required') && expenseBookingForm.get('type').touched">
+                                    {{'EXPENSEBOOKING.PLEASESELECTTYPE' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'EXPENSEBOOKING.ENTRYDATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                    formControlName="entryDate" placeholder="" required>
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                                <mat-error
+                                    *ngIf="expenseBookingForm.get('entryDate').hasError('required') && expenseBookingForm.get('entryDate').touched">
+                                    {{'EXPENSEBOOKING.PLEASESELECTENTRYDATE' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width ml-05">
+                                <mat-label> {{'ENTITYFORM.TERM' | translate}}</mat-label>
+                                <mat-select placeholder=" {{'ENTITYFORM.SELECTTERM' | translate}}"
+                                    formControlName="term" required>
+                                    <mat-option *ngFor="let termo of terms" [value]="termo.name">
+                                        {{termo.name}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="expenseBookingForm.get('term').hasError('required') && expenseBookingForm.get('term').touched">
+                                    {{'ENTITYFORM.PLEASESELECTTERM' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip [style.backgroundColor]='getColor()' style="color: black!important; padding: 8px 25px 20px 12px !important;border-radius: 6px !important;width: 150px !important;font: 15px;">
+                                    {{selectedType.name}}
+                                </mat-chip>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'ENTITYFORM.SITE' | translate}}</mat-label>
+                                <mat-select placeholder="{{'ENTITYFORM.SELECTSITE' | translate}}"
+                                    formControlName="siteId"
+                                    required>
+                                    <mat-option *ngFor="let site of sites" [value]="site.id">
+                                        {{site.name}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="expenseBookingForm.get('siteId').hasError('required') && expenseBookingForm.get('siteId').touched">
+                                    {{'ENTITYFORM.PLEASESELECTSITE' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                            <app-month-picker (monthEmit)="monthEmitHandled($event)" [month]="month"
+                                [disabled]="false">
+                            </app-month-picker>
+                        </div>
+                        <div fxFlex="23">
+                            <app-year-picker (yearEmit)="yearEmitHandled($event)" [year]="year"
+                                [disabled]="false">
+                            </app-year-picker>
+                        </div>
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <input formControlName="vendorName" matInput
+                                    placeholder="{{'EXPENSEBOOKING.VENDORNAME' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="expenseBookingForm.get('vendorName').hasError('required') && expenseBookingForm.get('vendorName').touched">{{'EXPENSEBOOKING.PLEASEENTERVENDORNAME'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="expenseBookingForm.get('vendorName').hasError('maxlength')">{{'EXPENSEBOOKING.VENDORNAMECANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'EXPENSEBOOKING.EXPENSETYPE' | translate}}</mat-label>
+                                <mat-select placeholder="{{'EXPENSEBOOKING.SELECTEXPENSETYPE' | translate}}"
+                                    formControlName="accountId" (selectionChange)="getExpenseSelected($event.value);"
+                                    required>
+                                    <mat-option *ngFor="let expense of expenses" [value]="expense.id">
+                                        {{expense.account}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="expenseBookingForm.get('accountId').hasError('required') && expenseBookingForm.get('accountId').touched">
+                                    {{'EXPENSEBOOKING.PLEASESELECTEXPENSETYPE' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <input formControlName="invoiceNo" matInput
+                                    placeholder="{{'EXPENSEBOOKING.INVOICENO' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="expenseBookingForm.get('invoiceNo').hasError('required') && expenseBookingForm.get('invoiceNo').touched">{{'EXPENSEBOOKING.PLEASEENTERINVOICENO'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="expenseBookingForm.get('invoiceNo').hasError('maxlength')">{{'EXPENSEBOOKING.INVOICENOCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'EXPENSEBOOKING.INVOICEDATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker3" (click)="picker3.open()"
+                                    formControlName="invoiceDate" placeholder="" required>
+                                <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                                <mat-datepicker #picker3></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="23">
+
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="45">
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="description" rows="5"
+                                placeholder="{{'EXPENSEBOOKING.DESCRIPTION'|translate}}"></textarea>
+                                <mat-error>
+                                    <span
+                                        *ngIf="expenseBookingForm.get('description').hasError('maxlength')">{{'EXPENSEBOOKING.DESCRIPTONSHOULDBE60CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                        </mat-form-field>
+                        </div>
+                        <div fxFlex="45">
+                    <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                    [getFilesByReferenceId]="true" [referenceId]="expenseBookingId"
+                    [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                    [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                    [isToUploadFiles]="isToUploadFiles"  *ngIf="!before">
+                    </app-dropzone>
+                    <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                    [getFilesByReferenceId]="true" [referenceId]="expenseBookingId"
+                    [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                    [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                    [isToUploadFiles]="isToUploadFiles" *ngIf="before">
+                    </app-dropzone>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="95">
+                      <table style="width:100%">
+                        <thead>
+                            <tr>
+                                <th width="5">{{'MASTERACCOUNT.CLASSNO' | translate}}</th>
+                                <th width="10">{{'MASTERACCOUNT.CLASS' | translate}}</th>
+                                <th width="20">{{'MASTERACCOUNT.GROUP' | translate}}</th>
+                                <th width="60">{{'MASTERACCOUNT.SUBGROUP' | translate}}</th>
+                                <th width="20">{{'MASTERACCOUNT.ACCOUNTNO' | translate}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ selectedExpense.classNo }}</td>
+                                <td>{{ selectedExpense.class }}</td>
+                                <td>{{ selectedExpense.group }}</td>
+                                <td>{{ selectedExpense.subGroup }}</td>
+                                <td>{{ selectedExpense.accountNo }}</td>
+                            </tr>
+                            </tbody>
+                            </table>
+                </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <div fxFlex="45">
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="comments" rows="5"
+                                placeholder="{{'EXPENSEBOOKING.COMMENTS'|translate}}"></textarea>
+                                <mat-error>
+                                    <span
+                                    *ngIf="expenseBookingForm.get('comments').hasError('maxlength')">
+                                        {{'PAYMENTRECEIPT.COMMENTSSHOULDBE150CHARACTERS' | translate}}</span></mat-error>
+                        </mat-form-field>
+                        </div>
+                        <div fxFlex="45" fxLayout="column">
+                                <div fxFlex="100" class="mb-4">
+                                    <mat-form-field class="full-width">
+                                        <input formControlName="invoiceValue" matInput  (keypress)="numberOnlyWithVal($event, $event.target.value)" 
+                                        (input)="onInvoiceValueChange()" mask="separator.2" thousandSeparator=","
+                                            placeholder="{{'EXPENSEBOOKING.INVOICEVALUE' | translate}}" min=1 required>
+                                            <span matSuffix>(CHF)</span>
+                                            <mat-hint align="start">Input the before VAT value from vendor if you want to separate VAT and invoice value</mat-hint>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="expenseBookingForm.get('invoiceValue').hasError('required') && expenseBookingForm.get('invoiceValue').touched">{{'EXPENSEBOOKING.PLEASEENTERINVOICEVALUE'
+                                                | translate}}
+                                            </span>
+                                            <span
+                                                *ngIf="expenseBookingForm.get('invoiceValue').hasError('max')">{{'EXPENSEBOOKING.INVOICEVALUECANNOTEXCEED250CHARACTERS'
+                                                | translate}}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="100">
+                                    <mat-checkbox formControlName="isTVAApplied" (change)="onInvoiceValueChange()" mat-primary fxFlex="50">TVA
+                                    </mat-checkbox>
+                                    <span fxFlex="40">{{tvaCal | number: '1.1-2'}}</span>
+                                    <span fxFlex="20">(CHF)</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="50">{{'TOTAL' | translate}}</span>
+                                    <span fxFlex="40">{{arrondi}}</span>
+                                    <span fxFlex="20">(CHF)</span>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+<div class="text-center mb-1 prl-1">
+    <button mat-raised-button type="submit" color="primary" class="mr-1"
+        [disabled]="!expenseBookingForm.valid||isAddIsInProgress">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAddIsInProgress">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+    </button>
+    <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+        <fa-icon class="mr-05" icon="times"></fa-icon>
+        {{ 'CANCEL' | translate }}
+    </button>
+</div>
+</form>
+</mat-card>
+</sat-popover>
+
+<sat-popover [interactiveClose]="false" #archivegrdPopOver hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{ 'EXPENSEBOOKING.DELETEEXPENSEBOOKING' | translate }}</div>
+          </mat-card-title>
+          <p class="p-05 m-0">{{ 'EXPENSEBOOKING.AREYOUSUREWANTTODELETEEXPENSEBOOKING' | translate }}
+          </p>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveExpenseBooking();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}" *ngIf="!(canAccess_feature_ManageExpenseBooking)">
+</app-common-message-box>

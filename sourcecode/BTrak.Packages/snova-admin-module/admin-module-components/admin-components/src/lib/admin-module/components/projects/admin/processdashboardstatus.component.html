@@ -1,0 +1,146 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageProcessDashboardStatus">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSTITLE' | translate | softLabelsPipe : softLabels  | titlecase}}">{{ 'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSTITLE' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="shift-timing-close mr-08" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-md-n4" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div *ngIf="canAccess_feature_ManageProcessDashboardStatus">
+        <div class="activity-data no-drag">
+            <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+                [limit]="10" [rows]="(processDashboardStatus
+                 | resultfilter
+                 : searchText
+                 : 'processDashboardStatusName')" [loadingIndicator]="processDashboardInProgress"
+                [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+
+                <ngx-datatable-column
+                    name="{{'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSNAME'|translate | softLabelsPipe : softLabels}}"
+                    [flexGrow]="1" [sortable]="true" prop="statusShortName">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <span matTooltip="{{  row?.statusShortName }}">
+                            {{  row?.statusShortName }}</span>
+                    </ng-template>
+                </ngx-datatable-column>
+
+                <ngx-datatable-column
+                    name="{{'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSCOLOR'|translate | softLabelsPipe : softLabels}}"
+                    [flexGrow]="1" [sortable]="false">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <div [ngStyle]="{ 'background' : row.processDashboardStatusHexaValue }" style="width:100px;">
+                            &nbsp;
+                        </div>
+                    </ng-template>
+                </ngx-datatable-column>
+
+                <ngx-datatable-column name="{{'PROCESSDASHBOARDSTATUS.EDIT'|translate}}" [flexGrow]="1"
+                    [sortable]="false">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <fa-icon icon="edit" class="icon-button mat-color-accent"
+                            matTooltip="{{'PROCESSDASHBOARDSTATUS.EDIT'|translate}}"
+                            [satPopoverAnchorFor]="createProcessStatus" #createProcessStatusPopover="satPopoverAnchor"
+                            (click)="EditProcessDashboardById(row, createProcessStatusPopover)"></fa-icon>
+                    </ng-template>
+                </ngx-datatable-column>
+
+            </ngx-datatable>
+        </div>
+    </div>
+
+    <sat-popover #createProcessStatus backdropClass="backdrop-color" [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">{{ titletext | softLabelsPipe : softLabels}}</div>
+            </mat-card-title>
+            <form (keydown.tab)="$event.stopPropagation()" [formGroup]="processDashboardStatusForm" novalidate
+                #formDirective="ngForm"
+                (submit)="processDashboardStatusForm.valid && SaveProcessDashboardStatus(formDirective)">
+                <div class="card-content p-05">
+                    <mat-form-field class="full-width mb-05">
+                        <input matInput formControlName="statusShortName"
+                            placeholder="{{'PROCESSDASHBOARDSTATUS.STATUSNAME'|translate | softLabelsPipe : softLabels}}"
+                            required />
+                        <mat-error>
+                            <span
+                                *ngIf="processDashboardStatusForm.get('statusShortName')
+                  .hasError('required') &&
+                processDashboardStatusForm.get('statusShortName')
+                  .touched
+              ">{{'PROCESSDASHBOARDSTATUS.PLEASESELECTPROCESSDASHBOARDSTATUSNAME'|translate | softLabelsPipe : softLabels}}</span>
+                            <span
+                                *ngIf="
+                processDashboardStatusForm
+                  .get('statusShortName')
+                  .hasError('maxlength')
+              ">{{'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSNAMECANNOTEXCEED250CHARACTERS'|translate | softLabelsPipe : softLabels}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-error>
+                        <span *ngIf="isThereAnError">{{ validationmessage | softLabelsPipe : softLabels}}</span>
+                    </mat-error>
+
+                    <mat-form-field class="full-width status-color mb-05">
+                        <input formControlName="processDashboardStatusHexaValue" matInput
+                            placeholder="{{'PROCESSDASHBOARDSTATUS.STATUSCOLOR'|translate | softLabelsPipe : softLabels}}"
+                            [(colorPicker)]="color" [cpPosition]="'top'" [style.background]="color"
+                            (colorPickerChange)="processDashboardStatusForm.get('processDashboardStatusHexaValue').setValue($event)"
+                            [value]="color" required />
+                        <mat-error>
+                            <span
+                                *ngIf="processDashboardStatusForm.get('processDashboardStatusHexaValue')
+                          .hasError('required') &&
+                        processDashboardStatusForm.get('processDashboardStatusHexaValue')
+                          .touched
+                      ">{{'PROCESSDASHBOARDSTATUS.PLEASESELECTPROCESSDASHBOARDSTATUSColor'|translate | softLabelsPipe : softLabels}}</span>
+                            <span
+                                *ngIf="
+                        processDashboardStatusForm
+                          .get('processDashboardStatusHexaValue')
+                          .hasError('maxlength')
+                      ">{{'PROCESSDASHBOARDSTATUS.PROCESSDASHBOARDSTATUSCOLORCANNOTEXCEED250CHARACTERS'|translate | softLabelsPipe : softLabels}}</span>
+                        </mat-error>
+                    </mat-form-field>
+
+                    <div class="text-center mb-1">
+                        <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!processDashboardStatusForm.valid || anyOperationInProgress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                            </mat-progress-bar>
+                            <fa-icon *ngIf="showPlusIcon" icon="plus" class="mr-05"></fa-icon>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button type="button" mat-button mat-raised-button (click)="closeDialog(formDirective);false">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'PROCESSDASHBOARDSTATUS.CANCEL'|translate}}
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </mat-card>
+    </sat-popover>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_ManageProcessDashboardStatus"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,145 @@
+<div fxFlex fxFlex="100">
+    <h4 class="ml-1 mt-05">Products & Services</h4>
+    <hr>
+</div>
+<mat-card>
+    <div style="height:fit-content;border: 1px solid #eceaea;margin: 0;padding: 0px 10px 0px 10px; background: aliceblue;"
+        fxLayout="row">
+        <div fxFlex="80" style="padding-top: 15px !important;">
+            <span> Customize and enhance your plan with additional features.
+            </span>
+        </div>
+        <div fxFlex="20" style="text-align: right;">
+            <button mat-raised-button color="primary" type="submit" class="ml-05 mt-05 mb-05"
+                (click)="openpop(closeBookingPopup)" [satPopoverAnchorFor]="feedTimeSheet"
+                #closeBookingPopup="satPopoverAnchor">
+                Customize
+            </button>
+        </div>
+    </div>
+
+</mat-card>
+<mat-card *ngIf="!isLoading">
+    <div style="height: fit-content;border: 1px solid #eceaea;margin: 0;padding: 0px 10px 0px 10px;" fxLayout="row"
+        *ngIf="isCancelled">
+        <div fxFlex="80" style="padding-top: 15px !important;">
+            <span> We are sorry to see you go. Thank you for letting us to be a part of your growth so far. We'll miss
+                you around here! If you decide you'd like to continue using this product, you can renew at any time by
+                clicking on the subscribe button. We hope to see you around! Thank you.
+            </span>
+        </div>
+        <div fxFlex="20" style="text-align: right;">
+            <button mat-raised-button color="primary" type="submit" class="ml-05 mt-05"
+                (click)="navigateToSubscription()">
+                Subscribe
+            </button>
+        </div>
+    </div>
+    <div style="height: fit-content;border: 1px solid #eceaea;margin: 0;padding: 0px 10px 0px 10px; " fxLayout="row"
+        *ngIf="isTrailValid">
+        <div fxFlex="80" style="padding-top: 15px !important;">
+            <span> It looks like you’ve already seen some great results with our Product. This is a great time to
+                consider taking a look at our different plans, so that you can take full advantage of our Product. As
+                your trail is going to expire in {{noOfDays}} days, please have a look at our different plans and
+                subscribe to them.
+            </span>
+        </div>
+        <div fxFlex="20" style="text-align: right;">
+            <button mat-raised-button color="primary" type="submit" class="ml-05 mt-05"
+                (click)="navigateToSubscription()">
+                Subscribe
+            </button>
+        </div>
+    </div>
+    <div style="height: fit-content;border: 1px solid #eceaea;margin: 0;padding: 15px;" fxLayout="row"
+        *ngIf="isTrailValid == false && !isCancelled">
+
+        <div fxFlex="70">
+            <label><b>{{productName}}</b></label><br>
+            <span>{{totalNoOfActiveUsers}} of {{totalNoOfPurchases}} Users assigned</span><br>
+            <span>Automatically renews on {{renewalDate | date}}. <a (click)="cancelSubscription()"
+                    style="cursor: pointer; color: #337ab7 !important; text-decoration: none !important; ">Cancel
+                    subscription</a></span>
+        </div>
+        <div fxFlex="30" style="text-align: right;">
+            <button mat-raised-button color="primary" type="submit" class="ml-05 mt-05" *ngIf="!isCancelled"
+                (click)="purchaseMoreLicenses()">
+                Purchase more licenses
+            </button>
+            <button mat-raised-button color="primary" type="submit" class="ml-05 mt-05" *ngIf="!isCancelled"
+                (click)="navigateToPlans()">
+                Change Plan
+            </button>
+        </div>
+    </div>
+
+    <div style="height: fit-content;border: 1px solid #eceaea;margin: 0;padding: 0px 10px 0px 10px;" fxLayout="row"
+        *ngFor="let history of paymentHistory">
+        <div fxFlex="70" style="padding-top: 15px !important;">
+            <table style="width: 100%;">
+                <tr fxLayout="row">
+                    <span style="font-weight: bold;">Subscription term : {{history.startTime | date}} to
+                        {{history.endTime | date}}</span>
+                </tr>
+                <tr fxLayout="row" *ngIf="!history.isUpdate">
+                    <td fxFlex="80"><span>{{history.purchaseType}} ({{history.noofpurchasedlicences}} Users Included)<br>
+                            Billed every {{history.subscriptionType}} </span>
+                    </td>
+                    <td fxFlex="20"> £{{history.totalAmountPaid}}</td>
+                </tr>
+                <tr fxLayout="row" *ngIf="history.isUpdate">
+                    <td fxFlex="80"><span>{{history.purchaseType}} ({{history.originalPurchases}} Users Included)
+                        </span>
+                    </td>
+                    <td fxFlex="20">
+                        £{{history.totalAmountPaid / history.noofpurchasedlicences * history.originalPurchases }}</td>
+                </tr>
+                <tr fxLayout="row" *ngIf="history.isUpdate">
+                    <td fxFlex="80"><span>{{history.purchaseType}} Additional Users
+                            ({{history.noofpurchasedlicences - history.originalPurchases}} Users)</span>
+                    </td>
+                    <td fxFlex="20">
+                        £{{history.totalAmountPaid / history.noofpurchasedlicences * ( history.noofpurchasedlicences - history.originalPurchases)}}
+                    </td>
+                </tr>
+                <tr fxLayout="row" *ngIf="history.isUpdate">
+                    <td fxFlex="80">{{history.purchaseType}} Total ({{history.noofpurchasedlicences}} Users)<br>
+                        <span style="font-size: 14px;"> Billed every {{history.subscriptionType}}</span>
+                    </td>
+                    <td fxFlex="20"> £{{history.totalAmountPaid}}</td>
+                </tr>
+                <tr *ngIf="history.isCancelled">
+                    <span>Subscription was cancelled at {{history.cancelledDate | date}}</span>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</mat-card>
+<sat-popover #feedTimeSheet [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+    <mat-card class="filter-data p-0" style="min-height: 150px;">
+
+        <div class="custom-dialog">
+            <div class="custom-close ml-lg-n4 mt-0 mt-lg-n4 ml-n3 " mat-dialog-close (click)="close()">
+                <fa-icon icon="times" class="project-dialog"></fa-icon>
+            </div>
+        </div>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                <h4 class="mt-05"> Customize site</h4>
+            </div>
+
+        </mat-card-title>
+        <mat-card-content class="card-content">
+            <div fxFlex="100" class="mt-2" style="text-align: center;">
+                If there is need to customize the site, then please call 0044-7944144944.
+            </div>
+            <!-- <div fxFlex="100" class="mt-2" style="text-align: center;">
+                <button mat-raised-button class="mr-1" color="primary" (click)="close()" type="submit">
+                    No
+                </button>
+            </div> -->
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

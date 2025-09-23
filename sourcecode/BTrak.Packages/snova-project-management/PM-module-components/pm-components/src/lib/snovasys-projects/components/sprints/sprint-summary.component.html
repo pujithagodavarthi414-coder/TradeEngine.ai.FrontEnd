@@ -1,0 +1,322 @@
+<div fxLayout="row" class="userstory-summary" (contextmenu)="openContextMenu($event)"
+    [ngStyle]="{ 'background-color': selectedSprintId == true ? '#e6f5ff' : '' }"
+    [ngClass]="sprint.description ? 'tag-superagile-summary': 'superagile-summary'">
+    <div fxLayout="row" fxFlex="100" class="userstory-list" *ngIf="!sprint.sprintStartDate">
+        <div fxFlex="25px" class="userstory-accordion" (click)="toggleUserStories()">
+            <span class="ml-08" fxLayoutAlign="center center">
+                <a class="caret-right-space" *ngIf="!treeStructure">
+                    <fa-icon class="caret-size" icon="caret-right"></fa-icon>
+                </a>
+                <a class="caret-right-space" *ngIf="treeStructure">
+                    <fa-icon class="caret-size" icon="caret-down"></fa-icon>
+                </a>
+            </span>
+        </div>
+        <span fxFlex="60px" class="sprint-unique-name goal-card-project" [ngClass]="setPaddingForSprints()">
+            <div fxLayoutAlign="start center" (click)="navigateToSprintsPage()">
+                <a class="unique-details-link unique-numbers-hover">
+                    {{sprint.sprintUniqueName}}
+                </a>
+            </div>
+        </span>
+
+        <app-avatar *ngIf="sprint.sprintResponsiblePersonId" matTooltip=" {{ sprint.sprintResponsiblePersonName }}"
+            class=" mr-05 mt-2p" [name]="sprint.sprintResponsiblePersonName | removeSpecialCharacters"
+            [src]="sprint.profileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true" size="20">
+        </app-avatar>
+
+        <app-avatar *ngIf="!sprint.sprintResponsiblePersonId" matTooltip="Sprint responsible person" class="mr-05 mt-2p"
+            [src]="defaultProfileImage" [isRound]="true" size="20">
+        </app-avatar>
+
+        <span (mouseover)="boardTypeTooltip(sprint.boardTypeId)" fxFlex="40px"
+            class="mt-05 board-icon goal-card-project">
+            <span *ngIf="sprint.boardTypeId">
+                <fa-icon class="pull-left board-type-icons" *ngIf="!sprint.isBugBoard"
+                    [ngClass]="(sprint.boardTypeUiId.toUpperCase() == boardView.toUpperCase()) ? 'kanbanRotate': 'superagileRotate'"
+                    [matTooltip]="checkTooltip(sprint)" icon="bars" matTooltipClass="tooltip-overflow">
+                </fa-icon>
+                <fa-icon class="pull-left ml-02 board-type-icons" *ngIf="(sprint | boardTypeToIcon) != null"
+                    [matTooltip]="checkTooltip(sprint)" icon="{{ sprint | boardTypeToIcon}}">
+                </fa-icon>
+            </span>
+        </span>
+
+        <div fxFlex class="mr-05 userStory-name-pm" fxLayout="column">
+            <span class="allgoals_txt userStory-name-control" matTooltip="{{ sprint.sprintName }}"
+                [ngClass]="sprint.description ? 'userStory-tag-control': ''" matTooltipShowDelay="1000"
+                matTooltipClass="tooltip-overflow">
+                {{ sprint.sprintName }} &nbsp; ({{sprint.userStoriesCount}}) </span>
+            <span class="userstory-tags-display full-width hide-content-overflow description-text" *ngIf="sprint.description"
+                [innerHTML]="sprint.description | sanitizeHtml">
+            </span>
+        </div>
+
+
+        <mat-icon class="more_vert card-control"
+            *ngIf="((canAccess_entityType_feature_AddOrUpdateSprint) || (canAccess_entityType_feature_DeleteSprint) || (canAccess_entityType_feature_StartSprint)) && !sprint.isComplete"
+            matTooltip="{{ 'MENU' | translate }}" [matMenuTriggerFor]="editSprint" (click)="$event.stopPropagation();"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+
+
+
+        <div fxFlex="30px" *ngIf="showHeader && (canAccess_entityType_feature_EditBacklogGoalAssignee)"
+            class="mt-04 text-center">
+            <fa-icon icon="user" (click)="clearAssigneeForm();updateAssigneePopover.open()" class="goal-cursor"
+                [satPopoverAnchorFor]="updateAssigneePopover" matTooltip="{{ 'GOALS.UPDATEASSIGNEE' | translate }}">
+            </fa-icon>
+        </div>
+        <div fxFlex="30px" *ngIf=" showHeader && (canAccess_entityType_feature_EditBacklogGoalEstimatedTime)"
+            class="mt-04 text-center">
+            <fa-icon icon="clock" (click)="clearEstimatedTimeForm();updateEstimatedTimePopover.open()"
+                class="goal-cursor" [satPopoverAnchorFor]="updateEstimatedTimePopover"
+                matTooltip="{{ 'GOALS.UPDATEESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}">
+            </fa-icon>
+        </div>
+
+        <div *ngIf="(accessUploadIcons)" style="margin-top: -8px !important;">
+            <button mat-icon-button type="button">
+                <fa-icon class="mat-color-accent icon-button"
+                    matTooltip="{{'USERSTORY.UPLOADWORKITEM' | translate | softLabelsPipe : softLabels}}" icon="upload"
+                    (click)="fileInput.click()">
+                    <input type="file" id="file" (change)="uploadEventHandler($event.target.files,$event)" #fileInput>
+                </fa-icon>
+            </button>
+            <button mat-icon-button type="button">
+                <fa-icon class="icon-button mat-color-accent" icon="download"
+                    matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILE' | translate | softLabelsPipe : softLabels}}"
+                    (click)="downloadFile();"></fa-icon>
+            </button>
+        </div>
+
+        <div style="margin-top: -8px !important;">
+            <button mat-icon-button type="button" [disabled]="downloadInProgress">
+                <fa-icon class="icon-button mat-color-accent" icon="arrow-down"
+                    matTooltip=" {{'GOALACTIVITY.DOWNLOADTASKLIST' | translate | softLabelsPipe : softLabels}}"
+                    (click)="downloadTasks();"></fa-icon>
+            </button>
+        </div>
+
+        <mat-icon class="more_vert card-control"
+            *ngIf="((canAccess_entityType_feature_AddOrUpdateSprint) || (canAccess_entityType_feature_DeleteSprint) || (canAccess_entityType_feature_StartSprint)) && !sprint.isComplete"
+            matTooltip="{{ 'MENU' | translate }}" [matMenuTriggerFor]="editSprint" (click)="$event.stopPropagation();"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+    </div>
+
+</div>
+
+<mat-menu class="goal-options" #editSprint="matMenu" (click)="$event.stopPropagation()">
+
+    <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="startSprintPopover"
+        (click)="startSprintPopover.open(); $event.stopPropagation();clearStartSprintsForm()"
+        *ngIf="(canAccess_entityType_feature_StartSprint)">
+        <mat-icon>queue</mat-icon><span>{{ 'SPRINTS.STARTSPRINT' | translate }} </span>
+    </button>
+    <button mat-menu-item class="allgoals_icons" *ngIf="(canAccess_entityType_feature_AddOrUpdateSprint)"
+        [satPopoverAnchorFor]="editSprintPopover"
+        (click)="editSprintPopover.open(); $event.stopPropagation();editSprintForm()">
+        <mat-icon>edit</mat-icon>{{'SPRINTS.EDITSPRINT' | translate}}
+    </button>
+    <button mat-menu-item class="allgoals_icons" *ngIf="(canAccess_entityType_feature_DeleteSprint)"
+        [satPopoverAnchorFor]="deleteSprintPopover" (click)="deleteSprintPopover.open(); $event.stopPropagation();">
+        <mat-icon>delete</mat-icon>{{'SPRINTS.DELETESPRINT' | translate}}
+    </button>
+</mat-menu>
+
+<sat-popover #deleteSprintPopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                <span> {{ 'SPRINTS.DELETESPRINT' | translate }}
+                </span>
+            </div>
+        </mat-card-title>
+        <p class="p-05 m-0">
+            {{ 'SPRINTS.AREYOUSUREWANTTODELETETHISSPRINT' | translate }} </p>
+        <div class="text-center p-05">
+            <button mat-raised-button type="button" color="primary" class="mr-05"
+                (click)="deleteSprint(); $event.stopPropagation()"
+                [disabled]="(sprintArchiveOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="(sprintArchiveOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-raised-button type="button" (click)="closeArchivePopup();deleteSprintPopover.close()"
+                [disabled]="(sprintArchiveOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+
+<sat-popover #editSprintPopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0" style="width: 376px;">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(sprintOperationInProgress$ | async)">
+        </mat-progress-bar>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                <span> {{ 'SPRINTS.EDITSPRINT' | translate }}
+                </span>
+            </div>
+        </mat-card-title>
+        <app-edit-sprint *ngIf="isEditSprint" [sprint]="sprint" [isEnableTestRepo]="sprint.isEnableTestRepo"
+            (closeEditSprintPopUp)="closeSprintPopup()">
+        </app-edit-sprint>
+    </mat-card>
+</sat-popover>
+
+
+<sat-popover #startSprintPopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop horizontalAlign="end">
+    <mat-card class="filter-data p-0" style="width: 358px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                <span> {{ 'SPRINTS.STARTSPRINT' | translate }}
+                </span>
+            </div>
+        </mat-card-title>
+        <form [formGroup]="sprintStartForm" novalidate (submit)="sprintStartForm.valid && startSprint()">
+            <div class="card-content p-05">
+                <div fxLayout="row wrap" class="mb-1">
+                    <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+                        <mat-form-field class="full-width">
+                            <input formControlName="sprintStartDate" matInput [matDatepicker]="startDatePicker"
+                                (click)="startDatePicker.open()" (dateChange)="changeStartDate()"
+                                placeholder="{{ 'SPRINTS.SPRINTSTARTDATE' | translate }}" required />
+                            <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+                            <mat-datepicker #startDatePicker></mat-datepicker>
+                            <mat-error>
+                                <span
+                                    *ngIf="sprintStartForm.get('sprintStartDate').hasError('required') && sprintStartForm.get('sprintStartDate').touched">{{ 'SPRINTS.PLEASEENTERSPRINTSTARTDATE' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input formControlName="sprintEndDate" matInput [matDatepicker]="endDatePicker"
+                                (click)="endDatePicker.open()" [min]="minDate"
+                                placeholder="{{ 'SPRINTS.SPRINTENDDATE' | translate }}" required />
+                            <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+                            <mat-datepicker #endDatePicker></mat-datepicker>
+                            <mat-error>
+                                <span
+                                    *ngIf="sprintStartForm.get('sprintEndDate').hasError('required') && sprintStartForm.get('sprintEndDate').touched">{{ 'SPRINTS.PLEASEENTERSPRINTENDDATE' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button mat-raised-button type="submit" color="primary" class="mr-05"
+                        [disabled]="!sprintStartForm.valid || (startSprintOperationInProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(startSprintOperationInProgress$| async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="save" class="mr-05"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-raised-button type="button"
+                        (click)="cancelStartSprintPopup();startSprintPopover.close()"
+                        [disabled]="(startSprintOperationInProgress$| async)">
+                        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+
+
+<!------------------Assignee Dialog---------------->
+<sat-popover #updateAssigneePopover verticalAlign="below" hasBackdrop [interactiveClose]="false" horizontalAlign="end"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{ 'GOALS.BULKACTIONSONASSIGNEE' | translate }}
+            </div>
+        </mat-card-title>
+        <form [formGroup]="assigneeForm" novalidate (submit)="
+        assigneeForm.valid && updateAssigneeForMultipleUserStories()
+          ">
+            <div class="card-content p-05">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select formControlName="ownerUserId" placeholder="{{ 'GOALS.SELECTASSIGNEE' | translate }}"
+                        (selectionChange)="getAssigneeValue($event.value)">
+                        <mat-select-trigger>
+                            {{selectedMember}}
+                        </mat-select-trigger>
+                        <mat-option value="option" [value]="assignee.projectMember.id"
+                            *ngFor="let assignee of (projectMembers$ | async)">
+                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                <div fxFlex="15">
+                                    <app-avatar matTooltip="{{ assignee.projectMember.name }}"
+                                        [name]="assignee.projectMember.name | removeSpecialCharacters"
+                                        [src]="assignee.projectMember.profileImage" [isRound]="true" size="30">
+                                    </app-avatar>
+                                </div>
+                                <div fxFlex="80">
+                                    <p class="mat-body-2">
+                                        {{ assignee.projectMember.name }}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <div class="text-center">
+                    <button color="primary" class="mr-05" mat-button mat-raised-button
+                        (click)="$event.stopPropagation()" [disabled]="(createUserstoryinProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(createUserstoryinProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="updateAssigneePopover.close();false"
+                        [disabled]="(createUserstoryinProgress$ | async)">
+                        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+<!------------------Assignee Dialog---------------->
+
+<!------------------Estimatedtime Dialog---------------->
+<sat-popover #updateEstimatedTimePopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{ 'GOALS.BULKACTIONSONESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <form [formGroup]="estimatedTimeForm" novalidate (keydown.enter)="$event.preventDefault()">
+            <div class="card-content p-05">
+                <app-common-estimatedTime *ngIf="clearFormValue" [estimatedTime]="estimatedTime"
+                    [isDisabled]="(!(canAccess_entityType_feature_EditBacklogGoalEstimatedTime))"
+                    (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+                <div class="text-center p-2">
+                    <button color="primary" class="mr-05" mat-button mat-raised-button
+                        [disabled]="(createUserstoryinProgress$ | async)"
+                        (click)="updateEstimatedTimeForMultipleUserStories(); $event.stopPropagation()">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(createUserstoryinProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }} &nbsp;
+                    </button>
+                    <button mat-button mat-raised-button
+                        (click)="closeEstimatedTimeDialog();updateEstimatedTimePopover.close();false"
+                        [disabled]="(createUserstoryinProgress$ | async)">
+                        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>

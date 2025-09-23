@@ -1,0 +1,219 @@
+<div class="p-0">
+    <mat-card class="p-0 canteen-manage m-0  mt-05">
+      <mat-card-title class="full-width data-table-header">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+          <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow" 
+            matTooltipClass="tooltipClass-mat" matTooltip="{{ 'COUNTERPARTYTYPE.COUNTERPATYTYPETITLE' | translate | titlecase | softLabelsPipe : softLabels}}">
+              {{ 'COUNTERPARTYTYPE.COUNTERPATYTYPETITLE' | translate | titlecase | softLabelsPipe : softLabels}}</span>
+          </div>
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle matTooltipClass="tooltipClass-mat"
+                [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                (change)="getCounterPartyTypes()">
+            </mat-slide-toggle>
+        </div>
+          <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="!isArchived">
+            <button mat-icon-button class="add_btn pull-right" matTooltipClass="tooltip-overflow tooltipClass-mat"
+              [satPopoverAnchorFor]="addCounterPartyTypePopover" #addCounterPartyPopup="satPopoverAnchor" (click)="createCounterPartyType(addCounterPartyPopup);clearForm()"
+              matTooltip=" {{'COUNTERPARTYTYPE.CLICKHERETOADDCOUNTERPARTYTYPE' | translate | softLabelsPipe : softLabels }} ">
+              <fa-icon icon="plus" class="action-icon-color"></fa-icon>
+            </button>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+    <div>
+      <div>
+        <mat-card-content class="p-0 mat-card-fx-col">
+          <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="(isAnyOperationIsInprogress || reOrderOperationInProgress)">
+          </mat-progress-bar>
+          <div fxFlex="100">
+            <div fxLayout="row" class="userstory-summary superagile-summary" style="background: #f6f6f6!important;">
+              <div fxLayout="row" fxFlex="100" class="userstory-list">
+                <div class="mt-02" fxFlex="30" style="margin-left:17px;">
+                  <b>
+                    {{ 'COUNTERPARTYTYPE.COUNTERPATYTYPENAME' | translate | softLabelsPipe : softLabels | uppercase }}
+                  </b>
+                </div>
+                <div class="mt-02" fxFlex="20" style="overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important;">
+                  <b>
+                    {{ 'COUNTERPARTYTYPE.ROLES' | translate | softLabelsPipe : softLabels | uppercase }}
+                  </b>
+                </div>
+                <div class="mt-02" fxFlex="15" style="margin-left: 5%;">
+                  <b>
+                    {{ 'COUNTERPARTYTYPE.ORDER' | translate | softLabelsPipe : softLabels | uppercase }}
+                  </b>
+                </div>
+                <div class="mt-02" fxFlex="15">
+                  <b>
+                    {{ 'TESTMANAGEMENT.ACTIONS' | translate | uppercase }}
+                  </b>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="clientTypeList && clientTypeList.length > 0" id="style-1" class="client-type-height">
+            <div dragula="reOrderItems" [(dragulaModel)]="clientTypeList"
+              [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+              <div class="user-story-list" *ngFor="let clientType of (clientTypeList)"
+                [attr.data-clientTypeId]="clientType.clientTypeId"
+                [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+                <div fxLayout="row wrap">
+                  <div fxFlex="100" [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+                    <div fxLayout="row" class="userstory-summary superagile-summary">
+                      <div fxLayout="row" fxFlex="100" class="userstory-list">
+                        <div fxFlex="30" style="margin-left:17px;">
+                          <span class="allgoals_txt" matTooltip="{{ clientType.clientTypeName }}"
+                            matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow tooltipClass-mat">
+                            {{ clientType.clientTypeName }}
+                          </span>
+                        </div>
+                        <div class="mt-02" fxFlex="20" style="overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important;">
+                          <span class="allgoals_txt" matTooltip="{{ clientType.roleNames }}"
+                            matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow tooltipClass-mat">
+                            {{ clientType.roleNames }}
+                          </span>
+                        </div>
+                        <div class="mt-02" fxFlex="15" style="margin-left: 5%;">
+                          {{clientType.order}}
+                        </div>
+                        <div fxFlex="15" (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                          <button class="text-center" matTooltipClass="tooltipClass-mat" matTooltip="{{ 'COUNTERPARTYTYPE.EDITCOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels}}"
+                          [satPopoverAnchorFor]="addCounterPartyTypePopover" #addCounterPartyPopup="satPopoverAnchor"
+                          (click)="editCounterPartyType(clientType,addCounterPartyPopup)" *ngIf="!isArchived" mat-icon-button>
+                          <fa-icon icon="edit" style="cursor: pointer;" class="action-icon-color"></fa-icon>
+                      </button>
+  
+                      <button class="text-center" matTooltipClass="tooltipClass-mat" matTooltip="{{ 'COUNTERPARTYTYPE.ARCHIVECOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels}}"
+                          [satPopoverAnchorFor]="deleteCounterPartyTypePopover" #deleteCounterPartyTypePopup="satPopoverAnchor"
+                          (click)="archiveCounterPartyTypePopUpOpen(clientType,deleteCounterPartyTypePopup)" *ngIf="!isArchived" mat-icon-button>
+                          <mat-icon class="action-icon-color" style="cursor: pointer;">archive</mat-icon>
+                      </button>
+  
+                      <button class="text-center" matTooltipClass="tooltipClass-mat" matTooltip="{{ 'COUNTERPARTYTYPE.UNARCHIVECOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels}}"
+                          [satPopoverAnchorFor]="deleteCounterPartyTypePopover" #deleteCounterPartyTypePopup="satPopoverAnchor"
+                          (click)="archiveCounterPartyTypePopUpOpen(clientType,deleteCounterPartyTypePopup)" *ngIf="isArchived" mat-icon-button>
+                          <mat-icon class="action-icon-color" style="cursor: pointer;">unarchive</mat-icon>
+                      </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+          </div>
+          <app-common-message-box *ngIf="!(isAnyOperationIsInprogress) && (!clientTypeList || clientTypeList.length == 0)"
+            textToDisplay="{{'NODATATODISPLAY'|translate}}">
+          </app-common-message-box>
+  
+        </mat-card-content>
+      </div>
+  
+      <sat-popover #addCounterPartyTypePopover verticalAlign="below" hasBackdrop [autoFocus]="false" horizontalAlign="start"
+        backdropClass="backdrop-color">
+        <mat-card class="filter-data p-0">
+          <mat-card-title class="text-center">
+            <div class="card-title-text p-05 mat-bg-primary">
+              {{counterPartyTitle | titlecase | softLabelsPipe : softLabels}}
+            </div>
+          </mat-card-title>
+          <form [formGroup]="clientTypeForm" #formDirective="ngForm" novalidate (submit)="clientTypeForm.valid && UpsertClientType(formDirective)">
+            <div class="card-content p-05">
+              <div fxLayout="row" fxLayoutGap="5px">
+                <div>
+                  <mat-form-field>
+                    <input matInput formControlName="clientTypeName" placeholder="{{ 'COUNTERPARTYTYPE.COUNTERPATYTYPENAME' |  translate | softLabelsPipe : softLabels}}" required>
+                    <mat-error *ngIf="clientTypeForm.get('clientTypeName').hasError('maxlength')">
+                        {{ 'COUNTERPARTYTYPE.COUNTERPATYTYPENAMEMAXLENGTHERROR' | translate | softLabelsPipe : softLabels}}</mat-error>
+                    <mat-error
+                        *ngIf="clientTypeForm.get('clientTypeName').hasError('required') && clientTypeForm.get('clientTypeName').touched">
+                        {{ 'COUNTERPARTYTYPE.COUNTERPATYTYPENAMEREQUIREDERROR' | translate | softLabelsPipe : softLabels}}
+                    </mat-error>
+                </mat-form-field>
+                </div>
+                <div>
+                  <mat-form-field class="full-width">
+                    <mat-select formControlName="roleIds" [compareWith]="compareSelectedRolesFn"
+                        placeholder="{{'HRMANAGAMENT.ROLE' | translate}}" required multiple
+                        (selectionChange)="getSelectedRoles()">
+                        <mat-select-trigger>
+                            {{selectedRoles}}
+                        </mat-select-trigger>
+                        <mat-option [value]="0" #allSelected (click)="toggleAllRolesSelected()">
+                            Select all
+                        </mat-option>
+                        <mat-option *ngFor="let role of rolesList" [value]="role.roleId"
+                            (click)="toggleGoalStatusPerOne($event)">
+                            {{role.roleName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="clientTypeForm.get('roleIds').hasError('required') && clientTypeForm.get('roleIds').touched">
+                            {{'USERSTORY.PLEASESELECTROLE' | translate}}</span></mat-error>
+                </mat-form-field>
+                  </div>
+              </div>
+              <div class="text-center mt-05">
+                <button type="submit" [disabled]="!clientTypeForm.valid" class="mr-05 glossy-button-button" mat-raised-button color="primary"
+                  [disabled]="isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-raised-button type="button" (click)="closedialog()">
+                  <fa-icon icon="times" class="mr-05"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+  
+          </form>
+        </mat-card>
+      </sat-popover>
+  
+      <sat-popover backdropClass="backdrop-color" #deleteCounterPartyTypePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isArchived">
+                    {{ 'COUNTERPARTYTYPE.UNARCHIVECOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isArchived">
+                    {{ 'COUNTERPARTYTYPE.ARCHIVECOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{ 'COUNTERPARTYTYPE.AREYOUSUREYOUWANTTOUNARCHIVETHISCOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels}}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{ 'COUNTERPARTYTYPE.AREYOUSUREYOUWANTTOARCHIVETHISCOUNTERPARTYTYPE' |  translate | softLabelsPipe : softLabels }}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" archiveCounterPartyType();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'YES' | translate }}
+                    </button>
+                    <button class="glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" archiveCounterPartyType();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    </div>
+  </div>
+  
+<app-common-message-box *ngIf="!canAccess_feature_ManageClientTypes"
+textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

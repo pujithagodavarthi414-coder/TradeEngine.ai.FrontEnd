@@ -1,0 +1,464 @@
+<div *ngIf="(canAccess_feature_AddOrUpdateApplications)">
+    <mat-card class="p-0 mt-05">
+        <div fxLayout="row">
+            <div fxFlex="25px" fxLayoutAlign="start center" class="ml-05">
+                <a (click)="goToViewCustomForms()">
+                    <fa-icon icon="arrow-left"
+                        matTooltip="{{ 'CUSTOMAPPLICATION.GOTOVIEWCUSTOAPPLICATIONS' | translate }}"></fa-icon>
+                </a>
+            </div>
+            <div class="card-title-text p-05">
+                <div class="ml-05">
+                    <span *ngIf="!applicationId">{{ 'CUSTOMAPPLICATION.ADDCUSTOMAPPLICATION' | translate }}</span>
+                    <span *ngIf="applicationId">{{ 'CUSTOMAPPLICATION.EDITCUSTOMAPPLICATION' | translate }}</span>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+
+    <mat-card class="p-0 mr-0">
+        <div class="p-1">
+            <form [formGroup]="customApplicationForm" novalidate #formDirective="ngForm"
+                (submit)="customApplicationForm.valid && saveCustomApplicationForm()">
+                <div fxLayout="column">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="customApplicationName"
+                                    placeholder="{{ 'CUSTOMAPPLICATION.CUSTOMAPLICATIONNAME' | translate }}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="customApplicationForm.get('customApplicationName').hasError('required') && customApplicationForm.get('customApplicationName').touched">
+                                        {{ 'CUSTOMAPPLICATION.PLEASEENTERCUSTOMAPPLICATIONNAME' | translate }}
+                                    </span>
+                                    <span
+                                        *ngIf="customApplicationForm.get('customApplicationName').hasError('maxlength')">
+                                        {{ 'CUSTOMAPPLICATION.SHOULDNOTEXCEED50CHARECTERS' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{'GENERICFORM.SELECTROLESTEXT' | translate}}"
+                                    formControlName="roleIds" multiple [compareWith]="compareSelectedRoles" required>
+                                    <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                                        {{ 'ADVANCEDSEARCH.SELECTALL' | translate}}
+                                    </mat-option>
+                                    <mat-option *ngFor="let role of rolesList" (click)="toggleUserPerOne()"
+                                        [value]="role.roleId">
+                                        {{role.roleName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'STATUSREPORT.FORMTYPE' | translate }}"
+                                    formControlName="formTypeId"
+                                    (selectionChange)="getForms($event.value);initializeFormTypeId()" required>
+                                    <mat-option *ngFor="let type of formTypes" [value]="type.id">
+                                        {{type.formTypeName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="customApplicationForm.get('formTypeId').hasError('required') && customApplicationForm.get('formTypeId').touched">
+                                        {{ 'STATUSREPORT.PLEASECHOOSEFORMTYPE' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'STATUSREPORT.SELECTFORM' | translate }}" multiple
+                                    formControlName="formId" (selectionChange)="getFormKeysByFormId($event.value)"
+                                    required>
+                                    <mat-option *ngFor="let form of genericFormListDetails" [value]="form.id">
+                                        {{form.formName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="customApplicationForm.get('formId').hasError('required') && customApplicationForm.get('formId').touched">
+                                        {{ 'STATUSREPORT.PLEASECHOOSEAFORM' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="publicMessage"
+                                    placeholder="{{ 'CUSTOMAPPLICATION.PUBLICMESSAGE' | translate }}">
+                                <mat-error>
+                                    <span *ngIf="customApplicationForm.get('publicMessage').hasError('maxlength')">
+                                        {{ 'CUSTOMAPPLICATION.PUBLICMESSAGELENGTHRESTRICTION' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="column" *ngIf="genericFormKeyList.length > 0 && customApplicationForm.get('formId').value != null 
+                            && customApplicationForm.get('formId').value != ''">
+                        <div *ngFor="let formKeys of multipleGenericFormKeys">
+                            <label class=''>{{ 'CUSTOMAPPLICATION.SELECTADEFAULTCOLUMN' | translate }}</label>
+                            <table>
+                                <tr>
+                                    <th class="p-05">{{ 'CUSTOMAPPLICATION.KEYNAME' | translate }}</th>
+                                    <th class="p-05">{{ 'CUSTOMAPPLICATION.ISDEFAULT' | translate }}</th>
+                                    <th class="p-05">{{ 'CUSTOMAPPLICATION.ISPRIVATE' | translate }}</th>
+                                    <th class="p-05">{{ 'CUSTOMAPPLICATION.ISTAG' | translate }}</th>
+                                    <th class="p-05">{{ 'CUSTOMAPPLICATION.ENABLETRENDS' | translate }}</th>
+                                </tr>
+                                <tr *ngFor="let option of formKeys; let i = index">
+                                    <td class="p-05">{{option.label}}</td>
+                                    <td class="p-05 text-center">
+                                        <mat-checkbox
+                                            name="{{ 'CUSTOMAPPLICATION.DEFAULT' | translate }} - {{ option.key }}"
+                                            (change)="onChange(option.genericFormKeyId, $event)"
+                                            id="checkbox-{{ option.genericFormKeyId }}"
+                                            value="{{ option.genericFormKeyId }}" [checked]="option.isActive">
+                                        </mat-checkbox>
+                                    </td>
+                                    <td class="p-05 text-center">
+                                        <mat-checkbox
+                                            name="{{ 'CUSTOMAPPLICATION.PRIVATE' | translate }} - {{ option.key }}"
+                                            (change)="onPrivateChange(option.genericFormKeyId, $event)"
+                                            id="private-{{ option.genericFormKeyId }}"
+                                            value="{{ option.genericFormKeyId }}" [checked]="option.isPrivate">
+                                        </mat-checkbox>
+                                    </td>
+                                    <td class="p-05 text-center">
+                                        <mat-checkbox
+                                            name="{{ 'CUSTOMAPPLICATION.TAG' | translate }} - {{ option.key }}"
+                                            (change)="onTagChange(option.genericFormKeyId, $event)"
+                                            id="tag-{{ option.genericFormKeyId }}" value="{{ option.genericFormKeyId }}"
+                                            [checked]="option.isTag">
+                                        </mat-checkbox>
+                                    </td>
+                                    <td class="p-05 text-center">
+                                        <mat-checkbox
+                                            name="{{ 'CUSTOMAPPLICATION.ENABLETRENDS' | translate }} - {{ option.key }}"
+                                            (change)="onEnableTrendsChange(option.genericFormKeyId, $event)"
+                                            id="enableTrends-{{ option.genericFormKeyId }}"
+                                            value="{{ option.genericFormKeyId }}" [checked]="option.isEnableTrends">
+                                        </mat-checkbox>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!-- <div *ngFor="let option of genericFormKeyList; let i = index">
+                            <mat-checkbox name="{{ option.key }}" (change)="onChange(option.genericFormKeyId, $event)"
+                                id="checkbox-{{ option.genericFormKeyId }}" value="{{ option.genericFormKeyId }}"
+                                [checked]="option.isActive">
+                                <div fxLayout="row wrap" fxLayoutGap="5px">
+                                    <div fxFlex="100" fxLayoutAlign="start center">
+                                        <span matTooltip="{{ option.label }}">{{option.label }}</span>
+                                    </div>
+                                </div>
+                            </mat-checkbox>
+                        </div> -->
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="submit" [disabled]="!customApplicationForm.valid || savingCustomApplicationInProgress"
+                        mat-button mat-raised-button color="primary" class="mr-1">
+                        <span *ngIf="!applicationId">
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate}}
+                        </span>
+                        <span *ngIf="applicationId">
+                            <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <div fxLayout="column wrap">
+                <div>
+                    <label class=''>{{ 'CUSTOMAPPLICATION.WORKFLOW' | translate }}</label>
+                    <div class="activity-data filter-margin mt-1">
+                        <div class="mb-05" *ngIf="this.applicationId">
+                            <a class="add-test-case" matTooltip="{{ 'CUSTOMAPPLICATION.ADDWORKFLOW' | translate }}"
+                                [satPopoverAnchorFor]="addWorkflowType" #workflowTypePopover="satPopoverAnchor"
+                                (click)="createWorkflowPopup(workflowTypePopover)">
+                                <fa-icon icon="plus" class="mr-05"></fa-icon>
+                                <b>{{ 'CUSTOMAPPLICATION.ADDWORKFLOW' | translate }}</b>
+                            </a>
+                        </div>
+                        <ngx-datatable class="btrak" [rows]="workFlowDataList" [columnMode]="'force'"
+                            [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+                            [loadingIndicator]="worflowGridSpinner">
+                            <ngx-datatable-column name="{{ 'CUSTOMAPPLICATION.WORKFLOWNAME' | translate }}"
+                                sortable="true" prop="workflowTypeName">
+                                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                                    <span
+                                        [matTooltip]="(row?.workflowName?.length > 10) ? row.workflowName : '' ">{{row?.workflowName}}</span>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="{{ 'CUSTOMAPPLICATION.WORKFLOWTYPE' | translate }}"
+                                sortable="true" prop="workflowTypeName">
+                                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                                    <span
+                                        [matTooltip]="(row?.workflowTypeName.length > 10) ? row.workflowTypeName : '' ">{{row?.workflowTypeName}}</span>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="{{ 'CUSTOMAPPLICATION.WORKFLOWTRIGGER' | translate }}"
+                                sortable="true" prop="workflowTrigger">
+                                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                                    <span
+                                        [matTooltip]="(row?.workflowTrigger?.length > 10) ? row.workflowTrigger : '' ">{{row?.workflowTrigger}}</span>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="{{ 'EDIT' | translate }}" [sortable]="false">
+                                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                                    <button
+                                        *ngIf="row.customApplicationWorkflowTypeId == workflowType3Id || row.customApplicationWorkflowTypeId == workflowType4Id"
+                                        class="text-center" (click)="editBpmnWorkflowData(row)"
+                                        matTooltip="{{ 'CUSTOMAPPLICATION.EDITWORKFLOW' | translate }}" mat-icon-button>
+                                        <fa-icon class="icon-button mat-color-accent" icon="edit"> </fa-icon>
+                                    </button>
+                                </ng-template>
+                            </ngx-datatable-column>
+                        </ngx-datatable>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="p-05" *ngIf="this.applicationId">
+        <workflow-triggger [referenceId]="this.applicationId" [referenceTypeId]="customApplicationReferenceTypeId">
+        </workflow-triggger>
+    </div> -->
+    </mat-card>
+
+
+    <sat-popover backdropClass="backdrop-color" #addWorkflowType verticalAlign="below" hasBackdrop
+        [interactiveClose]="false" horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05 mb-1">
+                    {{ 'CUSTOMAPPLICATION.ADDWORKFLOW' | translate }}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'CUSTOMAPPLICATION.WORKFLOWTYPES' | translate }}"
+                        [formControl]="selectedWorkflowType">
+                        <mat-option *ngFor="let type of workflowTypes" [value]="type.customApplicationWorkflowTypeId">
+                            {{type.customApplicationWorkflowTypeName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-hint>{{ 'CUSTOMAPPLICATION.SELECTAWORKFLOWTYPE' | translate }}</mat-hint>
+                </mat-form-field>
+                <div class="text-center mt-1">
+                    <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+                        [disabled]="checkStatusDisabled()" [satPopoverAnchorFor]="addWorkflow"
+                        (click)="addWorkFlowType(selectedWorkflowType.value)">
+                        <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'ADD' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeWorkFlowTypeDialog()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>
+                        {{ 'PIVOTGRID.CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #addWorkflow [autoFocus]="false" [restoreFocus]="false" [interactiveClose]="false"
+        scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0" *ngIf="loadWorkflowType">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingWorkflowInProgress">
+            </mat-progress-bar>
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="!editWorkflow">
+                    {{ 'CUSTOMAPPLICATION.ADDWORKFLOW' | translate }}</div>
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="editWorkflow">
+                    {{ 'CUSTOMAPPLICATION.EDITWORKFLOW' | translate }}</div>
+            </mat-card-title>
+            <form [formGroup]="workflowForm" novalidate #formDirectiveSatPopover="ngForm">
+                <div class="custom-mobile-popover p-1">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'CUSTOMAPPLICATION.PLEASESELECTAFORM' | translate }}"
+                                (selectionChange)="getFormKeysBySelectedFormId($event.value)"
+                                formControlName="selectedFormId">
+                                <mat-option *ngFor="let form of selectedFormsDetails" [value]="form.id">
+                                    {{form.formName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="workflowForm.get('selectedFormId').hasError('required') && workflowForm.get('selectedFormId').touched">
+                                    {{ 'CUSTOMAPPLICATION.PLEASESELECTAFORM' | translate }}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px">
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.SOURCEKEY' | translate }}"
+                                    formControlName="sourceKey">
+                                    <mat-option *ngFor="let key of availableGenericFormKeysList"
+                                        [value]="key.genericFormKeyId">
+                                        {{key.label}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="workflowForm.get('sourceKey').hasError('required') && workflowForm.get('sourceKey').touched">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTASOURCEKEY' | translate }}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.LOGICALOPERATOR' | translate }}"
+                                    formControlName="logicalOperation">
+                                    <mat-option *ngFor="let operator of availableLogicalOperators"
+                                        [value]="operator.value">
+                                        {{operator.title}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="workflowForm.get('logicalOperation').hasError('required') && workflowForm.get('logicalOperation').touched">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTALOGICALOPERATOR' | translate }}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxFlex="100" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="sourceValue"
+                                placeholder="{{ 'CUSTOMAPPLICATION.SOURCEVALUE' | translate }}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="workflowForm.get('sourceValue').hasError('required') && workflowForm.get('sourceValue').touched">
+                                    {{ 'CUSTOMAPPLICATION.PLEASEENTERSOURCEVALUE' | translate }} </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px"
+                        *ngIf="selectedWorkflowType.value && selectedWorkflowType.value.toLowerCase() == workflowType1Id">
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.DESTINATIONKEY' | translate }}"
+                                    formControlName="destinationKey" [required]="isType1required">
+                                    <mat-option *ngFor="let key of availableDestinationFormKeysList"
+                                        [value]="key.genericFormKeyId">
+                                        {{key.label}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="workflowForm.get('destinationKey').hasError('required') && workflowForm.get('destinationKey').touched">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTDESTIONATIONKEY' | translate }}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px"
+                            *ngIf="selectedWorkflowType.value && selectedWorkflowType.value.toLowerCase() == workflowType1Id">
+                            <div fxFlex="100" fxFlex.xs="100">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="destinationValue"
+                                        placeholder="{{ 'CUSTOMAPPLICATION.DESTINATIONVALUE' | translate }}"
+                                        [required]="isType1required">
+                                    <mat-error>
+                                        <span
+                                            *ngIf="workflowForm.get('destinationValue').hasError('required') && workflowForm.get('destinationValue').touched">
+                                            {{ 'CUSTOMAPPLICATION.PLEASESELECTDESTINATIONVALUETOREPLACE' | translate }}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row"
+                        *ngIf="selectedWorkflowType.value && selectedWorkflowType.value.toLowerCase() == workflowType2Id">
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.CUSTOMAPPLICATIONS' | translate }}"
+                                    formControlName="customApplicationId" [required]="isType2required"
+                                    (selectionChange)="getCustomApplicationForms($event.value)">
+                                    <mat-option *ngFor="let application of customApplicationsList"
+                                        [value]="application.customApplicationId">
+                                        {{application.customApplicationName}}</mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span *ngIf="workflowForm.get('customApplicationId').hasError('required')">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTCUSTOMAPPLICATION' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px"
+                        *ngIf="selectedWorkflowType.value && selectedWorkflowType.value.toLowerCase() == workflowType2Id">
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.CUSTOMAPPLICATIONFORMS' | translate }}"
+                                    formControlName="customApplicationFormId" [required]="isType2required">
+                                    <mat-option *ngFor="let application of selectedCustomApplicationForms"
+                                        [value]="application.formId">
+                                        {{application.formName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span *ngIf="workflowForm.get('customApplicationFormId').hasError('required')">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTCUSTOMAPPLICATIONFORM' | translate }}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="100" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-select placeholder="{{ 'CUSTOMAPPLICATION.CUSTOMAPPLICATIONKEYS' | translate }}"
+                                    formControlName="customApplicationKeyValues" multiple
+                                    [compareWith]="compareSelectedRoles" [required]="isType2required">
+                                    <mat-option #allKeysSelected (click)="toggleAllKeysSelected()" [value]="0">
+                                        {{ 'ADVANCEDSEARCH.SELECTALL' | translate}}
+                                    </mat-option>
+                                    <mat-option *ngFor="let key of availableGenericFormKeysList"
+                                        (click)="toggleKeyPerOne()" [value]="key.key">
+                                        {{key.label}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span *ngIf="workflowForm.get('customApplicationKeyValues').hasError('required')">
+                                        {{ 'CUSTOMAPPLICATION.PLEASESELECTCUSTOMAPPLICATIONKEYTOBIND' | translate }}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutAlign="space-evenly center">
+                    <div class="text-center mb-1">
+                        <button type="button" (click)="saveWorkflow()" [disabled]="!workflowForm.valid" mat-button
+                            mat-raised-button color="primary" class="mr-1">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingWorkflowInProgress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon>
+                            {{ 'SAVE'| translate }}
+                        </button>
+                        <button mat-button mat-raised-button type="button" (click)="closeWorkflowDialog()"
+                            [disabled]="savingWorkflowInProgress">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'PIVOTGRID.CANCEL'| translate }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </mat-card>
+    </sat-popover>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrUpdateApplications)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+
+<ng-template #workflowBpmnComponent let-data>
+    <workflow-bpmn [data]=[data]></workflow-bpmn>
+</ng-template>

@@ -1,0 +1,371 @@
+<mat-card *ngIf="candidate" class="details_userstory" id="style-1">
+  <mat-card-header>
+    <mat-card-title>
+      <div fxLayout="row wrap" *ngIf="selectedIndex === 'GENERAL'" class="mt-05 assignee-field">
+        <div fxFlex>
+          <mat-form-field (click)="$event.stopPropagation()" class="full-width">
+            <mat-select #showAssignee placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}"
+              (selectionChange)="changeAssignee($event.value)" [(ngModel)]="assignee">
+              <mat-select-trigger>
+                {{selectedMember}}
+              </mat-select-trigger>
+              <mat-option [value]="0" *ngIf="isSuperagileBoard">Select None</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="custom-add-icon mt-md-1 pt-3" *ngIf="!isInterviewerBoard">
+          <fa-icon icon="user-plus" aria-hidden="false" aria-label="add"
+            matTooltip="{{'USERSTORY.ADDPROJECTMEMBER'|translate }}"
+            [satPopoverAnchorFor]="candidateAssigneePopover" (click)="candidateAssigneePopover.open();">
+          </fa-icon>
+        </div>
+      </div>
+      <b>
+        <div fxlayout="row wrap" class="assignee-display full-width">
+          <span fxFlex="30px" *ngIf="selectedIndex === 'GENERAL'">
+            <app-avatar class="mr-05" [name]="candidate.firstName | removeSpecialCharacters" class="icon-button"
+              [src]="candidate.profileImage" [isRound]="true" size="25" (click)="openAssignee()">
+            </app-avatar>
+          </span>
+          <div fxFlex class="edit-userstory">
+            <span style="cursor: pointer;">{{ candidateData.firstName}} {{ candidateData.lastName}}</span>
+
+            <mat-form-field class="full-width search_goalinput" *ngIf="!isEditCandidate">
+              <input matInput placeholder="{{'USERDETAIL.USERSTORY'|translate}}"
+                [(ngModel)]="candidateName" (blur)="updateCandidateName()" (keydown.enter)="updateCandidateName()" />
+            </mat-form-field>
+          </div>
+        </div>
+      </b>
+    </mat-card-title>
+
+    <a class="detail_close mt-05" color="warn" (click)="closeCandidateDetailWindow()">
+      <fa-icon icon="times"></fa-icon>
+    </a>
+  </mat-card-header>
+  <mat-card-content class="p-0" style="padding-top: 10px !important;">
+    <kendo-tabstrip [tabPosition]="position" (tabSelect)="onTabSelect($event)" id="tab" #tabstrip>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.CANDIDATE'|translate}}" [selected]="true"
+        *ngIf="canAccess_feature_ViewCandidates">
+        <ng-template kendoTabContent>
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+          </mat-progress-bar>
+          <div class="userstory-detail-container" fxLayout="column">
+            <span class="hide-mat-form-label">
+              <mat-form-field class="search_goalinput" (click)="$event.stopPropagation()" fxFlex="150px">
+                <label class="hide-content-overflow">{{'STATUS'|translate}}</label>
+                <mat-select
+                  [disabled]="isCandidateStatus || isCandidateStatusDisabled || !canAccess_feature_EditCandidateDetails"
+                  fxFlex="150px" placeholder="{{'STATUS'|translate}}"
+                  (selectionChange)="getCandidateStatusChange($event.value)" class="custom-chip-box"
+                  [ngStyle]="{'background-color': candidate.color}" [(ngModel)]="candidateStatusId">
+                  <mat-option *ngFor="let hiring of hiringStatus" [value]="hiring.hiringStatusId">{{ hiring.status }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </span>
+
+            <span class="chip-box-margin hide-mat-form-label ml-02">
+              <mat-form-field appearance="none" fxFlex="150px">
+                <label class="hide-content-overflow">{{'CANDIDATES.Phone' |translate}}</label>
+                <input matInput class="custom-chip-box mb-n2 custom-chip-bg" fxFlex="150px"
+                  [disabled]="!canAccess_feature_EditCandidateDetails" [(ngModel)]="phoneNumber"
+                  (blur)="candidateDetailsUpdate()" (keypress)="numberOnly($event)"
+                  placeholder="{{'CANDIDATES.Phone' |translate}}">
+              </mat-form-field>
+            </span>
+            <span fxLayout="column" class="d-grid">
+              <span fxFlex></span>
+              <span fxFlex>
+                <fa-icon class="rotate-icon ml-02  mt-05 m-0 p-03 icon-button" icon="chevron-right"
+                  [ngClass]="{'rotate-icon-down': expansionIcon}" (click)="togglePanel();$event.stopPropagation()">
+                </fa-icon>
+              </span>
+            </span>
+
+            <div class="userstory-detail-expansion mt-n2">
+              <mat-accordion class="userstory-detail-expansion">
+                <mat-expansion-panel [expanded]="panelOpenState">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.FirstName'| translate}}" [(ngModel)]="firstName"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keyup)="validationCheck()" required />
+                  </mat-form-field>
+                  <mat-error *ngIf="firstName && (firstName.length) > 50">
+                    {{ 'CANDIDATES.FIRSTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                  <mat-error *ngIf="isFirstNameValidation">
+                    {{ 'CANDIDATES.FIRSTNAMEREQUIREDERROR' | translate }}
+                  </mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.LastName'|translate}}" [(ngModel)]="lastName"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keyup)="validationCheck()" required />
+                  </mat-form-field>
+                  <mat-error *ngIf="lastName && (lastName.length) > 50">
+                    {{ 'CANDIDATES.LASTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                  <mat-error *ngIf="isSecondNameValidation">
+                    {{ 'CANDIDATES.LASTNAMEREQUIREDERROR' | translate }}
+                  </mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.Email'|translate}}" [(ngModel)]="emailAddress"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keyup)="validationCheck()" required />
+                  </mat-form-field>
+                  <mat-error *ngIf="emailRequiredvalidation">{{ 'CANDIDATES.EMAILREQUIREDERROR' | translate }}
+                  </mat-error>
+                  <mat-error *ngIf="emailValidation">{{ 'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate }}</mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.SecondaryEmail'|translate}}" [(ngModel)]="secondaryEmail"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keyup)="validationCheck()" />
+                  </mat-form-field>
+                  <mat-error *ngIf="secondaryEmailValidation">{{ 'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate }}
+                  </mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.Phone' |translate}}" [(ngModel)]="phoneNumber"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keypress)="numberOnly($event);" (keyup)="validationCheck()" required />
+                  </mat-form-field>
+                  <mat-error *ngIf="phoneNumber && (phoneNumber.length) > 15">
+                    {{ 'CANDIDATES.PHONEMAXLENGTHERROR' | translate }}</mat-error>
+                  <mat-error *ngIf="phoneNumberValidation">
+                    {{ 'CANDIDATES.PHONEREQUIREDERROR' | translate }}
+                  </mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.FATHERNAME'|translate}}" [(ngModel)]="fatherName"
+                      (blur)="candidateDetailsUpdate()" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (keyup)="validationCheck()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET1'|translate}}"
+                      [(ngModel)]="address1" [disabled]="!canAccess_feature_EditCandidateDetails"
+                      (blur)="candidateAddressUpdate()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput [(ngModel)]="address2"
+                      placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET2'|translate}}"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (blur)="candidateAddressUpdate()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select [(ngModel)]="state" placeholder="{{'EMPLOYEECONTACTDETAILS.STATE'|translate}}" required
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (selectionChange)="candidateAddressUpdate()">
+                      <mat-option [value]="state.stateId" *ngFor="let state of statesList">
+                        {{state?.stateName}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput [(ngModel)]="zipcode"
+                      placeholder="{{'EMPLOYEECONTACTDETAILS.ZIP/POSTALCODE'|translate}}"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (blur)="candidateAddressUpdate()"
+                      (keypress)="numberOnly($event);" />
+                  </mat-form-field>
+                  <mat-error *ngIf="zipcode && zipcode.length > 20">
+                    {{ 'EMPLOYEECONTACTDETAILS.POSTALCODESHOULDNOTEXCEED20CHRACTERS' | translate }}</mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.CurrentSalary'|translate}}" [(ngModel)]="currentSalary"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (keypress)="floatOnly($event)"
+                      (blur)="candidateDetailsUpdate()" (keyup)="validationCheck()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.Expectedsalary'|translate}}" [(ngModel)]="expectedSalary"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (keypress)="floatOnly($event)"
+                      (blur)="candidateDetailsUpdate()" (keyup)="validationCheck()" />
+                  </mat-form-field>
+                  <mat-error *ngIf="expectedSalaryError">
+                    {{'CANDIDATES.EXPECTEDSALARYERROR'| translate}}
+                  </mat-error>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.ExperienceInyears' |translate}}" [(ngModel)]="experience"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (keypress)="floatOnly($event)"
+                      (blur)="candidateDetailsUpdate()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput placeholder="{{'CANDIDATES.SKYPEID'|translate}}" [(ngModel)]="skypeId"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (blur)="candidateDetailsUpdate()" />
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select placeholder="{{'CANDIDATES.Assigntomanager'|translate}}" [(ngModel)]="assignee"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (selectionChange)="candidateDetailsUpdate()">
+                      <mat-option *ngFor="let user of assignees" [value]="user.id">
+                        <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                          [name]="user.fullName| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                        <img class="employee_img" *ngIf="user.profileImage"
+                          [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">
+                        {{user?.fullName}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select [(ngModel)]="countryId" placeholder="{{'CANDIDATES.Country'|translate}}"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" required
+                      (selectionChange)="candidateDetailsUpdate()">
+                      <mat-option [value]="country.countryId" *ngFor="let country of countryList">
+                        {{country?.countryName}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select [(ngModel)]="currentDesignation"
+                      placeholder="{{'CANDIDATES.Currentdesignation'|translate}}"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (selectionChange)="candidateDetailsUpdate()">
+                      <mat-option [value]="designation.designationId" *ngFor="let designation of designationList">
+                        {{designation?.designationName}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select [(ngModel)]="sourceId" placeholder="{{'CANDIDATES.Source'|translate}}"
+                      [disabled]="!canAccess_feature_EditCandidateDetails" (selectionChange)="sourceChanged()">
+                      <mat-option [value]="'0'">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                      <mat-option [value]="source.sourceId" *ngFor="let source of sources">
+                        {{source.name}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <div class="full-width" *ngIf="isSourcePersonRequired">
+                    <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                      <mat-select [(ngModel)]="sourcePersonId" placeholder="{{'CANDIDATES.Sourceperson'|translate}}"
+                        [disabled]="!canAccess_feature_EditCandidateDetails"
+                        (selectionChange)="candidateDetailsUpdate()" [required]="isSourcePersonRequired">
+                        <mat-option *ngFor="let user of assignees" [value]="user.id">
+                          <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                            [name]="user.fullName| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                          <img class="employee_img" *ngIf="user.profileImage"
+                            [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">
+                          {{user?.fullName}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+
+            <div fxFlex class="unique-details-bg p-05" fxLayout="column" [ngStyle]="{  'background':isEditorVisible ? 'none' : ''}">
+              <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                <span *ngIf="description && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                  [innerHTML]=description>
+                </span>
+                <span *ngIf="description == null && !isEditorVisible && canAccess_feature_EditCandidateDetails"
+                  (click)="enableEditor()" style="cursor: pointer;" class="description-text">
+                  <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                </span>
+                <span *ngIf="description == null && !isEditorVisible && !canAccess_feature_EditCandidateDetails"
+                  style="cursor: pointer;" class="description-text">
+                  <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTION' | translate}}</b>
+                </span>
+              </div>
+              <div *ngIf="isEditorVisible">
+                <div class="full-width custom-input">
+                  <editor class="dfree-header custom-logtime-comment"
+                    apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Description" menubar="false"
+                    [init]="initSettings1" background="white" height="120" [(ngModel)]="description">
+                  </editor>
+                </div>
+                <div class="text-center mt-05">
+                  <button mat-raised-button (click)="saveCandidateDescription()" color="primary" class="mr-1"
+                    [disabled]="anyOperationInProgress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> Save
+                  </button>
+                  <button mat-raised-button [disabled]="savingInProgress" (click)="cancelDescription()"
+                    [disabled]="anyOperationInProgress">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>Cancel
+                  </button>
+                  <button mat-raised-button [disabled]="savingInProgress" color="primary" (click)="resetDescription()"
+                    [disabled]="anyOperationInProgress">
+                    <fa-icon icon="undo" class="mr-05"></fa-icon>Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+            <span>{{'CANDIDATES.UPLOADRESUME'|translate}} :</span>
+
+            <div class="custom-hrm-dropzone" style="padding: 10px; max-width: 300px;" *ngIf="!after">
+              <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [getFilesByReferenceId]="true" [referenceId]="candidateDocumentReferenceId"
+                [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+                [isToUploadFiles]="isToUploadFiles">
+              </app-dropzone>
+            </div>
+            <div class="custom-hrm-dropzone" style="padding: 10px; max-width: 300px;" *ngIf="after">
+              <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [getFilesByReferenceId]="true" [referenceId]="candidateDocumentReferenceId"
+                [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+                [isToUploadFiles]="isToUploadFiles">
+              </app-dropzone>
+            </div>
+            <div class="mt-1 text-center" style="margin-right: 250px;">
+              <button mat-raised-button color="primary" class="mr-1" [disabled]="isAnyOperationIsInprogress"
+                (click)="UpsertDocument()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> <span>{{ 'SAVE' | translate }}</span>
+              </button>
+              <button mat-button mat-raised-button type="button" (click)="CloseUpsertDocument()">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'ADVANCEDSEARCH.RESET' | translate }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.SKILLS'|translate}}" (click)="savepopup()"
+        *ngIf="canAccess_feature_ViewCandidateSkills">
+        <ng-template kendoTabContent>
+          <app-candide-skills-detail [isFromSkill]="true" [candidateData]="candidateData"></app-candide-skills-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'HRMANAGAMENT.EXPERIENCE'|translate}}"
+        *ngIf="canAccess_feature_ViewCandidateExperience">
+        <ng-template kendoTabContent>
+          <app-candide-experience-detail [isFromExperience]="true" [candidateData]="candidateData">
+          </app-candide-experience-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.EDUCATION'|translate}}"
+        *ngIf="canAccess_feature_ViewCandidateEducationDetails">
+        <ng-template kendoTabContent>
+          <app-candide-education-detail [isFromEducation]="true" [candidateData]="candidateData">
+          </app-candide-education-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.DOCUMENT'|translate}}"
+        *ngIf="canAccess_feature_ViewCandidateDocuments">
+        <ng-template kendoTabContent>
+          <app-candide-document-detail [candidateData]="candidateData">
+          </app-candide-document-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.JOB'|translate}}" *ngIf="canAccess_feature_ViewCandidateJobs">
+        <ng-template kendoTabContent>
+          <app-candidate-job-detail [isFromJob]="true" [candidateData]="candidateData">
+          </app-candidate-job-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'CANDIDATESTRIPS.INTERVIEW'|translate}}"
+        *ngIf="canAccess_feature_ManageCancelInterviewSchedule || canAccess_feature_AddInterviewSchedule">
+        <ng-template kendoTabContent>
+          <app-interview-tab-component [job]="job" [candidateData]="candidateData"></app-interview-tab-component>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERSTORYUNIQUE.HISTORY'|translate}}"
+        *ngIf="canAccess_feature_ViewCandidateHistory">
+        <ng-template kendoTabContent>
+          <app-candidate-history-detail [candidateData]="candidateData"></app-candidate-history-detail>
+        </ng-template>
+      </kendo-tabstrip-tab>
+    </kendo-tabstrip>
+  </mat-card-content>
+
+  <sat-popover #candidateAssigneePopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+    scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+    </mat-card>
+  </sat-popover>
+</mat-card>
+

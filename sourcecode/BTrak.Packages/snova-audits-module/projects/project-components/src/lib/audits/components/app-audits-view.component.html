@@ -1,0 +1,212 @@
+<mat-card-title *ngIf="dashboardFilters" class="full-width data-table-header drag-handler"
+    style="margin-bottom: 0.5rem !important;">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+            <span class="assets-comments">
+                {{'AUDIT.AUDITS' | translate | softLabelsPipe : softLabels}}
+            </span>
+            <span class="ml-05 badge-item testsuites-count count-padding"
+                *ngIf="!isFromDashboard && (activeAuditsCount$ | async) > 0"
+                style="line-height: 14px;">{{ activeAuditsCount$ | async }}
+            </span>
+        </div>
+    </div>
+</mat-card-title>
+<div class="audits-tab" [ngClass]="{'p-02': dashboardFilters}" fxLayout="row wrap" fxLayout.lt-sm="column"
+    (window:resize)="onResize()"
+    *ngIf="canAccess_entityType_feature_ViewAudit && ((activeAuditFoldersCount$ | async) > 0 || (archivedAuditsCount$ | async) > 0) && !isFromDashboard">
+    <div fxFlex="30px" fxHide.xs>
+        <div class='custom-label veritcal-label'>
+            <div class='custom-label-content' (click)="isAudit = !isAudit">
+                {{'AUDIT.AUDITS' | translate | softLabelsPipe : softLabels}} <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isAudit}">
+                    </fa-icon>
+                </span></div>
+            <div class='custom-label-content' (click)="isAuditCategories = !isAuditCategories" [hidden]="loadDocuments">
+                {{'AUDIT.CATEGORIES' | translate}} <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+                        [ngClass]="{'rotate-icon-down': isAuditCategories}">
+                    </fa-icon>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div fxFlex="17" fxFlex.sm="48" fxFlex.xs="100" fxFlex.md="45" fxFlex.lg="17" [hidden]="isAudit"
+        class="audit-custom">
+        <audits-list-view (selectedAudit)="getSelectedAudit($event)"
+            (loadAuditRelatedData)="getLoadAuditRelatedData($event)"></audits-list-view>
+    </div>
+    <div fxFlex="18" fxFlex.sm="46.5" fxFlex.xs="100" fxFlex.md="50" fxFlex.lg="18"
+        [hidden]="isAuditCategories || loadDocuments" class="namesection-custom">
+        <audit-category-list-view (selectedAuditCategoryData)="getSelectedAuditCategoryData($event)"
+            (loadAuditCategoryRelatedData)="getLoadAuditCategoryRelatedData($event)"
+            (hierarchicalQuestions)="getHierarchicalQuestions($event)" [selectedAudit]="selectedAudit"
+            [categorySelected]="categorySelected" [loadAuditRelatedData]="loadAuditRelatedData">
+        </audit-category-list-view>
+    </div>
+    <div fxFlex fxFlex.lt-sm="100" *ngIf="!loadDocuments">
+        <as-split direction="horizontal" unit="percent" gutterSize="5">
+            <as-split-area size="*" minSize="45">
+                <audit-questions-list-view (questionPreview)="getQuestionPreview($event)"
+                    (documents)="getDocumentsView($event)" [loadAuditRelatedData]="loadAuditRelatedData"
+                    [selectedAudit]="selectedAudit" [loadAuditCategoryRelatedData]="loadAuditCategoryRelatedData"
+                    [categorySelected]="categoryData" [categoryTemporaryData]="categoryTemporaryData"
+                    [selectedQuestion]="selectedQuestionFromPreview" [isHierarchical]="isHierarchical">
+                </audit-questions-list-view>
+            </as-split-area>
+            <as-split-area size="37" minSize="36" maxSize="54"
+                *ngIf="(upsertQuestion || previewQuestion) && (screenWidth > 1279) && selectedAudit != 'empty'">
+                <div fxFlex="100" *ngIf="previewQuestion">
+                    <audit-question-details [selectedAudit]="selectedAudit" [question]="questionData"
+                        [isHierarchical]="isHierarchical" (closePreview)="closeUpsertDialog()">
+                    </audit-question-details>
+                </div>
+                <div fxFlex="100" *ngIf="upsertQuestion">
+                    <audit-question-edit-view [selectedAudit]="selectedAudit" [auditCategoryId]="auditCategoryId"
+                        [question]="questionData" [isHierarchical]="isHierarchical"
+                        (closeUpsertQuestion)="closeUpsertDialog()">
+                    </audit-question-edit-view>
+                </div>
+            </as-split-area>
+        </as-split>
+    </div>
+    <div class="audit-documents-custom" fxFlex="81" fxFlex.md="99" fxFlex.sm="99" fxFlex.xs="99"
+        *ngIf="loadDocuments && documentsModuleLoaded" style="position: relative;">
+        <div style="position: absolute; right: 5px; top: 10px;">
+            <fa-icon icon="ellipsis-v" [satPopoverAnchorFor]="editThreeDotsPopover"
+                (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+                matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}" style="cursor: pointer; font-size: 16px;">
+            </fa-icon>
+        </div>
+        <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+            [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+            [ndcDynamicInputs]="documentStoreComponent.inputs" [ndcDynamicOutputs]="documentStoreComponent.outputs">
+        </ndc-dynamic>
+    </div>
+    <div fxFlex="100" *ngIf="previewQuestion && !(screenWidth > 1279) && !loadDocuments && selectedAudit != 'empty'">
+        <audit-question-details [selectedAudit]="selectedAudit" [question]="questionData"
+            [isHierarchical]="isHierarchical" (closePreview)="closeUpsertDialog()">
+        </audit-question-details>
+    </div>
+    <div fxFlex="100" *ngIf="upsertQuestion && !(screenWidth > 1279) && !loadDocuments && selectedAudit != 'empty'">
+        <audit-question-edit-view [selectedAudit]="selectedAudit" [auditCategoryId]="auditCategoryId"
+            [question]="questionData" [isHierarchical]="isHierarchical" (closeUpsertQuestion)="closeUpsertDialog()">
+        </audit-question-edit-view>
+    </div>
+</div>
+<div class="p-1" *ngIf="dashboardFilters && isFromDashboard">
+    <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+        <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+        {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+    </span>
+</div>
+
+<app-common-message-box
+    *ngIf="!isFromDashboard && canAccess_entityType_feature_ViewAudit && (canAccess_entityType_feature_AddOrUpdateAudit || canAccess_entityType_feature_AddOrUpdateAuditFolder) && ((activeAuditFoldersCount$ | async) == 0 && (archivedAuditsCount$ | async) == 0)"
+    textToDisplay="{{'AUDIT.YOUDONTHAVEANYAUDITS' | translate | softLabelsPipe :softLabels}}">
+    <ng-template ng-message-tmp>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="canAccess_entityType_feature_AddOrUpdateAuditFolder" [satPopoverAnchorFor]="addEditFolder"
+            #addEditAuditPopover="satPopoverAnchor" (click)="openAddEditFolder(addEditAuditPopover)">
+            <fa-icon class="mr-05" icon="plus"></fa-icon>
+            {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate | softLabelsPipe :softLabels}}
+        </button>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="canAccess_entityType_feature_AddOrUpdateAudit" [satPopoverAnchorFor]="addAudit"
+            #addAuditsPopover="satPopoverAnchor" (click)="openAuditDialog(addAuditsPopover)">
+            <fa-icon class="mr-05" icon="plus"></fa-icon>
+            {{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}
+        </button>
+    </ng-template>
+</app-common-message-box>
+
+<app-common-message-box
+    *ngIf="!isFromDashboard && canAccess_entityType_feature_ViewAudit && !canAccess_entityType_feature_AddOrUpdateAudit"
+    textToDisplay="{{'AUDIT.NOYOUDONTHAVEANYAUDITS' | translate | softLabelsPipe :softLabels}}">
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!isFromDashboard && !canAccess_entityType_feature_ViewAudit"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>
+
+<!-- <div class="floating-right-fab-button"
+    *ngIf="(canAccess_entityType_feature_ViewAudit$ | async) && (canAccess_entityType_feature_AddOrUpdateAudit$ | async)">
+    <div class="handle">
+        <button mat-fab color="accent" matTooltip="{{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}"
+            [satPopoverAnchorFor]="addAudit" #addAuditPopover="satPopoverAnchor"
+            (click)="openComplianceAuditDialog(addAuditPopover)">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div> -->
+
+<sat-popover backdropClass="backdrop-color" #addAudit verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <audit-add-or-edit *ngIf="loadAddAudit" [parentAuditId]=null (closeAudit)="closeAuditDialog()">
+        </audit-add-or-edit>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+    hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <div fxFlex fxLayoutAlign="start center">
+            <button mat-menu-item (click)="normalView();closeMenuPopover();">
+                <div fxLayoutAlign="row">
+                    <div fxFlex="25px">
+                        <fa-icon icon="bars"></fa-icon>
+                    </div>
+                    <div fxFlex class="ml-05">
+                        {{'AUDIT.NORMALVIEW' | translate}}
+                    </div>
+                </div>
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #addEditFolder verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content style="width: 280px;">
+            <form [formGroup]="auditFolderForm" novalidate (submit)="auditFolderForm.valid && addOrEditAuditFolder()">
+                <div fxLayout="row wrap">
+                    <mat-form-field class="full-width mb-05">
+                        <input matInput placeholder="{{'DOCUMENTMANAGEMENT.FOLDERNAME' | translate}}" required
+                            formControlName="auditName" trim />
+                        <mat-error
+                            *ngIf="auditFolderForm.get('auditName').hasError('required') && auditFolderForm.get('auditName').touched">
+                            {{'DOCUMENTMANAGEMENT.PLEASEENTERFOLDERNAME' | translate}}
+                        </mat-error>
+                        <mat-error *ngIf="auditFolderForm.get('auditName').hasError('maxlength')">
+                            {{'DOCUMENTMANAGEMENT.FOLDERNAMESHOULDNOTEXCEED150CHARACTERS' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="text-center mb-05">
+                    <button type="submit" class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="disableAddEditFolder">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableAddEditFolder">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="plus"></fa-icon> {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button (click)="closeAddEditFolder()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

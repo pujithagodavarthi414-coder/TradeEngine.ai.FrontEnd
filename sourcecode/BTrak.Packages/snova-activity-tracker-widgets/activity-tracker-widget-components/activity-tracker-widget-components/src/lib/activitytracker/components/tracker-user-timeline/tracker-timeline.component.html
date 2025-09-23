@@ -1,0 +1,110 @@
+<div class="full-height gridster-noset">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler"
+            style="color: white; background-color: #d81b60;">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow"
+                        matTooltip="{{ 'ACTIVITYTRACKER.DAILYACTIVITY' | translate }}">{{
+                        'ACTIVITYTRACKER.DAILYACTIVITY' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button type="submit" mat-icon-button class="pull-right cursor-pointer" (click)="resetFilter(null)"
+                        matTooltip=" {{'RESET' | translate}}">
+                        <fa-icon icon="redo-alt" class="filter" style="color: white;">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button type="submit" mat-icon-button class="pull-right cursor-pointer" (click)="filterClick()"
+                        [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                        <fa-icon icon="user-cog" class="filter" style="color: white;">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div id="widget-scroll-id" scrollStrategy="reposition"
+        [ngClass]="isFromDashboard ? 'no-drag tracker-timeline-height activity-data timeline-user' : 'activity-data timeline-user'">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="operationInProgress">
+        </mat-progress-bar>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="filterApplied">
+            <mat-chip disableRipple matRipple *ngIf="selectedUser && filterApplied" class="ml-05 m03" fxLayout="row">
+                <div>
+                    <b>{{'ACTIVITYTRACKER.USER' | translate}}:</b>&nbsp;{{selectedUser}}
+                </div>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="ml-05 m03" fxLayout="row" *ngIf="selectedDate">
+                <div>
+                    <b>{{'ACTIVITYTRACKER.GROUPBYDATE' | translate}}:</b>&nbsp;{{selectedDate | date:"d MMM, y"}}
+                </div>
+            </mat-chip>
+        </div>
+        <div class="timeline" *ngIf="rawData.length > 0">
+            <ul>
+                <li *ngFor="let dataItem of rawData">
+                    <div class="timeline-content">
+                        <p [ngStyle]="{ 'height' : getEventHeight(dataItem)}">
+                            <span *ngIf="dataItem.categoryType == 'WorkItemStart'"
+                                (click)="redirectToWorkItem(dataItem)" class="cursor-pointer"
+                                matTooltip=" {{'DAILYTRACKER.VIEWDETAILS' | translate}}" matTooltipShowDelay="100">
+                                {{ 'DAILYTRACKER.WORKITEMSTART' | translate }} {{ dataItem.title }}</span>
+                            <span *ngIf="dataItem.categoryType == 'WorkItemEnd'" (click)="redirectToWorkItem(dataItem)"
+                                matTooltip=" {{'DAILYTRACKER.VIEWDETAILS' | translate}}" class="cursor-pointer"
+                                matTooltipShowDelay="100">
+                                {{ 'DAILYTRACKER.WORKITEMEND' | translate }} {{ dataItem.title }}</span>
+                            <span *ngIf="dataItem.categoryType == 'TimesheetStart'">{{ 'DAILYTRACKER.TIMESHEETSTART' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'TimesheetFinish'">{{ 'DAILYTRACKER.TIMESHEETFINISH' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'LunchStart'">{{ 'DAILYTRACKER.TIMESHEETLUNCHSTART' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'LunchEnd'">{{ 'DAILYTRACKER.TIMESHEETLUNCHEND' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'BreakStart'">{{ 'DAILYTRACKER.TIMESHEETBREAKSTART' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'BreakEnd'">{{ 'DAILYTRACKER.TIMESHEETBREAKEND' |
+                                translate }}</span>
+                            <span *ngIf="dataItem.categoryType == 'Commit'" (click)="redirectToCommit(dataItem)"
+                                matTooltip=" {{'REPOSITORYCOMMITS.CLICKTONAVIGATE' | translate}}" class="cursor-pointer"
+                                matTooltipShowDelay="100">
+                                {{ 'DAILYTRACKER.WORKITEMCOMMIT' | translate }} {{ dataItem.title }}</span>
+                        </p>
+                    </div>
+                    <div class="time" [ngStyle]="{ 'background' : getEventStyles(dataItem)}"
+                        matTooltip="{{ dataItem.startedTime | utcToLocalTime | date : 'dd MMM yyyy HH:mm' }}">
+                        <h4>{{ dataItem.startedTime | utcToLocalTime | date : 'h:mm a' }}</h4>
+                    </div>
+                </li>
+                <div style="clear:both;"></div>
+            </ul>
+        </div>
+        <app-common-message-box *ngIf="rawData.length == 0 && !operationInProgress"
+            textToDisplay="{{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}">
+        </app-common-message-box>
+    </div>
+</div>
+
+<mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+        <mat-form-field (click)="$event.stopPropagation()" class="full-width" *ngIf="employeesDropDown?.length > 1">
+            <mat-select (selectionChange)="changeUser($event.value)" [(ngModel)]="userId"
+                placeholder="{{'ACTIVITYTRACKER.USER' | translate}}">
+                <mat-option [value]="employees.teamMemberId" *ngFor="let employees of employeesDropDown">
+                    {{employees.teamMemberName}}<span *ngIf="employees.teamMemberId == loggedUser">
+                        (Myself)</span>
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="full-width">
+            <input matInput [matDatepicker]="inputpicker1" (click)="inputpicker1.open()" readonly [max]="maxDate"
+                [(ngModel)]="selectedDate" placeholder="{{'ACTIVITYTRACKER.GROUPBYDATE' | translate}}"
+                (input)="dateFilterApplied($event);" (dateChange)="dateFilterApplied($event);" class="date-picker"
+                autocomplete="off">
+            <mat-datepicker-toggle matSuffix [for]="inputpicker1"></mat-datepicker-toggle>
+            <mat-datepicker #inputpicker1></mat-datepicker>
+        </mat-form-field>
+    </mat-card>
+</mat-menu>

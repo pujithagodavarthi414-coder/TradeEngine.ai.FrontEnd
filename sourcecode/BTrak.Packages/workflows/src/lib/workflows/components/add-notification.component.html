@@ -1,0 +1,161 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+            Add Notification</div>
+    </mat-card-title>
+    <form [formGroup]="notificationForm" novalidate (submit)="notificationForm.valid && addNotification()">
+        <div id="style-1" class="goal-create-height p-1">
+            <input matInput hidden formControlName="id" />
+            <div fxLayout="row wrap" class="p-05 ">
+                <div fxFlex="98">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">Form Name</div>
+                        </div>
+                        <div fxFlex="50" class="pt-1">
+                            <mat-label>{{formname}}</mat-label>
+                        </div>
+                    </div>
+                </div>
+                <div fxFlex="98">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">Notification alert name *</div>
+                        </div>
+                        <mat-form-field class="full-width" fxFlex="50">
+                            <input matInput formControlName="name">
+                            <mat-error>
+                                <span *ngIf="notificationForm.get('name').hasError('required')">
+                                    Notification name is required</span>
+                            </mat-error>
+
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxFlex="98">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">Roles</div>
+                        </div>
+                        <mat-form-field class="full-width" fxFlex="50">
+                            <mat-chip-list #chipList aria-label="Roles selection">
+                                <mat-chip *ngFor="let role of selectedRoles" [selectable]="selectable"
+                                    [removable]="removable" (removed)="removeSelectedRole(role)"
+                                    style="display: flex !important;">
+                                    {{role.roleName}}
+                                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                                </mat-chip>
+                                <input matInput placeholder="Select roles" #rolesInput
+                                    #autocompleteTrigger="matAutocompleteTrigger" formControlName="rolesInput"
+                                    [matAutocomplete]="auto" [matChipInputFor]="chipList" [matAutocomplete]="auto"
+                                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                    (matChipInputTokenEnd)="add($event)" (focus)="openAuto(autocompleteTrigger)">
+                            </mat-chip-list>
+                            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event.option.value)">
+                                <mat-option *ngFor="let roles of filteredRoles$ | async" [value]="roles.roleId">
+                                    <mat-checkbox color="primary" style="padding: 0 12px;"
+                                        [checked]="selectedRoles.indexOf(roles) >= 0"></mat-checkbox>
+                                    {{roles.roleName}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error>
+                                <span>
+                                    Please select Role</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxFlex="98">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">To *</div>
+                        </div>
+                        <mat-form-field class="full-width" fxFlex="50">
+                            <mat-chip-list #userChipList aria-label="Users selection">
+                                <mat-chip *ngFor="let user of selectedToUsers" [selectable]="selectable"
+                                    [removable]="removable" (removed)="removeSelectedUser(user)"
+                                    style="display: flex !important;">
+                                    {{user.email}}
+                                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                                </mat-chip>
+                                <input matInput placeholder="Select users" #userToInput
+                                    #userAutocompleteTrigger="matAutocompleteTrigger" formControlName="toInput"
+                                    [matAutocomplete]="toAuto" [matChipInputFor]="userChipList"
+                                    [matAutocomplete]="toAuto" 
+                                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                    (matChipInputTokenEnd)="addToUser($event)"
+                                    (focus)="openUserAuto(userAutocompleteTrigger)">
+                            </mat-chip-list>
+                            <mat-autocomplete #toAuto="matAutocomplete"
+                                (optionSelected)="selectedTo($event.option.value)">
+                                <mat-option *ngFor="let user of filteredToUsers$ | async" [value]="user.email">
+                                    <mat-checkbox color="primary" style="padding: 0 12px;"
+                                        [checked]="selectedToUsers.indexOf(user) >= 0"></mat-checkbox>
+                                    {{user.fullName}} ({{user.email}})
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error>
+                                <span>
+                                    Please select To</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+              <div fxFlex="98" *ngIf="isHidden">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">Navigation url </div>
+                        </div>
+                        <mat-form-field class="full-width" fxFlex="50">
+                            <input matInput formControlName="navigationUrl">
+                        </mat-form-field>
+                    </div>
+                </div> 
+                <div fxFlex="98">
+                    <div fxFlex fxLayout="row wrap">
+                        <div fxFlex="30">
+                            <div class="pt-1">Notification message *</div>
+                        </div>
+                        <div fxFlex="50">
+                            <!-- <input matInput formControlName="message"> -->
+                            <editor class="dfree-header custom-logtime-comment"
+                                apiKey="ln50de3rdhw6h9ld2lutg00tj5g9xk14pp5m8dfy1b1s4nen" formControlName="notificationText"
+                                [init]="config.init">
+                            </editor>
+                            <mat-error>
+                                <span *ngIf="notificationForm.controls['notificationText'].hasError('required')">
+                                    Please enter description
+                                </span>
+                            </mat-error>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+        <div class="mt-05">
+            <button class="pull-right mr-1" mat-raised-button type="submit" color="primary"
+                [disabled]="!notificationForm.valid">
+                <fa-icon class="mr-05" icon="check"></fa-icon>
+                Save
+            </button>
+            <button class="pull-right mr-1" mat-raised-button (click)="cancelNotification()"
+                [disabled]="!notificationForm.valid " type="button">
+                Cancel
+            </button>
+        </div>
+    </form>
+</mat-card>
+
+<ng-template #addActivityDialog let-data>
+    <app-activity-list [data]=[data]></app-activity-list>
+</ng-template>

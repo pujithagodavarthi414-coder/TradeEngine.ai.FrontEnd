@@ -1,0 +1,77 @@
+<div (click)="$event.stopPropagation()">
+  <mat-card-title class="text-center">
+    <div class="card-title-text p-05 mat-bg-primary">{{ 'PROJECTS.ADDMEMBER' | translate }}</div>
+  </mat-card-title>
+  <form [formGroup]="projectMemberForm" #formDirective="ngForm" novalidate
+    (submit)="projectMemberForm.valid && SaveProjectMember(null)">
+    <div class="card-content p-05" (click)="$event.stopPropagation()">
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{ 'PROJECTS.SELECTUSERS' | translate }}" formControlName="userIds" multiple required
+          (selectionChange)="getSelectedMembers()">
+          <mat-select-trigger>
+            {{selectedMember}}
+          </mat-select-trigger>
+          <mat-option #allSelected (click)="toggleAllGoalStatusSelection()" [value]="0">{{ 'PROJECTS.SELECTALL' | translate }}</mat-option>
+          <mat-option [value]="user.id" (click)="toggleGoalStatusPerOne(allSelected.viewValue);" *ngFor="
+                        let user of (allUsers$ | async | datafilter: 'id':projectMembers)">
+            <app-avatar class="employee_img" *ngIf="!user.profileImage" [name]="user.fullName | removeSpecialCharacters"
+              [isRound]="true" size="30"></app-avatar>
+            <img class="employee_img" *ngIf="user.profileImage"
+              [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.fullName }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          <span *ngIf="
+              !projectMemberForm.get('userIds').valid &&
+              projectMemberForm.get('userIds').touched
+            ">{{ 'PROJECTS.PLEASESELECTUSERS' | translate }}</span>
+        </mat-error>
+      </mat-form-field>
+      <!-- <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+        <mat-select formControlName="roles" placeholder="{{ 'PROJECTS.SELECTROLE' | translate }}"  multiple  required>
+          <mat-option [value]="role.entityRoleId" *ngFor="let role of (allRoles$ | async)">{{ role.entityRoleName }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          <span *ngIf="
+              !projectMemberForm.get('roles').valid &&
+              projectMemberForm.get('roles').touched
+            ">{{ 'USERSTORY.PLEASESELECTROLE' | translate }}</span>
+        </mat-error>
+      </mat-form-field> -->
+
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <mat-select placeholder="{{ 'PROJECTS.SELECTROLE' | translate }}" multiple required
+            formControlName="roleIds" multiple [compareWith]="compareSelecteddaysFn"
+            required  (selectionChange)="getSelectedRoles()" >
+            <mat-select-trigger>
+              {{selectedRoles}}
+            </mat-select-trigger>
+            <mat-option #allRolesSelected (click)="toggleAllRolesSelected()" [value]="0">
+              {{ 'PROJECTS.SELECTALL' | translate }}
+            </mat-option>
+            <mat-option [value]="role.entityRoleId" (click)="toggleUserPerOne()" *ngFor="let role of (allRoles$ | async)">{{ role.entityRoleName }}
+              
+            </mat-option>
+        </mat-select>
+        <mat-error *ngIf="projectMemberForm.get('roleIds').hasError('required')">
+            {{ 'USERSTORY.PLEASESELECTROLE' | translate }}
+        </mat-error>
+    </mat-form-field>
+
+      <div class="text-center">
+        <button class="mr-05" type="submit" [disabled]="!projectMemberForm.valid  ||(anyOperationInProgress$ | async) "
+          color="primary" mat-button mat-raised-button (click)="$event.stopPropagation()"
+          [disabled]="(anyOperationInProgress$ | async)">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'PROJECTS.ADDMEMBER' | translate }}&nbsp;
+        </button>
+        <button mat-button mat-raised-button (click)="closedialog(); (false)"
+          [disabled]="(anyOperationInProgress$ | async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

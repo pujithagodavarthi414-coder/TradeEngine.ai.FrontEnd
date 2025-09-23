@@ -1,0 +1,169 @@
+<div class="full-height" *ngIf="canAccess_feature_Managesources">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow" matTooltip="{{ 'SOURCES.SOURCESTITLE' | translate }}">{{
+            'SOURCES.SOURCESTITLE' | translate }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              (change)="getSources()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'SOURCES.CREATESOURCETOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertSourcePopover" #upsertSourcePopUp="satPopoverAnchor"
+              (click)="createSource(upsertSourcePopUp);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="20px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag accessible-ip-height">
+    <ngx-datatable class="btrak" [ngClass]="isFromRoute ? 'full-height' : ''" [columnMode]="'flex'" [headerHeight]="35"
+      [footerHeight]="50" [rowHeight]="50" [limit]="10" [rows]="sources" [loadingIndicator]="isAnyOperationIsInprogress"
+      [scrollbarH]="true" [virtualization]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'SOURCES.NAME' | translate }}" [flexGrow]="1" [sortable]="true" minWidth="150"
+        prop="name">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.name }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'SOURCES.ISREFERENCENUMBERNEEDED' | translate }}" [flexGrow]="1" [sortable]="true"
+        minWidth="150" prop="isReferenceNumberNeeded">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.isReferenceNumberNeeded }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'SOURCES.EDITSOURCETITLE' | translate }}"
+            [satPopoverAnchorFor]="upsertSourcePopover" #upsertSourcePopUp="satPopoverAnchor"
+            (click)=" editSource(row,upsertSourcePopUp)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'SOURCES.ARCHIVESOURCE' | translate }}"
+            [satPopoverAnchorFor]="deleteSourcePopover" #deleteSourcePopup="satPopoverAnchor"
+            (click)="deleteSourcePopupOpen(row,deleteSourcePopup)" *ngIf="!isArchived" mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'SOURCES.UNARCHIVESOURCE' | translate }}"
+            [satPopoverAnchorFor]="deleteSourcePopover" #deleteSourcePopup="satPopoverAnchor"
+            (click)="deleteSourcePopupOpen(row,deleteSourcePopup)" *ngIf="isArchived" mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!--Edit SOURCES dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertSourcePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ sourceTitle }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="sourceForm" #formDirective="ngForm" novalidate
+          (submit)="sourceForm.valid && upsertSource(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="name" placeholder="{{'SOURCES.NAME' | translate }}" required>
+              <mat-error *ngIf="sourceForm.get('name').hasError('maxlength')">
+                {{ 'SOURCES.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error *ngIf="sourceForm.get('name').hasError('required') && sourceForm.get('name').touched">
+                {{ 'SOURCES.NAMEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <div>
+              <mat-checkbox formControlName="isReferenceNumberNeeded">{{'SOURCES.ISREFERENCENUMBERNEEDED' |translate}}
+              </mat-checkbox>
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!sourceForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertSourcePopUpPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit SOURCES dialog-->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteSourcePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'SOURCES.ARCHIVESOURCE' | translate }}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'SOURCES.UNARCHIVESOURCE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'SOURCES.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'SOURCES.DESIGNU' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteSource() ;">
+            <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteSource();">
+            <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteSourcePopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+<ng-container *ngIf="!(canAccess_feature_Managesources)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

@@ -1,0 +1,110 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div mat-dialog-content class="project-dialogContent">
+    <mat-card class="p-0">
+        <div *ngIf="isForConfiguration">
+            <form [formGroup]="kycForm">
+                <div fxLayout="row">
+                    <div fxFlex="33.3" class="mb-05 ml-1">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="formName" type="text"
+                                (keypress)="keyPressAlphabets($event)"
+                                placeholder="{{ 'KYCCONFIG.COUNTERPARTYNAME' | translate }}" required>
+                            <mat-error *ngIf="kycForm.get('formName').hasError('required')">
+                                {{ 'KYCCONFIG.KYCNAMEISREUIRED' | translate }}
+                            </mat-error>
+                            <mat-error *ngIf="kycForm.get('formName').hasError('maxlength')">
+                                {{ 'KYCCONFIG.KYCNAMEEXCEEDED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="33.3" class="mb-05 ml-1 mr-1">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="selectedRoles" placeholder="Select roles" multiple
+                                required [compareWith]="compareSelectedRolesFn">
+                                <mat-select-trigger>
+                                    {{selectedRoleNames}}
+                                </mat-select-trigger>
+                                <mat-option [value]="0" #roleAllSelected (click)="toggleAllRoleSelectedSelected()">
+                                    Select all
+                                </mat-option>
+                                <app-select-all [model]="kycForm.get('selectedRoles')" [values]="legalEntityIds">
+                                </app-select-all>
+                                <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown"
+                                    (click)="toggleRolePerOne(roleAllSelected.value)">
+                                    {{ roles.roleName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="kycForm.get('selectedRoles').hasError('required') && kycForm.get('selectedRoles').touched">
+                                Please select atleast one role name name
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="33.3" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width status-color mb-05">
+                            <input formControlName="formBgColor" matInput placeholder="choose color"
+                                [(colorPicker)]="color" [cpPosition]="'bottom'" [style.background]="color"
+                                (colorPickerClose)="onChangeColor($event)" [value]="color" />
+                        </mat-form-field>
+                    </div>
+                </div>
+            </form>
+            <div class="performance" id="style-1" [ngStyle]="{'background-color': formBgColor}">
+                <!-- <form-builder [form]="formJson" (change)="onChange($event)"></form-builder> -->
+                <app-form-builder-component [form]="formJson" (change)="onChange($event)"></app-form-builder-component>
+            </div>
+
+            <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+                [disabled]="(isAnyOperationInProgress || !kycForm.valid)" (click)="UpsertKyc(false)">
+                <fa-icon class="mr-05" icon="save"></fa-icon>{{ 'SAVE' | translate }}
+            </button>
+            <button *ngIf="configurationId == null || isDraft == true" mat-button mat-raised-button
+                class="m-1 pull-right" color="primary" type="button"
+                [disabled]="(isAnyOperationInProgress || !kycForm.valid)" (click)="UpsertKyc(true)">
+                <fa-icon class="mr-05" icon="file"></fa-icon>{{ 'KYCCONFIG.SAVEASDRAFT' | translate }}
+            </button>
+        </div>
+        <mat-card *ngIf="!isForConfiguration" class="p-0 m-0">
+            <mat-card-title class="data-table-header">
+                <div fxLayout="row wrap" fxLayoutGap="0">
+                    <div fxFlex fxLayoutAlign="start center">
+                        <div class="card-title-text pl-05 ml-05">{{ performanceName }}</div>
+                    </div>
+                    <div fxFlex="50px" fxLayoutAlign="center center" *ngIf="isForApproval && !isEdit">
+                        <fa-icon icon="edit" class="mat-color-accent pull-right ml-05 goal-cursor"
+                            matTooltip="{{'GENERICFORM.EDITCUSTOMFIELD' | translate}}" (click)="editFormComponent()">
+                        </fa-icon>
+                        <br>
+                    </div>
+                </div>
+            </mat-card-title>
+        </mat-card>
+        <div *ngIf="!isForConfiguration" class="performance-form" id="style-1">
+            <div class="m-1">
+                <div *ngIf="!isEdit" [ngStyle]="{'background-color': formBgColor}">
+                    <app-form-builder-component [form]="formJson" [formSubmissionData]="formData"
+                        [preview]="isViewOnly">
+                    </app-form-builder-component>
+                </div>
+                <div *ngIf="isEdit" class="custom-form form-class" [ngStyle]="{'background-color': formBgColor}">
+                    <!-- <formio #customFormio [form]="formJson" [submission]="formData" (submit)="onDataSubmit(false)">
+                    </formio> -->
+                    <app-form-builder-component #customFormio [form]="formJson" [submission]="formData"
+                        (submit)="onDataSubmit(false)"></app-form-builder-component>
+                    <button *ngIf="!isForApproval" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                        type="button" (click)="onDataSubmit(true)">
+                        <fa-icon class="mr-05" icon="file"></fa-icon>{{ 'KYCCONFIG.SAVEASDRAFT' | translate }}
+                    </button>
+                </div>
+                <button *ngIf="isForApproval" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                    type="button" (click)="onDataApproval()">
+                    <fa-icon class="mr-05" icon="thumbs-up"></fa-icon>{{ 'KYCCONFIG.APPROVE' | translate }}
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</div>

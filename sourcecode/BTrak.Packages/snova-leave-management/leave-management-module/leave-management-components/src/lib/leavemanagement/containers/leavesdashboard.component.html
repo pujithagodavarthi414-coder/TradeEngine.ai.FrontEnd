@@ -1,0 +1,547 @@
+<div class="row">
+    <mat-card class="col-sm-12 mat-card" style="padding: 0px !important;">
+        <mat-card-title class="full-width mat-card-title">
+            <div class="col-sm-12" style="display: flex;">
+                <div class="col-sm-6" style="padding-top: 10px !important;">
+                    <h5>{{'LEAVESLIST.LEAVESDASHBOARD' | translate}}</h5>
+                </div>
+                <div class="col-sm-6" style="text-align: right;">
+                    <button class="topbar-button-right mat-icon-button" matTooltip="Leaves"
+                        *ngIf="(canAccess_feature_ApproveOrRejectLeave)"
+                        [routerLink]="['/leavemanagement/waitingforapproval']" (click)="closePopUpEmit()"
+                        style="line-height: 20px !important;">
+                        <span class="material-icons icon-button mat-color-accent">event</span>
+                    </button>
+
+                    <button class="topbar-button-right mat-icon-button"
+                        matTooltip="{{ 'LEAVETYPE.LEAVETYPECONFIGURATION' | translate }}"
+                        *ngIf="(canAccess_feature_LeaveTypeConfiguration)" [routerLink]="['/leavemanagement/leavetype']"
+                        (click)="closePopUpEmit()" style="line-height: 20px !important;">
+                        <span class="material-icons icon-button mat-color-accent">settings_applications</span>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+</div>
+<div id="style-1" *ngIf="(canAccess_feature_ViewLeaves)" fxLayout="row wrap" fxLayout.xs="column"
+    [ngClass]="fromRoute === false ? 'leaves-list-height' : ''" [ngStyle]="setHeightParent()">
+    <div fxFlex="{{isHistoryVisible ? 65 : 100}}" [ngClass]="{'mt-1': !dashboardId}" style="margin-top: 0px !important;">
+        <mat-card class="default" class="p-0">
+            <mat-card-title class="full-width" [ngClass]="{'data-table-header drag-handler': dashboardId}">
+                <div fxLayout="row wrap" fxLayoutAlign="start center">
+                    <div *ngIf="dashboardId" class="ml-05">
+                        <span>
+                            <b> {{'LEAVESLIST.LEAVESDASHBOARD' | translate}} </b>
+                        </span>
+                    </div>
+                    <div fxFlex="80px">
+                        <button type="submit" mat-icon-button (click)="filterClick()"
+                            matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                            <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                            </fa-icon>
+                        </button>
+                        <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()"
+                            [hidden]="!isOpen">
+                            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                        </button>
+                    </div>
+                    <div fxFlex>
+                        <div class="filter-section" [hidden]="!isOpen">
+                            <ul>
+                                <li [ngClass]="{ 'active': nameFilterIsActive }" [satPopoverAnchorFor]="namePopover"
+                                    hasBackdrop (click)="namePopover.toggle()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}
+                                    </a>
+                                    <sat-popover #namePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                                        <mat-card class="filter-data">
+                                            <div fxFlex="180px" class="ml-05 mr-05 search_goalinput">
+                                                <mat-form-field>
+                                                    <mat-label>{{'LEAVESLIST.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}
+                                                    </mat-label>
+                                                    <mat-select [(ngModel)]="selectedEmployeeId"
+                                                        (selectionChange)="searchByTeamMemberName($event.value)">
+                                                        <mat-option *ngFor="let employee of employeeList"
+                                                            [value]="employee">
+                                                            <app-avatar class="employee_img"
+                                                                *ngIf="!employee.profileImage"
+                                                                [name]="employee.teamMemberName | removeSpecialCharacters"
+                                                                [isRound]="true" size="30"></app-avatar>
+                                                            <img class="employee_img" *ngIf="employee.profileImage"
+                                                                src="{{employee.profileImage}}">{{employee.teamMemberName}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <li [ngClass]="{ 'active': searchByLeaveTypeFilterIsActive }"
+                                    [satPopoverAnchorFor]="leaveTypePopover" (click)="leaveTypePopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.LEAVETYPENAME' | translate}}
+                                    </a>
+                                    <sat-popover #leaveTypePopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTLEAVETYPE' | translate}}</mat-label>
+                                                <mat-select (selectionChange)="searchByLeaveType($event.value)"
+                                                    [(ngModel)]="selectedLeaveTypeId">
+                                                    <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                                                    <mat-option *ngFor="let leaveType of leaveTypesList$ | async"
+                                                        [value]="leaveType">
+                                                        {{leaveType.leaveTypeName | translate}}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <!-- <li [ngClass]="{ 'active': searchByBranchFilterIsActive }"
+                                    [satPopoverAnchorFor]="branchPopover" (click)="branchPopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'BRANCH.BRANCH' | translate}}
+                                    </a>
+                                    <sat-popover #branchPopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTBRANCH' | translate}}</mat-label>
+                                                <mat-select (selectionChange)="searchByBranch($event.value)"
+                                                    [(ngModel)]="selectedBranchId">
+                                                    <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                                                    <mat-option *ngFor="let branch of branchList$ | async"
+                                                        [value]="branch">
+                                                        {{branch.branchName}}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li> -->
+                                <li [ngClass]="{ 'active': entityIsActive }" [satPopoverAnchorFor]="entityPopover"
+                                    (click)="entityPopover.open()" *ngIf="entities?.length > 1">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.ENTITY' | translate}}
+                                    </a>
+                                    <sat-popover #entityPopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTENTITY' | translate}}</mat-label>
+                                                <mat-select [(ngModel)]="selectedEntityId"
+                                                    (selectionChange)="searchByEntityId($event.value)">
+                                                    <mat-option *ngFor="let entity of entities" [value]="entity">
+                                                        {{entity.name}}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <li [ngClass]="{ 'active': leaveStatusFilterIsActive }"
+                                    [satPopoverAnchorFor]="leaveStatusPopover" (click)="leaveStatusPopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.LEAVESTATUS' | translate}}
+                                    </a>
+                                    <sat-popover #leaveStatusPopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTLEAVESTATUS' | translate}}</mat-label>
+                                                <mat-select (selectionChange)="searchByLeaveStatus($event.value)"
+                                                    [(ngModel)]="selectedLeaveStatus">
+                                                    <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                                                    <mat-option *ngFor="let leaveStatus of leaveStatuses"
+                                                        [value]="leaveStatus">
+                                                        {{leaveStatus.leaveStatusName | translate }}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <li [ngClass]="{ 'active': dateFromFilterIsActive }"
+                                    [satPopoverAnchorFor]="dateFromPopover" (click)="dateFromPopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.FROMDATE' | translate}}
+                                    </a>
+                                    <sat-popover #dateFromPopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data" fxFlex="300px">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTDATEFROM' | translate}}</mat-label>
+                                                <input matInput [matDatepicker]="picker3"
+                                                    [(ngModel)]="leaveDateFromFilter" (click)="picker3.open()"
+                                                    autocomplete="off" [readonly]="true"
+                                                    (dateChange)="onLeaveDateFromChange($event)" class="date-picker">
+                                                <mat-datepicker-toggle matSuffix [for]="picker3">
+                                                </mat-datepicker-toggle>
+                                                <mat-datepicker #picker3></mat-datepicker>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <li [ngClass]="{ 'active': dateToFilterIsActive }" [satPopoverAnchorFor]="dateToPopover"
+                                    (click)="dateToPopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.TODATE' | translate}}
+                                    </a>
+                                    <sat-popover #dateToPopover verticalAlign="below" hasBackdrop
+                                        horizontalAlign="start">
+                                        <mat-card class="filter-data" fxFlex="300px">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTDATETO' | translate}}</mat-label>
+                                                <input matInput [matDatepicker]="picker2"
+                                                    [(ngModel)]="leaveDateToFilter" (click)="picker2.open()"
+                                                    autocomplete="off" [readonly]="true"
+                                                    (dateChange)="onLeaveDateToChange($event)" class="date-picker"
+                                                    [min]="minDate">
+                                                <mat-datepicker-toggle matSuffix [for]="picker2">
+                                                </mat-datepicker-toggle>
+                                                <mat-datepicker #picker2></mat-datepicker>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                                <li [ngClass]="{ 'active': dateFilterIsActive }" [satPopoverAnchorFor]="datePopover"
+                                    (click)="datePopover.open()">
+                                    <a>
+                                        <mat-icon>arrow_drop_down</mat-icon>{{'LEAVESLIST.DATE' | translate}}
+                                    </a>
+                                    <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                                        <mat-card class="filter-data" fxFlex="300px">
+                                            <mat-form-field class="full-width">
+                                                <mat-label>{{'LEAVESLIST.SELECTDATE' | translate}}</mat-label>
+                                                <input matInput [matDatepicker]="picker1" [(ngModel)]="fromDate"
+                                                    (click)="picker1.open()" autocomplete="off" [readonly]="true"
+                                                    (dateChange)="onDateFromChange($event)" class="date-picker">
+                                                <mat-datepicker-toggle matSuffix [for]="picker1">
+                                                </mat-datepicker-toggle>
+                                                <mat-datepicker #picker1></mat-datepicker>
+                                            </mat-form-field>
+                                        </mat-card>
+                                    </sat-popover>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div fxFlex="40px" fxLayoutAllign="end center">
+                        <button mat-icon-button (click)="getCalanderView()">
+                            <fa-icon *ngIf="!calanderView" icon="calendar"
+                                matTooltip="{{ 'LEAVESLIST.CALENDARVIEW' | translate }}"
+                                class="filter mat-color-accent">
+                            </fa-icon>
+                            <fa-icon *ngIf="calanderView" icon="bars"
+                                matTooltip="{{'LEAVESLIST.LISTVIEW' | translate }}" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                    </div>
+                </div>
+                <mat-divider></mat-divider>
+                <div *ngIf="filterStatus()" fxLayout="row wrap">
+                    <mat-chip disableRipple matRipple *ngIf="selectedEmployeeId" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVESLIST.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}:</b>&nbsp;{{selectedEmployeeName}}
+                        </div>
+                        <div (click)="searchByEmployeeName('all')" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="selectedLeaveTypeId" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVESLIST.LEAVETYPENAME' | translate}}:</b>&nbsp;{{selectedLeaveType | translate }}
+                        </div>
+                        <div (click)="searchByLeaveType('all')" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="selectedEntityId" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVESLIST.ENTITY' | translate}}:</b>&nbsp;{{selectedBranch}}
+                        </div>
+                        <div (click)="searchByEntityId('all')" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="selectedLeaveStatus" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVESLIST.LEAVESTATUS' | translate}}:</b>&nbsp;{{leaveStatusSelected | translate }}
+                        </div>
+                        <div (click)="searchByLeaveStatus('all')" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="leaveDateFromFilter" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVETYPES.FROMDATE' | translate}}:</b>&nbsp;{{leaveDateFromFilter | date:"dd-MM-yyyy"}}
+                        </div>
+                        <div (click)="clearDate(1)" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="leaveDateToFilter" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVETYPES.TODATE' | translate}}:</b>&nbsp;{{leaveDateToFilter | date:"dd-MM-yyyy"}}
+                        </div>
+                        <div (click)="clearDate(2)" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                    <mat-chip disableRipple matRipple *ngIf="fromDate" class="ml-05 m03" fxLayout="row">
+                        <div>
+                            <b>{{'LEAVESLIST.DATE' | translate}}:</b>&nbsp;{{fromDate | date:"dd-MM-yyyy"}}
+                        </div>
+                        <div (click)="clearDate(3)" class="cursor-pointer ml-01">
+                            <fa-icon icon="times" class="times-on-hover"></fa-icon>
+                        </div>
+                    </mat-chip>
+                </div>
+            </mat-card-title>
+        </mat-card>
+        <div fxLayout="column" *ngIf="!calanderView" [ngStyle]="setHeight()">
+            <div [ngClass]="fromLeaves ? 'full-height' : ''" class="paging-move">
+                <kendo-grid [data]="leavesList" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                    [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                    (dataStateChange)="dataStateChange($event)" [selectable]="true" (cellClick)="selectedRow($event)"
+                    [scrollable]="true" [loading]="isAnyOperationIsInprogress">
+                    <ng-template kendoGridNoRecordsTemplate>
+                        {{ 'LEAVESLIST.NODATATODISPLAY' | translate }}
+                      </ng-template>
+                      <kendo-grid-messages pagerOf="{{ 'LEAVESLIST.OF' | translate }}"
+                        pagerItems="{{ 'LEAVESLIST.ITEMS' | translate }}">
+                      </kendo-grid-messages>
+                    <kendo-grid-column width="100" field="employeeName" title="{{'LEAVESLIST.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer" fxLayout="row">
+                                <app-avatar [name]="dataItem.employeeName | removeSpecialCharacters"
+                                    fxLayoutAlign="start center" matTooltip="{{ dataItem.employeeName }}"
+                                    [src]="dataItem.profileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                                    size="20" (click)="profilePage(dataItem.userId);$event.stopPropagation();">
+                                </app-avatar>
+                                <div class="ml-05">
+                                    {{ dataItem.employeeName }}
+                                </div>
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveTypeName" title="{{'LEAVESLIST.LEAVETYPENAME' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer" fxLayoutAlign="center center"
+                                [ngStyle]="{'background': dataItem.leaveTypeColor == '' ? '' : dataItem.leaveTypeColor}"
+                                style="border-radius: 15px;text-align: center;">
+                                <span matTooltip="{{ dataItem.leaveTypeName | translate}}">{{  dataItem.leaveTypeName | translate }}</span>
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveAppliedDate" title="{{'LEAVESLIST.APPLIEDON' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div *ngIf="dataItem.leaveAppliedDate !=null" class="cursor-pointer">
+                                {{ dataItem.leaveAppliedDate | date: "dd-MMM-yyyy"  }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveDateFrom" title="{{'LEAVESLIST.LEAVEDATEFROM' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div *ngIf="dataItem.leaveDateFrom !=null" class="cursor-pointer">
+                                {{ dataItem.leaveDateFrom | date: "dd-MMM-yyyy"  }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveDateTo" title="{{'LEAVESLIST.LEAVEDATETO' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div *ngIf="dataItem.leaveDateTo !=null" class="cursor-pointer">
+                                {{ dataItem.leaveDateTo | date: "dd-MMM-yyyy"  }}</div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="days" title="{{'LEAVESLIST.DAYS' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">{{ dataItem.days }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="fromLeaveSessionName"
+                        title="{{'LEAVESLIST.FROMLEAVESESSIONNAME' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">{{ dataItem.fromLeaveSessionName | translate }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="toLeaveSessionName"
+                        title="{{'LEAVESLIST.TOLEAVESESSIONNAME' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">{{ dataItem.toLeaveSessionName | translate }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveStatusName" title="{{'LEAVESLIST.LEAVESTATUSNAME' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div [ngStyle]="{ 'background' : dataItem.leaveStatusColour }"
+                                style="border-radius: 15px;text-align: center;" class="cursor-pointer"
+                                fxLayoutAlign="center center">
+                                <span matTooltip="{{ dataItem.leaveStatusName | translate }}">{{  dataItem.leaveStatusName | translate }}</span>
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column width="100" field="leaveReason" title="{{'LEAVESLIST.LEAVEREASON' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="hide-content-overflow cursor-pointer">
+                                <span matTooltip="{{ dataItem.leaveReason }}">
+                                    {{ dataItem.leaveReason }}
+                                </span>
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-command-column width="100" title="{{'LEAVESLIST.DELETELEAVE' | translate}}"
+                        *ngIf="(canAccess_feature_DeleteLeave)">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <fa-icon icon="trash" style="cursor: pointer;" *ngIf="!dataItem.isRejected"
+                                class="text-center mat-color-accent"
+                                matTooltip="{{'LEAVESLIST.DELETELEAVE' | translate}}"
+                                [satPopoverAnchorFor]="archiveLeavePopOver" #archiveLeavePopUp="satPopoverAnchor"
+                                (click)="rejectLeavePopupOpen(dataItem,archiveLeavePopUp);$event.stopPropagation();">
+                            </fa-icon>
+                        </ng-template>
+                    </kendo-grid-command-column>
+                    <kendo-grid-command-column width="150" title="{{ 'LEAVESLIST.SETSTATUS' | translate}}"
+                        *ngIf="(canAccess_feature_ViewCompanyWideLeaves)">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div fxLayout="row" fxLayoutAlign="center center">
+                                <div style="padding: 2px;width: 30% !important;" fxLayoutAlign="center center">
+                                    <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"
+                                        *ngIf="!dataItem.isApproved" matTooltip="Approve leave"
+                                        [satPopoverAnchorFor]="approveLeavePopOver"
+                                        #approveLeavePopUp="satPopoverAnchor"
+                                        (click)="approveLeavePopupOpen(dataItem,approveLeavePopUp);$event.stopPropagation();">
+                                    </fa-icon>
+                                </div>
+                                <div fxFlex style="padding: 2px;width: 30% !important;" fxLayoutAlign="start center">
+                                    <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"
+                                        *ngIf="!dataItem.isRejected" matTooltip="Reject leave"
+                                        [satPopoverAnchorFor]="rejectLeavePopOver" #rejectLeavePopUp="satPopoverAnchor"
+                                        (click)="approveLeavePopupOpen(dataItem,rejectLeavePopUp);$event.stopPropagation();">
+                                    </fa-icon>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </kendo-grid-command-column>
+                </kendo-grid>
+            </div>
+        </div>
+        <div *ngIf="calanderView no-drag">
+            <app-fm-component-calendar-view *ngIf="!(isLoadingLeavesList$ | async)" [calanderList]="calanderList"
+                (selectedEvent)="selectedEvent($event)" [selectedViewType]="selectedViewType"
+                (selectedViewIndex)="schedulerViewChanged($event)">
+            </app-fm-component-calendar-view>
+            <div *ngIf="(isLoadingLeavesList$ | async)" class="k-i-loading"></div>
+        </div>
+    </div>
+
+    <div fxFlex="35" fxFlex.sm="100" *ngIf="isHistoryVisible">
+        <app-fm-component-leave-application-details [leaveApplicationInputId]="leaveApplicationId"
+            [leaveApplicationInputModel]="leaveApplicationModel" (closeHistoryWindow)="closeHistorywindow()">
+        </app-fm-component-leave-application-details>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!((canAccess_feature_ViewCompanyWideLeaves) || (canAccess_feature_DeleteLeave))"
+    textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+
+
+<sat-popover backdropClass="backdrop-color" #approveLeavePopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                Approve Leave</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1 mt-05 ">
+                Are you sure you want to approve the leave?
+            </div>
+            <div fxLayout="row" fxLayoutGap="15px" fxLayout.xs="column" fxLayoutAlign.xs="center center">
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="approveLeave(true)" color="primary"
+                        [disabled]="(isUpsertLeaveInprogress$ | async)">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.APPROVE' | translate}}
+                    </button>
+                </div>
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeApproveLeavePopup()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #archiveLeavePopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                {{'LEAVESLIST.DELETELEAVE' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1 mt-05 ">
+                {{ 'LEAVESLIST.AREYOUSUREDELETE' | translate}}
+            </div>
+            <mat-form-field class="full-width mt-05">
+                <input [formControl]="reason" matInput placeholder="{{'LEAVESLIST.REASONFORDELETION' | translate}}"
+                    (click)="$event.stopPropagation();" required>
+                <mat-error *ngIf="reason.hasError('maxlength')">
+                    {{'HRMANAGAMENT.REASONVALIDATIONTEXT' | translate}}
+                </mat-error>
+            </mat-form-field>
+            <div fxLayout="row" fxLayoutGap="15px" fxLayout.xs="column" fxLayoutAlign.xs="center center">
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="submit" [disabled]="!reason.valid"
+                        (click)="archiveLeave()" color="primary">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> Delete
+                    </button>
+                </div>
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeArchiveLeavePopup()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #rejectLeavePopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                Reject leave</div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-form-field class="full-width mt-05">
+                <input [formControl]="reason" matInput placeholder="{{'HRMANAGAMENT.REASONFORREJECTION' | translate}}"
+                    (click)="$event.stopPropagation();" required>
+                <mat-error *ngIf="reason.hasError('maxlength')">
+                    {{'HRMANAGAMENT.REASONVALIDATIONTEXT' | translate}}
+                </mat-error>
+            </mat-form-field>
+            <div fxLayout="row" fxLayoutGap="15px" fxLayout.xs="column" fxLayoutAlign.xs="center center">
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="submit" [disabled]="!reason.valid"
+                        (click)="approveLeave(false)" color="primary">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.REJECT' | translate}}
+                    </button>
+                </div>
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeRejectLeavePopup()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

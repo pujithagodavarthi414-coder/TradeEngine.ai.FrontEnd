@@ -1,0 +1,67 @@
+<div class="p-05" *ngIf="!isUserStoryInputVisible">
+    <a (click)="showUserstoryInput()" class="new-userstory">
+        <fa-icon icon="plus" class="mr-05"></fa-icon>
+        <span>
+            {{ 'USERSTORY.CREATEUSERSTORYLINK' | translate | softLabelsPipe : softLabels}}
+        </span>
+    </a>
+</div>
+<div class="mt-05 mb-05" *ngIf="isUserStoryInputVisible">
+    <form [formGroup]="createUserStoryLink" #formDirective="ngForm" novalidate
+        (submit)="createUserStoryLink.valid && saveUserStoryLink()">
+        <div fxLayout="row wrap">
+            <div fxFlex="35" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width custom-selectbox" (click)="$event.stopPropagation()">
+                    <mat-select placeholder="{{ 'USERDETAIL.USERSTORYLINKTYPE'|translate | softLabelsPipe : softLabels}}" required
+                        formControlName="linkUserStoryTypeId">
+                        <mat-option *ngFor="let userStoryType of (userStoryLinkTypes$ | async)"
+                            [value]="userStoryType.linkUserStoryTypeId">
+                            {{ userStoryType.linkUserStoryTypeName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="!createUserStoryLink.get('linkUserStoryTypeId').valid && createUserStoryLink.get('linkUserStoryTypeId').touched">
+                            {{ 'USERSTORY.PLEASESELECTUSERSTORYLINKTYPE' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex fxLayout="column wrap" class="full-width">
+                <mat-form-field class="full-width">
+                    <input type="text" class="search_goal" placeholder="{{ 'USERSTORY.SELECTUSERSTORY' | translate | softLabelsPipe : softLabels}}" matInput formControlName = "userStoryName"
+                        (input)="searchUserStories($event)" [matAutocomplete]="auto" 
+                        autocomplete="off" trim required>
+                    <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"
+                        *ngIf="(anyOperationInProgress$ | async)"></i>
+                    <span class="linked-userstory-close" *ngIf="userStoryName && !(anyOperationInProgress$ | async)">
+                        <span *ngIf="!userStoryName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="userStoryName" class="icon-button custom-auto-close-timesheet"
+                            aria-hidden="false" (click)="closeSearchUserStories()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                        (optionSelected)="onChangeUserStoryId($event.option.value)">
+                        <mat-option *ngFor="let userStory of  (userStories$|async| linkUserStoryfilter: 'id':userStoryId)" [value]="userStory.userStoryId">
+                            {{userStory.userStoryName}}
+                        </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
+        </div>
+
+        <div class="text-center p-05">
+            <button mat-raised-button color="primary"
+                [disabled]="!createUserStoryLink.valid || isButtonDisabled || (addOperationInProgress$ |async)" class="mr-05" type="submit"
+                title="{{ 'ADD' | translate }}">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(addOperationInProgress$ |async)">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'ADD' | translate }}
+            </button>
+            <button mat-raised-button type="button" title="Cancel" (click)="CancelUserstoryInput();(false)"
+                [disabled]="(addOperationInProgress$ |async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+        </div>
+    </form>
+</div>

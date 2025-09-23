@@ -1,0 +1,175 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageInterviewRatingTypes">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'RATINGTYPES.RATINGTYPETITLE' | translate }}">{{ 'RATINGTYPES.RATINGTYPETITLE' | translate
+            }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              (change)="getRatingTypes()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+
+            <button mat-icon-button matTooltip="{{'RATINGTYPES.CREATERATINGTYPETOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertRatingTypePopover" #upsertRatingTypePopUp="satPopoverAnchor"
+              (click)="createRatingType(upsertRatingTypePopUp);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="20px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag accessible-ip-height">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="10" [rows]="ratingTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+      [ngClass]="isFromRoute ? 'full-height' : ''" [scrollbarH]="true" [virtualization]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'RATINGTYPES.RATINGTYPENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="interviewRatingName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.interviewRatingName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'RATINGTYPES.VALUE' | translate }}" [flexGrow]="1" [sortable]="true" prop="value">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.value }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'RATINGTYPES.EDITRATINGTYPETITLE' | translate }}"
+            [satPopoverAnchorFor]="upsertRatingTypePopover" #upsertRatingTypePopUp="satPopoverAnchor"
+            (click)=" editRatingType(row,upsertRatingTypePopUp)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'RATINGTYPES.ARCHIVERATINGTYPE' | translate }}"
+            [satPopoverAnchorFor]="deleteRatingTypePopover" #deleteRatingTypePopup="satPopoverAnchor"
+            (click)="deleteRatingTypePopupOpen(row,deleteRatingTypePopup)" *ngIf="!isArchived" mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'RATINGTYPES.UNARCHIVERATINGTYPE' | translate }}"
+            [satPopoverAnchorFor]="deleteRatingTypePopover" #deleteRatingTypePopup="satPopoverAnchor"
+            (click)="deleteRatingTypePopupOpen(row,deleteRatingTypePopup)" *ngIf="isArchived" mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!--Edit RATINGTYPES dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertRatingTypePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ ratingTypeTitle }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="ratingTypeForm" #formDirective="ngForm" novalidate
+          (submit)="ratingTypeForm.valid && upsertRatingType(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="interviewRatingName"
+                placeholder="{{'RATINGTYPES.RATINGTYPENAME' | translate }}" required>
+              <mat-error *ngIf="ratingTypeForm.get('interviewRatingName').hasError('maxlength')">
+                {{ 'RATINGTYPES.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="ratingTypeForm.get('interviewRatingName').hasError('required') && ratingTypeForm.get('interviewRatingName').touched">
+                {{ 'RATINGTYPES.NAMEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="value" placeholder="{{'RATINGTYPES.VALUE' | translate }}" type="number"
+                min="0" required>
+              <mat-error
+                *ngIf="ratingTypeForm.get('value').hasError('required') && ratingTypeForm.get('value').touched">
+                {{ 'LEAVEENCASHMENTSETTINGS.VALUEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!ratingTypeForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertRatingTypePopUpPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit RATINGTYPES dialog-->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteRatingTypePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'RATINGTYPES.ARCHIVERATINGTYPE' | translate }}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'RATINGTYPES.UNARCHIVERATINGTYPE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'RATINGTYPES.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'RATINGTYPES.DESIGNU' | translate }}
+        </div>
+        <span *ngIf="isThereAnError">{{ validationMessage }}</span>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteRatingType() ;">
+            <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteRatingType();">
+            <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteRatingTypePopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageInterviewRatingTypes"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

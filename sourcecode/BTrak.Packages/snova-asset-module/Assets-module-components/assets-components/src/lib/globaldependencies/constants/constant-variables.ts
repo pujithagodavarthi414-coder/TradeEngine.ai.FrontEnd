@@ -1,0 +1,27 @@
+export const ConstantVariables = {
+    // Asset related constant variables
+    SuccessMessageForAssetCreated: "ASSETS.ASSETCREATEDSUCCESSFULLY",
+    SuccessMessageForAssetArchived: "ASSETS.ASSETARCHIVEDSUCCESSFULLY",
+    SuccessMessageForAssetUpdated: "ASSETS.ASSETUPDATEDSUCCESSFULLY",
+    SuccessMessageForLocationCreated: "LOCATION.CREATEDSUCCESSFULLY",
+    SuccessMessageForLocationArchived: "LOCATION.DELETEDSUCCESSFULLY",
+    SuccessMessageForLocationUpdated: "LOCATION.UPDATEDSUCCESSFULLY",
+    SuccessMessageForProductDetailsCreated: "PRODUCTDETAILS.PRODUCTDETAILSCREATEDSUCCESSFULLY",
+    SuccessMessageForProductDetailsDeleted: "PRODUCTDETAILS.PRODUCTDETAILSDELETEDSUCCESSFULLY",
+    SuccessMessageForProductDetailsUpdated: "PRODUCTDETAILS.PRODUCTDETAILSUPDATEDSUCCESSFULLY",
+    LocationWithSeatCode: "LOCATION.LOCATIONWITHSEATCODE",
+    SuccessMessageForCreated: "CREATEDSUCCESSFULLY",
+    SuccessMessageForArchived: "ARCHIVEDSUCCESSFULLY",
+    SuccessMessageForUpdated: "UPDATEDSUCCESSFULLY",
+    SuccessMessageForProductCreated: "PRODUCT.PRODUCTCREATEDSUCCESSFULLY",
+    SuccessMessageForProductArchived: "PRODUCT.PRODUCTARCHIVEDSUCCESSFULLY",
+    SuccessMessageForProductUpdated: "PRODUCT.PRODUCTUPDATEDSUCCESSFULLY",
+    SuccessMessageForSupplierCreated: "SUPPLIER.SUPPLIERCREATEDSUCCESSFULLY",
+    SuccessMessageForSupplierArchived: "SUPPLIER.SUPPLIERARCHIVEDSUCCESSFULLY",
+    SuccessMessageForSupplierUpdated: "SUPPLIER.SUPPLIERUPDATEDSUCCESSFULLY",
+    SuccessMessageForUserCreated: "HRMANAGAMENT.USERCREATEDSUCCESSFULLY",
+    SuccessMessageForUserArchived: "HRMANAGAMENT.USERARCHIVEDSUCCESSFULLY",
+    SuccessMessageForUserUpdated: "HRMANAGAMENT.USERUPDATEDSUCCESSFULLY",
+    success: "SUCCESS",
+    ASSETSREFERENCEID:'26B9D4A9-5AC7-47D0-AB1F-0D6AAA9EC904'
+}

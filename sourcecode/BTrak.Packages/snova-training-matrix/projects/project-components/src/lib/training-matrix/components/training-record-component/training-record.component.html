@@ -1,0 +1,121 @@
+<div *ngIf="canAccess_feature_ViewTrainingRecord" class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <!-- <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="searchTrainingCourses();updateExpenseDashboardFilter();">
+                        </mat-slide-toggle> -->
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" fxLayout="column">
+        <div *ngIf="resultsAreInProgress" class="text-center">
+            Loading...
+        </div>
+        <div *ngIf="!resultsAreInProgress">
+            <kendo-grid 
+                [data]="userAssignments" 
+                [pageSize]="state.take" 
+                [skip]="state.skip" 
+                [sort]="state.sort"
+                [filter]="state.filter"
+                [sortable]="true"
+                [pageable]="true"
+                [filterable]="false"
+                [loading]="isAnyOperationIsInprogress"
+                (dataStateChange)="dataStateChange($event)"
+                [selectable]="false"
+                class="training-k-grid"
+                style="width: 100%">
+                <kendo-grid-column 
+                    [locked]="lockColumns"
+                    width="250">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        <span [matTooltip]="('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)">
+                            {{('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)}}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem class="cursor-default">
+                        <div [matTooltip]="dataItem.userFullName">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <app-avatar *ngIf="!dataItem.userProfileImage"
+                                        [name]="dataItem.userFullName | removeSpecialCharacters"
+                                        [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="dataItem.userProfileImage" src="{{dataItem.userProfileImage}}">
+                                </div>
+                                <div class="col-sm-10">
+                                    <div class="cursor-pointer">
+                                        {{ dataItem.userFullName }} <span class="compliance-percentage">{{ GetCompliancePercentage(dataItem) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-command-column 
+                [locked]="false" 
+                *ngFor="let course of trainingCourses; let i = index"
+                [width]="200"
+                [headerStyle]="{'text-align': 'center'}"                
+                class="text-center training-matrix-col">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    <span [matTooltip]="(course.courseName | softLabelsPipe : softLabels)">
+                        {{course.courseName | softLabelsPipe : softLabels}}
+                    </span>
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem class="cursor-default">
+                    <div *ngFor="let assignment of dataItem.assignments">
+                        <div *ngIf="assignment.trainingCourseId == course.id" [matTooltip]="assignment.statusName + ' (Assign:' + (assignment.createdDateTime | date: 'dd/MM/yyyy') + ')'" [matTooltipClass]="'my-tooltip'">
+                            <div [ngStyle]="{'color': assignment.statusColor, 'font-weight': '600' }">
+                                <span>{{ assignment.statusGivenDate != null ? (assignment.statusGivenDate | date:'dd/MM/yyyy') : assignment.statusName }}</span>
+                                <br>
+                                <span>
+                                    <fa-icon [ngStyle]="{'color': assignment.statusColor, 'font-weight': '600' }" icon="{{assignment.statusIcon}}" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="checkAssignmentExists(dataItem, course)">
+                        <div [ngStyle]="{ 'font-weight': '600' }">
+                            <div [ngStyle]="{'color': 'grey', 'font-weight': '600' }">
+                                <span>N/A</span>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ViewTrainingRecord"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

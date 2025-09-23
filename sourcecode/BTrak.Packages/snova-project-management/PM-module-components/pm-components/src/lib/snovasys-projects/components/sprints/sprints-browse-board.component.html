@@ -1,0 +1,129 @@
+<div *ngIf="(canAccess_entityType_feature_ViewSprints)">
+    <div fxLayout="row" fxLayout.lt-md="column" class="allGoals-page" fxLayoutGap="8px">
+        <div fxLayout="row wrap" class="full-width mt-05"
+            *ngIf="(anyOperationInProgress$ | async) && isSprint && sprintSearchCriteriaModel.isGoalsPage ">
+            <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+                <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+                    <div fxFlex="92" fxFlexOffset="10px">
+                        <div fxLayout="row p-05">
+
+                            <div fxFlex="39">
+                                <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                            </div>
+                            <div fxFlex="1" fxFlexOffset="28">
+                                <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                            </div>
+                            <div fxFlex="3" fxFlexOffset="3">
+                                <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                            </div>
+                            <div fxFlex="3" fxFlexOffset="3">
+                                <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                            </div>
+                            <div fxFlexOffset="6" fxFlex="13">
+                                <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxFlex="100" fxFlex.gt-sm="300px" fxFlex.md="280px" [hidden]="isSprint" class="allgoals-listData">
+            <div fxLayout="column">
+                <div fxFlexFill>
+                    <mat-card class="goalList-popup p-0 custom-box">
+                        <app-pm-sprints-list [sprintSearchCriteriaModel]="sprintSearchCriteriaModel" [userStoriesCount]="userStoriesCount"
+                            (selectSprint)="selectSprint($event)" (getAllSprintsCount)="getSprintsCount($event)">
+                        </app-pm-sprints-list>
+                    </mat-card>
+                </div>
+            </div>
+        </div>
+
+        <div fxFlex="100" fxFlex.gt-sm="calc(100% - 350px)" fxFlex.md="calc(100% - 330px)" *ngIf="sprint">
+            <as-split direction="horizontal" unit="percent" gutterSize="5">
+                <as-split-area size="62" minSize="40">
+                    <app-sprint-workitems-list *ngIf="userStorySearchCriteriaModel && isBoardLayOut"
+                        [sprint]="sprint" [isBoardLayOut]="isBoardLayOut" [isBacklog]=isBacklog 
+                        [sprintSearchCriteriaModel]="userStorySearchCriteriaModel" (getReportsBoard)="getReportsBoard()"
+                        (selectedUserStoryEvent)="selectedUserStoryEvent($event)"
+                        (eventClicked)="clickBoardEvent($event)" (emitReplanTypeId)="emitReplanType($event)"
+                        (getDocumentStore)="getDocumentStore($event)" (emitUserStoriesCount)="getWorkItemsCount($event)"
+                        (getCalenderViewClicked)="getCalenderView($event)">
+                    </app-sprint-workitems-list>
+                    <app-pm-sprints-kanban-board
+                        *ngIf="userStorySearchCriteriaModel && !isBoardLayOut && !isReportsBoard && !showDocuments"
+                        [sprint]="sprint" [isBoardLayOut]="isBoardLayOut"
+                        [sprintSearchCriteriaModel]="userStorySearchCriteriaModel" (getReportsBoard)="getReportsBoard()"
+                        (emitReplanTypeId)="emitReplanType($event)" (eventClicked)="clickBoardEvent($event)"
+                        (selectedUserStory)="selectedUserStoryEvent($event)"
+                        (getCalenderViewClicked)="getCalenderView($event)"
+                        (getDocumentStore)="getDocumentStore($event)">
+                    </app-pm-sprints-kanban-board>
+                    <app-pm-sprints-reports-board *ngIf="isReportsBoard" [sprint]="sprint"
+                        class="display-grid full-height" (eventClicked)="clickBoardEvent($event)"
+                        (getReportsBoard)="getReportsBoard()" (getCalenderViewClicked)="getCalenderView($event)"
+                        (getDocumentStore)="getDocumentStore($event)">
+                    </app-pm-sprints-reports-board>
+
+                    <ng-container *ngIf="showDocuments">
+
+                        <app-pm-sprints-board [sprint]="sprint" [isDocumentView]=true [isBoardLayout]=false
+                            (eventClicked)="clickBoardEvent($event)" (reportsBoardClicked)="getReportsBoard()"
+                            (getCalenderViewClicked)="getCalenderView($event)"
+                            (getDocumentDetails)="getDocumentStore($event)">
+                        </app-pm-sprints-board>
+                        <!-- <app-document-store 
+                            *ngIf="sprint && showDocuments"
+                            [sprint]="sprint"
+                            [fileElement]="fileElement"
+                            [isComponentRefresh]="isComponentRefresh"
+                            (getDocumentStore)="getDocumentStore($event)"
+                            (getReportsBoard)="getReportsBoard()"
+                            (eventClicked)="clickBoardEvent($event)"
+                            (getCalenderViewClicked)="getCalenderView($event)">
+                        </app-document-store> -->
+                        <div *ngIf="documentStoreLoaded">
+                            <ndc-dynamic *ngIf="sprint && showDocuments"
+                                [ndcDynamicFactory]="documentStoreComponent.component"
+                                [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+                                [ndcDynamicInputs]="documentStoreComponent.inputs"
+                                [ndcDynamicOutputs]="documentStoreComponent.outputs">
+                            </ndc-dynamic>
+                        </div>
+                    </ng-container>
+
+                    <app-goal-component-calender-view-detail *ngIf="showCalendarView" [sprint]="sprint"
+                        (eventClicked)="clickBoardEvent($event)" [workItemList]=null class="dispaly-grid"
+                        (getCalenderViewClicked)="getCalenderView($event)" (getReportsBoard)="getReportsBoard()">
+                    </app-goal-component-calender-view-detail>
+                </as-split-area>
+                <as-split-area size="38" minSize="37" maxSize="51" *ngIf="selectedDetails && showDiv">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(sprintUserStoryIsInProgress$|async)">
+                    </mat-progress-bar>
+                    <gc-userstory-detail *ngIf="selectedDetails" [userStoryId]="selectedDetails"
+                        [isUserStoriesPage]="true" [isGoalChange]=true [goalReplanId]="replanTypeId"
+                        [isSprintUserStories]=true [selectedGoalId]="selectedDetails.sprintId"
+                        (userStoryCloseClicked)="userStoryCloseClicked()">
+                    </gc-userstory-detail>
+                </as-split-area>
+            </as-split>
+        </div>
+
+        <div fxFlex="100" fxShow fxHide.gt-sm *ngIf="selectedDetails && !showDiv">
+            <gc-userstory-detail *ngIf="selectedDetails" [userStoryId]="selectedDetails" [isUserStoriesPage]="true"
+                [isGoalChange]="true" [selectedGoalId]="selectedDetails.sprintId" [isSprintUserStories]=true
+                (userStoryCloseClicked)="userStoryCloseClicked()">
+            </gc-userstory-detail>
+        </div>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="sprintsCount < 0  && !(anyOperationInProgress$|async)"
+    textToDisplay="{{'NODATATODISPLAY' | translate}}">
+</app-common-message-box>
+
+
+<app-common-message-box *ngIf="!(canAccess_entityType_feature_ViewSprints)"
+    textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box>

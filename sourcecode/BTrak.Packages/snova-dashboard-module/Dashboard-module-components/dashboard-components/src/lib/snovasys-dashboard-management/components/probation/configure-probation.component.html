@@ -1,0 +1,114 @@
+<div class="p-0 m-0 full-height">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'PROBATION.PROBATIONCONFIGURATIONS' | translate | titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px" *ngIf="(canAccess_feature_ConfigureProbation)">
+                    <button mat-icon-button matTooltip="{{ 'PROBATION.ADDNEWCONFIGURATION' | translate }}"
+                        (click)="openAddNewConfiguration(null,true)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div *ngIf="probationConfigurations.length > 0 && canAccess_feature_ConfigureProbation"
+        class="no-drag">
+        <kendo-grid [data]="probationConfigurationsList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isAnyOperationIsInprogress"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="configurationName" title="{{'PROBATION.PROBATIONNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.configurationName   }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="isDraft" title="{{'PROBATION.ISDRAFT' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.isDraft == false">
+                        {{ 'ROSTER.NO' | translate }}
+                    </div>
+                    <div *ngIf="dataItem.isDraft == true">
+                        {{ 'YES' | translate }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="roleNames" title="{{'ACTIVITYAPPS.ROLES' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.roleNames }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdBy" title="{{'PROBATION.CREATEDBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.createdBy }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdOn" title="{{'PROBATION.CREATEDON' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.createdDatetime | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm'  }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'PROBATION.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="eye"
+                        matTooltip="{{ 'PROBATION.PREVIEWFORM' | translate}}"
+                        (click)="openAddNewConfiguration(dataItem,false)"></fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        matTooltip="{{ 'PROBATION.EDITCONFIGURATION' | translate}}"
+                        (click)="openAddNewConfiguration(dataItem,true)"></fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1"
+                        [satPopoverAnchorFor]="deleteConfigurationPopover" #deleteConfigurationPopup="satPopoverAnchor"
+                        matTooltip="{{ 'PROBATION.DELETECONFIGURATION' | translate}}"
+                        (click)="openDeletePopup(dataItem,deleteConfigurationPopup)" icon="trash">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag"
+        *ngIf="!isAnyOperationIsInprogress && probationConfigurations.length === 0"
+        textToDisplay="{{'PROBATION.YOUDONTHAVEANYCREATEDCONFIGURATIONS' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                (click)="openAddNewConfiguration(null,true)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'PROBATION.CREATENEWCONFIGURATION' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+    <app-common-message-box *ngIf="!(canAccess_feature_ConfigureProbation)"
+        textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+    </app-common-message-box>
+</div>
+
+<sat-popover #deleteConfigurationPopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1">{{ 'PROBATION.AREYOUSUREWANTTODELETETHECONFIGURATION' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteConfiguration();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<ng-template #uniqueProbationDialog let-data>
+    <probation-dialog [data]=[data]></probation-dialog>
+</ng-template>

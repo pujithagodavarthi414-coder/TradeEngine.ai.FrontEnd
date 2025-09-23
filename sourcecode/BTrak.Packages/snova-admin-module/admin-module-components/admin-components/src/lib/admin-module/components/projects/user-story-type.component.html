@@ -1,0 +1,286 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageWorkItemType)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+        <div class="card-title-text full-width ml-05 p-0" fxFlex *ngIf="!isEditAppName">
+          <span fxFlex="100" class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+            *ngIf="(canAccess_feature_DragApps)">
+            {{ dashboardName  | softLabelsPipe : softLabels | titlecase}}
+          </span>
+          <span fxFlex="100" class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+            {{ dashboardName  | softLabelsPipe : softLabels | titlecase}}
+          </span>
+        </div>
+        <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+          <mat-form-field>
+            <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+               [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+              matInputAutofocus />
+          </mat-form-field>
+        </div>
+        <div fxFlex="250px" fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+              <button mat-icon-button matTooltip="{{'USERSTORYTYPES.CLICKHERETOCREATEBRANCH' | translate }}"
+                [satPopoverAnchorFor]="upsertUserStoryTypePopover" #upsertUserStoryTypePopUp="satPopoverAnchor"
+                (click)="createUserStoryTypePopupOpen(upsertUserStoryTypePopUp);clearForm()" *ngIf="!isArchived">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag pagination-move-left">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="userstoryTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+
+      <ngx-datatable-column minWidth="150" name="{{'USERSTORYTYPES.USERSTORYTYPENAME' | translate  | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [sortable]="true" prop="userStoryTypeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.userStoryTypeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'USERSTORYTYPES.SHORTNAME' | translate  | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [sortable]="true" prop="shortName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.shortName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'USERSTORYTYPES.USERSTORYTYPECOLOR' | translate  | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [sortable]="true" prop="userStoryTypeColor">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div [ngStyle]="{ 'background' : row.userStoryTypeColor }" style="width:100px;">
+            &nbsp;
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'USERSTORYTYPES.ISFORQA' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="isQaRequired">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="{{row.isQaRequired ? 'Yes' : 'No'}}">
+            {{row?.isQaRequired ? "Yes" : "No"}}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name=" {{ 'USERSTORYTYPES.ISLOGTIME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="isLogTimeRequired">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="{{row.isLogTimeRequired ? 'Yes' : 'No'}}">
+            {{row?.isLogTimeRequired ? "Yes" : "No"}}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name=" {{ 'USERSTORYTYPES.ISBUG' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="isBug" *ngIf="isBugBoardEnable">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="{{row.isBug ? 'Yes' : 'No'}}">
+            {{row?.isBug ? "Yes" : "No"}}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center"
+            title="{{'USERSTORYTYPES.EDITUSERSTORYTYPE' | translate  | softLabelsPipe : softLabels}}" mat-icon-button
+            [satPopoverAnchorFor]="upsertUserStoryTypePopover" #upsertUserStoryTypePopUp="satPopoverAnchor"
+            (click)="editUserStoryTypePopupOpen(row,upsertUserStoryTypePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center"
+            title="{{'USERSTORYTYPES.DELETEUSERSTORYTYPE' | translate  | softLabelsPipe : softLabels}}" mat-icon-button
+            [satPopoverAnchorFor]="deleteUserStoryTypePopover" #deleteUserStoryTypePopUp="satPopoverAnchor"
+            (click)="deleteUserStoryTypePopupOpen(row,deleteUserStoryTypePopUp)">
+            <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #upsertUserStoryTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{userStoryTypeEdit | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <a *ngIf="isEdit" class="detail_close mt-05" color="warn" (click)="closePopUp()">
+      <fa-icon icon="times"></fa-icon>
+    </a>
+    <mat-card-content class="P-05 custom-height" id="style-1">
+      <form [formGroup]="userStoryTypeForm" #formDirective="ngForm" novalidate
+        (submit)="userStoryTypeForm.valid && upsertUserStoryType(formDirective)">
+        <div fxLayout="row wrap" class="mb-05">
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <mat-form-field class="full-width" *ngIf="!isEdit">
+              <input matInput formControlName="userStoryTypeName"
+                placeholder="{{'USERSTORYTYPES.USERSTORYTYPENAME' | translate  | softLabelsPipe : softLabels}}"
+                required>
+              <mat-error *ngIf="userStoryTypeForm.get('userStoryTypeName').hasError('maxlength')">
+                {{'USERSTORYTYPES.USERSTORYNAMECANNOTEXCEEDCHARACTERS' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+              <mat-error
+                *ngIf="userStoryTypeForm.get('userStoryTypeName').hasError('required') && userStoryTypeForm.get('userStoryTypeName').touched">
+                {{'USERSTORYTYPES.USERSTORYNAMEREQUIRED' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="isEdit">
+              <input matInput formControlName="userStoryTypeName" readonly
+                placeholder="{{'USERSTORYTYPES.USERSTORYTYPENAME' | translate  | softLabelsPipe : softLabels}}"
+                required>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+            <mat-form-field class="full-width" *ngIf="!isEdit">
+              <input matInput formControlName="shortName"
+                placeholder="{{'USERSTORYTYPES.SHORTNAME' | translate  | softLabelsPipe : softLabels}}" required>
+              <mat-error *ngIf="userStoryTypeForm.get('shortName').hasError('maxlength')">
+                {{'USERSTORYTYPES.USERSTORYTYPESHORTNAMECANNOTEXCEEDCHARACTERS' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+              <mat-error
+                *ngIf="userStoryTypeForm.get('shortName').hasError('required') && userStoryTypeForm.get('shortName').touched">
+                {{'USERSTORYTYPES.USERSTORYTYPENAMEREQUIRED' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="isEdit">
+              <input matInput formControlName="shortName" readonly
+                placeholder="{{'USERSTORYTYPES.SHORTNAME' | translate  | softLabelsPipe : softLabels}}" required>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <mat-error *ngIf="isThereAnError">{{ validationMessage  | softLabelsPipe : softLabels}}</mat-error>
+        <div fxLayout="row">
+          <div fxFlex="50">
+            <mat-form-field class="full-width status-color mb-05">
+              <input formControlName="userStoryTypeColor" matInput
+                placeholder="{{'USERSTORYTYPES.USERSTORYTYPECOLOR'|translate | softLabelsPipe : softLabels}}"
+                [(colorPicker)]="color" [cpPosition]="'top'" [style.background]="color"
+                (colorPickerChange)="userStoryTypeForm.get('userStoryTypeColor').setValue($event)" [value]="color"
+                required />
+              <mat-error
+                *ngIf="userStoryTypeForm.get('userStoryTypeColor').hasError('required') && userStoryTypeForm.get('userStoryTypeColor').touched">
+                {{'USERSTORYTYPES.PLEASESELECTUSERSTORYTYPECOLOR' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div fxLayout="row">
+          <div fxFlex="50">
+            <mat-checkbox formControlName="isQaRequired" class=" mb-1 checkbox-text checkbox_allgoals">
+              {{ 'USERSTORYTYPES.ISFORQA' | translate }}
+            </mat-checkbox>
+          </div>
+          <div fxFlex="50">
+            <mat-checkbox formControlName="isLogTimeRequired" class="mb-1 checkbox-text checkbox_allgoals">
+              {{ 'USERSTORYTYPES.ISLOGTIME' | translate }}
+            </mat-checkbox>
+          </div>
+        </div>
+        <br />
+        <div fxLayout="row" *ngIf="isBugBoardEnable">
+          <div fxFlex="50">
+            <mat-checkbox formControlName="isBug" class=" mb-1 checkbox-text checkbox_allgoals">
+              {{ 'USERSTORYTYPES.ISBUG' | translate }}
+            </mat-checkbox>
+          </div>
+        </div>
+        <div *ngIf="!isEdit && customFormComponent">
+          <span class="customfield-name hide-content-overflow goal-cursor"
+            matTooltip="{{ customFormComponent.formName }}" matTooltipShowDelay="1000"
+            matTooltipClass="tooltip-overflow" (click)="editFormComponent()">
+            {{ customFormComponent.formName }}</span>
+        </div>
+        <div class="custom-hrm-dropzone">
+          <app-custom-field-component *ngIf="isFormType" [moduleTypeId]="moduleTypeId" [reload]="isreload"
+            [referenceTypeId]="userStoryTypeId" [isButtonVisible]="isButtonVisible" [referenceId]="userStoryTypeId"
+            [isDeletePermission]="(canAccess_feature_DeleteCustomFieldsForProjectManagement)"
+            [isAddPermission]="(canAccess_feature_AddOrEditCustomFieldsForProjectManagement)"
+            [isEditFieldPermission]="(canAccess_feature_CanSubmitCustomFieldsForProjectManagement)">
+          </app-custom-field-component>
+        </div>
+        <br />
+        <div fxLayout="row wrap" *ngIf="(canAccess_feature_AddOrEditCustomFieldsForProjectManagement)">
+          <button mat-raised-button type="button" class="mr-1" (click)="openCustomForm();$event.stopPropagation()">
+            <fa-icon icon="plus" class="mr-05" matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}"
+              class="filter mat-color-accent">
+            </fa-icon>
+            <span class="mr-05">
+              {{'USERSTORYTYPES.ADDCUSTOMFIELDS'| translate}}
+            </span>
+          </button>
+        </div>
+        <div class="text-center mt-1">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!userStoryTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertUserStoryTypePopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteUserStoryTypePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">
+        {{'USERSTORYTYPES.DELETEUSERSTORYTYPE' | translate  | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        <span> {{ 'USERSTORYTYPES.AREYOUSUREWANTTODELETETHISUSERSTORYTYPE' | translate | softLabelsPipe : softLabels }}
+        </span>
+      </div>
+    </mat-card-content>
+    <div class="text-center">
+      <button mat-raised-button type="button" color="primary" class="mr-05"
+        (click)="deleteWorkItemType(); $event.stopPropagation()" [disabled]="isAnyOperationIsInprogress">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+        <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+      </button>
+      <button mat-raised-button type="button" (click)="closeArchivePopup()" [disabled]="isAnyOperationIsInprogress">
+        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+      </button>
+    </div>
+    <br />
+    <mat-error *ngIf="isThereAnError">{{ validationErrorMessage | softLabelsPipe : softLabels }}</mat-error>
+  </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageWorkItemType)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<ng-template #customFormsComponent let-data>
+  <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)" (submitFormComponent)="submitFormComponent($event)"></app-custom-form-component>
+</ng-template>

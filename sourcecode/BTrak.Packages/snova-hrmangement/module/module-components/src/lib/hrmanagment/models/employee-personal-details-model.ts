@@ -1,0 +1,39 @@
+export class EmployeePersonalDetailsModel {
+    userId: string;
+    employeeId: string;
+    employeeNumber: string;
+    firstName: string;
+    surName: string;
+    email: string;
+    nationalityId: string;
+    taxCode: string;
+    dateOfBirth: Date;
+    genderId: string;
+    maritalStatusId: string;
+    marriageDate: Date;
+    roleId: string;
+    roleIds: string;
+    isActive: boolean;
+    registeredDateTime: Date;
+    isActiveOnMobile: boolean;
+    mobileNo: string;
+    password: string;
+    isArchived: boolean;
+
+    profileImage: string;
+    nationality: string;
+    smoker: boolean;
+    militaryService: boolean;
+    nickName: string;
+    gender: string;
+    maritalStatus: string;
+    roleName: string;
+    branchId: string;
+    branchName: string;
+    timeZoneId: string;
+    timeZoneName: string;
+    lastConnection: Date;
+    timeStamp: any;
+    currencyId: string;
+    macAddress: string;
+}

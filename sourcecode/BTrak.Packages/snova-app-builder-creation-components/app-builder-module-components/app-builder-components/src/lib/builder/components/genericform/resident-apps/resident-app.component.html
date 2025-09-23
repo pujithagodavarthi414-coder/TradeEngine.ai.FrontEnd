@@ -1,0 +1,172 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+                <div class="card-title-text full-width ml-05 p-0" fxFlex *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex="60px" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+                    *ngIf="applicationId && this.selectedform?.formId">
+                    <mat-slide-toggle matTooltip="{{ 'ARCHIVE' | translate }}" class="mr-05 archive-switch"
+                        [(ngModel)]="isArchived" [checked]="isArchived" (change)="archiveFilterApplied()">
+                    </mat-slide-toggle>
+                </div>
+                <div fxLayout="row wrap" fxFlex="80px" fxFlex.xs="100" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="space-around center">
+                    <button mat-icon-button matTooltip="{{ 'GENERICFORM.CLICKHERETOCREATEANEWFORM' | translate }}"
+                        (click)="createANewform(selectedform.customApplicationId,'',selectedform)"
+                        *ngIf="!isFormLoading && !isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                    <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                        [matMenuTriggerFor]="filterMenu" *ngIf="customApplicationList && customApplicationList.length > 0">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent"
+                            matTooltip="{{'GENERICFORM.CHANGEAPPLICATION' | translate}}">
+                        </fa-icon>
+                    </button>
+                    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{ 'ACTIVITYTRACKER.APPLICATIONNAME' | translate }}</mat-label>
+                                <mat-select placeholder="{{ 'RESIDENT.SELECTAAPPLICATION' | translate }}"
+                                    [(ngModel)]="applicationId" (selectionChange)="getRelativeForms($event.value,false)"
+                                    required>
+                                    <mat-option *ngFor="let apps of customApplicationList"
+                                        [value]="apps.customApplicationId">
+                                        {{apps.customApplicationName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field class="full-width" *ngIf="applicationId">
+                                <mat-label>{{ 'RESIDENT.FORMNAME' | translate }}</mat-label>
+                                <mat-select placeholder="{{ 'STATUSREPORT.SELECTFORM' | translate }}"
+                                    [(ngModel)]="selectedform" (selectionChange)="selectedForm($event.value, false)"
+                                    required>
+                                    <mat-option *ngFor="let forms of applicationForms" [value]="forms">
+                                        {{forms.formName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field class="full-width" *ngIf="applicationId && this.selectedform?.formId">
+                                <mat-label>{{ 'RESIDENT.DASHBOARDNAME' | translate }}</mat-label>
+                                <mat-select placeholder="{{ 'RESIDENT.DASHBOARDNAME' | translate }}"
+                                    [(ngModel)]="selectedDashboard"
+                                    (selectionChange)="onDashboardSelected($event.value)" required>
+                                    <mat-option *ngFor="let selectedworkspace of workspaces"
+                                        [value]="selectedworkspace.workspaceId">
+                                        {{ selectedworkspace.workspaceName }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </mat-card>
+                    </mat-menu>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <!-- (columnReorder)="onReorder(grid)" -->
+    <div fxLayout="row wrap" class="no-drag" *ngIf="!isFormLoading">
+        <mat-card class="p-0 m-0">
+            <mat-card-content class="p-0" *ngIf="!anyOperationInProgress">
+                <kendo-grid #grid [data]="selectedform.gridData" [columnMenu]="true" [sortable]="false"
+                    [filterable]="false" [reorderable]="true" (remove)="removeHandler()"
+                    [pageSize]="selectedform.pageSize" [skip]="selectedform.skip" [pageable]="{
+                                buttonCount: buttonCount,
+                                info: info,
+                                type: type,
+                                pageSizes: pageSizes,
+                                previousNext: previousNext
+                              }" (pageChange)="pageChange($event,selectedform)" (columnReorder)="onReorder($event)"
+                    (cellClick)="cellClickHandler($event)" (columnVisibilityChange)="onVisibilityChange($event)">
+                    <ng-container *ngFor=" let col of selectedform.columns">
+                        <kendo-grid-column [field]="col.field" [title]="col.title" [hidden]="col.hidden"
+                            [filter]="col.type" [filterable]="true" *ngIf="col.field != 'actions'">
+                            <ng-container *ngIf="isProfileImage(col.title)">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <ng-container *ngIf="dataItem.firstName">
+                                        <app-avatar matTooltip="{{ dataItem.firstName }}"
+                                            [name]="dataItem.firstName" [isRound]="true"
+                                            size="30">
+                                        </app-avatar>
+                                    </ng-container>
+                                    <ng-container *ngIf="!(dataItem.firstName)">
+                                        <img class="employee_img" src="../assets/images/faces/18.png" />
+                                    </ng-container>
+                                </ng-template>
+                            </ng-container>
+                        </kendo-grid-column>
+                        <kendo-grid-column [field]="'actions'" [title]="col.title" [sortable]="false" [filterable]="false" [width]="100"
+                            *ngIf="col.field == 'actions'">
+                            <ng-template kendoGridCellTemplate let-dataItem>
+                                <fa-icon *ngIf="!isArchived" icon="edit" class="mat-color-accent cursor-pointer"
+                                    matTooltip="{{ 'EDIT' | translate }}"
+                                    (click)="editHandler(dataItem,selectedform);$event.stopPropagation();">
+                                </fa-icon>
+                                <fa-icon *ngIf="!isArchived" icon="archive" class="mat-color-accent cursor-pointer ml-1"
+                                    matTooltip="{{ 'ARCHIVE' | translate }}"
+                                    [satPopoverAnchorFor]="deleteConfigurationPopover"
+                                    #deleteConfigurationPopup="satPopoverAnchor"
+                                    (click)="changeArchive(dataItem,selectedform,deleteConfigurationPopup);$event.stopPropagation();">
+                                </fa-icon>
+                                <fa-icon *ngIf="isArchived" icon="archive" class="mat-color-accent cursor-pointer"
+                                    matTooltip="{{ 'UNARCHIVE' | translate }}"
+                                    [satPopoverAnchorFor]="deleteConfigurationPopover"
+                                    #deleteConfigurationPopup="satPopoverAnchor"
+                                    (click)="changeArchive(dataItem,selectedform,deleteConfigurationPopup);$event.stopPropagation();">
+                                </fa-icon>
+                            </ng-template>
+                        </kendo-grid-column>
+                    </ng-container>
+                    <kendo-grid-excel fileName="{{ customApplicationName }}.xlsx"></kendo-grid-excel>
+                </kendo-grid>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>
+
+<sat-popover #deleteConfigurationPopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                {{ 'ROSTER.CONFIRMATION' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div *ngIf="!isArchived" class="card-content mb-1">
+                {{ 'GENERICFORM.ARCHIVERECORDMESSAGE' | translate }}
+            </div>
+            <div *ngIf="isArchived" class="card-content mb-1">
+                {{ 'GENERICFORM.UNARCHIVERECORDMESSAGE' | translate }}
+            </div>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="saveArchive();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="cancelArchive();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+
+<ng-template #genericApplicationComponent let-data>
+    <generic-application-form-popup [data]=[data] (submitFinished)="submitFinished()"></generic-application-form-popup>
+</ng-template>

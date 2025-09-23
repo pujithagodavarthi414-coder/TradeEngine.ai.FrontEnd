@@ -1,0 +1,151 @@
+<mat-card class="project-card p-05 milestones-view" (contextmenu)="openContextMenu($event, milestone)">
+  <div fxLayout="row wrap" fxLayoutGap="5px">
+    <div class="project-avatar-image" fxFlex.lt-md="19" fxFlex="21">
+      <app-avatar [name]="milestone.milestoneTitle | removeSpecialCharacters" fxHide fxHide.gt-lg="false"
+        [isRound]="false" size="80">
+      </app-avatar>
+      <app-avatar [name]="milestone.milestoneTitle | removeSpecialCharacters" fxShow fxShow.gt-lg="false"
+        [isRound]="false" size="50">
+      </app-avatar>
+    </div>
+    <div fxFlex="74">
+      <div fxLayout="row wrap" fxLayoutGap="0px">
+        <div fxFlex="67" fxFlex.md="43" fxFlex.lg="48" fxFlex.sm="63">
+          <div class="mat-body-2 project-card-name" (mouseover)="checkTitleTooltipStatus()">
+            <p class="mat-body-1 person-name testcase_txt" #milestoneTitle>
+              <b>
+                <span [matTooltip]="showTitleTooltip ? milestone.milestoneTitle : ''">
+                  {{milestone.milestoneTitle}}
+                </span>
+              </b>
+            </p>
+          </div>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center">
+          <app-avatar
+            matTooltip="{{'TESTMANAGEMENT.CREATEDBY' | translate}} {{milestone.createdByName}} - {{milestone.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+            [name]="milestone.createdByName | removeSpecialCharacters" [src]="milestone.createdByProfileImage"
+            [isRound]="true" size="24">
+          </app-avatar>
+        </div>
+        <div fxFlex="65px" fxLayoutAlign="end center">
+          <span class="pull-right milestone-count testrun-passed-count" matTooltip="{{'TESTMANAGEMENT.TOTALCASES' | translate}} - {{milestone.totalCasesCount}}
+              , {{'TESTMANAGEMENT.UNTESTED' | translate}} - {{milestone.untestedPercent}}%
+              , {{'TESTMANAGEMENT.PASSED' | translate}} - {{milestone.passedPercent}}%
+              , {{'TESTMANAGEMENT.BLOCKED' | translate}} - {{milestone.blockedPercent}}%
+              , {{'TESTMANAGEMENT.RETEST' | translate}} - {{milestone.retestPercent}}%
+              , {{'TESTMANAGEMENT.FAILED' | translate}} - {{milestone.failedPercent}}%">{{milestone.passedPercent}}%
+          </span>
+        </div>
+
+
+        <mat-icon (click)="$event.stopPropagation()" class="right-click" [matMenuTriggerFor]="mileStoneMenu"
+          [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+        <div fxFlex fxFlex.gt-lg="100">
+          <div class="pull-right  milestone-operations">
+
+            <mat-menu class="goal-options" #mileStoneMenu="matMenu" (click)="$event.stopPropagation()">
+              <button mat-menu-item [matMenuTriggerFor]="testRunsList" *ngIf="milestone.testRunsXml != null">
+                <mat-icon>visibility</mat-icon>
+                <span>{{'TESTMANAGEMENT.VIEWTESTRUNS' | translate | softLabelsPipe : softLabels}}</span>
+              </button>
+              <button mat-menu-item [satPopoverAnchorFor]="addReport" (click)="openAddReport()"
+                *ngIf="(canAccess_entityType_feature_AddOrUpdateTestReport) && !fromCustomApp">
+                <mat-icon>assignment</mat-icon>
+                <span>{{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}</span>
+              </button>
+              <button mat-menu-item (click)="editMilestone(milestone)"
+                *ngIf="(canAccess_entityType_feature_AddOrUpdateVersion) && !fromCustomApp">
+                <mat-icon>edit</mat-icon>
+                <span>{{'TESTMANAGEMENT.EDIT' | translate}}</span>
+              </button>
+              <button mat-menu-item [satPopoverAnchorFor]="deleteMilestoneComponent"
+                #deleteMilestoneComponentPopover="satPopoverAnchor" (click)="deleteMilestoneComponent.toggle()"
+                *ngIf=" (canAccess_entityType_feature_DeleteVersion) && !fromCustomApp">
+                <mat-icon>delete</mat-icon>
+                <span>{{'TESTMANAGEMENT.DELETE' | translate}}</span>
+              </button>
+            </mat-menu>
+
+            <mat-menu class="goal-options" #testRunsList="matMenu" (click)="$event.stopPropagation()">
+              <mat-list-item *ngFor="let testRun of (testRunList$ | async); let i = index">
+                <div fxLayout="row" fxLayoutGap="10px">
+                  <div fxFlex="250px" class="p-05 related-testruns hide-content-overflow"
+                    (click)="goToRelatedTestRun(testRun)">
+                    {{testRun.testRunName}}
+                  </div>
+                </div>
+              </mat-list-item>
+            </mat-menu>
+
+          </div>
+        </div>
+      </div>
+      <div fxLayout="row wrap">
+        <div fxFlex="98" class="testcase_txt" (mouseover)="checkDescriptionTooltipStatus()">
+          <p class="mat-small testcase_txt" #milestoneDescription>
+            <span [matTooltip]="showDescriptionTooltip ? milestone.description : ''">{{milestone.description}}</span>
+          </p>
+        </div>
+      </div>
+      <div fxLayout="row"
+        [style.margin-top.px]="milestone.description == null || milestone.description == '' || milestone.description.length == 0 ? '20' : '0'">
+        <div fxFlex class="mt-045">
+          <span class="milestone-count testrun-passed-count"
+            matTooltip="{{'TESTMANAGEMENT.PASSEDCOUNT' | translate}} - {{milestone.passedPercent}}%">{{milestone.passedCount}}</span>
+          <span class="milestone-count ml-02 testrun-blocked-count"
+            matTooltip="{{'TESTMANAGEMENT.BLOCKEDCOUNT' | translate}} - {{milestone.blockedPercent}}%">{{milestone.blockedCount}}</span>
+          <span class="milestone-count ml-02 testruns-retest-count"
+            matTooltip="{{'TESTMANAGEMENT.RETESTCOUNT' | translate}} - {{milestone.retestPercent}}%">{{milestone.retestCount}}</span>
+          <span class="milestone-count ml-02 testruns-failed-count"
+            matTooltip="{{'TESTMANAGEMENT.FAILEDCOUNT' | translate}} - {{milestone.failedPercent}}%">{{milestone.failedCount}}</span>
+          <span class="milestone-count ml-02 testruns-untested-count"
+            matTooltip="{{'TESTMANAGEMENT.UNTESTEDCOUNT' | translate}} - {{milestone.untestedPercent}}%">{{milestone.untestedCount}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</mat-card>
+
+<sat-popover backdropClass="backdrop-color" #addReport verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <add-report *ngIf="loadAddReport" (closeReport)="closeReportDialog()" [hideMileStones]="hideMileStones"
+      [milestoneId]="milestone.milestoneId">
+    </add-report>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteMilestoneComponent verticalAlign="below" hasBackdrop horizontalAlign="end"
+  backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+          {{'TESTMANAGEMENT.DELETEMILESTONE' | translate | softLabelsPipe : softLabels}}
+        </div>
+      </mat-card-title>
+      <div class="card-content p-05">
+        <p>{{'TESTMANAGEMENT.AREYOUSUREWANTTODELETEMILESTONE' | translate | softLabelsPipe : softLabels}}</p>
+        <div class="text-center">
+          <button mat-raised-button color="primary" class="mr-05" [disabled]="deleteMilestone"
+            (click)="$event.stopPropagation();deleteMileStone(milestone)">
+            <!-- <mat-progress-bar color="primary" mode="indeterminate">
+            </mat-progress-bar> -->
+            <fa-icon icon="trash" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+          </button>
+          <button mat-button mat-raised-button (click)="deleteMilestoneComponent.close()">
+            <fa-icon icon="times" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>

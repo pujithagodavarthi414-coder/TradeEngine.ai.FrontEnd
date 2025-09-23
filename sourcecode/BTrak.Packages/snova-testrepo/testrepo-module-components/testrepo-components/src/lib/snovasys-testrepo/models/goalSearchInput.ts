@@ -1,0 +1,47 @@
+export class GoalSearchCriteriaApiInputModel {
+  public searchText: string;
+  public searchGoal: string;
+  public searchUserStory: string;
+  public pageNumber: number;
+  public pageSize: string;
+  public orderByField: string;
+  public orderByDirection: boolean;
+  public isActive: boolean;
+  public isBugBoard: boolean;
+
+  public goalId: string;
+  public projectId: string;
+  public goalStatusId: string;
+  public userStoryStatusId: string;
+  public isArchived: boolean;
+  public userId: string;
+  public goalResponsiblePersonId: string;
+  public branchId: string;
+  public deadLineDateFrom: string;
+  public deadLineDateTo: string;
+  public isRed: boolean;
+  public isWarning: boolean;
+  public isTracked: boolean;
+  public isProductive: boolean;
+  public isUserStoryArchived: boolean;
+  public isParked: boolean;
+  public isGoalsBasedOnProject: boolean;
+  public goalName: string;
+  public isGoalsBasedOnGrp: boolean;
+  public ownerUserId: string;
+  public isArchivedGoal: boolean;
+  public isParkedGoal: boolean;
+  public userStoryId:string;
+  public sortBy:string;
+  public sortDirection:string;
+  public isGoalsPage:boolean;
+  public isAdvancedSearch:boolean;
+  public isIncludedPark:boolean;
+  public isIncludedArchive:boolean;
+  public OnBoardProcessDate:Boolean;
+  public sortDirectionAsc:boolean;
+  public goalIds:string;
+  public isUniqueGoalsPage:boolean;
+  public tags:string;
+  public isSprintsConfiguration: boolean;
+}

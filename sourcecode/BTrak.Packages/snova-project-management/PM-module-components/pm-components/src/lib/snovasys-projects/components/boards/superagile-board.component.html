@@ -1,0 +1,1393 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(goalCreationInProgress$ | async)">
+</mat-progress-bar>
+<mat-card-title class="userstory_data superagile-userstory_title" *ngIf="goal">
+  <div fxLayout="row wrap" fxLayoutGap="2px" class="userstory_top-title">
+
+    <div fxFlex fxLayoutAlign="start center" class="goal-replan goal-title">
+      <div class="goalname-content ml-05" *ngIf="!showGoalName && goal.goalId =='00000000-0000-0000-0000-000000000000'"
+        matTooltip="{{goal.goalName | softLabelsPipe : softLabels}}({{goal.goalShortName| softLabelsPipe : softLabels}})"
+        matTooltipClass="tooltip-overflow">
+        <span class="hide-content-overflow">{{goal.goalName | softLabelsPipe : softLabels}}</span>
+        <span class="hide-content-overflow short-goalname"
+          *ngIf="goal.goalShortName && goal.goalId =='00000000-0000-0000-0000-000000000000'">({{goal.goalShortName | softLabelsPipe : softLabels}})</span>
+      </div>
+      <div class="goalname-content ml-05" *ngIf="showGoalName && goal.goalId =='00000000-0000-0000-0000-000000000000'"
+        matTooltip="{{goal.goalName | softLabelsPipe : softLabels}}" matTooltipClass="tooltip-overflow">
+        <span class="hide-content-overflow">{{goal.goalName | softLabelsPipe : softLabels}}</span>
+      </div>
+      &nbsp;&nbsp;
+      <fa-icon icon="download" class="mat-color-accent" *ngIf="goal.goalId =='00000000-0000-0000-0000-000000000000'"
+        matTooltip="{{'GOALACTIVITY.DOWNLOADTASKLIST' | translate | softLabelsPipe : softLabels}}"
+        (click)="downloadTasks();"></fa-icon>
+
+      <div class="goalname-content ml-05" *ngIf="!showGoalName && goal.goalId !='00000000-0000-0000-0000-000000000000'"
+        matTooltip="{{goal.goalName}}({{goal.goalShortName}})" matTooltipClass="tooltip-overflow">
+        <span class="hide-content-overflow">{{goal.goalName}}</span>
+        <span class="hide-content-overflow short-goalname"
+          *ngIf="goal.goalShortName && goal.goalId !='00000000-0000-0000-0000-000000000000'">({{goal.goalShortName}})</span>
+      </div>
+      <div class="goalname-content ml-05" *ngIf="showGoalName && goal.goalId !='00000000-0000-0000-0000-000000000000'"
+        matTooltip="{{goal.goalName | translate }}" matTooltipClass="tooltip-overflow">
+        <span class="hide-content-overflow">{{goal.goalName | translate }}</span>
+      </div>
+      <div fxFlex="30px"
+        *ngIf="showHeader && !isCalenderView && !isReportsPage && !isDocument && !isEmployeeTaskBoardPage && checkPermissionsForAssignee((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))"
+        class="text-center">
+        <fa-icon icon="user" (click)="clearAssigneeForm();updateAssigneePopover.open()" class="goal-cursor"
+          [satPopoverAnchorFor]="updateAssigneePopover" matTooltip="{{ 'GOALS.UPDATEASSIGNEE' | translate }}">
+        </fa-icon>
+      </div>
+      <div fxFlex="30px"
+        *ngIf="!isReportsPage && !isDocument && !isCalenderView && showHeader && !isEmployeeTaskBoardPage && !showReplanDropdown && showEstimatedTime && checkPermissionForBulkUpdateEstimatedTime(canAccess_entityType_feature_EditActiveGoalEstimatedTime,canAccess_entityType_feature_EditBacklogGoalEstimatedTime)"
+        class="text-center">
+        <fa-icon icon="clock" (click)="clearEstimatedTimeForm();updateEstimatedTimePopover.open()" class="goal-cursor"
+          [satPopoverAnchorFor]="updateEstimatedTimePopover"
+          matTooltip="{{ 'GOALS.UPDATEESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}">
+        </fa-icon>
+      </div>
+      <!-- <div fxFlex="30px"
+        *ngIf="!isReportsPage && !isDocument && !isCalenderView && showHeader && !showReplanDropdown && showDeadlineDate && checkPermissionForBulkUpdateDeadlineDate(canAccess_entityType_feature_EditActiveGoalDeadlineDate$|async,canAccess_entityType_feature_EditBacklogGoalDeadlineDate$|async)"
+        class="text-center">
+        <fa-icon icon="calendar" (click)="clearDeadlineDateForm();updateDeadlineDatePopover.open()" class="goal-cursor"
+          [satPopoverAnchorFor]="updateDeadlineDatePopover"
+          matTooltip="{{ 'GOALS.UPDATEDEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+        </fa-icon>
+      </div> -->
+      <div fxFlex="30px"
+        *ngIf="!isReportsPage && !isDocument && !isCalenderView && !isEmployeeTaskBoardPage && showHeader && !showReplanDropdown && isActiveGoalStatusId"
+        class="text-center">
+        <fa-icon icon="battery-three-quarters" (click)="clearStatusForm();updateUserStoryStatusPopover.open()"
+          class="goal-cursor" [satPopoverAnchorFor]="updateUserStoryStatusPopover"
+          matTooltip="{{ 'GOALS.UPDATESTATUS' | translate }}">
+        </fa-icon>
+      </div>
+      <div fxFlex="30px"
+        *ngIf="!isReportsPage  && !isDocument && !isCalenderView && !isEmployeeTaskBoardPage  && showFirst && isListView && !isBugFilters && (canAccess_entityType_feature_GoalReplan)"
+        aria-hidden="true">
+        <mat-icon mat-icon-button matTooltip="{{ 'GOALS.REPLANGOAL' | translate | softLabelsPipe : softLabels }}"
+          class="ml-05 mr-1 goal-cursor" matTooltip="Lock goal" (click)="LockGoal()">
+          lock</mat-icon>
+      </div>
+      <div fxFlex="33px" class="text-center"
+        *ngIf=" !isBacklogIssues &&  goal.goalId !='00000000-0000-0000-0000-000000000000' && showApproveIcon && (canAccess_entityType_feature_ApproveGoal) && !isReportsPage && !isDocument && !isEmployeeTaskBoardPage">
+        <fa-icon icon="thumbs-up" class="goal-cursor"
+          matTooltip="{{ 'GOALS.APPROVEGOAL' | translate | softLabelsPipe : softLabels }}" (click)="ApproveGoal()">
+        </fa-icon>
+      </div>
+      <div fxFlex="90px" class="text-center" *ngIf="isShowTemplateIcons && !isReportsPage && !isCalenderView 
+      && !isDocument  && goal.goalId !='00000000-0000-0000-0000-000000000000' && (accessUploadIcons$)">
+        <button mat-icon-button type="button">
+          <fa-icon class="mat-color-accent icon-button"
+            matTooltip="{{'USERSTORY.UPLOADWORKITEM' | translate | softLabelsPipe : softLabels}}" icon="upload"
+            (click)="fileInput.click()">
+            <input type="file" id="file" (change)="uploadEventHandler($event.target.files,$event)" #fileInput>
+          </fa-icon>
+        </button>
+        <button mat-icon-button type="button">
+          <fa-icon class="icon-button mat-color-accent" icon="download"
+            matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILE' | translate | softLabelsPipe : softLabels}}"
+            (click)="downloadFile();"></fa-icon>
+        </button>
+      </div>
+
+      <div fxFlex="33px" class="text-center"
+        *ngIf="showReplanDropdown && !isReportsPage && !isCalenderView && !isDocument && !isEmployeeTaskBoardPage">
+        <fa-icon icon="eye" aria-hidden="true" class="goal-cursor" matTooltip="{{ 'GOALS.REPLANSTART' | translate }}"
+          (click)="SetReplanOption()"></fa-icon>
+      </div>
+      <div fxFlex="37" style="margin-top:2px;"
+        *ngIf="checkReplan && !isReportsPage  && !isCalenderView && !isDocument && !isEmployeeTaskBoardPage"
+        class="goal-replan-type goal-replan mb-1">
+        <mat-form-field class="full-width kanban-replantype custom-select-matform">
+          <mat-select [(ngModel)]="selectedReplanId" placeholder="{{'GOALS.SELECTREPLANTYPE' | translate }} "
+            (selectionChange)="SaveGoalReplan($event.value)">
+            <mat-option [value]="0">{{'ADVANCEDSEARCH.SELECTNONE' | translate}}</mat-option>
+            <mat-option *ngFor="let goalReplan of (goalReplanModel$ | async)" [value]="goalReplan.goalReplanTypeId">
+              {{ goalReplan.goalReplanTypeName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!------------------Assignee Dialog---------------->
+    <sat-popover #updateAssigneePopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+      horizontalAlign="end" backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+            {{ 'GOALS.BULKACTIONSONASSIGNEE' | translate }}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="AssigneeForm" novalidate (submit)="
+            AssigneeForm.valid && UpdateAssigneeForMultipleUserStories()
+          ">
+          <div class="card-content p-05">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()" *ngIf="showDropDown">
+              <mat-select formControlName="ownerUserId" placeholder="{{ 'GOALS.SELECTASSIGNEE' | translate }}"
+                (selectionChange)="getAssigneeValue($event.Value)">
+                <mat-select-trigger>
+                  {{selectedMember}}
+                </mat-select-trigger>
+                <mat-option value="option" [value]="assignee.projectMember.id"
+                  *ngFor="let assignee of (projectMembers$ | async)">
+                  <div fxLayout="row wrap" fxLayoutGap="5px">
+                    <div fxFlex="15">
+                      <app-avatar matTooltip="{{ assignee.projectMember.name }}"
+                        [name]="assignee.projectMember.name | removeSpecialCharacters"
+                        [src]="assignee.projectMember.profileImage" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex="80">
+                      <p class="mat-body-2">
+                        {{ assignee.projectMember.name }}
+                      </p>
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()" *ngIf="!showDropDown">
+              <mat-select formControlName="ownerUserId" placeholder="{{ 'GOALS.SELECTASSIGNEE' | translate }}"
+                (selectionChange)="getAssigneeValue($event.value)">
+                <mat-select-trigger>
+                  {{selectedMember}}
+                </mat-select-trigger>
+                <mat-option value="option" [value]="assignee.projectMember.id"
+                  *ngFor="let assignee of (projectMembers$ | async)">
+                  <div fxLayout="row wrap" fxLayoutGap="5px">
+                    <div fxFlex="15">
+                      <app-avatar matTooltip="{{ assignee.projectMember.name }}"
+                        [name]="assignee.projectMember.name | removeSpecialCharacters"
+                        [src]="assignee.projectMember.profileImage" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex="80">
+                      <p class="mat-body-2">
+                        {{ assignee.projectMember.name }}
+                      </p>
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="text-center">
+              <button color="primary" class="mr-05" mat-button mat-raised-button (click)="$event.stopPropagation()"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="updateAssigneePopover.close();false"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card>
+    </sat-popover>
+    <!------------------Assignee Dialog---------------->
+
+    <!------------------Estimatedtime Dialog---------------->
+    <sat-popover #updateEstimatedTimePopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+      horizontalAlign="end" backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+            {{ 'GOALS.BULKACTIONSONESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="EstimatedTimeForm" novalidate (keydown.enter)="$event.preventDefault()">
+          <div class="card-content p-05">
+            <app-common-estimatedTime *ngIf="clearFormValue" [estimatedTime]="estimatedTime"
+              [isDisabled]="(!(canAccess_entityType_feature_EditActiveGoalEstimatedTime) || !(canAccess_entityType_feature_EditBacklogGoalEstimatedTime) || !(canAccess_entityType_feature_EditReplanGoalEstimatedTime))"
+              (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+            <div class="text-center p-2">
+              <button color="primary" class="mr-05" mat-button mat-raised-button
+                [disabled]="(anyOperationInProgress$ | async) || disabled"
+                (click)="$event.stopPropagation();UpdateEstimatedTimeForMultipleUserStories($event)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }} &nbsp;
+              </button>
+              <button mat-button mat-raised-button
+                (click)="clearEstimatedTime();updateEstimatedTimePopover.close();false"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card>
+    </sat-popover>
+    <!------------------Estimatedtime Dialog---------------->
+
+    <!------------------Status Dialog---------------->
+    <sat-popover #updateUserStoryStatusPopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+      horizontalAlign="end" backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+            {{ 'GOALS.UPDATEUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="StatusTransitionForm" novalidate (submit)="
+            StatusTransitionForm.valid &&
+              UpdateStatusTransitionsForMultipleUserStories()
+          ">
+          <div class="card-content p-05">
+            <mat-form-field class="full-width custom-select-matform" (click)="$event.stopPropagation()">
+              <mat-select formControlName="userStoryStatusId"
+                placeholder="{{ 'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}">
+                <mat-option [value]="status.userStoryStatusId" *ngFor="let status of (workflowStatus$ | async)">
+                  {{ status.userStoryStatusName }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="text-center ">
+              <button mat-raised-button color="primary" class="mr-05" (click)="$event.stopPropagation()"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }}
+              </button>
+              <button mat-raised-button (click)="updateUserStoryStatusPopover.close();false"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card>
+    </sat-popover>
+    <!------------------Status Dialog---------------->
+
+    <!-----------DeadlineDate Dialog----------------->
+    <sat-popover #updateDeadlineDatePopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+      horizontalAlign="end" backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+            {{ 'GOALS.UPDATEDEADLINEDATE' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="deadLineDateForm" novalidate
+          (submit)="deadLineDateForm.valid && UpdateDeadlineDateForMultipleUserStories()">
+          <div class="card-content p-05">
+            <mat-form-field>
+              <input type="number" matInput trim
+                placeholder="{{ 'GOALS.AMENDDDEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+                formControlName="amendedDaysCount" required>
+              <mat-error>
+                <span *ngIf="
+                deadLineDateForm.get('amendedDaysCount').hasError('required') &&
+                deadLineDateForm.get('amendedDaysCount')
+                      .touched
+                  ">{{'GOALS.PLEASEAMENDDEADLINEDATE'|translate | softLabelsPipe : softLabels}} </span>
+              </mat-error>
+            </mat-form-field>
+            <div class="text-center ">
+              <button mat-raised-button color="primary" class="mr-05" (click)="$event.stopPropagation()"
+                [disabled]="(amendDeadlineDateIsInProgress$ | async) ">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(amendDeadlineDateIsInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="sync" class="mr-05"></fa-icon> {{ 'UPDATE' | translate }}
+              </button>
+              <button mat-raised-button (click)="updateDeadlineDatePopover.close();false"
+                [disabled]="(amendDeadlineDateIsInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CLEAR' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card>
+    </sat-popover>
+
+    <!---------DeadlineDate Dialog------------------->
+
+    <!-- Select user Section -->
+    <div fxFlex="146px" fxFlex.lt-lg="130px" fxShow.xs="false" class="mt-02" *ngIf="!isReportsPage && !isDocument && !isBacklogIssues  && goal.goalId !='00000000-0000-0000-0000-000000000000' && (userStories$|async)?.length >0 
+      && (userStories$ |async | assigneeFilter: 'id':userStories)">
+      <div class="superagile-select selectuser_counthigh">
+        <span class="members_count" (click)="toggleUsers()"
+          *ngIf="(userStories$ |async | assigneeFilter: 'id':userStories)?.length >2 "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member" *ngIf="unAssignedUser && !isBacklogIssues">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+        <div class="project_member"
+          *ngFor="let member of (userStories$ |async | assigneeFilter: 'id':userStories| slice:0:2 | sortByComponent:'ownerName');let i=index">
+          <div (click)="getSelectedMember(member.ownerUserId,i,member.ownerName);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{member.ownerName}}">
+            <app-avatar [name]="member.ownerName| removeSpecialCharacters" [src]='member.ownerProfileImage'
+              [isRound]="true" size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (userStories$ |async |assigneeFilter: 'id':userStories|slice:2  | sortByComponent:'ownerName');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.ownerUserId, isSelected[j],j,member.ownerName)"></mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.ownerName}}" [name]="member.ownerName| removeSpecialCharacters"
+                  [src]='member.ownerProfileImage' [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.ownerName}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="select_users selectuser_countlow">
+        <span class="members_count" (click)="toggleUsers()"
+          *ngIf="(userStories$ |async | assigneeFilter: 'id':userStories)?.length >2 && !isDocument "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member_unAssign" *ngIf="unAssignedUser">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+
+        <div class="project_member"
+          *ngFor="let member of (userStories$ |async | assigneeFilter: 'id':userStories | slice:0:2  | sortByComponent:ownerName);let k=index">
+          <div (click)="getSelectedMember(member.ownerUserId,k, member.ownerName);"
+            [ngClass]="{memberhide: !isSelectedMembers[k], membershow: isSelectedMembers[k]}"
+            matTooltip="{{member.ownerName}}">
+            <app-avatar [name]="member.ownerName| removeSpecialCharacters" [src]='member.ownerProfileImage'
+              [isRound]="true" size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (userStories$ |async |assigneeFilter: 'id':userStories|slice:2  | sortByComponent:ownerName);let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.ownerUserId, isSelected[j],j,member.ownerName)"></mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.ownerName}}" [name]="member.ownerName| removeSpecialCharacters"
+                  [src]='member.ownerProfileImage' [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.ownerName}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Select user Section -->
+    <div fxFlex="146px" fxFlex.lt-lg="130px" fxShow.xs="false" class="mt-02" *ngIf="isBacklogIssues">
+      <div class="superagile-select selectuser_counthigh">
+
+        <span class="members_count" (click)="toggleUsers()" *ngIf="(projectMembers$ |async)?.length >3 "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member" *ngIf="unAssignedUser">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+        <div class="project_member"
+          *ngFor="let member of (projectMembers$ |async| slice:0:3 | sortByComponent:'projectMember');let i=index">
+          <div (click)="getSelectedMember(member.projectMember.id,i,member.projectMember.name);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{member.projectMember.name}}">
+            <app-avatar [name]="member.projectMember.name| removeSpecialCharacters"
+              [src]='member.projectMember.profileImage' [isRound]="true" size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (projectMembers$ |async |slice:3  | sortByComponent:'projectMember');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.projectMember.id, isSelected[j],j,member.projectMember.name)">
+                </mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.projectMember.name}}"
+                  [name]="member.projectMember.name| removeSpecialCharacters" [src]='member.projectMember.profileImage'
+                  [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.projectMember.name}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="select_users selectuser_countlow">
+        <span class="members_count" (click)="toggleUsers()" *ngIf="(projectMembers$ |async)?.length >2 "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member_unAssign" *ngIf="unAssignedUser">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+        <div class="project_member"
+          *ngFor="let member of (projectMembers$ |async| slice:0:2 | sortByComponent:'projectMember');let i=index">
+          <div (click)="getSelectedMember(member.projectMember.id,i,member.projectMember.name);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{member.projectMember.name}}">
+            <app-avatar [name]="member.projectMember.name| removeSpecialCharacters"
+              [src]='member.projectMember.profileImage' [isRound]="true" size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (projectMembers$ |async |slice:2  | sortByComponent:'projectMember');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.projectMember.id, isSelected[j],j,member.projectMember.name)">
+                </mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.projectMember.name}}"
+                  [name]="member.projectMember.name| removeSpecialCharacters" [src]='member.projectMember.profileImage'
+                  [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.projectMember.name}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Select user Section -->
+    <div fxFlex="146px" fxFlex.lt-lg="130px" fxShow.xs="false" class="mt-02"
+      *ngIf="goal.goalId == '00000000-0000-0000-0000-000000000000'">
+      <div class="superagile-select selectuser_counthigh">
+
+        <span class="members_count" (click)="toggleUsers()" *ngIf="(projectResponsiblePersons$ |async)?.length >2 "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member_unAssign" *ngIf="unAssignedUser">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+        <div class="project_member"
+          *ngFor="let member of (projectResponsiblePersons$ |async| slice:0:2 | sortByComponent:'user');let i=index">
+          <div (click)="getSelectedMember(member.id,i,member.fullName);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{member.fullName}}">
+            <app-avatar [name]="member.fullName| removeSpecialCharacters" [src]='member.profileImage' [isRound]="true"
+              size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (projectResponsiblePersons$ |async |slice:2  | sortByComponent:'user');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.id, isSelected[j],j,member.fullName)">
+                </mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.fullName}}" [name]="member.fullName| removeSpecialCharacters"
+                  [src]='member.profileImage' [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.fullName}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="select_users selectuser_countlow">
+        <span class="members_count" (click)="toggleUsers()" *ngIf="(projectResponsiblePersons$ |async)?.length >2 "
+          [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member_unAssign" *ngIf="unAssignedUser">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+        <div class="project_member"
+          *ngFor="let member of (projectResponsiblePersons$ |async| slice:0:2 | sortByComponent:'user');let i=index">
+          <div (click)="getSelectedMember(member.id,i,member.fullName);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{member.fullName}}">
+            <app-avatar [name]="member.fullName| removeSpecialCharacters" [src]='member.profileImage' [isRound]="true"
+              size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let member of (projectResponsiblePersons$ |async |slice:2  | sortByComponent:'user');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.id, isSelected[j],j,member.fullName)">
+                </mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.fullName}}" [name]="member.fullName| removeSpecialCharacters"
+                  [src]='member.profileImage' [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{member.fullName}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!--UserStory status-->
+    <div fxFlex="8" class="hide_input"
+      *ngIf="checkVisibilityOfUserStoryStatusFilter() && isFiltersShow && !isDocument && !isBacklogIssues && !isTheBoardLayoutKanban">
+      <form [formGroup]="selectUserStoryStatus">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels }}"
+            formControlName="userStoryStatus" (selectionChange)="getUserStorieslistByUserStoryStatus()" multiple>
+            <mat-select-trigger>
+              {{selectedWorkflowStatus}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #allUserStoryStatusSelected (click)="toggleAllUserStoryStatusSelection()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}
+            </mat-option>
+            <mat-option [value]="status.userStoryStatusId"
+              (click)="getUserStorieslistByUserStoryStatus();toggleUserStoryStatusPerOne(allUserStoryStatusSelected.viewValue)"
+              *ngFor="let status of (workflowStatus$ | async)">
+              {{ status.userStoryStatusName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <div fxFlex="8" class="hide_input" *ngIf="goal.goalId == '00000000-0000-0000-0000-000000000000'">
+      <form [formGroup]="selectUserStoryStatus">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels }}"
+            formControlName="userStoryStatus" (selectionChange)="getUserStorieslistByUserStoryStatus()" multiple>
+            <mat-select-trigger>
+              {{selectedWorkflowStatus}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #allUserStoryStatusSelected (click)="toggleAllUserStoryStatusSelection()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}
+            </mat-option>
+            <mat-option [value]="status.userStoryStatusId"
+              (click)="getUserStorieslistByUserStoryStatus();toggleUserStoryStatusPerOne(allUserStoryStatusSelected.viewValue)"
+              *ngFor="let status of  (userStoryStatus$ | async  | workItemStatusOrder)">
+              {{ status.userStoryStatusName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+    <!--UserStory status-->
+    <!--search bar-->
+    <div fxFlex="9" class="ml-05 hide_input mt-03" *ngIf="!isReportsPage  && !isDocument ">
+      <div class="goal-replan search-userstory">
+        <mat-form-field class="full-width custom-searchbar">
+          <input class="search_goal" matInput placeholder="{{ 'SEARCH' | translate }}" [(ngModel)]="searchText" trim
+            (keyup)="searchUserStories()">
+        </mat-form-field>
+        <span class="close_icon">
+          <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">close</mat-icon>
+        </span>
+      </div>
+    </div>
+    <!--search bar-->
+
+    <div fxFlex="9" class="ml-05 hide_input mt-03" *ngIf="isFiltersShow && isBacklogIssues">
+      <div class="goal-replan search-userstory">
+        <mat-form-field class="full-width custom-searchbar">
+          <input class="search_goal" (click)="$event.stopPropagation();" matInput
+            placeholder="{{ 'GOALS.SEARCHWITHGOALNAME' | translate | softLabelsPipe : softLabels}}" trim
+            [(ngModel)]="searchTextWithGoalName" (keyup)="searchUserStoriesWithGoalName()">
+        </mat-form-field>
+        <span class="close_icon">
+          <span *ngIf="!searchTextWithGoalName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon (click)="$event.stopPropagation();" *ngIf="searchTextWithGoalName" class="icon-button"
+            aria-hidden="false" (click)="closeSearchText()" style="cursor:pointer">close</mat-icon>
+        </span>
+      </div>
+    </div>
+
+    <!-- search by version name -->
+    <div fxFlex="9" class="ml-05 hide_input mt-03"
+      *ngIf="isFiltersShow && isBugFilters && !isReportsPage && !isDocument && !isBacklogIssues">
+      <div class="goal-replan search-userstory">
+        <mat-form-field class="full-width custom-searchbar">
+          <input (click)="$event.stopPropagation();" matInput trim
+            placeholder="{{ 'GOALS.SEARCHBYVERSIONNAME' | translate }}" [(ngModel)]="versionNamesearchText"
+            (keyup)="versionNamesearchUserStories()">
+        </mat-form-field>
+        <span class="close_icon">
+          <span *ngIf="!versionNamesearchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon (click)="$event.stopPropagation();" *ngIf="versionNamesearchText" class="icon-button"
+            aria-hidden="false" (click)="closeVersionNameSearch()" style="cursor:pointer">close</mat-icon>
+        </span>
+      </div>
+    </div>
+    <!-- search by version name -->
+
+    <!-- search by user story tags  -->
+    <div fxFlex="9" class="ml-05 hide_input mt-03" *ngIf="isFiltersShow && !isReportsPage && !isDocument">
+      <div class="goal-replan search-userstory">
+        <mat-form-field class="full-width custom-searchbar">
+          <input (click)="$event.stopPropagation();" matInput trim
+            placeholder="{{ 'GOALS.SEARCHBYUSERSTORYTAGS' | translate | softLabelsPipe : softLabels }}"
+            [(ngModel)]="searchTags" (keyup)="searchTagsForUserStories()">
+        </mat-form-field>
+        <span class="close_icon">
+          <span *ngIf="!searchTags">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon (click)="$event.stopPropagation();" *ngIf="searchTags" class="icon-button" aria-hidden="false"
+            (click)="closeUserStoryTags()" style="cursor:pointer">close</mat-icon>
+        </span>
+      </div>
+    </div>
+    <!-- search by user story tags -->
+
+    <!--sort by filter-->
+    <!-- <div class="hide_input mt-03 ml-05" fxFlex="10" 
+      *ngIf="isFiltersShow && isListView && !isReportsPage && !isTheBoardLayoutKanban && !isDocument && !isBacklogIssues">
+      <form [formGroup]="selectSortByForm">
+        <mat-form-field class="goal-replan full-width search-userstory custom-select-matform">
+          <mat-select (click)="$event.stopPropagation();" placeholder="{{'GOALS.SELECTSORTBYOPTIONASC' | translate}}"
+            formControlName="sortByOption" (selectionChange)="getUserStoriesOrderBy()">
+            <mat-option value="Deadlinedate">{{ 'GOALS.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}
+            </mat-option>
+            <mat-option value="Order">{{ 'GOALS.ORDER' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div> -->
+    <!--sort by filter-->
+
+    <!--Component filter-->
+    <div fxFlex="9" class="hide_input mt-03 ml-05"
+      *ngIf="isFiltersShow && isBugFilters && !isReportsPage && !isDocument && !isBacklogIssues">
+      <form [formGroup]="selectComponent">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{ 'USERSTORY.SELECTCOMPONENT' | translate }}" formControlName="componentName"
+            panelClass="dropdown-custom-class" (selectionChange)="getFilterUserStoriesListByComponent()" multiple>
+            <mat-select-trigger>
+              {{selectedProjectFeature}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #allProjectFeaturesSelected (click)="toggleAllProjectFeaturesSelection()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+            <mat-option [value]="component.projectFeatureId"
+              (click)="getFilterUserStoriesListByComponent();toggleProjectFeaturesSelectionPerOne(allProjectFeaturesSelected.viewValue)"
+              *ngFor="let component of (projectFeature$ | async)">
+              {{ component.projectFeatureName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+    <!--Component filter-->
+
+    <div class="hide_input mt-03 ml-05" fxFlex="9"
+      *ngIf="isFiltersShow && isBugFilters && !isReportsPage && !isDocument && !isBacklogIssues">
+      <form [formGroup]="selectBugPriority">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{ 'GOALS.SELECTBUGPRIORITY' | translate }}" formControlName="bugPriority"
+            panelClass="dropdown-custom-class" (selectionChange)="getUserStorieslistByBugPriorities()" multiple>
+            <mat-select-trigger>
+              {{selectedBugPriority}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #allSelected (click)="toggleAllBugPrioritySelection()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+            <mat-option [value]="bug.bugPriorityId"
+              (click)="getUserStorieslistByBugPriorities();toggleBugPrioritySelectionPerOne(allSelected.viewValue)"
+              *ngFor="let bug of (bugPriorities$ | async)">
+              <fa-icon icon="{{bug.icon}}" [ngStyle]="
+                        setColorForBugPriorityTypes(bug.color)
+                      "></fa-icon> {{ bug.priorityName }}&nbsp;-&nbsp;{{ bug.description }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <div class="hide_input mt-03 ml-05" fxFlex="9" *ngIf="isFiltersShow  && !isReportsPage && !isDocument">
+      <form [formGroup]="selectUserStoryTypeForm">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{ 'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+            formControlName="userStoryTypeId" panelClass="dropdown-custom-class"
+            (selectionChange)="getUserStorieslistByUserStoryTypes()" multiple>
+            <mat-select-trigger>
+              {{selectedUserStoryType}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #allUserStoryTypesSelected (click)="toggleAllUserStoryTypesSelection()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+            <mat-option [value]="userStoryType.userStoryTypeId"
+              (click)="getUserStorieslistByUserStoryTypes();toggleUsrStoryTypesSelectionPerOne(allUserStoryTypesSelected.viewValue)"
+              *ngFor="let userStoryType of (userStoryTypes$ | async)">
+              {{ userStoryType.userStoryTypeName | softLabelsPipe : softLabels}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <!-- <button mat-button [matMenuTriggerFor]="menu">Menu</button> -->
+    <fa-icon icon="filter" class="userstory_inputs mt-05" [matMenuTriggerFor]="menu"
+      *ngIf="!isReportsPage && !isDocument" matTooltip="{{'GOALS.CLICKHEREFORSEARCH' | translate}}">
+    </fa-icon>
+    <!-- <mat-icon class="userstory_inputs" [matMenuTriggerFor]="menu">more_vert</mat-icon> -->
+    <mat-menu #menu="matMenu" class="p-05" (click)="$event.stopPropagation();">
+      <div
+        *ngIf="goal.goalId != '00000000-0000-0000-0000-000000000000' && !isBacklogIssues && (userStories$|async)?.length >0 && (userStories$|async | assigneeFilter: 'id':userStories)">
+
+        <div class="select_users mt-05" fxShow.gt-xs="false">
+          <span class="members_count" (click)="toggleUsers()"
+            *ngIf="(userStories$|async | assigneeFilter: 'id':userStories)?.length >3"
+            [ngClass]="{'countActive': divActivate}">
+            <fa-icon icon="plus"></fa-icon>
+          </span>
+
+          <div class="project_member"
+            *ngFor="let member of (userStories$|async | assigneeFilter: 'id':userStories| slice:0:3);let i=index">
+
+            <div (click)="getSelectedMember(member.ownerUserId,i,member.ownerName);"
+              [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+              matTooltip="{{member.ownerName}}">
+              <app-avatar [name]="member.ownerName| removeSpecialCharacters" [src]='member.ownerProfileImage'
+                [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+
+          </div>
+
+          <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+            <div class="single_projectmember"
+              *ngFor="let member of (userStories$ |async | assigneeFilter: 'id':userStories|slice:3);let j=index"
+              [ngClass]="{membershow: isSelected[j]}">
+              <div fxLayout="row wrap" fxLayoutGap="5px">
+                <div fxFlex="10" class="mt-02">
+                  <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                    (change)="GetAssigne(member.ownerUserId, isSelected[j],j,member.ownerName)"></mat-checkbox>
+                </div>
+                <div fxFlex="15">
+                  <app-avatar matTooltip="{{member.ownerName}}" [name]="member.ownerName| removeSpecialCharacters"
+                    [src]='member.ownerProfileImage' [isRound]="true" size="30">
+                  </app-avatar>
+                </div>
+                <div fxFlex="70">
+                  <p class="m-0">{{member.ownerName}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="checkVisibilityOfUserStoryStatusFilter() && !isBacklogIssues && !isTheBoardLayoutKanban">
+          <form [formGroup]="selectUserStoryStatus">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select (click)="$event.stopPropagation();"
+                placeholder="{{'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}"
+                formControlName="userStoryStatus" (selectionChange)="getUserStorieslistByUserStoryStatus()" multiple>
+                <mat-select-trigger>
+                  {{selectedWorkflowStatus}}
+                </mat-select-trigger>
+                <mat-option [value]="0" #allUserStoryStatusSelected1 (click)="toggleAllUserStoryStatusSelection1()">
+                  Select
+                  All
+                </mat-option>
+                <mat-option [value]="status.userStoryStatusId"
+                  (click)="getUserStorieslistByUserStoryStatus(); toggleUserStoryStatusOnMediaPerOne()"
+                  *ngFor="let status of (workflowStatus$ | async)">
+                  {{ status.userStoryStatusName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+      </div>
+
+      <div *ngIf="goal.goalId == '00000000-0000-0000-0000-000000000000'">
+        <form [formGroup]="selectUserStoryStatus">
+          <mat-form-field class="goal-replan full-width custom-select-matform">
+            <mat-select (click)="$event.stopPropagation();"
+              placeholder="{{'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}"
+              formControlName="userStoryStatus" (selectionChange)="getUserStorieslistByUserStoryStatus()" multiple>
+              <mat-select-trigger>
+                {{selectedWorkflowStatus}}
+              </mat-select-trigger>
+              <mat-option [value]="0" #allUserStoryStatusSelected1 (click)="toggleAllUserStoryStatusSelection1()">
+                Select
+                All
+              </mat-option>
+              <mat-option [value]="status.userStoryStatusId"
+                (click)="getUserStorieslistByUserStoryStatus(); toggleUserStoryStatusOnMediaPerOne()"
+                *ngFor="let status of (userStoryStatus$ | async | workItemStatusOrder)">
+                {{ status.userStoryStatusName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </div>
+
+      <div *ngIf="isBacklogIssues">
+        <div class="select_users mt-05" fxShow.gt-xs="false">
+          <span class="members_count" (click)="toggleUsers()" *ngIf="(projectMembers$|async)?.length >3"
+            [ngClass]="{'countActive': divActivate}">
+            <fa-icon icon="plus"></fa-icon>
+          </span>
+
+          <div class="project_member" *ngFor="let member of (projectMembers$|async | slice:0:3);let i=index">
+
+            <div (click)="getSelectedMember(member.projectMember.id,i,member.projectMember.name);"
+              [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+              matTooltip="{{member.projectMember.name}}">
+              <app-avatar [name]="member.projectMember.name| removeSpecialCharacters"
+                [src]='member.projectMember.profileImage' [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+          </div>
+
+          <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+            <div class="single_projectmember" *ngFor="let member of (projectMembers$ |async |slice:3);let j=index"
+              [ngClass]="{membershow: isSelected[j]}">
+              <div fxLayout="row wrap" fxLayoutGap="5px">
+                <div fxFlex="10" class="mt-02">
+                  <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                    (change)="GetAssigne(member.projectMember.id, isSelected[j],j,member.projectMember.name)">
+                  </mat-checkbox>
+                </div>
+                <div fxFlex="15">
+                  <app-avatar matTooltip="{{member.projectMember.name}}"
+                    [name]="member.projectMember.name| removeSpecialCharacters"
+                    [src]='member.projectMember.profileImage' [isRound]="true" size="30">
+                  </app-avatar>
+                </div>
+                <div fxFlex="70">
+                  <p class="m-0">{{member.projectMember.name}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="goal-replan search-userstory mt-02">
+          <mat-form-field class="full-width custom-searchbar">
+            <input class="search_goal" (click)="$event.stopPropagation();" matInput
+              placeholder="{{ 'SEARCH' | translate }}" trim [(ngModel)]="searchText" (keyup)="searchUserStories()">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon (click)="$event.stopPropagation();" *ngIf="searchText" class="icon-button" aria-hidden="false"
+              (click)="closeSearch()" style="cursor:pointer">close</mat-icon>
+          </span>
+        </div>
+        <div class="goal-replan search-userstory mt-02" *ngIf="isBacklogIssues">
+          <mat-form-field class="full-width custom-searchbar">
+            <input class="search_goal" (click)="$event.stopPropagation();" matInput
+              placeholder="{{ 'SEARCHWITHGOALNAME' | translate | softLabelsPipe : softLabels }}" trim
+              [(ngModel)]="searchTextWithGoalName" (keyup)="searchUserStoriesWithGoalName()">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!searchTextWithGoalName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon (click)="$event.stopPropagation();" *ngIf="searchTextWithGoalName" class="icon-button"
+              aria-hidden="false" (click)="closeSearchText()" style="cursor:pointer">close</mat-icon>
+          </span>
+        </div>
+        <div class="goal-replan search-userstory"
+          *ngIf="!KanbanForm && !isSuperagileBoard && !isBacklogIssues && isBugFilters">
+          <mat-form-field class="full-width custom-searchbar">
+            <input (click)="$event.stopPropagation();" matInput trim
+              placeholder="{{ 'GOALS.SEARCHBYVERSIONNAME' | translate }}" [(ngModel)]="versionNamesearchText"
+              (keyup)="versionNamesearchUserStories()">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!versionNamesearchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon (click)="$event.stopPropagation();" *ngIf="versionNamesearchText" class="icon-button"
+              aria-hidden="false" (click)="closeVersionNameSearch()" style="cursor:pointer">close</mat-icon>
+          </span>
+        </div>
+        <div class="goal-replan search-userstory">
+          <mat-form-field class="full-width custom-searchbar">
+            <input (click)="$event.stopPropagation();" matInput trim
+              placeholder="{{ 'GOALS.SEARCHBYUSERSTORYTAGS' | translate | softLabelsPipe : softLabels}}"
+              [(ngModel)]="searchTags" (keyup)="searchTagsForUserStories()">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!searchTags">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon (click)="$event.stopPropagation();" *ngIf="searchTags" class="icon-button" aria-hidden="false"
+              (click)="closeUserStoryTags()" style="cursor:pointer">close</mat-icon>
+          </span>
+        </div>
+        <div *ngIf="!KanbanForm && !isSuperagileBoard && !isBacklogIssues && isBugFilters" class="mt-08">
+          <form [formGroup]="selectBugPriority" class="mt-02">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select (click)="$event.stopPropagation();" placeholder="{{ 'GOALS.SELECTBUGPRIORITY' | translate }}"
+                formControlName="bugPriority" (selectionChange)="getUserStorieslistByBugPriorities()" multiple>
+                <mat-select-trigger>
+                  {{selectedBugPriority}}
+                </mat-select-trigger>
+                <mat-option [value]="0" #allSelected1 (click)="toggleAllBugPrioritySelection1()">
+                  {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                <mat-option [value]="bug.bugPriorityId"
+                  (click)="getUserStorieslistByBugPriorities();toggleBugPrioritySelectionOnMediaPerOne(allSelected1.viewValue)"
+                  *ngFor="let bug of (bugPriorities$ | async)">
+                  <fa-icon icon="{{bug.icon}}" [ngStyle]="
+                        setColorForBugPriorityTypes(bug.color)
+                      "></fa-icon> {{ bug.priorityName }}&nbsp;-&nbsp;{{ bug.description }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+
+        <div class="mt-08 mb-05">
+          <form [formGroup]="selectUserStoryTypeForm">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select placeholder="{{ 'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                formControlName="userStoryTypeId" panelClass="dropdown-custom-class" (click)="$event.stopPropagation();"
+                (selectionChange)="getUserStorieslistByUserStoryTypes()" multiple>
+                <mat-select-trigger>
+                  {{selectedUserStoryType}}
+                </mat-select-trigger>
+                <mat-option [value]="0" #allUserStoryTypesSelected1 (click)="toggleAllUserStoryTypesSelection1()">
+                  {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                <mat-option [value]="userStoryType.userStoryTypeId"
+                  (click)="getUserStorieslistByUserStoryTypes();toggleUsrStoryTypesSelectionPerOne1(allUserStoryTypesSelected1.viewValue)"
+                  *ngFor="let userStoryType of (userStoryTypes$ | async)">
+                  {{ userStoryType.userStoryTypeName | softLabelsPipe : softLabels}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+        <div class="mb-05" *ngIf="!KanbanForm && !isSuperagileBoard && !isBacklogIssues && isBugFilters">
+          <form [formGroup]="selectComponent" class="mt-02">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select placeholder="{{ 'USERSTORY.SELECTCOMPONENT' | translate }}" formControlName="componentName"
+                (selectionChange)="getFilterUserStoriesListByComponent()" multiple>
+                <mat-select-trigger>
+                  {{selectedProjectFeature}}
+                </mat-select-trigger>
+                <mat-option [value]="0" #allProjectFeaturesSelectedOption
+                  (click)="toggleAllProjectFeaturesSelection1()">{{'ADVANCEDSEARCH.SELECTALL' | translate}}
+                </mat-option>
+                <mat-option [value]="component.projectFeatureId"
+                  (click)="getFilterUserStoriesListByComponent();toggleProjectFeaturesSelectionOnMediaPerOne()"
+                  *ngFor="let component of (projectFeature$ | async)">
+                  {{ component.projectFeatureName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+      </div>
+      <!-- <div *ngIf="isSuperagileBoard && !isTheBoardLayoutKanban && !isReportsPage && !isBacklogIssues" class="mt-08">
+        <form [formGroup]="selectSortByForm" class="mt-02 mb-05">
+          <mat-form-field class="goal-replan full-width search-userstory custom-select-matform">
+            <mat-select (click)="$event.stopPropagation();" placeholder="Select sort by option"
+              formControlName="sortByOption" (selectionChange)="getFilterUserStoriesList()">
+              <mat-option value="Deadlinedate">{{ 'GOALS.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}
+              </mat-option>
+              <mat-option value="Order">{{ 'GOALS.ORDER' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </div> -->
+    </mat-menu>
+
+
+    <div fxFlex="30px" *ngIf="!isReportsPage  && !isDocument" fxLayoutAlign="center center"
+      class="text-center clear_filters" matTooltip="{{'GOALS.CLEARALLFILTERS' | translate}}" style="font-size: 15px;">
+      <a (click)="clearUserStoryFilters()">
+        <!-- <fa-icon icon="filter"></fa-icon> -->
+        <fa-icon class="filter_circle" icon="times-circle" style="top: 6px;"
+          [ngStyle]="{ 'bottom': isBacklogIssues == true ? '7px' : '10px' }"></fa-icon>
+      </a>
+    </div>
+    <div fxFlex="22px" *ngIf="!isReportsPage  && !isDocument" class="ml-05 mt-05 show-filters" fxHide.lt-lg="true">
+      <!-- <mat-icon class="icon-button" >settings</mat-icon> -->
+      <fa-icon icon="filter" (click)="showFilters()" matTooltip="{{'GOALS.SHOWFILTERS' | translate}}">
+      </fa-icon>
+    </div>
+    <!-- <div fxFlex="22px" *ngIf="isReportsPage && !isDocument && !isBacklogIssues" class="ml-05 mt-05 filter-icon-show" > -->
+    <div fxFlex="22px" *ngIf="isReportsPage && !isDocument && !isBacklogIssues" class="ml-05 mt-05">
+      <fa-icon mat-icon-button icon="sliders-h" [matMenuTriggerFor]="filterthreeDotsPopOver"></fa-icon>
+    </div>
+    <!-- <div fxFlex="22px" *ngIf="isReportsPage && !isDocument && !isBacklogIssues &&  (accessDragApps$ | async)" class="ml-05 mt-05 filter-icon-show" > -->
+    <div fxFlex="22px" *ngIf="isReportsPage && !isDocument && !isBacklogIssues &&  (accessDragApps$)"
+      class="ml-05 mt-05">
+      <fa-icon mat-icon-button icon="store" matTooltip="{{ 'APP.APPSTORE' | translate}}"
+        (click)="openReportAppsSettings()"></fa-icon>
+    </div>
+    <div fxFlex="22px" class="ml-05 mt-05" *ngIf="listView && isReportsPage && !isDocument && !isBacklogIssues">
+      <fa-icon icon="bars" (click)="emitAppView()" matTooltip="Apps Horizontal"
+        class="mat-color-accent cursor-pointer mt-02" [ngClass]="{'active': listView}"></fa-icon>
+    </div>
+
+    <div fxFlex="22px" class="ml-05 mt-05" *ngIf="!listView && isReportsPage && !isDocument && !isBacklogIssues">
+      <fa-icon icon="bars" (click)="emitAppView()" matTooltip="Apps vertical"
+        class="mat-color-accent cursor-pointer kanban-icon-dashboard mt-02" [ngClass]="{'active': !listView}"></fa-icon>
+    </div>
+    <div fxFlex="22px"
+      *ngIf="!isTheBoardLayoutKanban && !isReportsPage && !isDocument && !isBacklogIssues && (!isCalenderView && !isEmployeeTaskBoardPage)"
+      class="ml-05 mt-05" fxHide.lt-lg="true">
+      <!-- <mat-icon class="icon-button" >settings</mat-icon> -->
+      <fa-icon mat-icon-button icon="eye" (click)="deadlineDispaly()" class="goal-cursor"
+        [ngClass]="{'highlight-calender': isDeadlineDisplay }"
+        matTooltip="{{'GOALS.DISPLAYDEADLINESESTIMATIONS' | translate  | translate | softLabelsPipe : softLabels}}">
+      </fa-icon>
+    </div>
+    <div fxFlex="18px" class="ml-02  mt-03"
+      *ngIf="isEnableSprints && ( goal?.isSprintsConfiguration && !isAllGoalsPage && (project$|async)?.isSprintsConfiguration)  && isBacklogIssues && (canAccess_entityType_feature_AddOrUpdateSprint) && (canAccess_entityType_feature_ViewSprints)">
+      <fa-icon class="backlog-button highlight-calender" matTooltip="{{'SPRINTS.CREATESPRINT' | translate}}"
+        icon="plus-circle" (click)="createSprint()"></fa-icon>
+    </div>
+    <div fxLayout="row wrap" style="position: sticky; left: 0px;"
+      *ngIf="isEmployeeTaskBoardPage && !isBacklogIssues  && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+      <div fxFlex class="mt-05">
+        <!-- <button mat-raised-button mat-button color="primary" [useExistingCss]="true" printSectionId="print-section"
+                  ngxPrint> -->
+        <!-- <fa-icon mat-icon-button icon="print" class="mr-05" printSectionId="print-section" ngxPrint
+          matTooltip="{{'CLIENTS.PRINT' | translate}}" (click)="printTaskboardView()"></fa-icon> -->
+        <!-- </button> -->
+      </div>
+      <mat-slide-toggle
+        [matTooltip]="taskBoardView == false ? ('TRAININGMANAGEMENT.SWITCHTOSTAFF' | translate) : ('TRAININGMANAGEMENT.SWITCHTOTRAINING' | translate) "
+        class="archive-switch mt-05 mr-05 ml-05" [checked]="taskBoardView" (change)="taskBoardViewChange()">
+      </mat-slide-toggle>
+    </div>
+    <div fxFlex="22px" class="ml-05 mt-05"
+      *ngIf="!isBacklogIssues && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+      <fa-icon icon="ellipsis-h" [satPopoverAnchorFor]="editThreeDotsPopover"
+        (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+        matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}"></fa-icon>
+    </div>
+
+    <!-- <img *ngFor="let form of Array(num).fill(1)" class="employee_img" src="../assets/images/faces/2.jpg" /> -->
+    <mat-form-field class="goal-replan" *ngIf="showDropDown && !isBacklogIssues">
+      <mat-select placeholder="{{ 'GOALS.SELECTUSER' | translate }}">
+        <mat-option value="0">All</mat-option>
+        <mat-option value="option" [value]="user.projectMember.id" *ngFor="let user of (projectMembers$ | async)"><img
+            class="employee_img" src="../assets/images/faces/2.jpg" *ngIf="!user.projectMember.profileImage" />
+          <div fxLayout="row wrap" fxLayoutGap="5px">
+            <div fxFlex="7">
+              <app-avatar matTooltip="{{ user.projectMember.fullName }}"
+                [name]="user.projectMember.fullName | removeSpecialCharacters" [src]="user.projectMember.profileImage"
+                [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div fxFlex="88">
+              <p class="mat-body-2">
+                {{ user.projectMember.fullName }}
+              </p>
+            </div>
+          </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-card-title>
+<mat-card class="p-0 m-0">
+  <mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{userNames}}" *ngIf="userNames">
+        <b>Employee name:&nbsp;</b>
+        {{ userNames }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearAssigneeFilter()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedWorkflowStatus}}"
+        *ngIf="selectedWorkflowStatus">
+        <b>Work item status:&nbsp;</b>
+        {{ selectedWorkflowStatus }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearWorkFlowStatus()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{searchText}}" *ngIf="searchText">
+        <b>Search:&nbsp;</b>
+        {{ searchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{searchTextWithGoalName}}"
+        *ngIf="searchTextWithGoalName">
+        <b>Search with goal name:&nbsp;</b>
+        {{ searchTextWithGoalName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearchText()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{versionNamesearchText}}"
+        *ngIf="versionNamesearchText">
+        <b>Search by version name:&nbsp;</b>
+        {{ versionNamesearchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeVersionNameSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{searchTags}}" *ngIf="searchTags">
+        <b>{{ 'GOALS.SEARCHBYUSERSTORYTAGS' | translate | softLabelsPipe : softLabels }}:&nbsp;</b>
+        {{ searchTags }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeUserStoryTags()">
+        </fa-icon>
+      </mat-chip>
+      <!-- <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{orderByOption}}" *ngIf="orderByOption">
+        <b>{{'GOALS.SELECTSORTBYOPTIONASC' | translate}}:&nbsp;</b>
+        {{ orderByOption }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearOrderByoption()">
+        </fa-icon>
+      </mat-chip> -->
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedProjectFeature}}"
+        *ngIf="selectedProjectFeature">
+        <b>Component:&nbsp;</b>
+        {{ selectedProjectFeature }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearProjectFeature()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedBugPriority}}"
+        *ngIf="selectedBugPriority">
+        <b>Bug priority:&nbsp;</b>
+        {{ selectedBugPriority }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearSelectedBugPriority()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedUserStoryType}}"
+        *ngIf="selectedUserStoryType">
+        <b>{{ 'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+        {{ selectedUserStoryType }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearUserStoryType()">
+        </fa-icon>
+      </mat-chip>
+    </div>
+  </mat-card-title>
+</mat-card>
+
+<!------- popover for visualizations menu -------->
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+  hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()" horizontalAlign="end">
+  <mat-card class="filter-data p-0" fxLayout='column'>
+    <div fxFlex fxLayoutAlign="start center" *ngIf="!isBacklogIssues">
+      <button mat-menu-item (click)="onClickFromSuperagile(false);closeMenuPopover();" [style]="getSelectedHoverStyle('agile')">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="bars"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'HORIZONTAL'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="!isBacklogIssues && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+      <button mat-menu-item (click)="onClickFromSuperagile(true);closeMenuPopover();" [style]="getSelectedHoverStyle('kanban')">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px" class="kanban-superagile-menu">
+            <fa-icon icon="bars" class="kanban-icon-menu"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'VERTICAL'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="goal.goalId !='00000000-0000-0000-0000-000000000000' && !isBacklogIssues && canAccessWorkflow">
+      <button mat-menu-item [satPopoverAnchorFor]="workFlowPopover"
+        (click)="workFlowPopover.open(); getGoalWorkflow();closeMenuPopover();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="cog"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALACTIVITY.WORKFLOW' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center" [style]="getSelectedHoverStyle('calendar')"
+      *ngIf="!isBacklogIssues && goal.goalId !='00000000-0000-0000-0000-000000000000' && !goal.inActiveDateTime && !goal.parkedDateTime && ((!isAllGoalsPage && canAccess_entityType_feature_ViewWorkItem) || (isAllGoalsPage && isPermissionForViewUserStories))">
+      <button mat-menu-item (click)="goalCalanderView();closeMenuPopover();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="calendar"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALACTIVITY.CALANDER'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center" [style]="getSelectedHoverStyle('reports')"
+      *ngIf="!isBacklogIssues && goal.goalId !='00000000-0000-0000-0000-000000000000' && checkPermissionsForReports()">
+      <button mat-menu-item (click)="getBurnDownCharts();hideFilters();closeMenuPopover();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="chart-line"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALACTIVITY.REPORTS'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="!isBacklogIssues && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+      <button mat-menu-item (click)="getDocuments();hideFilters();closeMenuPopover();" [style]="getSelectedHoverStyle('documents')">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="cloud-upload-alt"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'DOCUMENTS'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="goal.goalId !='00000000-0000-0000-0000-000000000000' && !isBacklogIssues && ((!isAllGoalsPage && canAccess_entityType_feature_ViewWorkItem) || (isAllGoalsPage && isPermissionForViewUserStories))">
+      <button mat-menu-item (click)="getEmployeeTaskBoard();hideFilters();closeMenuPopover();" [style]="getSelectedHoverStyle('tasks')">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="table"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALACTIVITY.USERTASKBOARD' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="goal.goalId !='00000000-0000-0000-0000-000000000000' && !isBacklogIssues">
+      <button mat-menu-item [disabled]="downloadInProgress" (click)="downloadTasks();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="download"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALACTIVITY.DOWNLOADTASKLIST' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="downloadInProgress">
+  </mat-progress-bar>
+</sat-popover>
+<!------- popover for visualizations menu -------->
+
+<!----- popover for dashboard settings ------>
+
+
+
+<sat-popover #workFlowPopover hasBackdrop verticalAlign="center" horizontalAlign="center" [interactiveClose]="false">
+  <mat-card class="filter-data p-0" style="width: 600px;">
+    <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{workflowName}}
+      </div>
+    </mat-card-title>
+    <div>
+      <div fxFlex>
+        <ndc-dynamic *ngIf="workflowStatusComponent" [ndcDynamicFactory]="workflowStatusComponent.component"
+          [ndcDynamicComponent]="workflowStatusComponent.component" [ndcDynamicInjector]="injector"
+          [ndcDynamicInputs]="workflowStatusComponent.inputs" [ndcDynamicOutputs]="workflowStatusComponent.outputs">
+        </ndc-dynamic>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<mat-menu class="goal-options" #filterthreeDotsPopOver="matMenu">
+
+  <button mat-menu-item (click)="resetToDefaultPersistance()">
+    <fa-icon icon="history" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'APP.RESETTODEFAULT' | translate}}">{{'APP.RESETTODEFAULT' | translate}}</span>
+  </button>
+
+  <button mat-menu-item *ngIf="(accessPublishBoard$)" (click)="saveAsDefaultDashboardPersistance()">
+    <fa-icon icon="save" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'APP.SAVEASDEFAULT' | translate}}">{{'APP.SAVEASDEFAULT' | translate}}</span>
+  </button>
+
+  <button mat-menu-item (click)="refreshReportsDashboard()">
+    <fa-icon icon="sync-alt" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'BILLINGDASHBOARD.REFRESH' | translate}}">{{'BILLINGDASHBOARD.REFRESH' | translate }}</span>
+  </button>
+</mat-menu>
+
+<!----- popover for dashboard settings ------>

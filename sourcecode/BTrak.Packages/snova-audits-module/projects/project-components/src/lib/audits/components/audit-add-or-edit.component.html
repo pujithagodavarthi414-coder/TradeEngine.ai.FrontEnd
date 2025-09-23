@@ -1,0 +1,370 @@
+<mat-card-content id="style-1" class="p-05 m-0" style="width: 600px; max-height: 300px;">
+  <form [formGroup]="auditForm" novalidate (submit)="auditForm.valid && addOrEditAudit()">
+    <div class="card-content">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width mb-05 p-05">
+            <input matInput placeholder="{{'AUDIT.AUDITNAME' | translate | softLabelsPipe :softLabels}}" required formControlName="auditName" />
+            <mat-error *ngIf="auditForm.get('auditName').hasError('required') &&
+                      auditForm.get('auditName').touched">
+              {{'AUDIT.PLEASEENTERAUDITNAME' | translate | softLabelsPipe : softLabels}}
+            </mat-error>
+            <mat-error *ngIf="auditForm.get('auditName').hasError('maxlength')">
+              {{'AUDIT.AUDITNAMEEXCEED150CHARACTERS' | translate | softLabelsPipe : softLabels}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100" class="mt-05">
+          <mat-form-field class="full-width">
+            <mat-select placeholder="{{ 'AUDIT.AUDITASSIGNEE' | translate | softLabelsPipe :softLabels }}" required
+              formControlName="responsibleUserId" (selectionChange)="getAssigneeValue($event.value)">
+              <mat-option [value]="user.projectMember.id" *ngFor="let user of userList">
+                <div fxLayout="row wrap" fxLayoutGap="5px">
+                  <div fxFlex="35px">
+                    <app-avatar [name]="user.projectMember.name | removeSpecialCharacters"
+                      [src]="user.projectMember.profileImage" [isRound]="true" size="30">
+                    </app-avatar>
+                  </div>
+                  <div fxFlex="75">
+                    <p class="mat-body-2">
+                      {{ user.projectMember.name }}
+                    </p>
+                  </div>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="mb-05">
+        <ng-container *ngIf="(auditForm.get('viewAuditDescription').value == false)">
+          <a class="add-test-case"
+            (click)="auditForm.get('viewAuditDescription').setValue(!auditForm.get('viewAuditDescription').value)">
+            <b>{{'AUDIT.ENTERAUDITDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+          </a>
+        </ng-container>
+        <ng-container *ngIf="!(auditForm.get('viewAuditDescription').value == false)">
+          <a class="add-test-case"
+            (click)="auditForm.get('viewAuditDescription').setValue(!auditForm.get('viewAuditDescription').value)">
+            <b>{{'AUDIT.HIDEAUDITDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+          </a>
+        </ng-container>
+      </div>
+      <!-- <mat-form-field class="mb-1 full-width"> -->
+      <!-- <textarea matInput placeholder="{{'AUDIT.DESCRIPTION' | translate}}"
+                    formControlName="auditDescription"></textarea> -->
+      <!-- </mat-form-field> -->
+      <div [hidden]="auditForm.get('viewAuditDescription').value == false">
+        <editor class="mb-1 dfree-header custom-logtime-comment"
+          apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Add comment" menubar="false"
+          [init]="initSettings" background="white" height="100" [formControl]="auditForm.controls['auditDescription']"
+          (onKeyUp)="checkValidation($event)">
+        </editor>
+        <mat-error *ngIf="auditForm.controls['auditDescription'].hasError('maxlength')">
+          {{'AUDIT.AUDITDESCRIPTIONEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}
+        </mat-error>
+      </div>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanScheduleAudit">
+      <mat-checkbox formControlName="recurringAudit">
+        {{'AUDIT.RECURRINGAUDIT' | translate | softLabelsPipe :softLabels}}
+      </mat-checkbox>
+      <!-- <span *ngIf="auditForm.get('recurringAudit').value && cronExpressionDescription" class="pl-05"><b>(
+          {{cronExpressionDescription}} )</b>
+      </span> -->
+      <!-- <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent pl-05"
+        [satPopoverAnchorFor]="addCronExpressionPopovers" #addCronExpressionPopUp="satPopoverAnchor"
+        *ngIf="isRecurringAudit && cronExpressionDescription" (click)="editCronExpressionPopup(addCronExpressionPopUp)">
+      </fa-icon> -->
+    </div>
+    <div *ngIf="auditForm.get('recurringAudit').value">
+
+      <kendo-grid #grid [data]="gridView" [sortable]="false" [pageable]="false" [selectable]="false">
+        <kendo-grid-column field="cronExpression">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'AUDIT.EXPRESSIONDESCRIPTION' | translate}}">{{'AUDIT.EXPRESSIONDESCRIPTION' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ getExpressionDescription(dataItem?.cronExpression) }}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="conductStartDate">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'AUDIT.STARTDATE' | translate}}">{{'AUDIT.STARTDATE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.conductStartDate  | date: dateFormat.pattern }}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="conductEndDate">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left" matTooltip="{{'AUDIT.ENDDATE' | translate}}">{{'AUDIT.ENDDATE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.conductEndDate  | date: dateFormat.pattern }}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column [width]="70">
+          <ng-template kendoGridHeaderTemplate>
+            <button class="text-center" title="{{ 'AUDIT.ADDRECURRINGAUDIT' | translate | softLabelsPipe :softLabels }}"
+              (click)="addRecurringAudit(addCronExpressionPopUp,$event)"
+              [satPopoverAnchorFor]="addCronExpressionPopovers" #addCronExpressionPopUp="satPopoverAnchor"
+              mat-icon-button>
+              <fa-icon icon="plus" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+          <ng-template let-dataItem kendoGridCellTemplate>
+            <button class="text-center" title="{{ 'AUDIT.EDITSCHEDULE' | translate }}" type="button"
+              (click)="bindSchedule(dataItem, addCronExpressionPopUp,$event)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button *ngIf="canAccess_entityType_feature_CanDeleteAuditSchedule" class="text-center"
+              title="{{ 'AUDIT.DELETESCHEDULE' | translate }}" type="button"
+              [satPopoverAnchorFor]="deleteAuditSchedulerTrigger" #deleteAuditSchedulerTriggerPopover="satPopoverAnchor"
+              (click)="deleteAuditSchedulerTriggerFn(dataItem,deleteAuditSchedulerTriggerPopover)" mat-icon-button>
+              <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-column>
+        <ng-template kendoGridNoRecordsTemplate>
+          {{'AUDIT.NOSCHEDULESTODISPLAY' | translate}}
+        </ng-template>
+      </kendo-grid>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanAddRAGConfiguration">
+      <mat-checkbox formControlName="isRAG" (change)="changeRAG($event.checked)">
+        {{'AUDIT.ISRAG' | translate}}
+      </mat-checkbox>
+    </div>
+    <div class="mb-05" *ngIf="auditForm.get('isRAG').value">
+      <mat-form-field class="mr-05">
+        <input matInput formControlName="inBoundPercent" type="number" min="0" max="99"
+          placeholder="{{ 'AUDIT.INBOUND' | translate }}" trim>
+        <mat-error *ngIf="auditForm.get('inBoundPercent').hasError('required') &&
+                  auditForm.get('inBoundPercent').touched">
+          {{'AUDIT.SELECTINBOUND' | translate}}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput formControlName="outBoundPercent" type="number" min="0" max="99"
+          placeholder="{{ 'AUDIT.OUTBOUND' | translate }}" trim>
+        <mat-error *ngIf="auditForm.get('outBoundPercent').hasError('required') &&
+                  auditForm.get('outBoundPercent').touched">
+          {{'AUDIT.SELECTOUTBOUND' | translate}}
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="mb-05"
+      *ngIf="checkValue(auditForm.get('inBoundPercent').value, auditForm.get('outBoundPercent').value)">
+      <span style="color: red; font-size: 12px;">
+        {{'AUDIT.INBOUNDGREATERTHANOUTBOUND' | translate}}
+      </span>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanLogTime">
+      <mat-checkbox formControlName="canLogTime">
+        {{'AUDIT.CANLOGTIME' | translate}}
+      </mat-checkbox>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanEnableWorkflows">
+      <mat-checkbox formControlName="enableQuestionLevelWorkFlow">
+        {{'AUDIT.ENABLEQUESTIONLEVELWORKFLOW' | translate | softLabelsPipe :softLabels }}
+      </mat-checkbox>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanEnableWorkflows">
+      <mat-checkbox formControlName="enableWorkFlowForAudit"
+        (click)="loadGenericStatusComponentForAudit('Audits', $event.checked);$event.stopPropagation()">
+        {{'AUDIT.ENABLEAUDITWORKFLOW' | translate | softLabelsPipe :softLabels }}
+      </mat-checkbox>
+    </div>
+    <div *ngIf="auditForm.get('enableWorkFlowForAudit').value && loadedAuditStatus">
+      <ndc-dynamic [ndcDynamicFactory]="dashboard.component" [ndcDynamicComponent]="dashboard.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+    </div>
+    <div *ngIf="canAccess_entityType_feature_CanEnableWorkflows">
+      <mat-checkbox formControlName="enableWorkFlowForAuditConduct"
+        (click)="loadGenericStatusComponentForConduct('Conduct', $event.checked);$event.stopPropagation()">
+        {{'AUDIT.ENABLECONDUCTWORKFLOW' | translate | softLabelsPipe :softLabels }}
+      </mat-checkbox>
+    </div>
+    <div *ngIf="auditForm.get('enableWorkFlowForAuditConduct').value && loadedConductStatus">
+      <ndc-dynamic [ndcDynamicFactory]="conductComp.component" [ndcDynamicComponent]="conductComp.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="conductComp.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+    </div>
+    <div class="text-center">
+      <button *ngIf="!isEditAudit" class="mr-1" mat-button mat-raised-button color="primary" type="submit"
+        [disabled]="disableAudit">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="plus"></fa-icon>
+        {{'AUDIT.ADD' | translate | softLabelsPipe : softLabels}}
+      </button>
+      <button *ngIf="isEditAudit" class="mr-1" mat-button mat-raised-button color="primary" type="submit"
+        [disabled]="disableAudit">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon>
+        {{'AUDIT.SAVE' | translate | softLabelsPipe : softLabels}}
+      </button>
+      <button mat-button mat-raised-button type="button" (click)="closeAuditDialog()">
+        <fa-icon class="mr-05" icon="times"></fa-icon> {{'AUDIT.CANCEL' | translate}}
+      </button>
+    </div>
+  </form>
+</mat-card-content>
+
+<sat-popover #addCronExpressionPopovers verticalAlign="center" hasBackdrop horizontalAlign="center"
+  backdropClass="backdrop-color" [interactiveClose]="false">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'USERSTORY.SCHEDULE' | translate}}</div>
+    </mat-card-title>
+    <form [formGroup]="schedulesForm" novalidate (submit)="schedulesForm.valid && submitCronExpressionPopUp()">
+      <div id="style-1" class="audit-edit-section">
+        <div class="col-md-12" *ngIf="editAuditData">
+          <audit-select-questions-schedule #SelectQuestions [selectedAudit]="editAuditData">
+          </audit-select-questions-schedule>
+        </div>
+        <div class="col-md-12">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                <input matInput [matDatepicker]="picker1" placeholder="{{'AUDIT.PLEASECHOOSEDEASTARTDATE' | translate}}"
+                  (click)="picker1.open()" formControlName="conductStartDate" required>
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="!schedulesForm.get('conductStartDate').valid && schedulesForm.get('conductStartDate').touched">
+                    {{'AUDIT.PLEASECHOOSEDEASTARTDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-md-6 col-sm-6">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                <input matInput [matDatepicker]="picker" [min]="minDate"
+                  placeholder="{{'AUDIT.PLEASECHOOSEDEADLINEDATE' | translate}}" (click)="picker.open()"
+                  formControlName="conductEndDate" required>
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="!schedulesForm.get('conductEndDate').valid && schedulesForm.get('conductEndDate').touched">
+                    {{'AUDIT.PLEASECHOOSEDEADLINEDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row pl-1">
+            <div class="col-md-6 col-sm-6" fxFlex="50" fxFlex.xs="100" fxLayoutAlign="end end">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'AUDIT.CONDUCTASSIGNEE' | translate | softLabelsPipe :softLabels }}" required
+                  formControlName="responsibleUserId" (selectionChange)="getAssigneeValue($event.value)">
+                  <mat-option [value]="user.projectMember.id" *ngFor="let user of userList">
+                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                      <div fxFlex="35px">
+                        <app-avatar [name]="user.projectMember.name | removeSpecialCharacters"
+                          [src]="user.projectMember.profileImage" [isRound]="true" size="30">
+                        </app-avatar>
+                      </div>
+                      <div fxFlex="75">
+                        <p class="mat-body-2">
+                          {{ user.projectMember.name }}
+                        </p>
+                      </div>
+                    </div>
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayoutAlign="center center" class="full-width p-1">
+          <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions" style="width:100%">
+          </cron-editor>
+        </div>
+        <div class="col-md-12">
+          <div class="row">
+            <div class="col-sm-4">
+              <mat-form-field>
+                <input matInput formControlName="spanInYears" type="number" [min]="0" [max]="1" autocomplete="off"
+                  placeholder="{{ 'AUDIT.SPANINYEAR' | translate }}" trim>
+                <mat-error
+                  *ngIf="(schedulesForm.get('spanInYears').hasError('required') || schedulesForm.get('spanInYears').hasError('min') || schedulesForm.get('spanInYears').hasError('max')) && schedulesForm.get('spanInYears').touched">
+                  {{'AUDIT.SELECTYEARSPAN' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-sm-4">
+              <mat-form-field>
+                <input matInput formControlName="spanInMonths" type="number" min="0" max="12" autocomplete="off"
+                  placeholder="{{ 'AUDIT.SPANINMONTH' | translate }}" trim>
+                <mat-error
+                  *ngIf="(schedulesForm.get('spanInMonths').hasError('required') || schedulesForm.get('spanInMonths').hasError('min') || schedulesForm.get('spanInMonths').hasError('max')) && schedulesForm.get('spanInMonths').touched">
+                  {{'AUDIT.SELECTMONTHSPAN' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-sm-4">
+              <mat-form-field>
+                <input matInput formControlName="spanInDays" type="number" min="0" max="99" autocomplete="off"
+                  placeholder="{{ 'AUDIT.SPANINDAY' | translate }}" trim>
+                <mat-error
+                  *ngIf="(schedulesForm.get('spanInDays').hasError('required') || schedulesForm.get('spanInDays').hasError('min') || schedulesForm.get('spanInDays').hasError('max')) && schedulesForm.get('spanInDays').touched">
+                  {{'AUDIT.SELECTDAYSPAN' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="ml-1">
+          <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center center">
+            <span *ngIf="schedulesForm.get('isPaused').value">{{'USERSTORY.RESUME' | translate}}</span>
+            <span *ngIf="!schedulesForm.get('isPaused').value">{{'USERSTORY.PAUSE' | translate}}</span>
+            <mat-slide-toggle
+              [matTooltip]="schedulesForm.get('isPaused').value == true ? ('USERSTORY.SWITCHTORESUME' | translate) : ('USERSTORY.SWITCHTOPAUSE' | translate)"
+              class="archive-switch" formControlName="isPaused">
+            </mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+      <div class="mb-1 mt-1 text-center">
+        <button mat-raised-button color="primary" class="mr-1" [disabled]="schedulesForm.invalid">
+          <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeCronExpressionPopUp()" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteAuditSchedulerTrigger [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'AUDIT.DELETEAUDITSCHEDULER' | translate}}
+      </div>
+    </mat-card-title>
+    <div class="card-content p-1">
+      <div class="text-center mb-1">{{'AUDIT.DELETEAUDITSCHEDULERTEXT' | translate}}
+      </div>
+      <div fxLayoutAlign="space-around center">
+        <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+          (click)="removeAuditScheduler();">
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button type="button" mat-button mat-raised-button (click)="cancelAuditSchedulerPopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>

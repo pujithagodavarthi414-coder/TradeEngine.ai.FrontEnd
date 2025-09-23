@@ -1,0 +1,195 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageMerchant">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text full-width p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'MERCHANT.MERCHANT' | translate | titlecase }}">{{ 'MERCHANT.MERCHANT' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="searchMerchants()">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon close_icon_billing" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button mat-icon-button matTooltip="{{ 'MERCHANT.CLICKHERETOCREATEAMERCHANT' | translate }}"
+                        [satPopoverAnchorFor]="merchantPopover" #upsertMerchantPopup="satPopoverAnchor"
+                        (click)=" createMerchant(upsertMerchantPopup);" *ngIf="!isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="36px" *ngIf="isArchived"></div>
+
+                <!-- <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="shift-timing-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+                </div> -->
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50" [rowHeight]="50"
+            [limit]="100" [rows]="merchants" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'MERCHANT.MERCHANTNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+                prop="merchantName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.merchantName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'MERCHANT.DESCRIPTION' | translate }}" [flexGrow]="1" [sortable]="true"
+                prop="description">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{row?.description}}">{{ row?.description }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'MERCHANT.EDITMERCHANTTITLE' | translate }}"
+                        [satPopoverAnchorFor]="merchantPopover" #upsertMerchantPopup="satPopoverAnchor"
+                        (click)="editMerchant(row,upsertMerchantPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'MERCHANT.ARCHIVEMERCHANT' | translate }}"
+                        [satPopoverAnchorFor]="deleteMerchantPopover" #deleteMerchantPopup="satPopoverAnchor"
+                        (click)="deleteExpenseCategoryPopupOpen(row,deleteMerchantPopup)" *ngIf="!isArchived"
+                        mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'MERCHANT.UNARCHIVEMERCHANT' | translate }}"
+                        [satPopoverAnchorFor]="deleteMerchantPopover" #deleteMerchantPopup="satPopoverAnchor"
+                        (click)="deleteExpenseCategoryPopupOpen(row,deleteMerchantPopup)" *ngIf="isArchived"
+                        mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- edit -->
+    <sat-popover backdropClass="backdrop-color" #merchantPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ merchantTitle }}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="merchantForm" class="full-width" #formDirective="ngForm" novalidate
+                    (submit)="merchantForm.valid;upsertMerchant(formDirective)">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="merchantName" required
+                                placeholder="{{'MERCHANT.MERCHANTNAME' | translate}}">
+                            <mat-error *ngIf="merchantForm.get('merchantName').hasError('maxlength')">
+                                {{ 'MERCHANT.MERCHANTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="merchantForm.get('merchantName').hasError('required') && merchantForm.get('merchantName').touched">
+                                {{ 'MERCHANT.MERCHANTNAMEREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="description"
+                                placeholder="{{'MERCHANT.DESCRIPTION' | translate}}">
+                            <mat-error *ngIf="merchantForm.get('description').hasError('maxlength')">
+                                {{ 'MERCHANT.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div class="text-center">
+                        <button mat-raised-button class="ml-05 mb-05 mat-primary"
+                            [disabled]="!merchantForm.valid || isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <mat-icon class="mr-05">add</mat-icon>{{'EXPENSEMANAGEMENT.ADD' | translate}}
+                        </button>
+                        <button mat-raised-button class="ml-05 mb-05" type="button"
+                            (click)="closeupsertMerchantPopup(formDirective)">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>{{'BILLINGMANAGEMENT.CANCEL' | translate}}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!-- edit -->
+
+    <!-- delete -->
+    <sat-popover backdropClass="backdrop-color" #deleteMerchantPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isMerchantArchived">
+                    {{ 'MERCHANT.ARCHIVEMERCHANT' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isMerchantArchived">
+                    {{ 'MERCHANT.UNARCHIVEMERCHANT' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isMerchantArchived">
+                    {{ 'MERCHANT.MERCHANTARCHIVETEXT' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isMerchantArchived">
+                    {{ 'MERCHANT.MERCHANTUNARCHIVETEXT' | translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isMerchantArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteMerchant();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isMerchantArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteMerchant();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon>{{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closedeleteMerchantPopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageMerchant" textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

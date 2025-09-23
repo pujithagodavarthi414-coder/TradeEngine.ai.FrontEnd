@@ -1,0 +1,117 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageButtonType">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" matTooltip="{{ 'BUTTONTYPE.BUTTONTYPETITLE' | translate | titlecase }}"
+            class="hide-content-overflow">{{ 'BUTTONTYPE.BUTTONTYPETITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="close_icon mr-lg-n5" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [rowHeight]="50" [limit]="10" [rows]="buttonTypes" [loadingIndicator]="isAnyOperationIsInprogress" 
+      [scrollbarH]="true" [virtualization]="false">
+      <ngx-datatable-column name="{{ 'BUTTONTYPE.BUTTONTYPENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="buttonTypeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.buttonTypeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'BUTTONTYPE.SHORTNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="shortName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.shortName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'BUTTONTYPE.EDITBUTTONTYPE' | translate }}" mat-icon-button
+            [satPopoverAnchorFor]="upsertButtonTypePopover" #upsertButtonTypePopUp="satPopoverAnchor"
+            (click)="editButtonTypePopupOpen(row,upsertButtonTypePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertButtonTypePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ buttonTypeEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="buttonTypeForm" #formDirective="ngForm" novalidate
+          (submit)="buttonTypeForm.valid && upsertButtonType(formDirective)">
+          <div fxLayout="row" fxLayoutGap="10px" class="p-05">
+            <div fxFlex="49">
+              <mat-form-field>
+                <input matInput formControlName="buttonTypeName"
+                  placeholder="{{ 'BUTTONTYPE.BUTTONTYPENAME' | translate }}" required>
+                <mat-error *ngIf="buttonTypeForm.get('buttonTypeName').hasError('maxlength')">
+                  {{ 'BUTTONTYPE.BUTTONTYPENAMECANNOTEXCEED12CHARACTERS' | translate }}
+                </mat-error>
+                <mat-error
+                  *ngIf="buttonTypeForm.get('buttonTypeName').hasError('required') && buttonTypeForm.get('buttonTypeName').touched">
+                  {{ 'BUTTONTYPE.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="49">
+              <mat-form-field>
+                <input matInput formControlName="shortName" placeholder="{{ 'BUTTONTYPE.SHORTNAME' | translate }}"
+                  required>
+                <mat-error *ngIf="buttonTypeForm.get('shortName').hasError('maxlength')">
+                  {{ 'BUTTONTYPE.SHORTNAMEMAXLENGTH' | translate }}
+                </mat-error>
+                <mat-error
+                  *ngIf="buttonTypeForm.get('shortName').hasError('required') && buttonTypeForm.get('shortName').touched">
+                  {{ 'BUTTONTYPE.SHORTNAMEREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!buttonTypeForm.valid ||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertButtonTypePopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageButtonType"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,172 @@
+<mat-card-title class="mrl0604">
+    <div class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center">
+        <span>{{'LEAVETYPES.APPLICABILITY' | translate}}</span>
+    </div>
+</mat-card-title>
+<mat-card class="mr-06 leave-type-configmat" id="style-1">
+    <form [formGroup]="applicabilityForm" #formDirective="ngForm" novalidate
+        (submit)="applicabilityForm.valid && upsertLeaveApplicability()">
+        <div fxFlex fxLayout="column">
+            <div class="mrl0604 leave-type-configapplicabilityform" id="style-1">
+                <mat-progress-bar *ngIf=" (upsertLeaveApplicabilityInprogress$ | async) || loadingeaveApplicabilityInprogress">
+                </mat-progress-bar>
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="5px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'LEAVETYPES.MINEMPLOYMENTDURATION' | translate}}
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="minExperienceInMonths" type="number" (input)="changeFields()"
+                                placeholder="{{'LEAVETYPES.MINEMPLOYMENTDURATION' | translate}}">
+                            <mat-error *ngIf="applicabilityForm.get('minExperienceInMonths').hasError('max')">
+                                {{'LEAVETYPES.MINEMPLOYMENTRESTRICTIONERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center" class="ml-1">
+                        {{'LEAVETYPES.MAXEMPLOYMENTDURATION' | translate}}
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="maxExperienceInMonths" type="number"
+                                (input)="changeFields()"
+                                placeholder="{{'LEAVETYPES.MAXEMPLOYMENTDURATION' | translate}}">
+                            <mat-error *ngIf="applicabilityForm.get('maxExperienceInMonths').hasError('max')">
+                                {{'LEAVETYPES.MAXEMPLOYMENTRESTRICTIONERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'LEAVETYPES.ROLESTITLE' | translate}}
+                    </div>
+                    <div fxFlex="85" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="roleId"
+                                placeholder="{{'LEAVETYPES.SELECTROLESPLACEHOLDER' | translate}}" multiple
+                                (selectionChange)="getRoleslistByUserId();">
+                                <mat-select-trigger>
+                                    {{selectedRoleNames}}
+                                </mat-select-trigger>
+                                <mat-option [value]="0" #allSelected (click)="toggleAllRolesSelected();changeFields();">
+                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}
+                                </mat-option>
+                                <mat-option [value]="role.roleId" (click)="toggleRolePerOne(allSelected.value);changeFields();"
+                                    *ngFor="let role of (selectRolesListData)">
+                                    {{ role.roleName }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'LEAVETYPES.BRANCHTITLE' | translate}}
+                    </div>
+                    <div fxFlex="85" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="branchId"
+                            (selectionChange)="changeFields()"
+                                placeholder="{{'LEAVETYPES.SELECTBRANCHPLACEHOLDER' | translate}}" multiple>
+                                <mat-option value="option" *ngFor="let branch of branchList" [value]="branch.branchId">
+                                    {{ branch.branchName }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'LEAVETYPES.GENDERTITLE' | translate}}
+                    </div>
+                    <div fxFlex="85" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="genderId"
+                            (selectionChange)="changeFields()"
+                                placeholder="{{'LEAVETYPES.SELECTGENDERPLACEHOLDER' | translate}}" multiple>
+                                <mat-option value="option" *ngFor="let gender of gendersList" [value]="gender.genderId">
+                                    {{ gender.gender }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'LEAVETYPES.MARITALSTATUSTITLE' | translate}}
+                    </div>
+                    <div fxFlex="85" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="maritalStatusId"
+                                (selectionChange)="changeFields()"
+                                placeholder="{{'LEAVETYPES.SELECTMARITALTATUSPLACEHOLDER' | translate}}" multiple>
+                                <mat-option value="option" *ngFor="let maritalStatus of maritalStatusesList"
+                                    [value]="maritalStatus.maritalStatusId">
+                                    {{ maritalStatus.maritalStatus }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <div fxFlex="15" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                        {{'PAYROLL.EMPLOYEES' | translate | softLabelsPipe : softLabels }}
+                    </div>
+                    <div fxFlex="85" fxFlex.lt-md="100">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                            <mat-select multiple formControlName="employeeId"
+                                placeholder="{{'LEAVESLIST.PLEASESELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                                (selectionChange)="getSelectedEmployees()" [disabled]="isEmployeeDisabled">
+                                <mat-select-trigger>
+                                    {{selectedEmployees}}
+                                </mat-select-trigger>
+                                <mat-option #allEmployeeSelected (click)="toggleAllEmployeesSelected();" [value]="0">
+                                    {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                <mat-option #allEmployeeSelected (click)="toggleEmployeePerOne();" value="option"
+                                    *ngFor="let employee of allEmployeeList" [value]="employee.employeeId">
+                                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                                        <div fxFlex="35px">
+                                            <app-avatar [name]="employee.userName | removeSpecialCharacters"
+                                                [src]="employee.profileImage" [isRound]="true" size="30">
+                                            </app-avatar>
+                                        </div>
+                                        <div fxFlex>
+                                            <p class="mat-body-2">
+                                                {{employee.userName}}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div fxLayout="row" class="pull-right">
+                    <button mat-button mat-raised-button class="mr-1"
+                        [disabled]="upsertLeaveApplicabilityInprogress$ | async" (click)="previousPage()">
+                        {{'LEAVETYPES.PREVIOUS' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button class="mr-1"
+                        [disabled]="upsertLeaveApplicabilityInprogress$ | async" (click)='goToPreviousPage()'>
+                        {{'LEAVETYPES.CANCEL' | translate}}
+                    </button>
+                    <button mat-raised-button color="primary" class="mr-1 text-center"
+                        (click)="upsertLeaveApplicability()"
+                        [disabled]="!applicabilityForm.valid || (upsertLeaveApplicabilityInprogress$ | async) || (loadingeaveApplicabilityInprogress == true)">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="upsertLeaveApplicabilityInprogress$ | async">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{'LEAVETYPES.SAVEANDPROCEED' | translate}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</mat-card>

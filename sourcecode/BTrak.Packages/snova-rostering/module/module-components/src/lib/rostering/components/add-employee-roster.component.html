@@ -1,0 +1,563 @@
+<ng-container *ngIf="canAccess_feature_CreateRoster">
+  <mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05">
+    <mat-card-title class="full-width data-table-header">
+      <div fxLayout="row wrap" fxLayoutAlign="start center" class="roster-scheduler">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{ priorInputData.rostName ? priorInputData.rostName : 'ROSTER.ROSTERTITLE' | translate}}
+          </span>
+        </div>
+        <div class="p-05 full-width ml-05" fxFlex="30" fxLayoutAlign="space-around">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{'ROSTER.EMPLOYEETEXT' | translate}} {{ this.filteredEmployeeList ? this.filteredEmployeeList.length : 0 }}
+          </span>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button type="button" mat-icon-button (click)="previous()" matTooltip="{{'ROSTER.GOBACK' | translate}}">
+            <fa-icon icon="arrow-left">
+            </fa-icon>
+          </button>
+        </div>
+
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.EDITROSTERPREREQUISITES' | translate}}"
+            (click)="updateRosterPrerequisites()">
+            <fa-icon class="filter mat-color-accent" icon="user-plus"></fa-icon>
+          </button>
+        </div>
+        <kendo-buttongroup [selection]="'single'">
+          <button kendoButton icon="user" toggleable="true" [selected]="true"
+            (click)="isBryntum = true;toggleScheduler(1)">{{'ROSTER.BRYNTUM'| translate}}</button>
+          <button kendoButton icon="clock" toggleable="true"
+            (click)="isBryntum = false;toggleScheduler(2)">{{'ROSTER.KENDO'| translate}}</button>
+        </kendo-buttongroup>
+        <div class="mt-05 ml-05 mr-05" fxLayoutAlign="end center">
+          <div *ngIf="budgetCalculated > 0">
+            <label><b>{{'ROSTER.BUDGETCALCULATED'| translate}}</b> :
+              {{budgetCalculated | currency : selectedCurrency.currencyCode}}</label>
+          </div>
+        </div>
+        <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="isBryntum">
+          <button mat-icon-button matTooltip="{{'ROSTER.RESETSHIFTFILTERS' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div> -->
+        <div fxFlex="50px" fxLayoutAlign="end center" fxLayoutAlign.xs="start center" *ngIf="isBryntum">
+          <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isOverlay" [checked]="isOverlay"
+            [matTooltip]="(!isOverlay) ? ('ROSTER.SHOWSHIFTOVERLAY' | translate) : ('ROSTER.HIDESHIFTOVERLAY' | translate)"
+            (change)="showOrHideOverlay()"></mat-slide-toggle>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.AUTOROSTER' | translate}}" [matMenuTriggerFor]="addMenu">
+            <fa-icon class="filter mat-color-accent" icon="plus"></fa-icon>
+          </button>
+        </div>
+        <!-- <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.AUTOROSTER' | translate}}" (click)="exportexcel()">
+            <fa-icon class="filter mat-color-accent" icon="file-excel"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'ROSTER.AUTOROSTER' | translate}}" (click)="exportpdf()">
+            <fa-icon class="filter mat-color-accent" icon="file-pdf"></fa-icon>
+          </button>
+        </div> -->
+        <mat-menu #addMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+          <button mat-menu-item [satPopoverAnchorFor]="createPlanFromShift" *ngIf="isBryntum"
+            #createPlanWithShiftPopover="satPopoverAnchor"
+            (click)="loadPlansFromShiftTimings(createPlanWithShiftPopover)">
+            {{'ROSTER.FROMSHIFTTIMING' | translate}}</button>
+          <!-- <button mat-menu-item *ngIf="isBryntum && !isOverlay" (click)="showOverlay()">
+            {{'ROSTER.SHOWSHIFTOVERLAY' | translate}}</button>
+          <button mat-menu-item *ngIf="isBryntum && isOverlay" (click)="hideOverlay()">
+            {{'ROSTER.HIDESHIFTOVERLAY' | translate}}</button> -->
+          <!-- <button mat-menu-item [matMenuTriggerFor]="nameSearch">
+            {{'ROSTER.FILTEREMPLOYEE' | translate}}</button> -->
+          <button mat-menu-item (click)="autoRosterSelectionType(false)">
+            {{'ROSTER.FROMTEMPLATE' | translate}}</button>
+          <button mat-menu-item (click)="autoRosterSelectionType(true)">
+            {{'ROSTER.FROMAUTO' | translate}}</button>
+        </mat-menu>
+        <!-- <mat-menu #nameSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-label>{{'ROSTER.FILTEREMPLOYEE' | translate}}</mat-label>
+              <mat-select placeholder="{{ 'ROSTER.FILTEREMPLOYEE' | translate }}" [(ngModel)]="filterData.Employee"
+                (selectionChange)="filterEmployee($event)" panelClass="dropdown-custom-class" multiple>
+                <mat-option [value]="component.employeeId" *ngFor="let component of employeeListDataDetails ">
+                  {{ component.firstName }} {{component?.surName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu> -->
+      </div>
+    </mat-card-title>
+    <mat-card-content class="roster-vertical-height roster-grid-content" [satPopoverAnchorFor]="createPlanName"
+      #createRosterNamePopover="satPopoverAnchor">
+      <div *ngIf="isBryntum">
+        <div class="card-content">
+          <bry-scheduler #scheduler1 [columns]="schedulerConfig.columns" [endDate]="schedulerConfig.endDate"
+            [events]="schedulerConfig.events" [minHeight]="schedulerConfig.minHeight"
+            [resources]="schedulerConfig.resources" [startDate]="schedulerConfig.startDate"
+            [eventContextMenuFeature]="schedulerConfig.eventContextMenuFeature"
+            [viewPreset]="schedulerConfig.viewPreset" [treeFeature]="schedulerConfig.treeFeature"
+            [currencyCode]="selectedCurrency.currencyCode" [requestData]="selectedRequest"
+            [employeeListDataDetails]="filteredEmployeeList" [selectedSolution]="selectedSolution"
+            [schedulerData]="filteredPlansList" [departments]="departmentList" [shifts]="shiftTimeList"
+            [isEditable]="editable" (updateBudgetLabels)="updateBudgetLabels($event)"
+            [stripeFeature]="schedulerConfig.stripeFeature" [breakmins]="priorInputData.breakHours"
+            [isOverlay]="isOverlay" [eventTooltipFeature]="schedulerConfig.eventTooltipFeature"
+            [priorInputData]="priorInputData">
+          </bry-scheduler>
+        </div>
+      </div>
+      <div *ngIf="!isBryntum">
+        <div class="card-content">
+          <div class="full-width">
+            <div fxLayout="row wrap" fxLayoutGap.xs="3px" fxLayoutGap="15px">
+              <div fxFlex="100">
+                <div class="full-width">
+                  <app-hr-component-roster-scheduler [currencyCode]="selectedCurrency.currencyCode"
+                    [requestData]="selectedRequest" [employeeListDataDetails]="filteredEmployeeList"
+                    [selectedSolution]="selectedSolution" [schedulerData]="filteredPlansList"
+                    [departments]="departmentList" [shifts]="shiftTimeList" [isEditable]="editable"
+                    (updateBudgetLabels)="updateBudgetLabels($event)" [dateFormat]="dateFormat"
+                    [breakmins]="priorInputData.breakHours" [priorInputData]="priorInputData">
+                  </app-hr-component-roster-scheduler>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div fxLayout="row wrap" class="mr-8 mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+        <button class="mr-1" mat-button mat-raised-button color="primary"
+          (click)="saveplan()" [disabled]="selectedPlan && selectedPlan.length == 0">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="rosterSolutionCreationLoading$ | async">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="edit"></fa-icon> {{'ROSTER.SAVE' | translate}}
+        </button>
+        <button type="button" mat-button mat-raised-button color="primary" class="mr-05"
+          [disabled]="selectedPlan && selectedPlan.length == 0" [satPopoverAnchorFor]="createPlanConfirmation"
+          #createPlanConfirmationPopover="satPopoverAnchor" (click)="createPlanTrigger(createPlanConfirmationPopover)">
+          <fa-icon icon="thumbs-up" class="mr-05"></fa-icon>
+          {{'ROSTER.ROSTERSTEP6' | translate}}
+        </button>
+        <button type="button" mat-button mat-raised-button class="mr-1" (click)='previous()'>
+          <fa-icon class="mr-05" icon="times"></fa-icon>{{'ROSTER.CANCEL' | translate}}
+        </button>
+
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <sat-popover #createPlanName [interactiveClose]="false" hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="center" horizontalAlign="center">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text p-05">{{'ROSTER.PLANCREATION' | translate}}
+          <div class="pull-right" (click)="closecreateRostrNamePopup()" *ngIf="addRosterPriorInputForm.value.rostName">
+            <fa-icon class="icon-button" icon="times"></fa-icon>
+          </div>
+        </div>
+
+      </mat-card-title>
+      <mat-card-content class="p-05 horizontalwidth60">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="employeeLoading$| async">
+        </mat-progress-bar>
+        <form [formGroup]="addRosterPriorInputForm" #formDirective="ngForm" novalidate
+          (submit)="addRosterPriorInputForm.valid && checkValidDateandName()">
+          <div>
+            <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="startDate" [matDatepicker]="inputpicker1"
+                    (click)="inputpicker1.open()" readonly [min]="minDate" (input)="inputFormstartDateChange()"
+                    (dateChange)="inputFormstartDateChange(); " placeholder="{{'ROSTER.ROSTSTARTDATE' | translate}}"
+                    autocomplete="off" required>
+                  <mat-datepicker-toggle matSuffix [for]="inputpicker1"></mat-datepicker-toggle>
+                  <mat-datepicker #inputpicker1></mat-datepicker>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('startDate').hasError('required') && addRosterPriorInputForm.get('startDate').touched">
+                      {{'HRMANAGAMENT.PLEASESELECTSTARTDATE' | translate}}</span>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('startDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="endDate" [matDatepicker]="inputpicker2" (click)="inputpicker2.open()"
+                    readonly [min]="minDateForEndDateForInput" placeholder="{{'ROSTER.ROSTENDDATE' | translate}}"
+                    autocomplete="off" required>
+                  <mat-datepicker-toggle matSuffix [for]="inputpicker2"></mat-datepicker-toggle>
+                  <mat-datepicker #inputpicker2></mat-datepicker>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('endDate').hasError('required') && addRosterPriorInputForm.get('endDate').touched">
+                      {{'HRMANAGAMENT.PLEASESELECTENDDATE' | translate}}</span>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('endDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASESELECTVALIDDATE' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input type="text" formControlName="rostName" matInput (change)="hasError = false"
+                    placeholder="{{'ROSTER.ROSTERNAME' | translate}}" (click)="$event.stopPropagation();" required
+                    autocomplete="off">
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('rostName').hasError('required') && addRosterPriorInputForm.get('rostName').touched">
+                      {{'ROSTER.PLEASEENTERROSTERNAME' | translate}}</span>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('rostName').hasError('maxLength') || (addRosterPriorInputForm.get('rostName').value.length > 150)">
+                      {{'ROSTER.ROSTERNAMEMAXLENGTH' | translate}}</span>
+                  </mat-error>
+                  <mat-error *ngIf="hasError"><span>
+                      {{'ROSTER.ROSTERNAMEALREADYAVAILABLE' | translate}}</span></mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input type="number" min="1" formControlName="totalBudget" matInput (change)="hasError = false"
+                    maxlength="10"
+                    placeholder="{{'ROSTER.PLEASEENTERBUDGET' | translate}}({{selectedCurrency.currencyCode}})"
+                    (click)="$event.stopPropagation();" required autocomplete="off">
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('totalBudget').hasError('required') && addRosterPriorInputForm.get('totalBudget').touched">
+                      {{'ROSTER.PLEASEENTERBUDGET' | translate}}</span>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('totalBudget').hasError('max') || (addRosterPriorInputForm.get('totalBudget').value.length > 10)">
+                      {{'ROSTER.ROSTERBUDGETMAXLENGTH' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'ROSTER.FILTERDEPARTMENT' | translate }}" formControlName="department"
+                    panelClass="dropdown-custom-class" multiple required (selectionChange)="departmentChange()">
+                    <mat-option #alldepartmentsSelected (click)="toggleAlldepartmentsSelected()" [value]="0">
+                      {{ 'ROSTER.SELECTALL' | translate }}</mat-option>
+                    <mat-option [value]="component.departmentId" *ngFor="let component of departmentList">
+                      {{ component.departmentName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('department').hasError('required') && addRosterPriorInputForm.get('department').touched">
+                      {{'ROSTER.PLEASESELECTDEPARTMENT' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'ROSTER.FILTERBRANCH' | translate }}" formControlName="branchId"
+                    panelClass="dropdown-custom-class"
+                    (selectionChange)="getUsersList(this.addRosterPriorInputForm.value.branchId)" single required>
+                    <mat-option [value]="component.branchId" *ngFor="let component of branchesList">
+                      {{ component.branchName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('branchId').hasError('required') && addRosterPriorInputForm.get('branchId').touched">
+                      {{'ROSTER.PLEASESELECTBRANCH' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'ROSTER.FILTEREMPLOYEE' | translate }}" formControlName="employee"
+                    panelClass="dropdown-custom-class" multiple required>
+                    <mat-option #allEmployeesSelected (click)="toggleAllEmployeesSelected()" [value]="0">
+                      {{ 'ROSTER.SELECTALL' | translate }}</mat-option>
+                    <mat-option [value]="component.employeeId"
+                      *ngFor="let component of employeeListDataDetails | rosterEmployeeFilter: null: addRosterPriorInputForm.get('department').value">
+                      {{ component.firstName }} {{component?.surName}}
+                    </mat-option>
+                  </mat-select>
+
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('employee').hasError('required') && addRosterPriorInputForm.get('employee').touched">
+                      {{'ROSTER.PLEASESELECTEMPLOYEE' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input type="number" min="1" formControlName="breakHours" matInput (change)="hasError = false"
+                    placeholder="{{'ROSTER.BREAK' | translate}}" (click)="$event.stopPropagation();" autocomplete="off">
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('breakHours').hasError('required') && addRosterPriorInputForm.get('breakHours').touched">
+                      {{'ROSTER.PLEASEENTERBREAKHOURS' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <div class="mt-05">
+                  <mat-checkbox class="example-margin" formControlName="isTemplate">{{'ROSTER.ISTEMPLATE' | translate}}
+                  </mat-checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+            <button class="mr-1" mat-button mat-raised-button color="primary"
+              [disabled]="addRosterPriorInputForm.invalid || hasError">
+              <fa-icon class="mr-05" icon="edit"></fa-icon>
+              {{ (addRosterPriorInputFormOldValue ? 'ROSTER.UPDATE' : 'ROSTER.CREATE') | translate}}
+            </button>
+            <button type="button" mat-button mat-raised-button (click)="previous()"
+              *ngIf="!addRosterPriorInputForm.value.rostName" matTooltip="{{'ROSTER.BACK' | translate}}">
+              <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{'ROSTER.BACK' | translate}}
+            </button>
+            <button type="button" mat-button mat-raised-button (click)="closecreateRostrNamePopup()"
+              *ngIf="addRosterPriorInputForm.value.rostName" matTooltip="{{'ROSTER.CANCEL' | translate}}">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'ROSTER.CANCEL' | translate}}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover #createPlanConfirmation hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text p-05">{{'ROSTER.CONFIRMATION' | translate}}</div>
+      </mat-card-title>
+      <mat-card-content class="p-05">
+        <form [formGroup]="addRosterPriorInputForm" #formDirective="ngForm" novalidate (submit)="validateSubmitPlan()">
+          <div>
+            <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98" *ngIf="isBudgetGiven">
+                <div class="full-width">
+                  <label class="roster-label-heading full-width">{{'ROSTER.ROSTERNAME' | translate}} </label>
+                  <label> {{ addRosterPriorInputForm.value.rostName}}</label>
+                </div>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98" *ngIf="!isBudgetGiven">
+                <mat-form-field class="full-width">
+                  <input type="text" formControlName="rostName" matInput (change)="hasError = false"
+                    placeholder="{{'ROSTER.ROSTERNAME' | translate}}" (click)="$event.stopPropagation();" required
+                    autocomplete="off">
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('rostName').hasError('required') && addRosterPriorInputForm.get('rostName').touched">
+                      {{'ROSTER.PLEASEENTERROSTERNAME' | translate}}</span>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('rostName').hasError('maxLength') || (addRosterPriorInputForm.get('rostName').value.length > 150)">
+                      {{'ROSTER.ROSTERNAMEMAXLENGTH' | translate}}</span>
+                  </mat-error>
+                  <mat-error *ngIf="hasError"><span>
+                      {{'ROSTER.ROSTERNAMEALREADYAVAILABLE' | translate}}</span></mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <div class="full-width">
+                  <label class="roster-label-heading full-width">{{'ROSTER.BREAK' | translate}} </label>
+                  <label>
+                    {{ addRosterPriorInputForm.value.breakHours ? addRosterPriorInputForm.value.breakHours : 0   }}
+                    {{'ROSTER.MINUTE' | translate}}</label>
+                </div>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98" *ngIf="isBudgetGiven">
+                <div class="full-width">
+                  <label class="roster-label-heading full-width">{{'ROSTER.BUDGETALLOCATED' | translate}} </label>
+                  <label>
+                    {{ addRosterPriorInputForm.value.totalBudget | currency : selectedCurrency.currencyCode}}</label>
+                </div>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98" *ngIf="!isBudgetGiven">
+                <mat-form-field class="full-width">
+                  <input type="number" min="1" formControlName="totalBudget" matInput (change)="hasError = false"
+                    [maxLength]="10"
+                    placeholder="{{'ROSTER.PLEASEENTERBUDGET' | translate}}({{selectedCurrency.currencyCode}})"
+                    (click)="$event.stopPropagation();" required autocomplete="off">
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterPriorInputForm.get('totalBudget').hasError('required') && addRosterPriorInputForm.get('totalBudget').touched">
+                      {{'ROSTER.PLEASEENTERBUDGET' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <div class="full-width">
+                  <label class="roster-label-heading full-width">{{'ROSTER.BUDGETCALCULATED' | translate}} </label>
+                  <label> {{budgetCalculated | currency : selectedCurrency.currencyCode}}</label>
+                </div>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="48" fxFlex.lt-sm="98">
+                <div class="mt-05">
+                  <mat-checkbox class="example-margin" formControlName="isTemplate"
+                    [checked]="addRosterPriorInputForm.value.isTemplate">{{'ROSTER.ISTEMPLATE' | translate}}
+                  </mat-checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+            <button class="mr-1" mat-button mat-raised-button color="primary"
+              [satPopoverAnchorFor]="submitRosterPopover" #submitPlanWithBudgetPopover="satPopoverAnchor"
+              [disabled]="hasError && addRosterPriorInputForm.invalid">
+              <fa-icon class="mr-05" icon="edit"></fa-icon> {{'ROSTER.UPDATE' | translate}}
+            </button>
+            <button type="button" mat-button mat-raised-button (click)="closecreatePlanTriggerPopup();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'ROSTER.CANCEL' | translate}}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover #createPlanFromShift hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text p-05">{{'ROSTER.FROMSHIFTTIMING' | translate}}</div>
+      </mat-card-title>
+      <mat-card-content class="p-05">
+        <form [formGroup]="addRosterShiftInputForm" #formDirective="ngForm" novalidate
+          (submit)="loadAllPrerequisitesForShift(false)">
+          <div>
+            <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="startDate" [matDatepicker]="picker1" (click)="picker1.open()"
+                    readonly [min]="minDate" (input)="startDateChange()" (dateChange)="startDateChange(); "
+                    placeholder="{{'ROSTER.ROSTSTARTDATE' | translate}}" autocomplete="off" required>
+                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('startDate').hasError('required') && addRosterShiftInputForm.get('startDate').touched">
+                      {{'HRMANAGAMENT.PLEASESELECTSTARTDATE' | translate}}</span>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('startDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="endDate" [matDatepicker]="picker2" (click)="picker2.open()" readonly
+                    [min]="minDateForEndDateForShift" placeholder="{{'ROSTER.ROSTENDDATE' | translate}}"
+                    autocomplete="off" required>
+                  <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                  <mat-datepicker #picker2></mat-datepicker>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('endDate').hasError('required') && addRosterShiftInputForm.get('endDate').touched">
+                      {{'HRMANAGAMENT.PLEASESELECTENDDATE' | translate}}</span>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('endDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASESELECTVALIDDATE' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'ROSTER.FILTERSHIFT' | translate }}" formControlName="shifts"
+                    panelClass="dropdown-custom-class" multiple>
+                    <mat-option [value]="component.shiftTimingId" *ngFor="let component of shiftTimeList">
+                      {{ component.shift }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('shifts').hasError('required') && addRosterShiftInputForm.get('shifts').touched">
+                      {{'ROSTER.PLEASESELECTSHIFT' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <div>
+                  {{'ROSTER.INCLUDEWEEKENDS' | translate}} :
+                </div>
+                <div>
+                  <mat-radio-group formControlName="includeWeekends" (change)="setMaxDays()">
+                    <mat-radio-button value="Yes" class="mr-1 radio-text-size">
+                      {{'ROSTER.INCLUDEWEEKENDSYES' | translate}}
+                    </mat-radio-button>
+                    <mat-radio-button value="No" class="radio-text-size">
+                      {{'ROSTER.INCLUDEWEEKENDSNO' | translate}}
+                    </mat-radio-button>
+                  </mat-radio-group>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('includeWeekends').hasError('required') && addRosterShiftInputForm.get('includeWeekends').touched">
+                      {{'ROSTER.PLEASESELECTWEEKENDS' | translate}}</span>
+                  </mat-error>
+                </div>
+              </div>
+              <div fxFlex fxFlex.gt-sm="48" fxFlex.sm="49" fxFlex.lt-sm="98">
+                <div>
+                  {{'ROSTER.INCLUDEHOLIDAYS' | translate}} :
+                </div>
+                <div>
+                  <mat-radio-group formControlName="includeHolidays" (change)="setMaxDays()">
+                    <mat-radio-button value="Yes" class="mr-1 radio-text-size">
+                      {{'ROSTER.INCLUDEHOLIDAYSYES' | translate}}
+                    </mat-radio-button>
+                    <mat-radio-button value="No" class="radio-text-size">
+                      {{'ROSTER.INCLUDEHOLIDAYSNO' | translate}}
+                    </mat-radio-button>
+                  </mat-radio-group>
+                  <mat-error>
+                    <span
+                      *ngIf="addRosterShiftInputForm.get('includeHolidays').hasError('required') && addRosterShiftInputForm.get('includeHolidays').touched">
+                      {{'ROSTER.PLEASESELECTHOLIDAYS' | translate}}</span>
+                  </mat-error>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+            <button class="mr-1" mat-button mat-raised-button color="primary"
+              [disabled]="!addRosterShiftInputForm.valid">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="shiftDataLoading$ | async">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="edit"></fa-icon> {{'ROSTER.UPDATE' | translate}}
+            </button>
+            <button type="button" mat-button mat-raised-button (click)="closecreatePlanFromShiftTriggerPopup();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'ROSTER.CANCEL' | translate}}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover #submitRosterPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+    horizontalAlign="center">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{'ROSTER.SUBMITROSTER' | translate}}
+        </div>
+      </mat-card-title>
+      <div class="card-content p-1">
+        <div class="text-center mb-1">{{'ROSTER.SUBMITROSTERTEXT' | translate}}
+        </div>
+        <div fxLayoutAlign="space-around center">
+          <button type="button" mat-button mat-raised-button class="mr-05" color="primary" (click)="submitPlan(true);">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="cancelRosterSubmitPopover()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </mat-card>
+  </sat-popover>
+
+</ng-container>
+
+<app-common-message-box *ngIf="!(canAccess_feature_CreateRoster)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

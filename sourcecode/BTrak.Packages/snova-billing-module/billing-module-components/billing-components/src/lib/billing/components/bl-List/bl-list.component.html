@@ -1,0 +1,310 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<mat-card class="filter-data p-0">
+    <mat-card-title class="text-center" *ngIf="!isDoc">
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="blEdit==false">
+            Add BL</div>
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="blEdit==true">
+            Edit BL</div>
+    </mat-card-title>
+    <mat-card-title class="text-center" *ngIf="isDoc">
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="blEdit==false">
+            <span>{{ 'BLSUPPLIER.FNDOCUMENT' | translate }}</span>
+        </div>
+    </mat-card-title>
+    <form *ngIf="isDoc" [formGroup]="blForm" novalidate #formDirective="ngForm" (submit)="upsertBlDoc()">
+        <div class="mt-2 text-center">
+            <label class="full-width">Select an option *</label>
+            <mat-radio-group>
+                <mat-radio-button checked value="initial" (change)="check($event)" class="mr-1 ">
+                    Initial documents</mat-radio-button>
+                <mat-radio-button value="final" (change)="check($event)">
+                    Final documents</mat-radio-button>
+
+            </mat-radio-group>
+        </div>
+        <div class=" text-center mt-2 mb-4 " fxflex="100" fxflex.gt-sm="100">
+            <a (click)="getControlsLength()" style="font-size: 15px !important;" class="custom-link ">Upload
+                document</a>
+        </div>
+        <div style="max-height:250px" id="style-1">
+
+            <div formArrayName="blSteps" *ngFor="let item of getStepControls(); let i = index;">
+                <mat-card-content class="Step-description mt-1">
+                    <div>
+                        <div [formGroupName]="i" fxLayout="row" fxLayoutAlign="space-between center">
+                            <div fxFlex="20px" class="mr-05">
+                                <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                            </div>
+                            <mat-form-field class="full-width">
+                                <textarea matInput formControlName="description"
+                                    placeholder="{{'BLSUPPLIER.BLDESCRIPTION' | translate}}"></textarea>
+                            </mat-form-field>
+                            <div fxFlex="20px" class="ml-05">
+                                <fa-icon matTooltip="Upload files" icon="image"
+                                    [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                    #testSuiteFileUploadPopup="satPopoverAnchor"
+                                    (click)="openFileUploadPopover(docsData.id,i,testSuiteFileUploadPopup)">
+                                </fa-icon>
+                            </div>
+
+
+                            <div fxFlex="40px" fxLayout="column" fxLayoutAlign="space-around center" class="ml-05"
+                                fxLayoutGap="8px">
+                                <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                                    <a class="icon-hover" matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}"
+                                        (click)="addItem(i)">
+                                        <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                                    </a>
+                                    <a class="icon-hover" matTooltip="Remove field"
+                                        [satPopoverAnchorFor]="deleteFeaturePopOver"
+                                        #deleteStepPopover="satPopoverAnchor" (click)="removeItem(i,deleteStepPopover)">
+                                        <fa-icon icon="minus" class="mat-color-accent"></fa-icon>
+                                    </a>
+                                </div>
+                                <!-- <div *ngIf="item.get('id').value != null && item.get('id').value != ''"
+                                    fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                                    <fa-icon matTooltip="Upload files" icon="image" class="mat-color-accent icon-button"
+                                        [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                        #testSuiteFileUploadPopup="satPopoverAnchor"
+                                        (click)="openStepDescriptionPopover(i,testSuiteFileUploadPopup)">
+                                    </fa-icon>
+
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </div>
+        </div>
+        <div class="text-center mb-1 prl-1">
+            <button mat-raised-button class="mr-3" color="primary" [disabled]="isInProgress ||!visible"
+                #documentPopover="satPopoverAnchor" [satPopoverAnchorFor]="documentShare"
+                (click)="$event.stopPropagation();openDocumentPopup(documentPopover)">
+                <fa-icon icon="share-square" class="mr-05"></fa-icon> Share
+            </button>
+            <button mat-raised-button class="mr-3" color="primary" type="submit" (click)="onNoClick()"
+                [disabled]="isInProgress">
+                <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+            </button>
+            <button mat-raised-button type="reset" (click)="onNoClick()" [disabled]="isInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+
+    </form>
+    <form *ngIf="!isDoc" [formGroup]="blForm" novalidate #formDirective="ngForm" (submit)="upsertBlSuppllier()">
+        <div id="style-1" class="goal-create-height p-1">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="blNumber" matInput placeholder="{{ 'BLSUPPLIER.BL' | translate }}"
+                            required>
+                        <mat-error>
+                            <span *ngIf="blForm.get('blNumber').hasError('required') && blForm.get('blNumber').touched">
+                                {{ 'BLSUPPLIER.PLEASEENTERBLNUMBER' | translate }}
+                            </span>
+                            <span *ngIf="blForm.get('blNumber').hasError('maxlength')">{{ 'BLSUPPLIER.BLNUMBERMAXLENGTH'
+                                | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="contractDateTo" (click)="contractDateTo.open();" required
+                            formControlName="blDate" placeholder="{{ 'BLSUPPLIER.BLDATE' |  translate }}"
+                            autocomplete="off">
+                        <mat-datepicker-toggle matSuffix [for]="contractDateTo"></mat-datepicker-toggle>
+                        <mat-datepicker #contractDateTo></mat-datepicker>
+                        <mat-error class="P-06"
+                            *ngIf="blForm.get('blDate').hasError('required') && blForm.get('blDate').touched">
+                            {{ 'BLSUPPLIER.DATEREQUIREDERROR' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="consigneeId"
+                            placeholder="{{ 'BLSUPPLIER.SELECTCONSGNEE' | translate }}" required>
+                            <mat-option value="option" *ngFor="let product of consigneeList" [value]="product.id">
+                                {{product.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="blForm.get('consigneeId').hasError('required') && blForm.get('consigneeId').touched">{{
+                                'BLSUPPLIER.PLEASESELECTBUYER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="consignerId"
+                            placeholder="{{ 'BLSUPPLIER.SELECTCONSGNER' | translate }}" required>
+                            <mat-option value="option" *ngFor="let product of consignerList" [value]="product.id">
+                                {{product.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="blForm.get('consignerId').hasError('required') && blForm.get('consignerId').touched">{{
+                                'BLSUPPLIER.PLEASESELECTGRADE' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="blQuantity" matInput trim mask="separator.2" thousandSeparator=","
+                            autocomplete="off" placeholder="{{ 'BLSUPPLIER.BLQUANTITY(MT)' | translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="blForm.get('blQuantity').hasError('required') && blForm.get('blQuantity').touched">
+                                {{ 'BLSUPPLIER.PLEASEENTERBLQUANTITY(MT)' | translate }}
+                            </span>
+                            <span *ngIf="blForm.get('blQuantity').hasError('min')">{{ 'BLSUPPLIER.RATEMINLENGTH' |
+                                translate }}</span>
+                            <span *ngIf="blForm.get('blQuantity').hasError('max')">{{ 'BLSUPPLIER.RATEMAXLENGTH' |
+                                translate }}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="packingDetails" matInput
+                            placeholder="{{ 'BLSUPPLIER.PACKING' | translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="blForm.get('packingDetails').hasError('required') && blForm.get('packingDetails').touched">
+                                {{ 'BLSUPPLIER.PLEASEENTERPACKING' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="notifyParty" matInput
+                            placeholder="{{ 'BLSUPPLIER.NOTIFY' | translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="blForm.get('notifyParty').hasError('required') && blForm.get('notifyParty').touched">
+                                {{ 'BLSUPPLIER.PLEASESELECTPAYMENT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="text-center mb-1 prl-1">
+            <button mat-raised-button color="primary" type="submit" [disabled]="!blForm.valid || isInProgress"
+                class="mr-05" (click)="$event.stopPropagation()" *ngIf="blEdit==false">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon> {{'ADD' | translate}}
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="!blForm.valid || isInProgress"
+                class="mr-05" (click)="$event.stopPropagation()" *ngIf="blEdit==true">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                </mat-progress-bar>
+                <fa-icon icon="pen" class="mr-05"></fa-icon>{{'HRMANAGAMENT.UPDATE' | translate}}
+            </button>
+            <button mat-raised-button type="reset" (click)="onNoClick()" [disabled]="isInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+
+    </form>
+</mat-card>
+<sat-popover #testSuiteFileUploadPopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closeTestSuitePopup()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="mobile-view-popover p-1">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="referenceId"
+                [selectedParentFolderId]="referenceId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true">
+            </app-dropzone>
+        </div>
+    </mat-card>
+</sat-popover>
+<!--Delete dialog-->
+<sat-popover #deleteFeaturePopOver hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content p-05">
+                {{'TESTMANAGEMENT.REALLYDELETETHISSTEPTHISOPERATIONCANNOTBEUNDONE' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-05" mat-button mat-raised-button color="primary" (click)="removeItemAtIndex()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteStepDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<sat-popover #documentShare hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">
+                {{documentText}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05" style="width: 300px;">
+            <div style="max-height: calc(100vh - 620px);" id="style-1">
+                <div fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="CHA Name" (selectionChange)="employeeSelection($event)">
+                            <mat-option value="option" *ngFor="let client of clientData" [value]="client.userId">
+                                {{client.fullName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" (click)="shareDocuments(rowData)"
+                    [disabled]="!selectedChaUserId || shareDocumentsLoading">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="shareDocumentsLoading">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> Share and Assign
+                </button>
+                <button mat-button mat-raised-button (click)="closeSendEmailPopover()"
+                    [disabled]="shareDocumentsLoading">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

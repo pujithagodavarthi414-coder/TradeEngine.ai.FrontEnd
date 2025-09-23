@@ -1,0 +1,85 @@
+<div class="ml-05 mr-05 search_goalinput" fxLayout="row wrap">
+    <div fxLayout="row wrap" fxFlex="160px" fxFlex.md="100px" fxFlex.sm="80" fxFlex.xs="50"
+        class="custom-position-relative">
+        <mat-form-field class="custom-searchbar full-width">
+            <input class="search_goal full-width" matInput placeholder="{{'SEARCH' | translate}}"
+                [(ngModel)]="searchText">
+        </mat-form-field>
+        <span class="close_icon">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+        </span>
+    </div>
+    <div fxFlex="10px" fxFlex.md="25px" fxFlex.sm="55" fxFlex.xs="10" fxLayoutAlign.sm="end center"
+        (click)="resetAllFilters()">
+        <fa-icon mat-icon-button class="filter mat-color-accent goal_clear ml-01" icon="undo"></fa-icon>
+    </div>
+    <div class="select_users goals-selectusers selectuser_counthigh" *ngIf=" sprintsList.length > 0"
+        fxFlex="73px">
+        <span class="members_count mt-2p" [matMenuTriggerFor]="showUsersList"
+            *ngIf="(sprintsList$ | async | sprintResponsiblePersonFilter)?.length >1"
+            [ngClass]="{'countActive': divActivate}">
+            <fa-icon icon="plus"></fa-icon>
+        </span>
+        <div class="project_member"
+            *ngFor="let member of (sprintsList$ | async | sprintResponsiblePersonFilter | slice:0:1);let k=index">
+            <div (click)="getSelectedMember(member.sprintResponsiblePersonId,k);" class="mt-03"
+                [ngClass]="{memberhide: !isSelectedMembers[k], membershow: isSelectedMembers[k]}"
+                matTooltip="{{member.sprintResponsiblePersonName}}">
+                <app-avatar [name]="member.sprintResponsiblePersonName| removeSpecialCharacters"
+                    [src]='member.profileImage' [isRound]="true" size="30">
+                </app-avatar>
+            </div>
+        </div>
+
+        <mat-menu #showUsersList="matMenu" xPosition="before" yPosition="below">
+            <div class="projectmembers_list" id="style-1" style="width: 215px;">
+                <div *ngFor="let member of (sprintsList$ | async | sprintResponsiblePersonFilter | slice:1);let j=index"
+                    [ngClass]="{membershow: isSelected[j]}">
+                    <div class="projectmembers_list single_projectmember" style="height: 40px;"
+                        *ngIf="member.sprintResponsiblePersonName!='' && member.sprintResponsiblePersonName!=null">
+                        <div *ngIf="member.sprintResponsiblePersonName!='' && member.sprintResponsiblePersonName!=null"
+                            fxLayout="row wrap" class="pt-2 pl-05" fxLayoutGap="5px">
+                            <div fxFlex="10" class="pt-2">
+                                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                                    (change)="getAssigne(member.sprintResponsiblePersonId, isSelected[j],j)">
+                                </mat-checkbox>
+                            </div>
+                            <div fxFlex="15">
+                                <app-avatar matTooltip="{{member.sprintResponsiblePersonName}}"
+                                    [name]="member.sprintResponsiblePersonName| removeSpecialCharacters"
+                                    [src]='member.profileImage' [isRound]="true" size="30">
+                                </app-avatar>
+                            </div>
+                            <div fxFlex="65"
+                                *ngIf="member.sprintResponsiblePersonName!='' && member.sprintResponsiblePersonName!=null"
+                                class="pt-lg-1 hide-content-overflow">
+                                <p class="m-0">{{member.sprintResponsiblePersonName}}</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </mat-menu>
+
+    </div>
+</div>
+<div class="p-0">
+    <div class="p-0 m-0 allgoals-list" id="style-1">
+        <div class="p-0">
+            <span *ngIf="!(anyOperationInProgress$ | async)">
+                <mat-list-item
+                    *ngFor="let sprints of (sprintsList$ | async | resultfilter: searchText:'sprintName' | sprintFilter: sprintResponsiblePerson)">
+                    <app-sprint-summary-view [sprint]="sprints" [sprintSelected]="sprints.sprintId === selectedSprintId" [userStoriesCount]="userStoriesCount" [isAllGoalsPage]="sprintSearchCriteriaModel.isGoalsPage"
+                        (click)="handleClickOnSprintSummaryComponent(sprints)">
+                    </app-sprint-summary-view>
+                </mat-list-item>
+            </span>
+            <gc-goal-summary-loading *ngIf="(anyOperationInProgress$ | async)">
+            </gc-goal-summary-loading>
+        </div>
+    </div>
+</div>

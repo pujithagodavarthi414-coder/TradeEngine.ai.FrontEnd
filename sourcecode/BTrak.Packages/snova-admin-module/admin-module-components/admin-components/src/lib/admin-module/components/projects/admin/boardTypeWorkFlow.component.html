@@ -1,0 +1,174 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageBoardTypeWorkflow">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'BOARDTYPEWORKFLOW.BOARDTYPES' | translate | titlecase }}">{{ 'BOARDTYPEWORKFLOW.BOARDTYPES'
+            | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="230px" fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-5" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button type="button" mat-icon-button matTooltip="{{ 'BOARDTYPEWORKFLOW.CLICKADDBOARD' | translate }}"
+              [satPopoverAnchorFor]="addBoardTypeWorkFlowPopover" #addBoardTypeWorkFlowPopUp1="satPopoverAnchor"
+              (click)="createBoardTypePopUpOpen(addBoardTypeWorkFlowPopUp1)">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="no-drag" *ngIf="canAccess_feature_ManageBoardTypeWorkflow">
+    <div class="activity-data pagination-move-left">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="100" [rows]="boardTypes" [loadingIndicator]="anyOperationInProgress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+
+        <ngx-datatable-column minWidth="150" name="Board type" [flexGrow]="1" [sortable]="true" prop="boardTypeName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.boardTypeName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="Workflow" [flexGrow]="1" [sortable]="true" prop="workFlowName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.workFlowName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="Board type ui" [flexGrow]="1" [sortable]="true"
+          prop="boardTypeUiName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.boardTypeUiName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="Is bug board" [flexGrow]="1" [sortable]="true" prop="isBugBoard">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row?.isBugBoard">
+              {{ 'PROJECTS.YES' | translate }}
+            </span>
+            <span *ngIf="!row?.isBugBoard">
+              {{ 'PROJECTS.NO' | translate }}
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="Is superagile board" [flexGrow]="1" [sortable]="true"
+          prop="isSuperAgileBoard">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row?.isSuperAgileBoard">
+              {{ 'PROJECTS.YES' | translate }}
+            </span>
+            <span *ngIf="!row?.isSuperAgileBoard">
+              {{ 'PROJECTS.NO' | translate }}
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button type="button" class="text-center" title="{{ 'BOARDTYPEWORKFLOW.EDITBOARD' | translate }}"
+              *ngIf="!isArchivedTypes && !row.isDefault" [satPopoverAnchorFor]="addBoardTypeWorkFlowPopover"
+              #addBoardTypeWorkFlowPopUp="satPopoverAnchor"
+              (click)="editBoardTypeWorkFlowPopover(row,addBoardTypeWorkFlowPopUp)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+
+  <sat-popover #addBoardTypeWorkFlowPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div *ngIf="!isEdit" class="card-title-text mat-bg-primary p-05">
+          {{ 'BOARDTYPEWORKFLOW.ADDBOARDTYPE' | translate }}</div>
+        <div *ngIf="isEdit" class="card-title-text mat-bg-primary p-05">{{ 'BOARDTYPEWORKFLOW.EDITBOARD' | translate }}
+        </div>
+      </mat-card-title>
+      <form [formGroup]="boardTypeForm" #formDirective="ngForm" novalidate
+        (submit)="boardTypeForm.valid && SaveBoardType()">
+        <div class="card-content p-05">
+          <mat-form-field class="full-width">
+            <input matInput formControlName="boardTypeName"
+              placeholder="{{ 'BOARDTYPEWORKFLOW.BOARDTYPENAME' | translate }}"
+              (blur)="onBlurMethod($event.target.value)" required />
+            <mat-error>
+              <span
+                *ngIf="boardTypeForm.get('boardTypeName').hasError('required')&&boardTypeForm.get('boardTypeName').touched">{{
+                'BOARDTYPEWORKFLOW.PLEASEENTER' | translate }}</span>
+              <span *ngIf="boardTypeForm.get('boardTypeName').hasError('maxlength')">{{
+                'BOARDTYPEWORKFLOW.MAXLENGTHERROR' | translate }}</span>
+              <span *ngIf="errorMessage" class="alert-alert-danger">{{validationMessages}}</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <mat-select formControlName="workFlowId" [disabled]="!isEditWorkFlow"
+              placeholder="{{ 'BOARDTYPEWORKFLOW.SELECTWORKFLOW' | translate }}" required>
+              <mat-option value="option" *ngFor="let WorkFlow of workFlowsList" [value]="WorkFlow.workFlowId">
+                {{ WorkFlow.workFlowName }}</mat-option>
+            </mat-select>
+            <mat-error>
+              <span *ngIf="!boardTypeForm.get('workFlowId').valid &&boardTypeForm.get('workFlowId').touched">
+                {{ 'BOARDTYPEWORKFLOW.PLEASESELECTWORKFLOW' | translate }}</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <mat-select formControlName="boardTypeUiId"
+              placeholder="{{ 'BOARDTYPEWORKFLOW.SELECTBOARDTYPEUI' | translate }}" required>
+              <mat-option *ngFor="let boardType of boardTypeUIList" [value]="boardType.boardTypeUiId">
+                {{ boardType.boardTypeUiName }}</mat-option>
+            </mat-select>
+            <mat-error>
+              <span *ngIf="!boardTypeForm.get('boardTypeUiId').valid &&boardTypeForm.get('boardTypeUiId').touched">{{
+                'BOARDTYPEWORKFLOW.PLEASESELECTBOARDTYPE' | translate }}</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <mat-select formControlName="isDefaultSelected"
+              placeholder="{{ 'BOARDTYPEWORKFLOW.SELECTTYPE' | translate }}">
+              <mat-option value="0">{{ 'BOARDTYPEWORKFLOW.SELECTNONE' | translate }}</mat-option>
+              <mat-option value="isSuperagile">{{ 'BOARDTYPEWORKFLOW.ISSUPERAGILE' | translate }}</mat-option>
+              <mat-option value="isBugBoard">{{ 'BOARDTYPEWORKFLOW.ISBUGBOARD' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-error>
+            <span *ngIf="errorMessage" class="alert-alert-danger">{{validationMessages}}</span>
+          </mat-error>
+        </div>
+
+        <div class="text-center mb-1">
+          <button mat-button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!boardTypeForm.valid || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+            </mat-progress-bar>
+            <fa-icon icon="{{ projectButtonIcon }}" class="mr-05"></fa-icon> {{ buttontext }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDialog();false">
+            <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageBoardTypeWorkflow"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

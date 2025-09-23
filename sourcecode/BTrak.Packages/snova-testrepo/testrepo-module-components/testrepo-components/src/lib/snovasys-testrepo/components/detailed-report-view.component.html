@@ -1,0 +1,134 @@
+<div class="p-0">
+     <div class="p-0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <div *ngIf="loadReports">
+                <div class="report-cases" fxLayout="column" *ngIf="!(anyOperationInProgress$ | async)">
+                    <div fxLayout="row wrap" class="data-table-header p-02" style="position: sticky; top: 0;z-index: 1;background: white;">
+                        <div class="ml-05 mt-05 report-description" fxLayout="row" *ngIf="detailedReport" fxFlex="73"
+                            fxFlex.lg="67" fxFlex.lt-lg="100">
+                            <span>
+                                <b>
+                                    <span class="word-break user-select-text"
+                                        matTooltip="{{'TESTMANAGEMENT.REPORTNAME' | translate | softLabelsPipe : softLabels}}">{{detailedReport.testRailReportName}}
+                                    </span>
+                                </b>
+                                <span class="ml-02 word-break user-select-text section-description"
+                                    *ngIf="!(detailedReport.description == undefined) && detailedReport.description != null && detailedReport.description.length > 0"
+                                    matTooltip="{{'TESTMANAGEMENT.REPORTDESCRIPTION' | translate | softLabelsPipe : softLabels}}">({{detailedReport.description}})
+                                </span>
+                            </span>
+                        </div>
+                        <div class="ml-05 mt-05" fxLayout="row" *ngIf="detailedReport" fxFlex="24" fxFlex.lg="29"
+                            fxFlex.lt-lg="100">
+                            <div class="mr-05" fxFlex>
+                                <span
+                                    class="section-description ">{{'TESTMANAGEMENT.PROJECTNAME' | translate | softLabelsPipe : softLabels}}
+                                    -
+                                    <b>{{detailedReport.projectName}}</b>
+                                </span>
+                                <br>
+                                <span class="section-description">{{'TESTMANAGEMENT.CREATEDBY' | translate}}
+                                    <b>{{detailedReport.createdBy}}</b> -
+                                    {{detailedReport.createdDateTime | utcToLocalTime | date:'medium'}}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="width: 100%; color: #958a8a;" >
+                         <div *ngIf="detailedReport && detailedReport.testRuns != null">
+                                <div class="report-runs-results" fxLayout="row">
+                                    <b>{{'TESTMANAGEMENT.TESTRUNSRESULTS' | translate | softLabelsPipe : softLabels}}</b>
+                                </div>
+                                <div class="ml-1 mt-1 mb-0" fxLayout="row" *ngFor="let run of detailedReport.testRuns">
+                                    <b class="report-testrun custom-link"
+                                        matTooltip="{{'TESTMANAGEMENT.TESTRUNNAME' | translate | softLabelsPipe : softLabels}}"
+                                        (click)="goToTestRuns(run)">{{run.testRunName}}
+                                    </b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <mat-card *ngIf="detailedReport && detailedReport.testRuns == null" class="p-0 mt-1-05 test-display"
+                        fxFlex="100" fxFlex.gt-sm="100">
+                        <div fxLayout="row" fxFlex="100" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                            <p class="m-0 ml-1">
+                                {{'TESTMANAGEMENT.THEREARENOTESTRUNSAVAILABLEINTHEREPORT' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                        </div>
+                    </mat-card>
+                    <!-- id="style-1" [ngStyle]="{ 'max-height': detailedReport && detailedReport.testRuns != null ? 'calc(100vh - 174px)' : 'calc(100vh - 216px)' }" -->
+                    <div class="p-0 test-suit-sections-height mb-0" id="style-1">
+                        <!-- <div *ngIf="detailedReport && detailedReport.testRuns != null" style="position: sticky; top: 75px; z-index: 1; background: white;">
+                            <div class="report-runs-results" fxLayout="row">
+                                <b>{{'TESTMANAGEMENT.TESTRUNSRESULTS' | translate | softLabelsPipe : softLabels}}</b>
+                            </div>
+                            <div class="ml-1 mt-1" fxLayout="row" *ngFor="let run of detailedReport.testRuns">
+                                <b class="report-testrun custom-link"
+                                    matTooltip="{{'TESTMANAGEMENT.TESTRUNNAME' | translate | softLabelsPipe : softLabels}}"
+                                    (click)="goToTestRuns(run)">{{run.testRunName}}
+                                </b>
+                            </div>
+                        </div> -->
+                        <div *ngIf="detailedReport && detailedReport.testCases != null">
+                            <mat-list class="compact-list mb-1 mt-0">
+                                <mat-divider class="mat-divider-position" *ngIf="detailedReport.testRuns != null">
+                                </mat-divider>
+                                <mat-list-item *ngFor="let case of detailedReport.testCases">
+                                    <report-test-case class="full-width" (click)="handleClick(case)"
+                                        (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+                                        [caseSelected]="case.testCaseId === selectedCaseId" [caseDetails]="case">
+                                    </report-test-case>
+                                </mat-list-item>
+                            </mat-list>
+                        </div>
+                        <div class="report-runs-results" fxLayout="row"
+                            *ngIf="detailedReport && detailedReport.hierarchyTree && detailedReport.hierarchyTree.length > 0">
+                            <b>{{'TESTMANAGEMENT.TESTRUNSRESULTS' | translate | softLabelsPipe : softLabels}}</b>
+                        </div>
+                        <div
+                            *ngIf="detailedReport && detailedReport.hierarchyTree && detailedReport.hierarchyTree.length > 0">
+                            <div *ngFor="let report of detailedReport.hierarchyTree">
+                                <div class="ml-1 mb-05 mt-1" fxLayout="row">
+                                    <b class="word-break user-select-text"
+                                        matTooltip="{{'TESTMANAGEMENT.SECTIONNAME' | translate}}">{{report.sectionName}}</b>
+                                    <span matTooltip="{{'TESTMANAGEMENT.CASESCOUNT' | translate}}"
+                                        class="ml-05 badge-item test-case-count-number">{{report.casesCount}}</span>
+                                </div>
+                                <div class="ml-1 mb-1"
+                                    *ngIf="report.description != null && report.description.length > 0">
+                                    <span class="section-description word-break user-select-text"
+                                        matTooltip="{{'TESTMANAGEMENT.SECTIONDESCRIPTION' | translate}}">{{report.description}}</span>
+                                </div>
+                                <mat-card-content class="p-0" *ngIf="report.testCases && report.testCases.length > 0">
+                                    <mat-list class="compact-list mb-1">
+                                        <mat-divider class="mat-divider-position">
+                                        </mat-divider>
+                                        <mat-list-item *ngFor="let case of report.testCases">
+                                            <report-test-case class="full-width" (click)="handleClick(case)"
+                                                (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+                                                [caseSelected]="case.testCaseId === selectedCaseId"
+                                                [caseDetails]="case">
+                                            </report-test-case>
+                                        </mat-list-item>
+                                    </mat-list>
+                                </mat-card-content>
+                                <div class="ml-08 mb-05 hierarchical-subsection-border"
+                                    *ngIf="report.subSections && report.subSections.length > 0">
+                                    <div class="ml-05" *ngFor="let subSection of report.subSections">
+                                        <report-hierarchy-cases
+                                            (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+                                            [subSection]="subSection"></report-hierarchy-cases>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="report-runs-results" fxLayout="row"
+                                *ngIf="detailedReport.casesCount && detailedReport.casesCount > 100">
+                                <b>{{'TESTMANAGEMENT.REPORTHIERARCHYCASESLIMITEXCEED' | translate | softLabelsPipe : softLabels}}</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>

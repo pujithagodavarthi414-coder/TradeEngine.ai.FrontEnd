@@ -1,0 +1,705 @@
+<div *ngIf="(canAccess_feature_ViewExpenses)" class="full-height invoice-manager" fxLayout="column">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler"> 
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>  
+                    <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span> 
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="!isApprovedExpenses && !isArchived && (canAccess_feature_ApproveOrRejectExpense) && expenses && expenses.length > 0">
+                    <button matTooltip="{{'EXPENSEMANAGEMENT.APPROVEEXPENSE' | translate}}"
+                        [satPopoverAnchorFor]="approveMultipleExpensesPopOver"
+                        #approveMultipleExpensesPopup="satPopoverAnchor"
+                        (click)="approveMultipleExpensePopupOpen(approveMultipleExpensesPopup);$event.stopPropagation();"
+                        mat-icon-button class="mr-05">
+                        <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="!isArchived && !isPendingExpenses && expenses && expenses.length > 0">
+                    <button mat-icon-button matTooltip="{{ 'EXPENSEMANAGEMENT.DOWNLOAD' | translate }}"
+                        (click)="downloadSelectedExpenses()" class="mr-05">
+                        <fa-icon icon="download" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="resetStates();searchExpenses();updateExpenseDashboardFilter();">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="!isArchived">
+                    <button type="submit" mat-icon-button matTooltip="{{'EXPENSEMANAGEMENT.FILTER' | translate}}"
+                        [matMenuTriggerFor]="filterMenu">
+                        <fa-icon icon="filter" class="filter-icon mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="!isArchived">
+                    <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                    </button>
+                </div>
+                <!-- <div fxFlex="135px" fxLayoutAlign="end center">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div> -->
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon close_icon_billing" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="!isArchived && (canAccess_feature_AddOrUpdateExpense) && !isApprovedExpenses">
+                    <button mat-icon-button matTooltip="{{ 'EXPENSEMANAGEMENT.ADDEXPENSE' | translate }}"
+                        (click)="openCreateExpenseDialog(null)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength == 0 && canAccess_feature_AddOrEditCustomFieldsForExpenses">
+                    <button mat-icon-button (click)="openCustomForm();$event.stopPropagation()">
+                        <fa-icon matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}" class="filter mat-color-accent"
+                            icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForExpenses">
+                    <button mat-icon-button (click)="editCustomForm();$event.stopPropagation()">
+                        <fa-icon matTooltip="{{'GENERICFORM.EDITCUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+                            icon="edit">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForExpenses">
+                    <button mat-icon-button (click)="deleteCustomForm();$event.stopPropagation()">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                        </mat-progress-bar>
+                        <fa-icon matTooltip="{{'GENERICFORM.DELETECUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+                            icon="trash">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" *ngIf="isArchived">
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()"
+                *ngIf="!isPendingExpenses && !isApprovedExpenses">
+                <mat-select placeholder="{{ 'EXPENSEMANAGEMENT.SELECTSTATUS' | translate }}" multiple
+                    [(ngModel)]="selectedStatus" (selectionChange)="selectedStatusValues($event.value)">
+                    <mat-option *ngFor="let status of statuses" [value]="status.expenseStatusId">
+                        {{status.expenseStatusName}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <mat-select placeholder="{{ 'EXPENSEMANAGEMENT.CLAIMEDBY' | translate }}" [(ngModel)]="claimedBy"
+                    (selectionChange)="selectedUserValues($event.value)">
+                    <mat-option [value]="1">
+                        Select all
+                    </mat-option>
+                    <mat-option *ngFor="let user of employeeList" [value]="user.userId">
+                        {{user.fullName}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <mat-select placeholder="{{ 'EXPENSEMANAGEMENT.BRANCHNAME' | translate }}" [(ngModel)]="branchId"
+                    (selectionChange)="selectedBranchValues($event.value)">
+                    <mat-option [value]="1">
+                        Select all
+                    </mat-option>
+                    <mat-option *ngFor="let branch of branchList" [value]="branch.branchId">
+                        {{branch.branchName}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="picker1" [(ngModel)]="expenseDateFrom"
+                    placeholder="{{'EXPENSEMANAGEMENT.EXPENSEDATEFROM' | translate}}" (click)="picker1.open()"
+                    (input)="expenseDateFromInput()" [max]="expenseDateTo" (dateChange)="expenseDateFromInput()">
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <input [(ngModel)]="expenseDateTo" matInput [matDatepicker]="picker2" [min]="expenseDateFrom"
+                    placeholder="{{'EXPENSEMANAGEMENT.EXPENSEDATETO' | translate}}" (click)="picker2.open()"
+                    (input)="expenseDateToInput()" (dateChange)="expenseDateToInput()">
+                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <input [(ngModel)]="createdDateFrom" matInput [matDatepicker]="picker3" [max]="createdDateTo"
+                    placeholder="{{'EXPENSEMANAGEMENT.CREATEDDATEFROM' | translate}}" (click)="picker3.open()"
+                    (input)="createdDateFromInput()" (dateChange)="createdDateFromInput()">
+                <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                <mat-datepicker #picker3></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <input [(ngModel)]="createdDateTo" matInput [matDatepicker]="picker4" [min]="createdDateFrom"
+                    placeholder="{{'EXPENSEMANAGEMENT.CREATEDDATETO' | translate}}" (click)="picker4.open()"
+                    (input)="createdDateToInput()" (dateChange)="createdDateToInput()">
+                <mat-datepicker-toggle matSuffix [for]="picker4"></mat-datepicker-toggle>
+                <mat-datepicker #picker4></mat-datepicker>
+            </mat-form-field>
+        </mat-card>
+    </mat-menu>
+
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="selectedStatus" style="padding: 8px 12px 28px 12px;">
+            <b>{{'EXPENSEMANAGEMENT.EXPENSESTATUS' | translate}}:&nbsp;</b>
+            {{ selectedStatusName }}
+            <fa-icon icon="times" *ngIf="!isPendingExpenses && !isApprovedExpenses"
+                class="ml-05 mat-color-accent cursor-pointer" (click)="closeStatusSearch()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="claimedBy">
+            <b>{{'EXPENSEMANAGEMENT.CLAIMEDBY' | translate}}:&nbsp;</b>
+            {{ selectedUserName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeUserSearch()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="branchId">
+            <b>{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}:&nbsp;</b>
+            {{ selectedBranchName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeBranchSearch()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="expenseDateFrom">
+            <b>{{'EXPENSEMANAGEMENT.EXPENSEDATEFROM' | translate}}:&nbsp;</b>
+            {{ expenseDateFrom | date: 'mediumDate'  }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeExpenseDateFrom()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="expenseDateTo">
+            <b>{{'EXPENSEMANAGEMENT.EXPENSEDATETO' | translate}}:&nbsp;</b>
+            {{ expenseDateTo | date: 'mediumDate'  }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeExpenseDateTo()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="createdDateFrom">
+            <b>{{'EXPENSEMANAGEMENT.CREATEDDATEFROM' | translate}}:&nbsp;</b>
+            {{ createdDateFrom | date: 'mediumDate'  }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeCreatedDateFrom()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="createdDateTo">
+            <b>{{'EXPENSEMANAGEMENT.CREATEDDATETO' | translate}}:&nbsp;</b>
+            {{ createdDateTo | date: 'mediumDate'  }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeCreatedDateTo()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+
+    <div class="projects-list-grid grid-wrapper no-drag" fxLayout="column">
+        <kendo-grid class="area-apps"  [data]="expensesList" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+            [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+            (dataStateChange)="dataStateChange($event)" [selectable]="true" [loading]="isAnyOperationIsInprogress"
+            (cellClick)="selectedRow($event)" [scrollable]="true"
+            kendoGridSelectBy="expenseId" [selectedKeys]="selection">
+            <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}" pagerItems="{{'ITEMS' | translate}}"
+                pagerOf="{{'OF' | translate}}">
+            </kendo-grid-messages>
+            <kendo-grid-checkbox-column width="150" title="{{'EXPENSEMANAGEMENT.SELECTED' | translate}}"
+                *ngIf="!isArchived && !isPendingExpenses">
+                <ng-template kendoGridCellTemplate let-dataItem let-idx="rowIndex">
+                    <input [kendoGridSelectionCheckbox]="idx" (click)="selectedExpenseData(dataItem)" />
+                </ng-template>
+            </kendo-grid-checkbox-column>
+            <kendo-grid-column field="identificationNumber" width="150"
+                title="{{'EXPENSEMANAGEMENT.IDENTIFICATIONNUMBER' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">
+                        {{ dataItem.identificationNumber }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="categoryName" width="150" [sortable]="false"
+                title="{{'EXPENSEMANAGEMENT.CATEGORYNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">
+                        {{ dataItem.expenseCategoryNames }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="expenseName" width="150" title="{{'EXPENSEMANAGEMENT.EXPENSENAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">{{ dataItem.expenseName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="expenseDate" width="150" title="{{'EXPENSEMANAGEMENT.EXPENSEDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">{{ dataItem.expenseDate | date: 'mediumDate' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="merchantName" width="150" [sortable]="false"
+                title="{{'EXPENSEMANAGEMENT.MERCHANTNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">
+                        {{ dataItem.merchantName}}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="branchName" width="150" title="{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">
+                        {{ dataItem.branchName}}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="amount" width="150" title="{{'EXPENSEMANAGEMENT.AMOUNT' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-pointer">{{ dataItem.currencySymbol }}
+                        {{ dataItem.totalAmount.toFixed(2) | number }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="expenseStatus" width="150" title="{{'EXPENSEMANAGEMENT.STATUS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [ngStyle]="{ 'backgroundColor': dataItem?.expenseStatus == 'Pending' ? 'gray' : dataItem?.expenseStatus == 'Approved' ? '#69bc69' : dataItem?.expenseStatus == 'Rejected' ? '#dd675e' : 'green'}"
+                        (click)="onCellClick(dataItem)">
+                        {{ dataItem.expenseStatus }}
+                    </mat-chip>
+                </ng-template>>
+            </kendo-grid-column>
+            <kendo-grid-column field="claimedByUserName" width="150"
+                title="{{'EXPENSEMANAGEMENT.CLAIMEDBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    {{ dataItem.claimedByUserName }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdDateTime" width="150"
+                title="{{'EXPENSEMANAGEMENT.CREATEDDATETIME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    {{ dataItem.createdDateTime | date: 'mediumDate' }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdByUserName" width="150"
+                title="{{'EXPENSEMANAGEMENT.CREATEDBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    {{ dataItem.createdByUserName }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="paidBy" width="150" title="{{'EXPENSEMANAGEMENT.PAYMENTDONEBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    {{ dataItem.paidStatusSetByUserName }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="250" title="{{'TESTMANAGEMENT.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div (click)="$event.stopPropagation()" style="display: flex;">
+                        <button
+                            *ngIf="!isArchived && (canAccess_feature_AddOrUpdateExpense) && (dataItem.expenseStatus == 'Pending' || dataItem.expenseStatus == 'Rejected')"
+                            class="text-center ml-05" title="{{ 'EXPENSEMANAGEMENT.EDITEXPENSE' | translate }}"
+                            mat-icon-button (click)="openCreateExpenseDialog(dataItem);$event.stopPropagation();">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center ml-05 mr-05"
+                            title="{{ 'EXPENSEMANAGEMENT.SENDEXPENSE' | translate }}"
+                            [satPopoverAnchorFor]="mailInvoice" #mailInvoicePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();sendExpense(dataItem,mailInvoicePopover,rowIndex)"
+                            mat-icon-button *ngIf="(canAccess_feature_ShareExpense)"
+                            [ngStyle]="{ 'pointer-events': mailOperationIsInprogress ? 'none' : '' }">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="rowIndex == kendoRowIndex && mailOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon icon="share-square" style="cursor: pointer;" class="mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <button class="text-center" *ngIf="(canAccess_feature_ArchiveExpense)"
+                            [matTooltip]="(isArchived == true) ? ('EXPENSEMANAGEMENT.UNARCHIVEEXPENSE' | translate) : ('EXPENSEMANAGEMENT.ARCHIVEEXPENSE' | translate)"
+                            mat-icon-button [satPopoverAnchorFor]="archiveExpensePopover"
+                            #archiveExpensePopUp="satPopoverAnchor"
+                            (click)="archiveExpensePopupOpen(dataItem,archiveExpensePopUp);$event.stopPropagation();">
+                            <mat-icon *ngIf="!isArchived" class="mat-color-accent" style="cursor: pointer;">archive
+                            </mat-icon>
+                            <mat-icon *ngIf="isArchived"  class="mat-color-accent" style="cursor: pointer;">unarchive
+                            </mat-icon>
+                        </button>
+                        <div *ngIf="!isArchived && (canAccess_feature_ApproveOrRejectExpense)"
+                            [ngStyle]="{ 'display': dataItem?.expenseStatus == 'Pending' ? 'flex' : 'none' }">
+                            <button class="text-center" title="{{'EXPENSEMANAGEMENT.APPROVEEXPENSE' | translate}}"
+                                [satPopoverAnchorFor]="approveExpensePopOver" #approveExpensePopup="satPopoverAnchor"
+                                (click)="approveExpensePopupOpen(dataItem,approveExpensePopup);$event.stopPropagation();"
+                                mat-icon-button>
+                                <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent">
+                                </fa-icon>
+                            </button>
+                            <button class="text-center" title="{{'EXPENSEMANAGEMENT.REJECTEXPENSE' | translate}}"
+                                [satPopoverAnchorFor]="rejectExpensePopOver" #rejectExpensePopUp="satPopoverAnchor"
+                                (click)="rejectExpensePopUpOpen(dataItem,rejectExpensePopUp);$event.stopPropagation();"
+                                mat-icon-button>
+                                <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <div *ngIf="!isArchived" [ngStyle]="{ 'display': 'flex' }">
+                            <button class="text-center ml-05"
+                                title="{{'EXPENSEMANAGEMENT.PAYEXPENSEAMOUNT' | translate}}"
+                                [satPopoverAnchorFor]="payExpensePopOver" #payExpensePopup="satPopoverAnchor"
+                                (click)="payExpensePopupOpen(dataItem,payExpensePopup);$event.stopPropagation();"
+                                mat-icon-button *ngIf="dataItem?.expenseStatus == 'Approved'">
+                                <fa-icon icon="money-bill-alt" style="cursor: pointer;" class="mat-color-accent">
+                                </fa-icon>
+                            </button>
+                        </div>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" title="{{'EXPENSEMANAGEMENT.RECEIPTS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="{{'EXPENSEMANAGEMENT.RECEIPTS' | translate}}"
+                        *ngIf="dataItem.expenseReceipts?.length > 0"
+                        (click)="showReceiptsPopupOpen(dataItem,showReceiptsPopUp);$event.stopPropagation();"
+                        [satPopoverAnchorFor]="showReceiptsPopover" #showReceiptsPopUp="satPopoverAnchor"
+                        mat-icon-button>
+                        <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                        <span>({{receiptsCount(dataItem)}})</span>
+                    </button>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #archiveExpensePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isArchived">
+                    {{'EXPENSEMANAGEMENT.UNARCHIVEEXPENSE' | translate}}
+                </div>
+                <div class="card-title-text mb-1" *ngIf="!isArchived">
+                    {{'EXPENSEMANAGEMENT.ARCHIVEEXPENSE' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{'EXPENSEMANAGEMENT.UNARCHIVEEXPENSETEXT' | translate}}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{'EXPENSEMANAGEMENT.ARCHIVEEXPENSETEXT' | translate}}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isUpsertExpenseInprogress" (click)="approveOrRejectExpense();" *ngIf="!isArchived">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                        </mat-progress-bar>
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>
+                        {{ 'YES' | translate }}
+                    </button>
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isUpsertExpenseInprogress" (click)="approveOrRejectExpense();" *ngIf="isArchived">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                        </mat-progress-bar>
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon>
+                        {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeArchiveExpenseDialog();"
+                        [disabled]="isUpsertExpenseInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #showReceiptsPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+        <mat-card class="p-0 expense-recipts-width">
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'HRMANAGAMENT.RECEIPTS' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center" class="cursor-pointer">
+                    <span class="inline_edit_close_btn" (click)="closeReceiptsPopup()">
+                        <fa-icon icon="times"></fa-icon>
+                    </span>
+                </div>
+            </div>
+            <mat-card-content class="p-05 mobile-view-popover">
+                <div *ngIf="galleryImages && galleryImages.length > 0">
+                    <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+                </div>
+                <div fxLayout="column" fxLayoutGap="0">
+                    <div fxLayout="row wrap" class="p-05" fxLayoutGap="5px" *ngFor="let file of receiptsPdfForAnOrder">
+                        <span fxFlex="15px">
+                            <fa-icon icon="file" class="icon-button mat-color-accent"
+                                (click)="downloadFile(file.filePath)">
+                            </fa-icon>
+                        </span>
+                        <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button on-name-hover"
+                            [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+                            (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #approveExpensePopOver hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">
+                    {{'EXPENSEMANAGEMENT.APPROVEEXPENSE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1 mt-05 ">
+                    {{'EXPENSEMANAGEMENT.APPROVEEXPENSETEXT' | translate}}
+                </div>
+                <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                    fxLayoutAlign.xs="center center">
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="approveExpense()" color="primary"
+                            [disabled]="isUpsertExpenseInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.APPROVE' | translate}}
+                        </button>
+                    </div>
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="closeapproveExpensePopup()">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #approveMultipleExpensesPopOver hasBackdrop
+        backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">
+                    {{'EXPENSEMANAGEMENT.APPROVEEXPENSE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1 mt-05 ">
+                    {{'EXPENSEMANAGEMENT.APPROVEEXPENSESTEXT' | translate}}
+                </div>
+                <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                    fxLayoutAlign.xs="center center">
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="approvePendingExpenses()"
+                            color="primary" [disabled]="isUpsertExpenseInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.APPROVE' | translate}}
+                        </button>
+                    </div>
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="closeapproveExpensesPopup()">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!--payExpensePopOver-->
+    <sat-popover backdropClass="backdrop-color" #payExpensePopOver hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">
+                    {{'EXPENSEMANAGEMENT.PAYEXPENSEAMOUNT' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1 mt-05 ">
+                    {{'EXPENSEMANAGEMENT.AREYOUSURETOCLEARTHISDUEAMOUNT' | translate}}
+                </div>
+                <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                    fxLayoutAlign.xs="center center">
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="payExpenseAmount()" color="primary"
+                            [disabled]="isUpsertExpenseInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{'EXPENSEMANAGEMENT.PAY' | translate}}
+                        </button>
+                    </div>
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="closePayExpensePopup()">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--payExpensePopOver-->
+
+    <sat-popover backdropClass="backdrop-color" #rejectExpensePopOver hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">
+                    {{'EXPENSEMANAGEMENT.REJECTEXPENSE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1 mt-05 ">
+                    {{'EXPENSEMANAGEMENT.REJECTEXPENSETEXT' | translate}}
+                </div>
+                <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                    fxLayoutAlign.xs="center center">
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="rejectExpense()" color="primary"
+                            [disabled]="isUpsertExpenseInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.REJECT' | translate}}
+                        </button>
+                    </div>
+                    <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                        <button mat-button mat-raised-button type="button" (click)="closerejectExpensePopUp()">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #mailInvoice hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">{{'EXPENSEMANAGEMENT.SHAREEXPENSES' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="p-05" style="width: 300px;">
+                <div fxLayout="row wrap">
+                    <mat-form-field class="full-width tags-popup"
+                        hintLabel="{{ 'EXPENSEMANAGEMENT.PLEASEPRESSCOMMAORENTERFORNEXTMAIL' | translate }}">
+                        <mat-chip-list #tagsList1>
+                            <mat-chip *ngFor="let tags of toMailsList" [selectable]="selectable" [removable]="removable"
+                                (removed)="removeToMailId(tags)" class="userstory-tags">
+                                <span class="hide-content-overflow" matTooltip="{{ tags }}"
+                                    matTooltipClass="tooltip-overflow">
+                                    {{tags}}
+                                </span>
+                                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                            </mat-chip>
+                            <input placeholder="{{'EXPENSEMANAGEMENT.TO' | translate}}" [matChipInputFor]="tagsList1"
+                                [(ngModel)]="toMail" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addToMailIds($event)">
+                            <!-- <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon> -->
+                        </mat-chip-list>
+                    </mat-form-field>
+                </div>
+                <div fxLayout="row wrap">
+                    <mat-form-field class="full-width tags-popup"
+                        hintLabel="{{ 'EXPENSEMANAGEMENT.PLEASEPRESSCOMMAORENTERFORNEXTMAIL' | translate }}">
+                        <mat-chip-list #tagsList2>
+                            <mat-chip *ngFor="let tags of ccMailsList" [selectable]="selectable" [removable]="removable"
+                                (removed)="removeCCMailId(tags)" class="userstory-tags">
+                                <span class="hide-content-overflow" matTooltip="{{ tags }}"
+                                    matTooltipClass="tooltip-overflow">
+                                    {{tags}}
+                                </span>
+                                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                            </mat-chip>
+                            <input placeholder="{{'EXPENSEMANAGEMENT.CC' | translate}}" [matChipInputFor]="tagsList2"
+                                [(ngModel)]="ccMail" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addCCMailIds($event)">
+                            <!-- <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon> -->
+                        </mat-chip-list>
+                    </mat-form-field>
+                </div>
+                <div fxLayout="row wrap" class="mb-1">
+                    <mat-form-field class="full-width tags-popup"
+                        hintLabel="{{ 'EXPENSEMANAGEMENT.PLEASEPRESSCOMMAORENTERFORNEXTMAIL' | translate }}">
+                        <mat-chip-list #tagsList3>
+                            <mat-chip *ngFor="let tags of bccMailsList" [selectable]="selectable"
+                                [removable]="removable" (removed)="removeBCCMailId(tags)" class="userstory-tags">
+                                <span class="hide-content-overflow" matTooltip="{{ tags }}"
+                                    matTooltipClass="tooltip-overflow">
+                                    {{tags}}
+                                </span>
+                                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                            </mat-chip>
+                            <input placeholder="{{'EXPENSEMANAGEMENT.BCC' | translate}}" [matChipInputFor]="tagsList3"
+                                [(ngModel)]="bccMail" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addBCCMailIds($event)">
+                            <!-- <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon> -->
+                        </mat-chip-list>
+                    </mat-form-field>
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="mailOperationIsInprogress || (count == 0)" (click)="shareExpense()">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="mailOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon>{{'BILLINGMANAGEMENT.SEND' | translate}}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeSendExpensePopover()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewExpenses)" textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>
+
+<ng-template #expenseDetailsComponent let-data>
+    <app-expense-details [data]=[data] (editExpenseDetails)="openCreateExpenseDialog($event)"></app-expense-details>
+</ng-template>
+
+<ng-template #upsertExpenseComponent let-data>
+    <app-add-expense-dialog [data]=[data]></app-add-expense-dialog>
+</ng-template>
+
+<ng-template #customFormsComponent let-data>
+    <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)"></app-custom-form-component>
+</ng-template>

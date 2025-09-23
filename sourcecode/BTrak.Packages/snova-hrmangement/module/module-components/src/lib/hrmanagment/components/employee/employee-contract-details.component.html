@@ -1,0 +1,144 @@
+<mat-card class="p-0 canteen-manage m-0 mt-05">
+    <mat-card-title class="data-table-header">
+
+        <div fxLayout="row wrap" fxLayout.xs="column">
+
+            <div fxFlex class="p-1" fxLayoutAlign.xs="start center">
+                {{'HRMANAGAMENT.CONTRACTDETAILS' | translate | titlecase}}
+            </div>
+
+            <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap" fxLayoutAlign.xs="start center">
+                <mat-form-field ngClass.xs="full-width">
+                    <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                        (input)="search()">
+                </mat-form-field>
+                <span class="close_icon" style="right: 0px !important;">
+                    <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                        style="cursor:pointer">
+                        close
+                    </mat-icon>
+                </span>
+            </div>
+
+            <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                <button
+                    *ngIf="((canAccess_feature_AddOrUpdateEmploymentContract) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )"
+                    mat-icon-button matTooltip="{{'HRMANAGAMENT.ADDCONTRACTDETAILS' | translate}}"
+                    (click)="editContractDetailsId(null,editContractDetailsPopover)"
+                    [satPopoverAnchorFor]="addContractDetails" #editContractDetailsPopover="satPopoverAnchor">
+                    <fa-icon icon="plus" class="filter mat-color-accent">
+                    </fa-icon>
+                </button>
+            </div>
+
+        </div>
+
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+            <b>{{'SEARCH' | translate}}:&nbsp;</b>
+            {{ searchText }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+</mat-card>
+<div class="activity-data" id="employee-contract-details">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [rows]="(employeeContractDetailsList$ | async)" [columnMode]="'force'"
+        [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)"
+        (page)='setPage($event)' [loadingIndicator]="employeeContractDetailsLoading$ | async"
+        [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.CONTRACTTYPENAME' | translate}}" sortable="true"
+            prop="contractTypeName">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                {{value}}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.CONTRACTEDHOURS' | translate}}" sortable="true"
+            prop="contractedHours">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                {{value}}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.STARTDATE' | translate}}" sortable="true" prop="startDate">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.startDate != null">{{ row.startDate | date: "dd-MMM-yyyy" }}</div>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.ENDDATE' | translate}}" sortable="true" prop="endDate">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.endDate != null">{{ row.endDate | date: "dd-MMM-yyyy" }}</div>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'SIGNATURE.SIGNATURE' | translate}}" [sortable]="false">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <button class="text-center" matTooltip="{{'SIGNATURE.VIEWANDEDITSIGNATURE' | translate}}"
+                    (click)="viewSignature(row)" mat-icon-button>
+                    <fa-icon icon="file-signature" class="mat-color-accent"></fa-icon>
+                </button>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [sortable]="false"
+            *ngIf="((canAccess_feature_AddOrUpdateEmploymentContract) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails ) || (canAccess_feature_CanCreateReminders)">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <button class="text-center" matTooltip="{{'HRMANAGAMENT.EDITCONTRACTDETAILS' | translate}}"
+                    (click)="editContractDetailsId(row,editContractDetailsPopover)"
+                    *ngIf="((canAccess_feature_AddOrUpdateEmploymentContract) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )"
+                    [satPopoverAnchorFor]="addContractDetails" #editContractDetailsPopover="satPopoverAnchor"
+                    mat-icon-button>
+                    <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                </button>
+                <button *ngIf="(canAccess_feature_CanCreateReminders)" class="text-center"
+                    matTooltip="{{'REMINDER.VIEWANDREMINDER' | translate}}" (click)="addReminder(row,true)"
+                    mat-icon-button>
+                    <fa-icon icon="calendar-week" class="mat-color-accent"></fa-icon>
+                </button>
+                <button class="text-center" matTooltip="{{'HRMANAGAMENT.DELETECONTRACTDETAILS' | translate}}"
+                    (click)="getContractDetailsId(row,deleteContractDetailsPopover)"
+                    *ngIf="((canAccess_feature_AddOrUpdateEmploymentContract) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )"
+                    [satPopoverAnchorFor]="deleteContractDetails" #deleteContractDetailsPopover="satPopoverAnchor"
+                    mat-icon-button>
+                    <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                </button>
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
+</div>
+
+<sat-popover #addContractDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0" *ngIf="isContract">
+        <app-hr-component-add-contract-details [selectedEmployeeId]="employeeId" [isPermission]="permission"
+            [editContractDetailsData]="editContractDetailsData" (closePopup)="closeUpsertContractDetailsPopover()">
+        </app-hr-component-add-contract-details>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteContractDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'HRMANAGAMENT.DELETECONTRACTDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <div class="card-content p-1">
+            <div class="mb-1">
+                {{'HRMANAGAMENT.AREYOUSUREWANTTODELETE' | translate}}
+            </div>
+            <div fxLayoutAlign="space-around center">
+                <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+                    (click)="deleteContractDetail()">
+                    <i class="fa fa-check"></i>{{'YES' | translate}}
+                </button>
+                <button type="button" mat-button mat-raised-button (click)="cancelContractDetails()">
+                    <i class="fa fa-times"></i>{{'NO' | translate}}
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>

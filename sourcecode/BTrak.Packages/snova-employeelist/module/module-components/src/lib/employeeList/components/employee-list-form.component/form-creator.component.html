@@ -1,0 +1,98 @@
+<div class="custom-dialog" *ngIf="isFromModal">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div fxLayout="row">
+    <div fxLayout="column" class="projects-list-grid grid-wrapper ml-05 mr-05" *ngIf="isLoaded" style="width: 30%;">
+        <kendo-grid [data]="gridView" [pageSize]="pageSize" [pageable]="true" [skip]="skip"
+            (pageChange)="pageChange($event)">
+            <kendo-grid-column field="fieldName" title="{{'EMPLOYEEFIELDS.FIELDNAME' | translate}}" [width]="120">
+            </kendo-grid-column>
+            <kendo-grid-column field="isHide" title="{{'EMPLOYEEFIELDS.ISHIDE' | translate}}" [width]="120">
+            </kendo-grid-column>
+            <kendo-grid-column field="isRequired" title="{{'EMPLOYEEFIELDS.ISREQUIRED' | translate}}" [width]="120">
+            </kendo-grid-column>
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}" [width]="120">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" [satPopoverAnchorFor]="editEmployeeFieldDetailsPopovers"
+                        #editEmployeeFieldDetailsPopover="satPopoverAnchor"
+                        matTooltip="{{'EMPLOYEEFIELDS.EDITEMPLOYEEDETAILSFIELDS' | translate | softLabelsPipe : softLabels}}"
+                        (click)="editEmployeeFieldDetails(dataItem,editEmployeeFieldDetailsPopover);$event.stopPropagation()"
+                        mat-icon-button *ngIf="getEdit(dataItem)">
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <div fxLayout="column" mat-dialog-content class="project-dialogContent" id="style-1" style="width: 70%;">
+        <div>
+            <div id="style-1" style="overflow: hidden;">
+                <!-- <div id="style-1" *ngIf="isFormCompleted == false" class="full-height" style="overflow-x: hidden;">
+                    <form-builder [form]="formObject" (change)="onChange($event)"></form-builder>
+                </div>
+                <div id="style-1" *ngIf="isFormCompleted == true" class="full-height" style="overflow-x: hidden;">
+                    <form-builder [form]="forms" (change)="onChange($event)"></form-builder>
+                </div> -->
+                <app-form-builder-component [form]="forms" (emitFormEvent)="emitEvent($event)">
+                </app-form-builder-component>
+            </div>
+            <button *ngIf="isFormEdit==false" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                type="button" [disabled]="checkDisable()" (click)="createAGenericForm()">
+                <fa-icon class="mr-05" icon="save"></fa-icon>{{ 'GENERICFORM.SAVEFORM' | translate }}
+            </button>
+            <button *ngIf="isFormEdit==true" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                type="button" [disabled]="checkDisable()" (click)="createAGenericForm()">
+                <fa-icon class="mr-05" icon="sync"></fa-icon> {{ 'GENERICFORM.UPDATEFORM' | translate }}
+            </button>
+        </div>
+    </div>
+</div>
+<sat-popover #editEmployeeFieldDetailsPopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" verticalAlign="center" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'ACTIVITYTRACKER.EDIT' | translate}}
+            </div>
+        </mat-card-title>
+        <form [formGroup]="editFields" novalidate #formDirective="ngForm"
+            (submit)="editFields.valid && upsertEmployeeFields()">
+            <div class="apps-popover p-1" id="style-1">
+                <div fxLayout="column" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxLayout="row wrap" fxLayoutGap="10px">
+                        <div fxFlex="100" fxFlex="30">
+                            <mat-checkbox formControlName="isHide" (click)="$event.stopPropagation();"
+                                [(ngModel)]="isHide" class="mb-1 checkbox-text mr-1">
+                                {{'EMPLOYEEFIELDS.ISHIDE' | translate}}</mat-checkbox>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayoutGap="10px">
+                        <div fxFlex="100" fxFlex="30">
+                            <mat-checkbox formControlName="isRequired" (click)="$event.stopPropagation();"
+                                [(ngModel)]="isRequired" class="mb-1 checkbox-text mr-1">
+                                {{'EMPLOYEEFIELDS.ISREQUIRED' | translate}}</mat-checkbox>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mobile-view-popover p-1">
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                </div>
+            </div>
+            <div class="text-center mb-1 prl-1">
+                <mat-error>
+                    <span *ngIf="isRequired&&isHide">{{'EMPLOYEEFIELDS.MANDORTYCONFIGUREDANDHIDED' | translate}}
+                    </span>
+                </mat-error>
+                <button mat-raised-button color="primary" class="mr-05" (click)="$event.stopPropagation()">
+                    <fa-icon icon="save" class="mr-05"></fa-icon> {{'ACTIVITYTRACKER.SAVE' | translate}}
+                </button>
+                <button mat-raised-button (click)="closeFieldsDialog()" type="reset">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>

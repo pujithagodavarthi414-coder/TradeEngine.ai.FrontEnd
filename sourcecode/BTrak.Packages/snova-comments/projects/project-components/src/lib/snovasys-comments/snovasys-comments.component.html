@@ -1,0 +1,57 @@
+<div id="snovasys-comments">
+  <div *ngIf="isPermissionExists" class="clearfix">
+    <editor [formControl]="commentsFormControl" class="dfree-header custom-logtime-comment"
+      apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Comments" menubar="false"
+      [init]="initSettings" background="white" [(ngModel)]="commentText" (onKeyUp)="buttonDisabledInProgress($event)">
+    </editor>
+    <mat-error>
+      <span *ngIf="isCommentsTextValidation">
+        {{'COMMENTS.COMMENTSLENGTHSHOULDNOTEXCEED800CHARACTERS'| translate}}
+      </span>
+    </mat-error>
+    <button mat-raised-button color="primary" class="mt-05 mb-05 pull-right" (click)="postComment()"
+      [disabled]="isButtonDisabled || eventInProgress">
+      <fa-icon icon="paper-plane" class="mr-05"></fa-icon>
+      {{'POSTNOW' | translate}}
+      <i class="fa fa-spin fa-spinner" *ngIf="eventInProgress"></i>
+    </button>
+  </div>
+  
+  <div class="comments_section" *ngIf="isPermissionExists" id="style-1">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="eventInProgress">
+    </mat-progress-bar>
+    <div *ngFor="let comment of comments" class="comment-area p-05">
+      <mat-card-title>
+        <div fxLayout="row" fxLayoutGap="5px">
+          <div fxFlex fxLayoutAlign="start center" (click)="goToProfile(comment.commentedByUser.id)"
+            style="cursor: pointer;">
+            <app-avatar *ngIf="!comment.commentedByUser.profileImage" [name]="comment.commentedByUser.name" matTooltip="{{ comment.commentedByUser.name }}"
+              [isRound]="true" size="30">
+            </app-avatar>
+            <img class="employee_img" *ngIf="comment.commentedByUser.profileImage" matTooltip="{{ comment.commentedByUser.name }}"
+              src="{{comment.commentedByUser.profileImage}}">
+            &nbsp;&nbsp;
+            <span *ngIf="comment.commentedByUser.name.length > 30">
+              {{ comment.commentedByUser.name | slice:0:30}}...
+            </span>
+            <span *ngIf="comment.commentedByUser.name.length < 30">
+              {{ comment.commentedByUser.name}}
+            </span>
+          </div>
+          <div fxFlex fxLayoutAlign="end center">
+            <span class="pull-right"
+              matTooltip="{{comment.originallyCommentedDateTime| date:'dd-MM-yyyy, h:mm a' }}">{{comment.originallyCommentedDateTime
+              | timeago: 'live'}}</span>
+          </div>
+        </div>
+      </mat-card-title>
+      <mat-card-content class="user-comment p-0" fxLayout="row">
+        <span fxFlexOffset="40px" class="mat-body-2" [innerHTML]="comment.comment | sanitizeHtml">
+        </span>
+      </mat-card-content>
+    </div>
+  </div>
+
+  <app-common-message-box *ngIf="!isPermissionExists" textToDisplay="DONTHAVEANYPERMISSIONS">
+  </app-common-message-box>
+</div>

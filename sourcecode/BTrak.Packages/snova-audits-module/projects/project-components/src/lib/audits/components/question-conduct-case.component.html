@@ -1,0 +1,311 @@
+<div class="testrail-case-details section-cases-operations category-questions"
+    [ngStyle]="{ 'background-color': questionSelected == true ? '#e0dbdb' : '' }" fxLayout="row">
+    <!-- <div fxFlex="2px" class="testrail-userstory-left testsuit-left-border">
+        &nbsp;
+    </div> -->
+    <input matInput [value]="canAccess_entityType_feature_CanAnswerQuestions" #accessSingleUpdate hidden />
+    <div fxFlex="5" fxFlex.lg="7" fxFlex.md="7" class="text-overflow-wrap"
+        (click)="previewQuestion(questionDetail,accessSingleUpdate.value)">
+        <a>{{questionDetail.questionIdentity}}</a>
+        <span *ngIf="questionDetail.isQuestionMandatory != null && (questionDetail.isQuestionMandatory == true)"
+            style="color: red;">
+            *
+        </span>
+    </div>
+    <div fxFlex class="m-0 ml-05 text-overflow-wrap userStory-name"
+        (click)="previewQuestion(questionDetail,accessSingleUpdate.value)" #questionTitle
+        (mouseover)="checkTitleTooltipStatus()">
+        <span class="user-select-text" [matTooltip]="showTitleTooltip ? questionDetail.questionName : ''"
+            matTooltipShowDelay="300">
+            {{questionDetail.questionName}}
+        </span>
+    </div>
+    <div fxFlex="44px" (click)="$event.stopPropagation()" *ngIf="questionDetail.actionsCount > 0">
+        <a matTooltip="{{'AUDIT.ACTIONSCOUNT' | translate | softLabelsPipe :softLabels}}" [satPopoverAnchorFor]="scenarioBugs"
+            #scenarioBugsPopover="satPopoverAnchor"
+            (click)="$event.stopPropagation();openBugsPopover(scenarioBugsPopover)">
+            <fa-icon icon="eye"></fa-icon>
+        </a>
+        <span class="testsuite-sections-count scenario-bugs-place scenario-bugs-count-padding">
+            {{questionDetail.actionsCount}}
+        </span>
+    </div>
+    <div fxFlex="{{isFromUniquePage ? '9' : '6'}}" class="ml-05 mr-05 text-overflow-wrap"
+        (click)="$event.stopPropagation()" ngClass.sm="mr-05"
+        *ngIf="canAccess_entityType_feature_CanHaveQuestionResponsiblePerson">
+        <img class="testcase-user-img" src="../../../assets/images/faces/18.png"
+            *ngIf="!questionDetail.questionResponsiblePersonName" />
+        <!-- (click)="goToProfilePage(questionDetail.questionResponsiblePersonId)" -->
+        <div *ngIf="questionDetail.questionResponsiblePersonName && questionDetail.questionResponsiblePersonId">
+            <app-avatar matTooltip="{{questionDetail.questionResponsiblePersonName}}"
+                [name]="questionDetail.questionResponsiblePersonName | removeSpecialCharacters"
+                [src]="questionDetail.questionResponsiblePersonProfileImage" [isRound]="true" size="25"
+                (click)="previewQuestion(questionDetail,accessSingleUpdate.value)">
+            </app-avatar>
+        </div>
+    </div>
+    <mat-chip matTooltipShowDelay="300" fxFlex="13" class="mt-05 allgoals_process text-center mat-chip-color-text mr-05" *ngIf="questionDetail.enableQuestionLevelWorkFlow"
+        [ngStyle]="{'background-color': questionDetail.statusColor ? questionDetail.statusColor : '#b0b0b0' }"
+        mat-sm-chip style="color: white; text-transform: none !important;">
+        {{ status }}
+    </mat-chip>
+    <!-- matTooltip="{{'AUDIT.RESULT' | translate}} - Not answered" -->
+    <mat-chip
+        *ngIf="questionDetail.isQuestionAnswered != null && questionDetail.isQuestionAnswered == false && questionDetail.canEdit"
+        (click)="openUpdateStatusPopover(accessSingleUpdate.value)" [satPopoverAnchorFor]="updateStatusPopover"
+        matTooltipShowDelay="300" fxFlex="13" class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #b0b0b0;color: white; text-transform: none !important;">
+        {{'AUDIT.NOTANSWERED' | translate}}
+    </mat-chip>
+    <!-- matTooltip="{{'AUDIT.RESULT' | translate}} - {{questionDetail.questionResult}}" matTooltipShowDelay="300" -->
+    <mat-chip
+        *ngIf="questionDetail.isQuestionAnswered != null && questionDetail.isQuestionAnswered == true && questionDetail.isAnswerValid == false && questionDetail.canEdit"
+        (click)="openUpdateStatusPopover(accessSingleUpdate.value)" [satPopoverAnchorFor]="updateStatusPopover"
+        fxFlex="11" class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #d97373;color: white; text-transform: none !important;">
+        <span *ngIf="questionDetail.questionResult">{{questionDetail.questionResult}}</span>
+        <span *ngIf="questionDetail.questionResultText"
+            matTooltip="{{questionDetail.questionResultText}}">{{truncateTextName(questionDetail.questionResultText)}}</span>
+        <span
+            *ngIf="questionDetail.questionResultDate">{{questionDetail.questionResultDate | utcToLocalTime | date: "dd-MMM-yyyy"}}</span>
+        <span *ngIf="questionDetail.questionResultNumeric">{{questionDetail.questionResultNumeric}}</span>
+        <span *ngIf="questionDetail.questionResultTime">{{questionDetail.questionResultTime}}</span>
+    </mat-chip>
+    <!-- matTooltip="{{'AUDIT.RESULT' | translate}} - {{questionDetail.questionResult}}" matTooltipShowDelay="300" -->
+    <mat-chip
+        *ngIf="questionDetail.isQuestionAnswered != null && questionDetail.isQuestionAnswered == true && questionDetail.isAnswerValid == true && questionDetail.canEdit"
+        (click)="openUpdateStatusPopover(accessSingleUpdate.value)" [satPopoverAnchorFor]="updateStatusPopover"
+        fxFlex="11" class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #65bb63;color: white; text-transform: none !important;">
+        <span *ngIf="questionDetail.questionResult">{{questionDetail.questionResult}}</span>
+        <span *ngIf="questionDetail.questionResultText"
+            matTooltip="{{questionDetail.questionResultText}}">{{truncateTextName(questionDetail.questionResultText)}}</span>
+        <span
+            *ngIf="questionDetail.questionResultDate">{{questionDetail.questionResultDate | utcToLocalTime | date: "dd-MMM-yyyy"}}</span>
+        <span *ngIf="questionDetail.questionResultNumeric">{{questionDetail.questionResultNumeric}}</span>
+        <span *ngIf="questionDetail.questionResultTime">{{questionDetail.questionResultTime}}</span>
+    </mat-chip>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #updateStatusPopover verticalAlign="below" hasBackdrop
+    [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="closeUpdateStatusPopover()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                    {{'AUDIT.UPDATERESULT' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="testrun-inline-editor" *ngIf="loadStatus">
+                <div class="inline-conduct-height" id="style-1" fxFlex="300px">
+                    <form [formGroup]="questionConductForm" novalidate
+                        (submit)="questionConductForm.valid && submitConductQuestion()" fxLayout="column">
+                        <div fxLayout="row wrap" fxFlex="100"
+                            *ngIf="questionDetail.masterQuestionTypeId == dropdownQuestionTypeId">
+                            <mat-form-field class="mt-05 mb-05 full-width">
+                                <mat-select placeholder="{{'AUDIT.RESULT' | translate}}" required
+                                    formControlName="auditConductAnswerId">
+                                    <mat-option *ngFor="let type of questionTypeOptions"
+                                        [value]="type.auditConductAnswerId">
+                                        {{type.questionTypeOptionName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="questionConductForm.get('auditConductAnswerId').hasError('required') && questionConductForm.get('auditConductAnswerId').touched">
+                                    {{'AUDIT.PLEASESELECTRESULT' | translate}}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div class="questions-mat-radio" fxLayout="row wrap" fxFlex="100"
+                            *ngIf="questionDetail.masterQuestionTypeId == booleanQuestionTypeId">
+                            <mat-radio-group class="full-width mt-1 radio-group" formControlName="auditConductAnswerId">
+                                <div class="mb-05" fxLayout="row wrap" fxFlex="100"
+                                    *ngFor="let type of questionTypeOptions">
+                                    <mat-radio-button class="full-width" [value]="type.auditConductAnswerId"
+                                        [checked]="type.auditConductAnswerId == questionConductForm.get('auditConductAnswerId').value">
+                                        {{type.questionTypeOptionName}}
+                                    </mat-radio-button>
+                                </div>
+                            </mat-radio-group>
+                        </div>
+                        <div *ngIf="questionDetail.masterQuestionTypeId == dateQuestionTypeId">
+                            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                <input matInput [matDatepicker]="picker"
+                                    placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}" (click)="picker.open()"
+                                    formControlName="questionOptionDate">
+                                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                <mat-error>
+                                    <span
+                                        *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+                                        {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="questionDetail.masterQuestionTypeId == numericQuestionTypeId">
+                            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                <input matInput formControlName="questionOptionDate"
+                                    placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}" type="number">
+                                <mat-error>
+                                    <span
+                                        *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+                                        {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="questionDetail.masterQuestionTypeId == textQuestionTypeId">
+                            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                <input matInput formControlName="questionOptionDate"
+                                    placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}">
+                                <mat-error>
+                                    <span
+                                        *ngIf="!questionConductForm.get('questionOptionDate').valid && questionConductForm.get('questionOptionDate').touched">
+                                        {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="questionDetail.masterQuestionTypeId == timeQuestionTypeId">
+                            <mat-form-field class="full-width audit-timepicker">
+                                <input formControlName="questionOptionDate" matInput
+                                    placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}" aria-label="24hr format"
+                                    [ngxTimepicker]="fullTime" [format]="24" readonly [(ngModel)]="intimepicker" />
+                                <ngx-material-timepicker #fullTime [cancelBtnTmpl]="intimecancelBtn"
+                                    [confirmBtnTmpl]="confirmBtn">
+                                </ngx-material-timepicker>
+                                <span class="close-icon-padding close_icon pull-right">
+                                    <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false"
+                                        (click)="closeintime()" style="cursor:pointer">close</mat-icon>
+                                </span>
+                            </mat-form-field>
+                            <ng-template #intimecancelBtn>
+                                <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;"
+                                    (click)="closefromTime()">
+                                    {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+                            </ng-template>
+                            <ng-template #confirmBtn>
+                                <p class="feedtimesheet-datepicker-button">{{'FEEDTIMESHEET.OK' | translate}}</p>
+                            </ng-template>
+                        </div>
+                        <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05">
+                            <div fxFlex="100">
+                                <ng-container *ngIf="(questionConductForm.get('viewAnswerComment').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionConductForm.get('viewAnswerComment').setValue(!questionConductForm.get('viewAnswerComment').value)">
+                                        <b>{{'AUDIT.ENTERCOMMENT' | translate}}</b>
+                                    </a>
+                                </ng-container>
+                                <ng-container *ngIf="!(questionConductForm.get('viewAnswerComment').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionConductForm.get('viewAnswerComment').setValue(!questionConductForm.get('viewAnswerComment').value)">
+                                        <b>{{'AUDIT.HIDECOMMENT' | translate}}</b>
+                                    </a>
+                                </ng-container>
+                            </div>
+                            <div fxLayout="row wrap" fxFlex="100"
+                                [hidden]="questionConductForm.get('viewAnswerComment').value == false">
+                                <div fxFlex="100">
+                                    <editor class="dfree-header custom-logtime-comment"
+                                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+                                        placeholder="Add comment" menubar="false" [init]="initSettings"
+                                        background="white" height="90" formControlName="answerComment"
+                                        (onKeyUp)="checkButtonDisabled()">
+                                    </editor>
+                                    <mat-error *ngIf="questionConductForm.get('answerComment').hasError('maxlength')">
+                                        {{ 'AUDIT.COMMENTEXCEED800CHARACTERS' | translate }}
+                                    </mat-error>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mb-05">
+                            <button class="mr-1" type="submit" mat-button mat-raised-button color="primary"
+                                [disabled]="disableUpdate || checkSubmit()">
+                                <mat-progress-bar
+                                    *ngIf="(anyOperationInProgress$ | async) || (searchOperationInProgress$ | async)"
+                                    color="primary" mode="indeterminate">
+                                </mat-progress-bar>
+                                <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.UPDATE' | translate}}
+                            </button>
+                            <button type="button" mat-button mat-raised-button (click)="closeUpdateStatusPopover()">
+                                <fa-icon icon="times" class="mr-05"></fa-icon>
+                                {{'TESTMANAGEMENT.CANCEL' | translate}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </mat-card-content>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #scenarioBugs hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+            <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'AUDIT.ACTIONS' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05 goal-bugs" id="style-1" *ngIf="loadActions && questionDetail.actionsCount > 0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(bugsInTestCaseProgress$ | async)">
+            </mat-progress-bar>
+            <div fxLayout="column" *ngIf="!(bugsInTestCaseProgress$ | async)" fxLayoutGap="5px">
+                <div fxLayout="row" *ngFor="let bug of (scenarioBugs$ | async);let i = index" fxLayoutGap="5px">
+                    <div fxFlex="15px">
+                        <fa-icon matTooltip="{{ bug.bugPriorityName }} ({{bug.bugPriorityDescription}})"
+                            icon="{{bug.bugPriorityIcon}}"
+                            [ngStyle]="setColorForBugPriorityTypes(bug.bugPriorityColor)">
+                        </fa-icon>
+                    </div>
+                    <div fxFlex="70" class="word-break display-pre-line">
+                        <span>{{bug.userStoryName}}</span>
+                    </div>
+                    <mat-chip matTooltip="{{'AUDIT.ACTIONSTATUS' | translate | softLabelsPipe :softLabels}}" fxFlex
+                        class="allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="bug.statusHexValue">
+                        {{ bug.status }}
+                    </mat-chip>
+                </div>
+            </div>
+            <!-- <mat-menu #unLinkAction="matMenu" [overlapTrigger]="false">
+                <ng-template matMenuContent let-actionData="actionData">
+                    <button mat-menu-item [satPopoverAnchorFor]="deleteAction"
+                    *ngIf="canLinkAction"
+                    (click)="openArchiveActionPopover(actionData); $event.stopPropagation()">
+                    <mat-icon>archive</mat-icon> <span>{{'AUDIT.ARCHIVE' | translate}}</span>
+          </button>
+                </ng-template>
+            </mat-menu> -->
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- 
+<sat-popover #deleteAction hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="actionRequiredData">
+      <div class="card-content mb-1">
+        {{'AUDIT.REALLYUNLINKTHEACTION' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary"
+          [disabled]="disableActionDelete" (click)="deleteSelectedAction()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(deleteOperationInProgress)">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'USERSTORY.ARCHIVEUSERSTORYLINK' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteActionPopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover> -->

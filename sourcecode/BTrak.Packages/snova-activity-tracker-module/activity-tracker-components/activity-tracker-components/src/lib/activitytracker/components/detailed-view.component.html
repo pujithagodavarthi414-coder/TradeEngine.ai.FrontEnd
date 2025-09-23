@@ -1,0 +1,114 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div class="full-height">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow">{{ 'ACTIVITYTRACKER.DETAILEDUSEAGE' |
+                    translate}}</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <div fxFlex="40px" fxLayoutAlign="end center">
+                        <button type="submit" mat-icon-button [matMenuTriggerFor]="filterMenu"
+                            matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                            <fa-icon icon="filter" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                    </div>
+
+                    <div fxFlex="40px" fxLayoutAlign="end center">
+                        <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+    <div class="activity-data no-drag detailed-view">
+        <ngx-datatable class="btrak" [rows]="webAppUsage"
+            [headerHeight]="35" [footerHeight]="35" [rowHeight]="40"
+            [limit]="pageSize" [columnMode]="'force'" [externalPaging]="true" [offset]="pageNumber"
+            (sort)="onSort($event)" (page)='setPage($event)' [selectionType]="'single'" [count]="totalCount"
+            [scrollbarH]="true" [virtualization]="false"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+            [sorts]="[{prop: 'name', dir: 'asc'}]">
+            <ngx-datatable-column name="{{'ACTIVITYTRACKER.USER' | translate | softLabelsPipe : softLabels}}"
+                sortable="true" prop="name">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="10px">
+                        <div fxFlex>
+                            <img class="employee_img" style="margin: 0;width:25px;height: 25px;"
+                                src="{{row.profileImage}}" *ngIf="row?.profileImage" />
+                            <ngx-avatar name="{{ row?.name }}" *ngIf="!row?.profileImage" initialsSize="2"
+                                [round]="true" size="25">
+                            </ngx-avatar>
+                        </div>
+                        <div fxFlex>
+                            <label class="assets-name-control hide-content-overflow activity-font-color mb-0 mt-05"
+                                matTooltip="{{row?.name }}">{{ row?.name }}<span *ngIf="row.userId == loggedUser">
+                                    (Myself)</span></label>
+                        </div>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIVITYTRACKER.APPWEBSITE' | translate}}" sortable="true"
+                prop="applicationName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <label class="assets-name-control hide-content-overflow activity-font-color mb-0 mt-05"
+                        matTooltip="{{row?.applicationName}}">{{ row?.applicationName }}</label>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIVITYTRACKER.LOGGEDTIME' | translate}}" sortable="true" prop="spentValue">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <label class="assets-name-control hide-content-overflow activity-font-color mb-0 mt-05"
+                        matTooltip="{{ row?.spentValue | activityTimeFilter }}">{{ row?.spentValue |
+                        activityTimeFilter}}</label><label for=""></label>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIVITYTRACKER.PRODUCTIVITY' | translate}}" sortable="true" prop="timeValue"
+                [cellClass]="'productivity-custom-cell'">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="app-usage-status">
+                        <mat-progress-bar mode="determinate" value="{{ row?.timeValue }}"
+                            [matTooltip]="getProductiveToolTip(row)"
+                            [ngClass]="[row?.applicationTypeName == 'Productive' ? 'productive-color' : row?.applicationTypeName == 'UnProductive' ? 'unproductive-color' : 'neutral-color']"
+                            [ngStyle]="{height:'8px', display: 'block', position: 'absolute', width: '22%'}">
+                        </mat-progress-bar>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field color="accent" class="full-width">
+                <mat-label>{{ 'PERMISSIONHISTORY.FROMDATE' | translate }}</mat-label>
+                <input matInput [matDatepicker]="picker2" autocomplete="off" (click)="picker2.open()"
+                    (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="fromDate" [max]="maxDate"
+                    [readonly]="true" [min]="fromMinDate">
+                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field color="accent" class="full-width">
+                <mat-label>{{ 'PERMISSIONHISTORY.TODATE' | translate }}</mat-label>
+                <input matInput [matDatepicker]="picker3" autocomplete="off" (click)="picker3.open()"
+                    (dateChange)="dateToChanged($event)" class="date-picker" [min]="fromDate" [max]="maxDate"
+                    [(ngModel)]="toDate" [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                <mat-datepicker #picker3></mat-datepicker>
+            </mat-form-field>
+        </mat-card>
+    </mat-menu>
+
+</div>
+
+<!-- <app-common-message-box 
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+  </app-common-message-box> -->

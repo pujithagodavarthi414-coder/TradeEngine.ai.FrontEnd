@@ -1,0 +1,20 @@
+export const ApiUrls = {
+  GetForms: "GenericForm/GenericFormApi/GetForms",
+  UpsertWorkflow :"GenericForm/GenericFormApi/UpsertWorkflow",
+  UpdateWorkflow:"GenericForm/GenericFormApi/UpdateWorkflow",
+  GetFormFields: "GenericForm/GenericFormApi/GetFormFieldValues",
+  GetTimezone:"TimeZone/TimeZoneApi/GetAllTimeZone",
+  UpsertWorkflowTrigger:"AutomatedWorkflowManagement/AutomatedWorkflowManagementApi/UpsertWorkflowTrigger",
+  GetWorkflows:'GenericForm/GenericFormApi/GetWorkflows',
+  GetAllUsers: `User/UsersApi/GetAllUsers`,
+  GetActivity: 'GenericForm/GenericFormApi/GetActivity',
+  UpsertActivity: 'GenericForm/GenericFormApi/UpsertActivity',
+  GetError: 'GenericForm/GenericFormApi/GetError',
+  UpsertError: 'GenericForm/GenericFormApi/UpsertError',
+  GetWorkflowById: 'GenericForm/GenericFormApi/GetWorkflowById',
+  GetGenericForms: `GenericForm/GenericFormApi/GetGenericForms`,
+  GetDataServiceGenericForms: `GenericForm/GenericFormApi/GetDataServiceGenericForms`,
+  GetFormsFields: `GenericForm/GenericFormApi/GetFormsFields`,
+  GetCustomApplication: `CustomAppplication/CustomApplicationApi/GetCustomApplication`,
+  GetRolesDropdown : `Roles/RolesApi/GetAllRolesDropDown`
+}

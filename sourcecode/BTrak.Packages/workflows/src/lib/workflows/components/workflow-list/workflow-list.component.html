@@ -1,0 +1,170 @@
+<div class="full-height">
+    <mat-card class="p-0 m-0 time-sheet">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0">
+                <div fxFlex fxFlex.xs="100" fxLayoutAlign="start center" fxLayoutAlign.xs="center center">
+                    <div class="card-title-text p-05">Workflows
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="mr-05">
+                
+                    <mat-slide-toggle [matTooltip]="(isArchived == true) ? 'Switch to unarchive' : 'Switch to archive'"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="changeArchiveWorkflow(isArchived)">
+                    </mat-slide-toggle>
+                </div>
+                <div class="h-75" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px" fxLayoutAlign="end center">
+                    <button mat-icon-button color="primary" matTooltip="Add workflow"
+                      (click)="$event.stopPropagation();addWorkflow()">
+                      <fa-icon class="mat-color-accent icon-button" icon="plus"></fa-icon>
+                  </button>
+                </div>
+                <div class="mr-05 search_goalinput row-wrap" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px">
+                    <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+                            (input)="filterByName($event)">
+                    </mat-form-field>
+                    <span class="custom_close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="full-height">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isLoading">
+            </mat-progress-bar>
+            <kendo-grid [data]="workflows" [sortable]="true" [pageable]="false" [filterable]="false" [height]="696"
+                [selectable]="false" [sort]="sort" (sortChange)="sortChange($event)" [scrollable]="true">
+                <kendo-grid-column field="workflowName" title="Workflow name" [style]="{'cursor':'default'}">
+                </kendo-grid-column>
+                <kendo-grid-column field="formName" title="Form name" [style]="{'cursor':'default'}">
+                </kendo-grid-column>
+                <kendo-grid-column field="description" title="Description" [style]="{'cursor':'default'}">
+                </kendo-grid-column>
+
+                <kendo-grid-command-column field="action" title="Actions">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <button *ngIf="!isArchived" class="text-center mr-05" title="Edit workflow" mat-icon-button
+                            (click)="editWorkflow(dataItem)">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="!isArchived" class="text-center" title="Archive workflow"
+                            [satPopoverAnchorFor]="deleteWorkflow" #deleteWorkflowPopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteWorkflowItem(dataItem,deleteWorkflowPopover)"
+                            mat-icon-button>
+
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                        </button>
+                        <button *ngIf="isArchived" class="text-center" title="Unarchive workflow"
+                            [satPopoverAnchorFor]="deleteWorkflow" #deleteWorkflowPopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteWorkflowItem(dataItem,deleteWorkflowPopover)"
+                            mat-icon-button>
+
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                        </button>
+                    </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+    </mat-card>
+</div>
+
+<!-- <sat-popover #editActivityPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="filter-data p-0" style="width: 330px;">
+      <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+              <span *ngIf="isEdit">
+                  Edit activity
+              </span>
+            
+          </div>
+      </mat-card-title>
+      <form [formGroup]="form" novalidate #formDirective="ngForm"
+          (submit)="form.valid && upsertActivity()">
+          <div class="mobile-view-popover p-1">
+              <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                  <div fxFlex="100" fxFlex.xs="100">
+                      <mat-form-field class="full-width">
+                          <input formControlName="activityName" matInput required
+                              placeholder="Activity name">
+                          <mat-error *ngIf="form.get('activityName').hasError('required') &&
+                                   form.get('activityName').touched">
+                              Activity name is required
+                          </mat-error>
+                      </mat-form-field>
+                  </div>
+              </div>
+              <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                  <div fxFlex="100" fxFlex.xs="100">
+                      <mat-form-field class="full-width">
+                          <input formControlName="description" matInput
+                              placeholder="Description">
+                      </mat-form-field>
+                  </div>
+              </div>
+              <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                  <div fxFlex="100" fxFlex.xs="100">
+                      <mat-form-field class="full-width">
+                          <input formControlName="inputs" matInput
+                              placeholder="Inputs">
+                      </mat-form-field>
+                  </div>
+              </div>
+          </div>
+          <div class="text-center mb-1 prl-1">
+              <button mat-raised-button color="primary" type="submit" class="mr-05"
+                  (click)="$event.stopPropagation()">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertInProgress">
+                  </mat-progress-bar>
+                  <span *ngIf="isEdit"><fa-icon icon="save" class="mr-05" *ngIf="isEdit"></fa-icon> Save </span>
+                  <span *ngIf="!isEdit"><fa-icon icon="plus" class="mr-05"></fa-icon> Add </span>
+              </button>
+              <button mat-raised-button (click)="closePopup()" type="reset">
+                  <fa-icon icon="times" class="mr-05"></fa-icon> Cancel
+              </button>
+          </div>
+      </form>
+  </mat-card>
+</sat-popover> -->
+
+<sat-popover #deleteWorkflow hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05"> Confirmation </div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar>
+            <div class="card-content p-05" *ngIf="!isArchived">
+                Are you sure, you want to archive workflow
+            </div>
+            <div class="card-content p-05" *ngIf="isArchived">
+                Are you sure, you want to unarchive workflow
+            </div>
+            <div class="text-center">
+                <button *ngIf="!isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeWorkflowAtIndex(true)" [disabled]="deleteOperationIsInprogress">
+                    <mat-icon style="cursor: pointer;" class="mr-05">archive</mat-icon>
+                    Archive
+                </button>
+                <button *ngIf="isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeWorkflowAtIndex(false)" [disabled]="deleteOperationIsInprogress">
+                    <mat-icon style="cursor: pointer;" class="mr-05">unarchive</mat-icon>
+                    Unarchive
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteWorkflowDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> Cancel
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<ng-template #addWorkflowDialog let-data>
+    <app-add-workflow [data]=[data]></app-add-workflow>
+</ng-template>

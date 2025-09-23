@@ -1,0 +1,26 @@
+export const moduleLoader: any = {
+    modules: {
+         AdminPackageModule: () => import('projects/launcher.dev/src/app/packageModules/admin-package.module').then(m => m.AdminPackageModule),
+         TrainingMatrixPacakgeModule: () => import('projects/launcher.dev/src/app/packageModules/training-matrix-package.module').then(m => m.TrainingMatrixPacakgeModule),
+         DashboardPackageModule: () => import('projects/launcher.dev/src/app/packageModules/dashboard-package.module').then(m => m.DashboardPackageModule),
+         LeavesManagementPackageModule: () => import('projects/launcher.dev/src/app/packageModules/leavemanagement-package.module').then(m => m.LeavesManagementPackageModule),
+         AppBuilderPacakgeModule: () => import('projects/launcher.dev/src/app/packageModules/app-builder-package.module').then(m => m.AppBuilderPacakgeModule),
+         AuditsPackageModule: () => import('projects/launcher.dev/src/app/packageModules/audits-package.module').then(m => m.AuditsPackageModule),
+         ExpensePackageModule: () => import('projects/launcher.dev/src/app/packageModules/expense-package.module').then(m => m.ExpensePackageModule),
+         PayRollWidgetPackageModule: () => import('projects/launcher.dev/src/app/packageModules/payroll-widgets-package.module').then(m => m.PayRollWidgetPackageModule),
+         ActivityTrackerWidgetPackageModule: () => import('projects/launcher.dev/src/app/packageModules/activity-tracker-widget.module').then(m => m.ActivityTrackerWidgetPackageModule),
+         HrmanagmentPackageModule: () => import('projects/launcher.dev/src/app/packageModules/hr-management-package.module').then(m => m.HrmanagmentPackageModule),
+         InvoicePackageModule: () => import('projects/launcher.dev/src/app/packageModules/invoice-package.module').then(m => m.InvoicePackageModule),
+         DocumentManagementPackageModule: () => import('projects/launcher.dev/src/app/packageModules/documentmanagement-package.module').then(m => m.DocumentManagementPackageModule),
+         AssetmanagementAppPackageModule: () => import('projects/launcher.dev/src/app/packageModules/assetmanagement-app-package.module').then(m => m.AssetmanagementAppPackageModule),
+         PayrollPackageModule: () => import('projects/launcher.dev/src/app/packageModules/payroll-package.module').then(m => m.PayrollPackageModule),        
+         CanteenPackageModule: () => import('projects/launcher.dev/src/app/packageModules/canteen-package.module').then(m => m.CanteenPackageModule),
+         FoodOrderPackageModule: () => import('projects/launcher.dev/src/app/packageModules/food-order-package.module').then(m => m.FoodOrderPackageModule),
+         ProjectPackageModule: () => import('projects/launcher.dev/src/app/packageModules/project-management-package.module').then(m => m.ProjectPackageModule),
+         TestRepoPackageModule: () => import('projects/launcher.dev/src/app/packageModules/test-repo-package.module').then(m => m.TestRepoPackageModule),
+         CustomFieldsPackageModule: () => import('projects/launcher.dev/src/app/packageModules/custom-field-package.module').then(m => m.CustomFieldsPackageModule),
+         FeedbackPackageModule: () => import('projects/launcher.dev/src/app/packageModules/feedback-package.module').then(m => m.FeedbackPackageModule),
+         RoleManagementPackageModule: () => import('projects/launcher.dev/src/app/packageModules/role-management-package.module').then(m => m.RoleManagementPackageModule),
+         TimesheetPackageModule: () => import('projects/launcher.dev/src/app/packageModules/time-sheet-package.module').then(m => m.TimesheetPackageModule),
+     }
+ };

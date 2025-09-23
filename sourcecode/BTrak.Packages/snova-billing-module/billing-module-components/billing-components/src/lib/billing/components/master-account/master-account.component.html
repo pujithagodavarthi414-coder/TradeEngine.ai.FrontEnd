@@ -1,0 +1,321 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageMasterAccount">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'MASTERACCOUNT.MASTERACCOUNTS' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px">
+                    <button mat-icon-button matTooltip="{{ 'MASTERACCOUNT.ADDNEWMASTERACCOUNT' | translate }}"
+                        [satPopoverAnchorFor]="addMasterAccountPopOver" #addMasterAccountPopUp="satPopoverAnchor"
+                        (click)="openMasterAccountPopUp(addMasterAccountPopUp)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="masterAccountModel.length > 0">
+        <kendo-grid [data]="masterAccountModelList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isLoading"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="account" title="{{'MASTERACCOUNT.ACCOUNT' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="classNo" title="{{'MASTERACCOUNT.CLASSNO' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="classNoF" title="{{'MASTERACCOUNT.CLASSNOF' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="class" title="{{'MASTERACCOUNT.CLASS' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="classF" title="{{'MASTERACCOUNT.CLASSF' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="group" title="{{'MASTERACCOUNT.GROUP' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="groupF" title="{{'MASTERACCOUNT.GROUPF' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="subGroup" title="{{'MASTERACCOUNT.SUBGROUP' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="subGroupF" title="{{'MASTERACCOUNT.SUPGROUPF' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="accountNo" title="{{'MASTERACCOUNT.ACCOUNTNO' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="accountNoF" title="{{'MASTERACCOUNT.ACCOUNTNOF' | translate}}"></kendo-grid-column>
+            <kendo-grid-column field="compte" title="{{'MASTERACCOUNT.COMPTE' | translate}}"></kendo-grid-column>
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="addMasterAccountPopOver" #addMasterAccountPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'MASTERACCOUNT.EDITMASTERACCOUNT' | translate}}"
+                        (click)="editMasterAccountPopUp(dataItem,addMasterAccountPopUp)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" [satPopoverAnchorFor]="archivegrdPopOver"
+                        #archiveMasterAccountPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'MASTERACCOUNT.ARCHIVEMASTERACCOUNT' | translate}}"
+                        (click)="deleteMasterAccountPopUp(dataItem,archiveMasterAccountPopUp)" icon="trash">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag" *ngIf="!isLoading && masterAccountModel.length === 0"
+        textToDisplay="{{'MASTERACCOUNT.YOUDONTHAVEANYMASTERACCOUNT' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addMasterAccountPopOver" #addMasterAccountPopUp="satPopoverAnchor"
+                (click)="openMasterAccountPopUp(addMasterAccountPopUp)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'MASTERACCOUNT.ADDNEWMASTERACCOUNT' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+</div>
+
+    <sat-popover #addMasterAccountPopOver backdropClass="backdrop-color" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" [autoFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+                <div class="card-title-text" *ngIf="!masterAccoumtId">{{ 'MASTERACCOUNT.CREATEMASTERACCOUNT' |
+                    translate }}
+                </div>
+                <div class="card-title-text" *ngIf="masterAccoumtId">{{ 'MASTERACCOUNT.UPDATEMASTERACCOUNT' |
+                    translate }}
+                </div>
+            </div>
+            <form [formGroup]="masterAccountForm" novalidate #formDirective="ngForm" (submit)="upsertMasterAccount(formDirective)">
+                <div id="style-1" class="goal-create-height p-1">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="account" matInput
+                                    placeholder="{{'MASTERACCOUNT.ACCOUNT' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('account').hasError('required') && masterAccountForm.get('account').touched">{{'MASTERACCOUNT.PLEASEENTERACCOUNT'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('account').hasError('maxlength')">{{'MASTERACCOUNT.ACCOUNTCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="classNo" matInput
+                                    placeholder="{{'MASTERACCOUNT.CLASSNO' | translate}}" required type="number">
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classNo').hasError('required') && masterAccountForm.get('classNo').touched">{{'MASTERACCOUNT.PLEASEENTERCLASSNO'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classNo').hasError('max')">{{'MASTERACCOUNT.CLASSNOCANNOTEXCEED9999999999DIGITS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="classNoF" matInput
+                                    placeholder="{{'MASTERACCOUNT.CLASSNOF' | translate}}" required type="number">
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classNoF').hasError('required') && masterAccountForm.get('classNoF').touched">{{'MASTERACCOUNT.PLEASEENTERCLASSNOF'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classNoF').hasError('max')">{{'MASTERACCOUNT.CLASSNOFCANNOTEXCEED9999999999DIGITS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="class" matInput
+                                    placeholder="{{'MASTERACCOUNT.CLASS' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('class').hasError('required') && masterAccountForm.get('class').touched">{{'MASTERACCOUNT.PLEASEENTERCLASS'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('class').hasError('maxlength')">{{'MASTERACCOUNT.CLASSCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="classF" matInput
+                                    placeholder="{{'MASTERACCOUNT.CLASSF' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classF').hasError('required') && masterAccountForm.get('classF').touched">{{'MASTERACCOUNT.PLEASEENTERCLASSF'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('classF').hasError('maxlength')">{{'MASTERACCOUNT.CLASSFCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="group" matInput
+                                    placeholder="{{'MASTERACCOUNT.GROUP' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('group').hasError('required') && masterAccountForm.get('group').touched">{{'MASTERACCOUNT.PLEASEENTERGROUP'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('group').hasError('maxlength')">{{'MASTERACCOUNT.GROUPCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="groupF" matInput
+                                    placeholder="{{'MASTERACCOUNT.GROUPF' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('groupF').hasError('required') && masterAccountForm.get('groupF').touched">{{'MASTERACCOUNT.PLEASEENTERGROUPF'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('groupF').hasError('maxlength')">{{'MASTERACCOUNT.GROUPFCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="subGroup" matInput
+                                    placeholder="{{'MASTERACCOUNT.SUBGROUP' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('subGroup').hasError('required') && masterAccountForm.get('subGroup').touched">{{'MASTERACCOUNT.PLEASEENTERSUBGROUP'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('subGroup').hasError('maxlength')">{{'MASTERACCOUNT.SUBGROUPCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="subGroupF" matInput
+                                    placeholder="{{'MASTERACCOUNT.SUPGROUPF' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('subGroupF').hasError('required') && masterAccountForm.get('subGroupF').touched">{{'MASTERACCOUNT.PLEASEENTERSUBGROUPF'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('subGroupF').hasError('maxlength')">{{'MASTERACCOUNT.SUBGROUPFCANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="accountNo" matInput
+                                    placeholder="{{'MASTERACCOUNT.ACCOUNTNO' | translate}}" required type="number">
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('accountNo').hasError('required') && masterAccountForm.get('accountNo').touched">{{'MASTERACCOUNT.PLEASEENTERACCOUNTNO'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('accountNo').hasError('max')">{{'MASTERACCOUNT.ACCOUNTNOCANNOTEXCEED9999999999DIGITS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="accountNoF" matInput
+                                    placeholder="{{'MASTERACCOUNT.ACCOUNTNOF' | translate}}" required type="number">
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('accountNoF').hasError('required') && masterAccountForm.get('accountNoF').touched">{{'MASTERACCOUNT.PLEASEENTERACCOUNTNOF'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('accountNoF').hasError('max')">{{'MASTERACCOUNT.ACCOUNTNOFCANNOTEXCEED9999999999DIGITS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <input formControlName="compte" matInput
+                                    placeholder="{{'MASTERACCOUNT.COMPTE' | translate}}" required>
+                                <mat-error>
+                                    <span
+                                        *ngIf="masterAccountForm.get('compte').hasError('required') && masterAccountForm.get('compte').touched">{{'MASTERACCOUNT.PLEASEENTERCOMPTE'
+                                        | translate}}
+                                    </span>
+                                    <span
+                                        *ngIf="masterAccountForm.get('compte').hasError('maxlength')">{{'MASTERACCOUNT.COMPTECANNOTEXCEED250CHARACTERS'
+                                        | translate}}
+                                    </span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+<div class="text-center mb-1 prl-1">
+    <button mat-raised-button type="submit" color="primary" class="mr-1"
+        [disabled]="!masterAccountForm.valid||isAddIsInProgress">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAddIsInProgress">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+    </button>
+    <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+        <fa-icon class="mr-05" icon="times"></fa-icon>
+        {{ 'CANCEL' | translate }}
+    </button>
+</div>
+</form>
+</mat-card>
+</sat-popover>
+
+<sat-popover [interactiveClose]="false" #archivegrdPopOver hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{ 'MASTERACCOUNT.DELETEMASTERACCOUNT' | translate }}</div>
+          </mat-card-title>
+          <p class="p-05 m-0">{{ 'MASTERACCOUNT.AREYOUSUREWANTTODELETEMASTERACCOUNT' | translate }}
+          </p>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveMasterAccount();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}" *ngIf="!(canAccess_feature_ManageMasterAccount)">
+</app-common-message-box>

@@ -1,0 +1,182 @@
+<div class="ml-01 search_goalinput" fxLayout="row wrap">
+  <div fxLayout="row wrap" fxFlex="120px" fxFlex.md="100px" fxFlex.sm="24" fxFlex.xs="50"
+    class="custom-position-relative">
+    <mat-form-field class="ml-05">
+      <input class="search_goal full-width ml-lg-n2 mt-lg-n1" matInput placeholder="{{'SEARCH' | translate}}"
+        [(ngModel)]="searchText" (input)="filterByName($event)">
+    </mat-form-field>
+    <span class="close_icon">
+      <span *ngIf="!searchText"></span>
+      <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+        style="cursor:pointer">close
+      </mat-icon>
+    </span>
+  </div>
+  <div fxFlex="10px" fxFlex.md="25px" fxFlex.sm="55" fxFlex.xs="10" fxLayoutAlign.sm="end center"
+    matTooltip="{{'RESET'|translate}}" (click)="resetAllFilters()">
+    <fa-icon mat-icon-button class="filter mat-color-accent goal_clear ml-01" style="cursor: pointer;" icon="undo">
+    </fa-icon>
+  </div>
+  <!--closedate filter start-->
+  <div fxFlex="30px" fxLayoutAlign="end center" [satPopoverAnchorFor]="datePopover" hasBackdrop
+    (click)="datePopover.toggle()" class="mr-05">
+    <div fxFlex="14px" fxFlex.md="13px" fxFlex.sm="35px" fxFlex.xs="10" class="color-search mt-05 ml-02 mr-lg-1"
+      fxLayoutAlign="space-around center">
+      <span class="pull-right date-filter">
+        <fa-icon matTooltip="{{'JOBOPENING.CLOSEDDATEFILTER' | translate}}" icon="filter"
+          class="mat-color-accent filter-operation">
+        </fa-icon>
+      </span>
+    </div>
+    <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+      <mat-card class="filter-data">
+        <div class="mr-1 mt-02">
+          <mat-form-field class="mr-05">
+            <mat-label> {{'JOBOPENING.CLOSEDDATE' | translate}}</mat-label>
+            <input matInput [matDatepicker]="picker1" autocomplete="off" (click)="picker1.open()" readonly
+              class="date-picker" [(ngModel)]="dateTo" (dateChange)="dateToChanged($event)">
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="close_icon date_search">
+          <mat-icon *ngIf="dateTo" class="icon-button" aria-hidden="false" (click)="closeDateFilter()"
+            style="cursor:pointer">close</mat-icon>
+        </div>
+      </mat-card>
+    </sat-popover>
+  </div>
+  <!--deadline filter end-->
+  <div class="color-search mt-05 ml-05 mr-05" fxLayoutAlign="space-around center"
+    matTooltip="{{ 'JOBOPENING.ADDJOBOPENING' | translate }}" (click)="createJobDetails('')">
+    <fa-icon icon="plus" class="filter mat-color-accent goal_clear ml-01"
+      style="cursor: pointer;margin-left: -20px !important;">
+    </fa-icon>
+  </div>
+  <!---color filter starting -->
+  <div>
+    <div class="select_colours mt-1 mr-lg-n2" [ngStyle]="{ 'right':actvieJobsList.statusColour ? '0px' : ''}"
+      [ngClass]="{'mr-05': (openingstatus | jobFilter: 'statusColour':openingstatus )?.length == 1}">
+      <span class="colour_plus" [matMenuTriggerFor]="showColoursList"
+        *ngIf="(openingstatus | jobFilter: 'statusColour':actvieJobsList)?.length >1">
+        <fa-icon icon="plus" [ngClass]="{'countActive': divActivate}"></fa-icon>
+      </span>
+
+      <mat-button-toggle-group #group="matButtonToggleGroup" multiple=true class="color-search first_colour first-Color"
+        [(ngModel)]="colorList">
+        <mat-button-toggle
+          *ngFor="let openingstatus of (openingstatus | jobFilter: 'statusColour':actvieJobsList | slice:0:1)"
+          (change)="selectJobStatusColor($event.value)" class="color-circle" [value]="openingstatus.statusColour"
+          [ngStyle]="setMyStyles(openingstatus.statusColour)">
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <mat-menu #showColoursList="matMenu" class="color-search dialog_window color-search-width" xPosition="before"
+        yPosition="below">
+        <mat-button-toggle-group [(ngModel)]="colorList" multiple=true>
+          <mat-button-toggle (click)="$event.stopPropagation();" class="color-circle"
+            *ngFor="let openingstatus of  (openingstatus | jobFilter: 'statusColour':actvieJobsList | slice: 1)"
+            (change)="selectJobStatusColor($event.value)" [value]="openingstatus.statusColour"
+            [ngStyle]="setMyStyles(openingstatus.statusColour)">
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <mat-form-field hidden>
+          <input matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="selectedColor">
+        </mat-form-field>
+      </mat-menu>
+
+    </div>
+  </div>
+  <!---color filter end-->
+
+
+
+  <!---profile filter-->
+  <div [ngClass]="showDropdown ? 'goals-selectusers': 'goal-users'" class="select_users mr-lg-n2">
+    <span class="members_count mt-2p" [matMenuTriggerFor]="showUsersList"
+      *ngIf="(openingstatus | hiringManagerFilter: 'hiringManagerId':actvieJobsList)?.length >1"
+      [ngClass]="{'countActive': divActivate}">
+      <fa-icon icon="plus"></fa-icon>
+    </span>
+    <div class="project_member"
+      *ngFor="let openingstatus of (openingstatus | hiringManagerFilter :'hiringManagerId' : actvieJobsList| slice:0:1);let k=index">
+      <div (click)="getSelectedMember(openingstatus.hiringManagerId,k);" class="mt-03"
+        [ngClass]="{memberhide: !isSelectedMembers[k], membershow: isSelectedMembers[k]}"
+        matTooltip="{{openingstatus.hiringManagerName}}">
+        <app-avatar [name]="openingstatus.hiringManagerName| removeSpecialCharacters" [src]='openingstatus.profileImage'
+          [isRound]="true" size="30">
+        </app-avatar>
+      </div>
+    </div>
+
+    <mat-menu #showUsersList="matMenu" xPosition="before" yPosition="below">
+      <div class="projectmembers_list" id="style-1" style="width: 215px;">
+        <div
+          *ngFor="let openingstatus of (openingstatus| hiringManagerFilter:'hiringManagerId':actvieJobsList | slice:1);let j=index"
+          [ngClass]="{membershow: isSelected[j]}">
+          <div class="projectmembers_list single_projectmember" style="height: 40px;"
+            *ngIf="openingstatus.hiringManagerName!='' && openingstatus.hiringManagerName!=null">
+            <div *ngIf="openingstatus.hiringManagerName!='' && openingstatus.hiringManagerName!=null"
+              fxLayout="row wrap" class="pt-2 pl-05" fxLayoutGap="5px">
+              <div fxFlex="10" class="pt-2">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(openingstatus.hiringManagerId, isSelected[j],j)"></mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{openingstatus.hiringManagerName}}"
+                  [name]="openingstatus.hiringManagerName| removeSpecialCharacters" [src]='openingstatus.profileImage'
+                  [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="65" *ngIf="openingstatus.hiringManagerName!='' && openingstatus.hiringManagerName!=null"
+                class="pt-lg-1 hide-content-overflow">
+                <p class="m-0">{{openingstatus.hiringManagerName}}</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-menu>
+
+  </div>
+  <!--profile end -->
+  <fa-icon icon="plus-circle" mat-icon-button class="mat-color-accent icon-button "
+    [ngClass]="showDropdown ? 'goal-add': 'goal-add-backlog'" matTooltip="{{'GOALS.ADDGOAL'|translate }}"
+    *ngIf="selectedTab == 'backlog-goals' && actvieJobsList.length > 0" [satPopoverAnchorFor]="addOrEditJobPopover"
+    #addJobPopover = "satPopoverAnchor" (click)="addJobPopover.openPopover(); clearJobForm()">
+  </fa-icon>
+
+</div>
+
+<div fxFlex class="p-05" fxLayout="row" *ngIf="searchJobTags">
+  <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchJobTags">
+    <b>{{'GOALS.SEARCHGOALTAGS' | translate}}:&nbsp;</b>
+    {{searchJobTags}}
+    <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeJobSearch()">
+    </fa-icon>
+  </mat-chip>
+</div>
+
+<app-common-message-box
+  *ngIf="(actvieJobsList | jobStatusfilter:selectedColor | JobResponsiblefilter: 'hiringManagerId':jobResponsiblePerson).length == 0"
+  textToDisplay="{{'JOBOPENING.NOTMATCHED'|translate}}">
+</app-common-message-box>
+
+<div [ngClass]="getclass()" id="style-1">
+  <span>
+    <mat-list-item
+      *ngFor="let job of (actvieJobsList | jobStatusfilter:selectedColor  | JobResponsiblefilter: 'hiringManagerId':jobResponsiblePerson) ">
+
+      <gc-job-summary [job]="job" class="full-width" (click)="handleClickOnJobSummaryComponent(job)"
+        (jobEdited)="jobEdited($event)" (selectJobId)="selectedJobbyClick($event)" [openingstatus]="openingstatus"
+        [jobSelected]="job.jobOpeningId === selectedJobOpeningId">
+      </gc-job-summary>
+    </mat-list-item>
+  </span>
+
+</div>
+<mat-paginator *ngIf="(totalCount > 25 && tempList.length > 24) || (totalCount > 25 && pageNumber>1)"
+  [length]="totalCount" [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="pageSizeOptions"
+  (page)="getJobOpeningsList($event)">
+</mat-paginator>

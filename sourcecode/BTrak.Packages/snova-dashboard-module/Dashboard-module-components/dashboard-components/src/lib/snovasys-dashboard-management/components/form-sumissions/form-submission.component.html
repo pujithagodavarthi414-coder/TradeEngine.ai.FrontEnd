@@ -1,0 +1,190 @@
+<div class="roles p-0 m-0 full-height">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header">
+            <div fxLayout="row wrap" class="drag-handler" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center" *ngIf="!dashboardId">
+                    <div class="card-title-text pl-05 ml-05">{{ 'FORMSUBMISSION.FORMSUBMISSIONS' | translate | titlecase }}
+                        (<span class="hide-content-overflow role-feature-menu-item-name"
+                            *ngIf="!assignedByYou">{{ 'FORMSUBMISSION.ASSIGNEDBYYOU' | translate | titlecase }}</span>
+                        <span class="hide-content-overflow role-feature-menu-item-name"
+                            *ngIf="assignedByYou">{{ 'FORMSUBMISSION.ASSIGNEDTOYOU' | translate | titlecase }}</span>)
+                    </div>
+                </div>
+                <div class="card-title-text full-width ml-05 p-0" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName && dashboardId">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="(canAccess_feature_DragApps)">
+                        {{ dashboardName }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                        {{ dashboardName }}
+                    </span>
+                    (<span class="hide-content-overflow role-feature-menu-item-name"
+                        *ngIf="!assignedByYou">{{ 'FORMSUBMISSION.ASSIGNEDBYYOU' | translate }}</span>
+                    <span class="hide-content-overflow role-feature-menu-item-name"
+                        *ngIf="assignedByYou">{{ 'FORMSUBMISSION.ASSIGNEDTOYOU' | translate }}</span>)
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName && dashboardId">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center"
+                    *ngIf="(canAccess_feature_ManageCustomFormSubmissions)">
+                    <div fxFlex="275px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(assignedByYou== true) ? ('FORMSUBMISSION.CHANGETOASSIGNEDBYYOU' | translate) : ('FORMSUBMISSION.CHANGETOASSIGNTOYOU' | translate)"
+                            class="archive-switch" [(ngModel)]="assignedByYou" [checked]="assignedByYou"
+                            (change)="getFormSubmissions();updateFormDashboardFilter()">
+                        </mat-slide-toggle>
+                        <div class="ml-1" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu"
+                            (click)="openMenu()">
+                            <fa-icon icon="plus" class="filter mat-color-accent"
+                                matTooltip="{{'FORMSUBMISSION.SUBMITANEWFORM' | translate}}">
+                            </fa-icon>
+                        </button>
+                        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                            <mat-card class="filter-data" style="width: 220px;" (click)="$event.stopPropagation()">
+                                <mat-form-field class="full-width">
+                                    <mat-label>{{ 'FORMSUBMISSION.FORMTYPE' | translate }}</mat-label>
+                                    <mat-select placeholder="{{ 'FORMSUBMISSION.FORMTYPE' | translate }}"
+                                        (selectionChange)="getForms($event.value)" [(ngModel)]="formTypeId">
+                                        <mat-option *ngFor="let type of formTypes" [value]="type.id">
+                                            {{type.formTypeName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <mat-form-field class="full-width" *ngIf="formTypeId">
+                                    <mat-label>{{ 'FORMSUBMISSION.FORM' | translate }}</mat-label>
+                                    <mat-select placeholder="{{ 'FORMSUBMISSION.FORM' | translate }}"
+                                        (selectionChange)="formIdSelected($event.value)">
+                                        <mat-option *ngFor="let form of genericFormListDetails" [value]="form.id">
+                                            {{form.formName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-card>
+                        </mat-menu>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div *ngIf="(canAccess_feature_ManageCustomFormSubmissions)" class="no-drag">
+        <kendo-grid [data]="formSubmissions" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sort]="state.sort" [filter]="state.filter" [sortable]="true" [filterable]="false" [selectable]="true"
+            [loading]="isAnyOperationIsInprogress" (dataStateChange)="dataStateChange($event)" [scrollable]="true"
+            [style]="{'width': 'max-content'}">
+            <kendo-grid-column width="150" field="formTypeName" title="{{'FORMSUBMISSION.FORMTYPENAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.formTypeName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="formName" title="{{'FORMSUBMISSION.FORMNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.formName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="assignedTo" *ngIf="!assignedByYou"
+                title="{{'FORMSUBMISSION.ASSIGNEDTO' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.assignedToUserName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="assignedBy" *ngIf="assignedByYou"
+                title="{{'FORMSUBMISSION.ASSIGNEDBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.assignedByUserName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="status" title="{{'FORMSUBMISSION.STATUS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.status }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="latestModificationOn"
+                title="{{'FORMSUBMISSION.LATESTMODIFICATIONON' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.lastestModificationOn | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm'  }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column width="150" title="{{'FORMSUBMISSION.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" *ngIf="dataItem.status != 'Closed'"
+                        icon="edit" matTooltip="{{ 'FORMSUBMISSION.EDIT' | translate}}"
+                        (click)="editFormSubmission(dataItem)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" *ngIf="dataItem.status != 'Closed'"
+                        icon="lock" matTooltip="{{ 'FORMSUBMISSION.MARKASCLOSED' | translate}}"
+                        [satPopoverAnchorFor]="deleteConfigurationPopover" #deleteConfigurationPopup="satPopoverAnchor"
+                        (click)="openDeletePopup(dataItem,deleteConfigurationPopup,true)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" *ngIf="dataItem.status == 'Closed'"
+                        icon="lock-open" matTooltip="{{ 'FORMSUBMISSION.REOPENTHEFORM' | translate}}"
+                        [satPopoverAnchorFor]="deleteConfigurationPopover" #deleteConfigurationPopup="satPopoverAnchor"
+                        (click)="openDeletePopup(dataItem,deleteConfigurationPopup,false)">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+</div>
+
+<sat-popover #deleteConfigurationPopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1" *ngIf="isFromClosed">
+                {{ 'FORMSUBMISSION.AREYOUSUREYOUWANTTOCLOSETHEFORM' | translate }}
+            </div>
+            <div class="card-title-text mb-1" *ngIf="!isFromClosed">
+                {{ 'FORMSUBMISSION.AREYOUSUREYOUWANTTOREOPENTHEFORM' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deletePopup();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<ng-template #uniqueFormSubmissionDialog let-data>
+    <form-submission-dialog [data]=[data]></form-submission-dialog>
+</ng-template>
+
+<app-common-message-box
+    *ngIf="!(canAccess_feature_ManageCustomFormSubmissions)  && !(roleFeaturesIsInProgress$|async)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

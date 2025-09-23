@@ -1,0 +1,84 @@
+<div class="full-height">
+    <div fxLayout="row">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div fxFlex class="card-title-text feedback-header-text p-05" fxLayoutAlign="start center">
+                    {{ 'FEEDBACKS.VIEWFEEDBACK' | translate }}
+                </div>
+                <div fxFlex.gt-xs="180px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+                    *ngIf="(canAccess_feature_ViewFeedback)" fxLayoutAlign.xs="center center">
+                    <mat-form-field ngClass.xs="full-width">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+            </div>
+        </mat-card-title>
+    </div>
+
+    <app-common-message-box *ngIf="!canAccess_feature_ViewFeedback"
+        textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+    </app-common-message-box>
+
+    <div *ngIf="canAccess_feature_ViewFeedback">
+        <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="(anyOperationInProgress$ | async) && pageNumber == 1">
+        </mat-progress-bar>
+        <mat-card-content class="feedback-list" #scrollMe infiniteScroll id="style-1"
+            [infiniteScrollDisabled]="(anyOperationInProgress$ | async)" [infiniteScrollDistance]="scrollDistance"
+            [scrollWindow]="false" [infiniteScrollThrottle]="throttle" (scrolled)="onScrollDown()">
+            <div *ngFor="let feedback of (feedbackList$|async)">
+                <div fxLayout="row wrap" class="p-1">
+                    <div mat-card-avatar fxFlex="30px" class="mr-05">
+                        <app-avatar [name]="feedback.fullName | removeSpecialCharacters"
+                            [src]="feedback.profileImage | fetchSizedAndCachedImage: '40':''" [isRound]="true"
+                            size="40">
+                        </app-avatar>
+                    </div>
+                    <div fxLayout="row wrap" fxFlex="93%">
+                        <div fxFlex="100" fxLayout="row wrap">
+                            <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45"
+                                class="goal-activity-description">
+                                <b>{{feedback.fullName}}</b>
+                            </div>
+                            <div fxFlex fxLayoutAlign="end start">
+                                <span class="pull-right">{{feedback.createdDateTime | utcToLocalTime | timeago }}</span>
+                            </div>
+                        </div>
+                        <div fxFlex="100" class="goal-activity-description">
+                            <div class="assets-comments">
+                                {{'FEEDBACKS.USERNAME' | translate}}:&nbsp;<span
+                                    class="user-name-link">{{feedback.userName}}</span><br>
+                                {{'FEEDBACKS.COMPANYNAME' | translate}}:&nbsp;{{feedback.companyName}}<br>
+                                <div *ngIf="feedback.mobileNo">
+                                    {{'FEEDBACKS.MOBILENO' | translate}}:&nbsp;{{feedback.mobileNo}}
+                                </div>
+                            </div>
+                            <div fxFlex class="feedback-description">
+                                <span [innerHTML]="feedback.description"></span><br />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="m-1" *ngIf="(anyOperationInProgress$ | async) && pageNumber >1">
+                <div class="cs-loader">
+                    <div class="cs-loader-inner">
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                        <label> ●</label>
+                    </div>
+                </div>
+            </div>
+        </mat-card-content>
+    </div>
+</div>

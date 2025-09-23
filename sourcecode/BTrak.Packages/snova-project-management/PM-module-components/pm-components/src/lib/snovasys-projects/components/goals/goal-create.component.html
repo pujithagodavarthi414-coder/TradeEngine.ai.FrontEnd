@@ -1,0 +1,272 @@
+<div>
+  <form [formGroup]="goalForm" #formDirective="ngForm" novalidate (submit)="goalForm.valid && saveGoal()">
+    <div class="create-edit-goal-component card-content p-05">
+      <!-- [ngClass]="showProductivityHours ? 'goal-large' : 'goal-small'" -->
+      <div id="style-1" class="goal-create-height" [ngClass]="checkStyle()">
+        <div class="mb-05" *ngIf="editGoal && (canAccess_entityType_feature_CanMoveGoalToAnotherProject)">
+          <div fxFlex="100">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'PROJECTS.PROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+                formControlName="projectId" (selectionChange)="selectConfiguration($event.value)">
+                <mat-option [value]="project.projectId" *ngFor="let project of (projectSearchResults$ | async)">
+                  {{ project.projectName }}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="
+                        !goalForm.get('projectId').valid &&
+                        goalForm.get('projectId').touched
+                      ">{{ 'GOALS.SELECTPROJECTNAME' | translate | softLabelsPipe : softLabels }}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+          <input formControlName="goalId" matInput hidden />
+          <input formControlName="projectId" matInput hidden />
+          <input formControlName="isArchived" matInput hidden />
+          <input formControlName="isApproved" matInput hidden />
+          <input formControlName="isLocked" matInput hidden />
+          <input formControlName="isParked" matInput hidden />
+          <input formControlName="goalStatusId" matInput hidden />
+
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <mat-form-field class="full-width">
+              <input formControlName="goalName" matInput
+                placeholder="{{ 'GOALS.GOALNAME' | translate | softLabelsPipe : softLabels}}" trim required />
+              <mat-error>
+                <span *ngIf="
+                  goalForm.get('goalName').hasError('required') &&
+                  goalForm.get('goalName').touched
+                ">{{ 'GOALS.PLEASEENTERGOALNAME' | translate | softLabelsPipe : softLabels }} </span>
+                <span *ngIf="goalForm.get('goalName').hasError('maxlength')">{{
+                  'GOALS.GOALNAMECANNOTEXCEED250CHARACTERS' | translate | softLabelsPipe : softLabels }}
+                </span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+            <mat-form-field class="full-width">
+              <input [autocomplete]="autoCompleteOff" formControlName="goalShortName" matInput
+                placeholder="{{ 'GOALS.GOALSHORTNAME' | translate  | softLabelsPipe : softLabels}}" trim required />
+              <mat-error>
+                <span *ngIf="
+                  goalForm.get('goalShortName').hasError('required') &&
+                  goalForm.get('goalShortName').touched
+                ">{{ 'GOALS.PLEASEENTERGOALSHORTNAME' | translate | softLabelsPipe : softLabels}}</span>
+                <span *ngIf="goalForm.get('goalShortName').hasError('maxlength')">
+                  {{ 'GOALS.GOALSHORTNAMECANNOTEXCEED250CHARACTERS' | translate | softLabelsPipe : softLabels}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <mat-form-field class="full-width">
+              <input formControlName="onboardProcessDate" matInput [autocomplete]="autoCompleteOff"
+                (dateChange)="changeStartDate()" [matDatepicker]="picker" (click)="picker.open()"
+                placeholder="{{ 'GOALS.STARTDATE' | translate }}" required />
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error>
+                <span
+                  *ngIf="goalForm.get('onboardProcessDate').hasError('required') && goalForm.get('onboardProcessDate').touched">
+                  {{ 'GOALS.PLEASEENTERSTARTDATE' | translate }}
+                </span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+            <mat-form-field class="full-width">
+              <input formControlName="endDate" matInput [autocomplete]="autoCompleteOff" [matDatepicker]="endDatePicker"
+                (click)="endDatePicker.open()" placeholder="{{ 'GOALS.ENDDATE' | translate }}"
+                (dateChange)="changeEndDate()" />
+              <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #endDatePicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-1">
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <app-common-estimatedTime [estimatedTime]="estimatedTime" [isGoalPage] = "true"
+              (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+            </app-common-estimatedTime>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{ 'GOALS.GOALRESPONSIBLEPERSON' | translate | softLabelsPipe : softLabels  }}"
+                formControlName="goalResponsibleUserId" required (selectionChange)="getAssigneeValue($event.value)">
+                <mat-select-trigger>
+                  {{selectedMember}}
+                </mat-select-trigger>
+                <mat-option [value]="member.projectMember.id" *ngFor="let member of (projectMembers$ | async)">
+                  <div fxLayout="row wrap" fxLayoutGap="5px">
+                    <div fxFlex="35px">
+                      <app-avatar [name]="member.projectMember.name | removeSpecialCharacters"
+                        [src]="member.projectMember.profileImage" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex="75">
+                      <p class="mat-body-2">
+                        {{ member.projectMember.name }}
+                      </p>
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="
+                  !goalForm.get('goalResponsibleUserId').valid &&
+                  goalForm.get('goalResponsibleUserId').touched
+                ">{{ 'GOALS.PLEASESELECTGOALRESPONSIBLEPERSON' | translate | softLabelsPipe : softLabels }}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{ 'GOALS.BOARDTYPE' | translate }}" formControlName="boardTypeId"
+                (selectionChange)="selectConfiguration($event.value)" required>
+                <mat-option [value]="boardType.boardTypeId"
+                  *ngFor="let boardType of (boardTypes$ | async | boardTypesFilter: isActiveGoal)">
+                  {{ boardType.boardTypeName }}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="
+                  !goalForm.get('boardTypeId').valid &&
+                  goalForm.get('boardTypeId').touched
+                ">{{ 'GOALS.PLEASESELECTBOARDTYPE' | translate }}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showAPI">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{ 'GOALS.SELECTAPI' | translate }}" formControlName="boardTypeApiId">
+                <mat-option [value]="boardtypeapiObj.boardTypeApiId"
+                  *ngFor="let boardtypeapiObj of (boardTypesApi$ | async)">
+                  {{ boardtypeapiObj.apiName }}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="
+                  !goalForm.get('boardTypeApiId').valid &&
+                  goalForm.get('boardTypeApiId').touched
+                ">{{ 'GOALS.PLEASESELECTBOARDTYPEAPI' | translate }}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showVersion">
+            <mat-form-field class="full-width">
+              <input formControlName="version" matInput placeholder="{{ 'GOALS.VERSION' | translate }}" />
+              <mat-error>
+                <span *ngIf="
+                            !goalForm.get('version').valid &&
+                            goalForm.get('version').touched
+                          ">{{ 'GOALS.PLEASEENTERVERSION' | translate }} </span>
+                <span *ngIf="goalForm.get('version').hasError('maxlength')">{{ 'GOALS.VERSIONCANNOTEXCEED50CHARACTERS' |
+                  translate }}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showTestSuite && isTestrailEnable">
+            <div fxLayout="row wrap">
+              <div fxFlex="89" fxFlex.gt-sm="86">
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{'TESTMANAGEMENT.TESTSUITE' | translate | softLabelsPipe : softLabels}}"
+                    formControlName="testSuiteId" (selectionChange)="changeTestSuiteId($event.value)">
+                    <mat-option value="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                    <mat-option *ngFor="let suite of (testSuitesList$ | async)" [value]="suite.testSuiteId">
+                      {{suite.testSuiteName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div fxFlex="22px" fxLayoutAlign="end center">
+                <fa-icon icon="plus" aria-hidden="false" aria-label="add" class="icon-style icon-button goal-cursor"
+                  matTooltip="{{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe : softLabels}}"
+                  *ngIf="(canAccess_entityType_feature_AddOrUpdateScenario) && isTestrailEnable"
+                  [satPopoverAnchorFor]="addTestSuite" #addTestSuitePopover="satPopoverAnchor"
+                  (click)="openTestSuiteDialog(addTestSuitePopover)">
+                </fa-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="row">
+          <div fxFlex="50">
+            <mat-checkbox formControlName="isToBeTracked" class=" mb-1 checkbox-text checkbox_allgoals">
+              {{ 'GOALS.TOBETRACKED' | translate }}
+            </mat-checkbox>
+          </div>
+          <div fxFlex="50">
+            <mat-checkbox formControlName="isProductiveBoard" (change)="toggleIsProductiveBoard()"
+              class="mb-1 checkbox-text checkbox_allgoals">
+              {{ 'GOALS.ISPRODUCTIVEBOARD' | translate }}
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <ng-container *ngIf="showProductivityHours">
+          <div fxLayout="column">
+            <div fxFlex="100">
+              <b> {{ 'GOALS.CONSIDER' | translate }} : </b>
+            </div>
+            <div fxFlex="100" class="mt-05 scrollmenu">
+              <mat-radio-group class="consider_radio" formControlName="considerEstimatedHoursId">
+                <div fxLayout="row">
+                  <mat-radio-button *ngFor="let hour of (considerHours$|async)" [value]="hour.considerHourId"
+                    [style.marginBottom]="'.5rem'" class="mr-1">
+                    <div fxFlex="50">
+                      {{ "GOALS."+hour.considerHourName | translate }}
+                    </div>
+                  </mat-radio-button>
+                </div>
+              </mat-radio-group>
+              <mat-error>
+                <span *ngIf="
+                            !goalForm.get('considerEstimatedHoursId').valid &&
+                            goalForm.get('considerEstimatedHoursId').touched
+                          ">{{ 'GOALS.PLEASESELECTCONSIDERHOURS' | translate }} </span>
+              </mat-error>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      <div class="text-center">
+        <button color="primary" class="mr-05" mat-button mat-raised-button type="submit"
+          [disabled]="!goalForm.valid ||(anyOperationInProgress$ | async) || goalFormDisabled || startDateValidate || endDateValidate">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon icon="{{ buttonGoalIcon }}" class="mr-05"></fa-icon>
+          {{ buttonGoalText | softLabelsPipe : softLabels }}
+        </button>
+        <button type="button" mat-button mat-raised-button (click)="closedialog();"
+          [disabled]="(anyOperationInProgress$ | async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Add Testsuite -->
+<sat-popover backdropClass="backdrop-color" #addTestSuite verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <!-- <app-testrail-testsuite-edit *ngIf="loadAddTestSuite" [projectId]="projectId"
+      (closeTestSuite)="closeTestSuiteDialog()">
+    </app-testrail-testsuite-edit>  -->
+    <ndc-dynamic *ngIf="loadAddTestSuite" [ndcDynamicFactory]="testSuitEdit.component"
+      [ndcDynamicComponent]="testSuitEdit.component" [ndcDynamicInjector]="injector"
+      [ndcDynamicInputs]="testSuitEdit.inputs" [ndcDynamicOutputs]="testSuitEdit.outputs">
+    </ndc-dynamic>
+  </mat-card>
+</sat-popover>

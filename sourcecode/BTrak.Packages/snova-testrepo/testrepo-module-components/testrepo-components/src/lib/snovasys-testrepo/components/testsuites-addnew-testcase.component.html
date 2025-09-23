@@ -1,0 +1,214 @@
+<div fxLayout="row wrap" class="new-testcase">
+    <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+        <mat-progress-bar *ngIf="anyOperationInProgress$ | async" color="primary" mode="indeterminate">
+        </mat-progress-bar>
+        <mat-card class="p-0">
+            <mat-card-title class="">
+                <div *ngIf="!editTestCase" class="card-title-text">
+                    Add Test Case</div>
+                <div *ngIf="editTestCase" class="card-title-text">
+                    Edit Test Case</div>
+                <mat-divider></mat-divider>
+            </mat-card-title>
+            <div *ngIf="!(anyOperationInProgress$ | async)">
+                <form [formGroup]="addTestCaseForm" novalidate (submit)="addTestCaseForm.valid && addNewTestCase()">
+                    <mat-card-content class="p-1" fxLayout="row wrap">
+                        <div class="mb-1 previous-page" (click)="backToSections()">
+                            <fa-icon class="mr-05" icon="arrow-left" matTooltip="Back to sections"></fa-icon>
+                            <span>Back to sections</span>
+                        </div>
+                        <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                            <input matInput placeholder="Title *" formControlName="title">
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('title').hasError('required') && addTestCaseForm.get('title').touched">
+                                Please fill test case title
+                            </mat-error>
+                            <mat-error *ngIf="addTestCaseForm.get('title').hasError('maxlength')">
+                                Test case title should not exceed 500 characters
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <mat-select placeholder="Section*" formControlName="sectionId">
+                                <mat-option *ngFor="let section of (testCaseSectionsList$ | async) "
+                                    [value]="section.id">
+                                    <pre>{{section.value}}</pre>
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('sectionId').hasError('required') && addTestCaseForm.get('sectionId').touched">
+                                Please select section
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <mat-select placeholder="Template	*" formControlName="templateId"
+                                (selectionChange)="onChangeTemplate($event.value)">
+                                <mat-option *ngFor="let template of (testCaseTemplatesList$ | async) "
+                                    [value]="template.id">
+                                    {{template.value}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('templateId').hasError('required') && addTestCaseForm.get('templateId').touched">
+                                Please select template
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <mat-select placeholder="Type	*" formControlName="typeId">
+                                <mat-option *ngFor="let type of (testCaseTypesList$ | async) " [value]="type.id">
+                                    {{type.value}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('typeId').hasError('required') && addTestCaseForm.get('typeId').touched">
+                                Please select type
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <mat-select placeholder="Priority	*" formControlName="priorityId">
+                                <mat-option *ngFor="let priority of (testCasePrioritiesList$ | async) "
+                                    [value]="priority.id">
+                                    {{priority.value}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('priorityId').hasError('required') && addTestCaseForm.get('priorityId').touched">
+                                Please select priority
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <input matInput placeholder="Estimate" formControlName="estimate">
+                        </mat-form-field>
+                        <mat-form-field class="mr-1" fxFlex.xs="100">
+                            <mat-select placeholder="Automation	Type   *" formControlName="automationTypeId">
+                                <mat-option *ngFor="let automation of (testCaseAutomationsList$ | async) "
+                                    [value]="automation.id">
+                                    {{automation.value}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="addTestCaseForm.get('automationTypeId').hasError('required') && addTestCaseForm.get('automationTypeId').touched">
+                                Please select automation type
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="textShow || stepsShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <textarea matInput rows="2" placeholder="Preconditions"
+                                formControlName="precondition"></textarea>
+                        </mat-form-field>
+                        <mat-card class="p-0 mt-1 test-display"
+                            *ngIf="stepsShow && validateStepsLength()"
+                            fxFlex="100" fxFlex.gt-sm="100">
+                            <div fxLayout="row" fxFlex="100">
+                                <div fxFlex="100" fxFlex.gt-sm="5" class="m-1">
+                                    <fa-icon icon="info-circle"></fa-icon>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-sm="50" class="p-1">
+                                    <p class="m-0">Add steps to this test case.</p>
+                                    <p class="m-0">For every test step, enter a short description and the expected
+                                        results.
+                                        <a (click)="showSteps()"> Add the first step.</a></p>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-sm="40" class="p-1">
+                                    <p class="m-0">What are steps?</p>
+                                    <p>Enter all test steps needed to verify this test case.</p>
+                                </div>
+                            </div>
+                        </mat-card>
+                        <div *ngIf="stepsShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <div formArrayName="testCaseSteps" *ngFor="let item of getStepControls(); let i = index;">
+                                <mat-card-content class="Step-description mt-1" fxFlex="100" fxFlex.gt-sm="100">
+                                    <div [formGroupName]="i" style="display: flex">
+                                        <div fxFlex="100" fxFlex.gt-sm="46" class="mr-1">
+                                            <textarea rows="3" placeholder=" Step description"
+                                                formControlName="stepText" style="width: 100%"></textarea>
+                                        </div>
+                                        <div fxFlex="100" fxFlex.gt-sm="46">
+                                            <textarea rows="3" placeholder=" Expected result"
+                                                formControlName="stepExpectedResult" style="width: 100%"></textarea>
+                                        </div>
+                                        <div fxFlex="100" fxFlex.gt-sm="8" class="testsuite-padding text-center mt-1">
+                                            <span>
+                                                <a class="padding-p5 icon-hover" matTooltip="Add field"
+                                                    (click)="addItem(i)">
+                                                    <fa-icon icon="plus"></fa-icon>
+                                                </a>
+                                                <a class="padding-p5 icon-hover ml-1" matTooltip="Delete Field"
+                                                    [satPopoverAnchorFor]="deleteFeaturePopOver"
+                                                    #deleteStepPopover="satPopoverAnchor"
+                                                    (click)="removeItem(i,deleteStepPopover)">
+                                                    <fa-icon icon="minus"></fa-icon>
+                                                </a>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </mat-card-content>
+                            </div>
+                            <div class="text-right" fxflex="100" fxflex.gt-sm="100" (click)="getControlsLength()">
+                                <a style="text-decoration: underline">Add step</a>
+                            </div>
+                        </div>
+                        <mat-card class="p-0" *ngIf="showStepsCard" fxFlex="100" fxFlex.gt-sm="100" class="ml-1 mr-1">
+                        </mat-card>
+                        <mat-form-field *ngIf="textShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <textarea matInput placeholder="Step description" formControlName="steps"></textarea>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="textShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <textarea matInput placeholder="Expected Result"
+                                formControlName="expectedResult"></textarea>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="exploratoryShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <textarea matInput placeholder="Mission" formControlName="mission"></textarea>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="exploratoryShow" fxFlex="100" fxFlex.gt-sm="100">
+                            <textarea matInput placeholder="Goals" formControlName="goals"></textarea>
+                        </mat-form-field>
+                        <div class="text-center Test-buttons mt-1">
+                            <button *ngIf="!editTestCase" mat-button mat-raised-button color="primary"
+                                class="mr-1 test-button" type="submit" [disabled]="disabledTestCase">
+                                <fa-icon class="mr-05" icon="plus"></fa-icon> Add test
+                                case
+                            </button>
+                            <button *ngIf="editTestCase" mat-button mat-raised-button color="primary"
+                                class="mr-1 test-button" type="submit" [disabled]="disabledTestCase">
+                                <fa-icon class="mr-05" icon="edit"></fa-icon> Save test
+                                case
+                            </button>
+                            <button mat-button mat-raised-button type="button" (click)="backToSections()">
+                                <fa-icon class="mr-05" icon="times"></fa-icon> Cancel
+                            </button>
+                        </div>
+                    </mat-card-content>
+                </form>
+            </div>
+        </mat-card>
+    </div>
+    <!-- <div fxFlex="100" fxFlex.gt-sm="30" fxLayout="column wrap">
+        <mat-card class="p-0">
+            <kendo-upload [saveUrl]="uploadSaveUrl" [removeUrl]="uploadRemoveUrl">
+            </kendo-upload>
+        </mat-card>
+    </div> -->
+</div>
+
+<!--Delete dialog-->
+<sat-popover #deleteFeaturePopOver hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">Confirmation</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                Really delete this step? This operation cannot be undone.
+            </div>
+            <div class="text-center mb-1">
+                <button class="mr-1" mat-button mat-raised-button color="accent" (click)="removeItemAtIndex()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> Delete
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteStepDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> Cancel
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete dialog-->

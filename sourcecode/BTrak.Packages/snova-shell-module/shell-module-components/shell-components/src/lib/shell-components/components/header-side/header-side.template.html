@@ -1,0 +1,318 @@
+<mat-toolbar class="topbar remove-padding">
+    <div fxFlex>
+        <app-menu [reload]="reload" (isOpened)="isOpened($event)" (openNewDashboard)="navigateToUrl($event)"></app-menu>
+    </div>
+    <div fxFlex fxLayout="row" fxHide.xs fxLayoutAlign="center" style="vertical-align: center;">
+    </div>
+    <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+        <div *ngIf="companiesList != null && companiesList.length > 1" class="filter-data custom-box language-section"
+            style="width:150px;" (click)="$event.stopPropagation()">
+            <mat-select placeholder="" name="selectedCompany" [(ngModel)]="selectedCompany"
+                (selectionChange)="selectCompany($event.value)">
+                <mat-select-trigger>
+                    <div *ngIf="selectedCompany" fxLayout="row" fxLayoutGap="15px">
+                        <div [ngStyle]="{ 'margin-bottom': selectedCompany.companyMiniLogo ? '10px' : '0px' }">
+                            <app-avatar [name]="selectedCompany.companyName | removeSpecialCharacters"
+                                fxLayoutAlign="start center" matTooltipClass="tooltipClass-mat" matTooltip="{{ selectedCompany.companyName }}"
+                                [src]="selectedCompany.companyMiniLogo | fetchSizedAndCachedImage: '20':''"
+                                [isRound]="true" size="20">
+                            </app-avatar>
+                        </div>
+                        <span matTooltipClass="tooltipClass-mat" matTooltip="{{selectedCompany.companyName}}" matTooltipShowDelay="400"
+                            fxFlex="calc(100% - 40px)" class="language-display" style="color: black !important;">{{ selectedCompanyName }}</span>
+                    </div>
+                </mat-select-trigger>
+                <div fxFlex class="search_goalinput ml-1" fxLayoutAlign="start center"
+                    style="position: sticky; top: 0; z-index: 1; background-color: white;">
+                    <div fxLayoutAlign="start center">
+                        <mat-form-field class="full-width">
+                            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                [(ngModel)]="searchText" autocomplete="off">
+                            <!-- (input)="search($event)"> -->
+                        </mat-form-field>
+                    </div>
+                    <span class="close_icon masterdata-search-close" fxLayoutAlign="end center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05 mt-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+                <mat-option *ngFor="let companyList of searchCompanies(companiesList, searchText);trackBy: trackByCompanyId" [value]="companyList"
+                matTooltipClass="tooltipClass-mat" matTooltip="{{companyList.companyName}}" matTooltipShowDelay="400">
+                    <div class="cursor-pointer" fxLayout="row">
+                        <app-avatar [name]="companyList.companyName | removeSpecialCharacters"
+                            [ngStyle]="{ 'margin-bottom': companyList.companyMiniLogo ? '10px' : '0px' }"
+                            fxLayoutAlign="start center" matTooltipClass="tooltipClass-mat" matTooltip="{{ companyList.companyName }}"
+                            [src]="companyList.companyMiniLogo | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                            size="20">
+                        </app-avatar>
+                        <div class="ml-05">
+                            {{ companyList.companyName }}
+                        </div>
+                    </div>
+                </mat-option>
+            </mat-select>
+        </div>
+        <!-- <div *ngIf="showTrailPeriod">
+            <span>{{ 'SHELL.FREETRAILEXPIRE' | translate }}<span [(ngModel)]="noOfDays">{{company.trailDays}}</span>
+                {{ 'SHELL.DAYS' | translate }}</span>
+        </div> -->
+        <!-- <div class="home">
+            <button mat-icon-button [style.overflow]="'visible'" matTooltip="{{ 'SHELL.HOME' | translate}}"
+                class="topbar-button-right" (click)="changeMenuType('WorkspaceMenuItems');navigateToDashboards()"
+                [ngClass]="(menuType == 'WorkspaceMenuItems'|| this.router.url.includes('/dashboard-management')) ? 'icon_active_class' : ''">
+                <mat-icon>home</mat-icon>
+            </button>
+        </div> -->
+        <!-- <div class="home" *ngIf="canAccess_feature_ViewRoles">
+            <button mat-icon-button [style.overflow]="'visible'" matTooltip="{{ 'ROLESVIEW.ROLES' | translate}}"
+                class="topbar-button-right" (click)="changeMenuType('WorkspaceMenuItems');navigateToRoles()"
+                [ngClass]="(menuType == 'WorkspaceMenuItems'|| this.router.url.includes('/rolemanagement/rolemanagement')) ? 'icon_active_class' : ''">
+                <mat-icon>brightness_high</mat-icon>
+            </button>
+        </div> -->
+        <div *ngIf="(canAccess_feature_Settings) || (canAccess_feature_ViewRoles)">
+            <button matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.SETTINGS' | translate }}" class="topbar-button-right theme-navbar-icon-color" mat-icon-button
+                (click)="navigateToSettings()"
+                [ngClass]="(this.router.url.includes('/settings')) ? 'icon_active_class' : ''">
+                <mat-icon>settings</mat-icon>
+            </button>
+        </div>
+
+        <div *ngIf="canAccess_feature_MyProjectWork">
+            <button matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.MYWORK' | translate }}" class="topbar-button-right theme-navbar-icon-color" mat-icon-button
+                (click)="navigateToStatusReport()">
+                <mat-icon>assignment</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <div
+        *ngIf="(canAccess_feature_PunchCard) && !( timesheetDisableorEnable && timesheetDisableorEnable.TimeSheetRestricted)">
+        <button mat-icon-button id="feedTimeSheetComponent" [style.overflow]="'visible'"
+        matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.LOGTIME' | translate}}" [satPopoverAnchorFor]="feedTimeSheet"
+            (click)="openTimeSheet()" class="topbar-button-right theme-navbar-icon-color">
+            <mat-icon>access_time</mat-icon>
+        </button>
+    </div>
+    <!-- Notification toggle button -->
+    <button mat-icon-button matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.NOTIFICATIONS' | translate}}" (click)="toggleNotific()"
+        [style.overflow]="'visible'" *ngIf="newNotificationsCount != 0" class="topbar-button-right theme-navbar-icon-color"
+        [matMenuTriggerFor]="notification">
+        <mat-icon>notifications</mat-icon>
+        <span *ngIf="newNotificationsCount != 0" class="notification-number mat-bg-warn">{{
+            newNotificationsCount }}</span>
+    </button>
+    <mat-menu #notification="matMenu">
+        <app-notifications></app-notifications>
+    </mat-menu>
+
+    <!-- Top left user menu -->
+    <button mat-icon-button [matMenuTriggerFor]="accountMenu" (click)="toggleRecording()"
+        [ngClass]="this.router.url.includes('/dashboard/profile/') ? 'icon_active_class' : ''"
+        class="topbar-button-right img-button" *ngIf="authenticatedUserRecord">
+        <img class="icon-highlight-setter" *ngIf="authenticatedUserRecord.profileImage"
+            [src]="authenticatedUserRecord.profileImage | fetchSizedAndCachedImage: '60':''" alt="profile image" />
+        <div *ngIf="!authenticatedUserRecord.profileImage" style="margin-left: 4px !important;">
+            <app-avatar [name]="authenticatedUserRecord.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+            </app-avatar>
+        </div>
+    </button>
+
+    <sat-popover #feedTimeSheet [autoFocus]="false" hasBackdrop [restoreFocus]="false" [interactiveClose]="true"
+        scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+        <app-feed-time (closeFeedTimeSheetPopup)="closeFeedTimeSheet()" [isFeedTimeSheet]="isFeedTimeSheet">
+        </app-feed-time>
+    </sat-popover>
+
+    <mat-menu #accountMenu="matMenu">
+        <button mat-menu-item (click)="navigateToProfile()">
+            <mat-icon>account_box</mat-icon>
+            <span>{{ 'SHELL.PROFILE' | translate}}</span>
+            <mat-icon class="activity-recorder recording-style" *ngIf="isRecording">
+                <!-- fiber_manual_record -->
+            </mat-icon>
+        </button>
+
+        <!-- <button mat-menu-item (click)="goToUserStore()" *ngIf="isStoreAccess">
+            <mat-icon>cloud</mat-icon>
+            <span>Store</span>
+        </button> -->
+        <button mat-menu-item matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.CLEARDEMODATA' | translate}}" *ngIf="showDeleteIcon && showDelete"
+            (click)="clearDemoData()" [style.overflow]="'visible'">
+            <mat-icon>delete</mat-icon>
+            <span>{{ 'SHELL.CLEARDEMODATA' | translate}}</span>
+        </button>
+        <button mat-menu-item matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.EXPORTCONFIGURATION' | translate}}"
+            *ngIf="canAccess_feature_ManageSystemExports" (click)="exportConfigurationDialogData()"
+            [style.overflow]="'visible'">
+            <mat-icon>get_app</mat-icon>
+            <span>{{ 'SHELL.EXPORTCONFIGURATION' | translate}}</span>
+        </button>
+        <button mat-menu-item matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.IMPORTCONFIGURATION' | translate}}"
+            [satPopoverAnchorFor]="fileUploadDropzonePopover" #fileUploadDropzonePopup="satPopoverAnchor"
+            *ngIf="canAccess_feature_ManageSystemImports" (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+            <mat-icon>publish</mat-icon>
+            <span>{{ 'SHELL.IMPORTCONFIGURATION' | translate}}</span>
+        </button>
+        <!--<div class="filter-data custom-box language-section" (click)="$event.stopPropagation()">
+            <mat-select placeholder="" name="currentLang" [(ngModel)]="currentLang" (selectionChange)="setLang()">
+                <mat-select-trigger>
+                    <div fxLayout="row" fxLayoutGap="15px">
+                        <mat-icon fxFlex="24px" class="language-icon">language</mat-icon>
+                        <span fxFlex="calc(100% - 40px)" class="language-display">{{ selectedLangName }}</span>
+                    </div>
+                </mat-select-trigger>
+                <mat-option value="option" *ngFor="let lang of availableLangs" [value]="lang.code">
+                    {{ lang.name }}
+                </mat-option>
+            </mat-select>
+        </div>-->
+        <button mat-menu-item (click)="onNavigateToBillingScreen()" *ngIf="canAccess_feature_ManageAccountsAndBilling">
+            <mat-icon>account_balance</mat-icon>
+            <span>Account & Billing</span>
+        </button>
+        <button mat-menu-item (click)="onNavigateToPricingScreen()" *ngIf="canAccess_feature_ManageAccountsAndBilling">
+            <mat-icon>account_balance_wallet</mat-icon>
+            <span>Pricing & Features</span>
+        </button>
+
+        <button *ngIf="canAccess_feature_AlternateSignIn" mat-menu-item (click)="alternateSignIn()"
+            [style.overflow]="'visible'" matTooltipClass="tooltipClass-mat" matTooltip="{{ 'SHELL.SIGNINAS' | translate}}">
+            <mat-icon>how_to_reg</mat-icon>
+            <span>{{ 'SHELL.SIGNINAS' | translate}}</span>
+        </button>
+        <button mat-menu-item (click)="onSignout()">
+            <mat-icon>exit_to_app</mat-icon>
+            <span>{{ 'SHELL.SIGNOUT' | translate}}</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="feedBackPopover.toggle();openFeedBackDialog()">
+            <mat-icon class="feedback-icon" [satPopoverAnchorFor]="feedBackPopover">
+                sentiment_satisfied_alt
+            </mat-icon>
+            <span>v-{{applicationVersion}}</span>
+        </button>
+    </mat-menu>
+</mat-toolbar>
+<!-- <ngx-ui-loader fgsSize="180" [fgsType]="spinnerType" color="primary"></ngx-ui-loader> -->
+<div *ngIf="loading" class="k-i-loading"></div>
+<sat-popover #feedBackPopover verticalAlign="below" hasBackdrop backdropClass="backdrop-color"
+    [interactiveClose]="false" horizontalAlign="end">
+    <app-submit-feedback *ngIf="isFeedBackDialog" (closeDialog)="closeFeedBacklogDialog()">
+    </app-submit-feedback>
+</sat-popover>
+
+<mat-menu #menu2="matMenu" class="dialog_window" (click)="$event.stopPropagation()">
+    <mat-card-content class="p-0 m-0 listof_assets store-list-dropdown" id="style-1">
+        <mat-list class="compact-list">
+            <mat-card class="p-0 asset-card" *ngIf="(canAccess_feature_AddOrUpdateForm || canAccess_feature_ViewForms)"
+                [routerLink]="['/applications/view-forms']">
+                <span class="hide-content-overflow userStory-name-control store-dropdown-padding">Forms</span>
+            </mat-card>
+            <mat-card class="p-0 asset-card" *ngIf="canAccess_feature_AddOrUpdateApplications"
+                [routerLink]="['/applications/custom-applications']">
+                <span class="hide-content-overflow userStory-name-control store-dropdown-padding">Custom
+                    applications</span>
+            </mat-card>
+            <mat-card *ngIf="canAccess_feature_ViewRoles" class="p-0 asset-card"
+                [routerLink]="['/rolemanagement/rolemanagement']">
+                <span class="hide-content-overflow userStory-name-control store-dropdown-padding">Role
+                    configuration</span>
+            </mat-card>
+            <mat-card *ngIf="canAccess_feature_ManageProjectRolePermissions" class="p-0 asset-card"
+                [routerLink]="['/rolemanagement/entityrolemanagement']">
+                <span class="hide-content-overflow userStory-name-control store-dropdown-padding">{{projectRoleText |
+                    softLabelsPipe : softLabels}}</span>
+            </mat-card>
+        </mat-list>
+    </mat-card-content>
+</mat-menu>
+
+<div [@fade] *ngIf="displayWelcomeNote && userFullName" class="welcome-note">
+    <span *ngIf="loggedInCount == 1; else elseSpan">Welcome &nbsp; </span> <span> {{ userFullName }} </span>
+    <ng-template #elseSpan> Welcome back &nbsp;</ng-template>
+</div>
+<sat-popover #fileUploadDropzonePopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closeUploadFilePopup()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="m-1">
+            <div class="custom-dropzone dropzone-height" ngx-dropzone (change)="filesSelected($event)" accept=".json">
+                <ngx-dropzone-label>
+                    <span>{{'DOCUMENTMANAGEMENT.DRAGANDDROPFILESHERE' | translate}}</span>
+                </ngx-dropzone-label>
+                <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+                    (removed)="onRemove(f)">
+                    <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">
+                        {{ setLabelNameForDropzone(f.name) }}
+                    </ngx-dropzone-label>
+                </ngx-dropzone-preview>
+            </div>
+            <div class="m-05 text-muted" style="text-align: center;">
+                <span>allowed file extensions : .json</span>
+            </div>
+            <mat-progress-bar color="primary" mode="determinate" [value]="progressValue" *ngIf="progressValue > 0">
+            </mat-progress-bar>
+            <div *ngIf="progressValue > 0">
+                {{progressValue}}% completed (Uploading {{fileCounter}} of {{files.length}} files)
+            </div>
+            <div class="mt-05" fxLayoutAlign="center end" *ngIf="filesPresent">
+                <button mat-button mat-raised-button color="primary" (click)="saveFiles()">
+                    <fa-icon class="mr-05" icon="save"></fa-icon>{{'UPLOAD' | translate}}
+                </button>
+                <button class="ml-1" mat-button mat-raised-button (click)="removeAllFiles();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>{{'DOCUMENTMANAGEMENT.CLEARFILES' | translate}}
+                </button>
+            </div>
+            <div class="mt-05" fxLayoutAlign="center end" *ngIf="importingInProgress">
+                <button class="ml-1" mat-button mat-raised-button [disabled]="true">
+                    <fa-icon class="mr-05" icon="upload"></fa-icon>{{'SHELL.IMPORTINGTEXT' | translate }}
+                    <i class="fa fa-spin fa-spinner" *ngIf="importingInProgress"></i>
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<style>
+    .file-or-folder-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 50px;
+    }
+
+    .file-or-folder-name-align {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        text-align: center;
+        word-break: break-word;
+    }
+
+    .dropzone-height {
+        height: 130px;
+    }
+
+    .custom-dropzone-preview {
+        height: 100px !important;
+        min-height: 100px !important;
+        padding: 0px !important;
+    }
+</style>
+<ng-template #openAnnoucementDialogComponent let-data>
+    <announcement-dialog [data]=[data]></announcement-dialog>
+</ng-template>

@@ -1,0 +1,159 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="center">
+            <span
+                *ngIf="!employeeImmigrationDetailsId">{{'EMPLOYEEIMMIGRATIONDETAILS.ADDIMMIGRATIONDETAILS' | translate}}</span>
+            <span
+                *ngIf="employeeImmigrationDetailsId">{{'EMPLOYEEIMMIGRATIONDETAILS.EDITIMMIGRATIONDETAILS' | translate}}</span>
+        </div>
+    </div>
+</mat-card-title>
+<form [formGroup]="employeeImmigrationDetailsForm" novalidate #formDirective="ngForm" class="hr-apps-scroll"
+    id="style-1" (submit)="saveEmployeeImmigrationDetails(formDirective)">
+    <div class="apps-create-height p-1">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div>
+                <label>{{'EMPLOYEEIMMIGRATIONDETAILS.DOCUMENT' | translate}}</label>
+            </div>
+            <div fxFlex>
+                <mat-radio-group formControlName="documents" [(ngModel)]="documents" (change)="onChange($event)">
+                    <div fxLayout="row" fxLayoutAlign="space-around center">
+                        <mat-radio-button value="Visa">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.VISA' | translate}}</mat-radio-button>
+                        <mat-radio-button value="Passport">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.PASSPORT' | translate}}</mat-radio-button>
+                    </div>
+                </mat-radio-group>
+                <mat-error>
+                    <span
+                        *ngIf="!employeeImmigrationDetailsForm.get('documents').valid && employeeImmigrationDetailsForm.get('documents').touched">
+                        {{'EMPLOYEEIMMIGRATIONDETAILS.PLEASESELECTDOCUMENT' | translate}}</span></mat-error>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="documentNumber"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.DOCUMENTNUMBER' | translate}}" required>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeImmigrationDetailsForm.get('documentNumber').hasError('required') && employeeImmigrationDetailsForm.get('documentNumber').touched">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.DOCUMENTNUMBERISREQUIRED' | translate}}</span>
+                    </mat-error>
+                    <mat-error>
+                        <span *ngIf="employeeImmigrationDetailsForm.get('documentNumber').hasError('maxlength')">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.DOCUMENTNUMBERCANNOTEXCEED50CHARACTERS' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="countryId"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.COUNTRY' | translate}}"
+                        (selectionChange)="searchByCountry($event.value)" required>
+                        <mat-option>Select none</mat-option>
+                        <mat-option *ngFor="let country of selectCountryListData$ | async" [value]="country.countryId">
+                            {{country.countryName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeImmigrationDetailsForm.get('countryId').hasError('required') && employeeImmigrationDetailsForm.get('countryId').touched">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.PLEASESELECTCOUNTRY' | translate}} </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="issuedDate" [matDatepicker]="picker1" (click)="picker1.open()"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.ISSUEDDATE' | translate}}" required
+                        [max]="employeeImmigrationDetailsForm.get('expiryDate').value" [readonly]="true"
+                        autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeImmigrationDetailsForm.get('issuedDate').hasError('required') && employeeImmigrationDetailsForm.get('issuedDate').touched">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.PLEASESELECTISSUEDDATE' | translate}}</span>
+                        <span
+                            *ngIf="employeeImmigrationDetailsForm.get('issuedDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                        <span
+                            *ngIf="employeeImmigrationDetailsForm.get('issuedDate').hasError('matDatepickerMax')">{{'HRMANAGAMENT.SELECTEDDATESHOULDBELESSTHANTODAYSDATE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="expiryDate" [matDatepicker]="picker2" (click)="picker2.open()"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.EXPIRYDATE' | translate}}"
+                        [min]="employeeImmigrationDetailsForm.get('issuedDate').value" [readonly]="true"
+                        autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker2">
+                    </mat-datepicker-toggle>
+                    <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="eligibleStatus"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.ELIGIBLESTATUS' | translate}}">
+                    <mat-error>
+                        <span *ngIf="employeeImmigrationDetailsForm.get('eligibleStatus').hasError('maxlength')">
+                            {{'EMPLOYEEIMMIGRATIONDETAILS.ELIGIBLESTATUSCANNOTEXCEED100CHARACTERS' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="eligibleReviewDate" [matDatepicker]="picker3"
+                        (click)="picker3.open()"
+                        placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.ELIGIBLEREVIEWDATE' | translate}}" [max]="maxDate"
+                        autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                    <mat-datepicker #picker3></mat-datepicker>
+                </mat-form-field>
+            </div>
+        </div>
+        <div>
+            <mat-form-field class="full-width">
+                <textarea formControlName="comments" matInput rows="1" cols="20"
+                    placeholder="{{'EMPLOYEEIMMIGRATIONDETAILS.COMMENTS' | translate}}"></textarea>
+                <mat-error>
+                    <span *ngIf="employeeImmigrationDetailsForm.get('comments').hasError('maxlength')">
+                        {{'EMPLOYEEIMMIGRATIONDETAILS.COMMENTSCANNOTEXCEED800CHARACTERS' | translate}}</span>
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <div class="custom-hrm-dropzone">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [getFilesByReferenceId]="true" [referenceId]="employeeImmigrationDetailsId"
+                [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+                [isToUploadFiles]="isToUploadFiles">
+            </app-dropzone>
+        </div>
+        <!-- <mat-label>{{'USERSTORY.FILEEXTENSIONS' | translate}} :&nbsp;jpg, jpeg, png, pdf</mat-label> -->
+    </div>
+    <div class="mb-1 prl-1" fxLayoutAlign="center center">
+        <button mat-button mat-raised-button type="submit" color="primary" class="mr-1"
+            [disabled]="!employeeImmigrationDetailsForm.valid || (upsertEmployeeImmigrationDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="upsertEmployeeImmigrationDetailsInProgress$ | async">
+            </mat-progress-bar>
+            <span *ngIf="!this.employeeImmigrationDetailsId">
+                <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+            </span>
+            <span *ngIf="this.employeeImmigrationDetailsId">
+                <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+            </span>
+        </button>
+        <button mat-button mat-raised-button type="button" (click)="closePopover(formDirective)"
+            [disabled]="(upsertEmployeeImmigrationDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+        </button>
+    </div>
+</form>

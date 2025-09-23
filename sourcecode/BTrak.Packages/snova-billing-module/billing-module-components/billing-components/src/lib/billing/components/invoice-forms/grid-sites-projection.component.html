@@ -1,0 +1,178 @@
+<div class="p-0 m-0 full-height">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'SITE.MANAGESITE' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px">
+                    <button mat-icon-button matTooltip="{{ 'SITE.ADDNEWSITE' | translate }}"
+                        [satPopoverAnchorFor]="addGridForSiteProjectionPopover" #addGridForSiteProjectionPopUp="satPopoverAnchor"
+                        (click)="openSitePopUp(addGridForSiteProjectionPopUp)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="sitesModel.length > 0">
+        <kendo-grid [data]="gridForSitesModel" [pageSize]="state.take" [skip]="state.skip" [pageable]="true" [sortable]="true"
+            [sort]="state.sort" [filterable]="false" [loading]="isLoading" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="siteName" title="{{'SITE.AUTOCTARRIFCTS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.siteName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="gridName" title="{{'SITE.ROOFRENTALADDRESS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.gridName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="startDate" title="{{'SITE.DATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.startDate  | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="endDate" title="{{'SITE.DATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.endDate  | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="addGridForSiteProjectionPopover" #addGridForSiteProjectionPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'SITE.EDITSITE' | translate}}" (click)="editSitePopUp(dataItem,addGridForSiteProjectionPopUp)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" [satPopoverAnchorFor]="archiveGridForSiteProjectionPopOver"
+                        #archiveGridForSiteProjectionPopup="satPopoverAnchor" matTooltip="{{ 'SITE.ARCHIVESITE' | translate}}"
+                        (click)="deleteSitePopUp(dataItem,archiveGridForSiteProjectionPopup)" icon="trash">
+                    </fa-icon>
+
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag" *ngIf="!isLoading && sitesModel.length === 0"
+        textToDisplay="{{'SITE.YOUDONTHAVEANYSITES' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addGridForSiteProjectionPopover" #addGridForSiteProjectionPopUp="satPopoverAnchor"
+                (click)="openSitePopUp(addGridForSiteProjectionPopUp)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'SITE.ADDNEWSITE' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+
+    <sat-popover #addGridForSiteProjectionPopover hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+                <div class="card-title-text mb-1" *ngIf="!gridForSiteProjectionId">{{ 'SITE.CREATESITE' | translate }}
+                </div>
+                <div class="card-title-text mb-1" *ngIf="gridForSiteProjectionId">{{ 'SITE.UPDATESITE' | translate }}
+                </div>
+            </div>
+            <form [formGroup]="gridForSiteProjectionForm" novalidate #formDirective="ngForm" (submit)="upsertGridforSitesProjection()">
+                <div id="style-1" class="goal-create-height p-1" style="height: 50vh;">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'ENTITYFORM.SITE' | translate}}</mat-label>
+                                <mat-select placeholder="{{'ENTITYFORM.SELECTSITE' | translate}}"
+                                    formControlName="siteId"
+                                    required>
+                                    <mat-option *ngFor="let site of sitesModel" [value]="site.id">
+                                        {{site.name}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="gridForSiteProjectionForm.get('siteId').hasError('required') && gridForSiteProjectionForm.get('siteId').touched">
+                                    {{'ENTITYFORM.PLEASESELECTSITE' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width ml-05">
+                                <mat-label>{{'ENTITYFORM.GRD' | translate}}</mat-label>
+                                <mat-select placeholder="{{'ENTITYFORM.SELECTGRD' | translate}}"
+                                    formControlName="gridId" required>
+                                    <mat-option *ngFor="let grd of grdModel" [value]="grd.id">
+                                        {{grd.name}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="gridForSiteProjectionForm.get('grdId').hasError('required') && gridForSiteProjectionForm.get('grdId').touched">
+                                    {{'ENTITYFORM.PLEASESELECTGRD' | translate}}</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width">
+                                <mat-label>{{'SITE.STARTDATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                    formControlName="startDate" placeholder="" required>
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50" fxFlex.xs="100">
+                            <mat-form-field class="full-width ml-05">
+                                <mat-label>{{'SITE.ENDDATE' | translate}}</mat-label>
+                                <input matInput formControlName="endDate" (click)="picker2.open()"
+                                    [matDatepicker]="picker2" placeholder="" required>
+                                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-1 text-center">
+                    <button mat-raised-button type="submit" color="primary" class="mr-1"
+                        [disabled]="!gridForSiteProjectionForm.valid||isAddIsInProgress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAddIsInProgress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #archiveGridForSiteProjectionPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="p-1">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mb-1">{{ 'SITE.AREYOUSUREWANTTODELETESITE' | translate }}
+                </div>
+            </mat-card-title>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveSite();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+</div>
+
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageSite" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

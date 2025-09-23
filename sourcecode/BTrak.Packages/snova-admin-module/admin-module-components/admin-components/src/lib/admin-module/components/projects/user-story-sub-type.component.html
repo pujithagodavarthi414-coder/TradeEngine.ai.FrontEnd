@@ -1,0 +1,177 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageWorkItemSubType">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="50" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'USERSTORYSUBTYPE.USERSTORYSUBTYPETITLE'| translate | softLabelsPipe : softLabels  | titlecase}}">{{'USERSTORYSUBTYPE.USERSTORYSUBTYPETITLE'| translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle [matTooltip]="(isArchivedTypes == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)" class="mr-1 archive-switch"
+              [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes" (change)="getAllUserstorySubTypes()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'USERSTORYSUBTYPE.CREATEUSERSTORYSUBTYPETOOLTIP' | translate | softLabelsPipe : softLabels}}"
+              [satPopoverAnchorFor]="upsertUserstorySubTypePopover" #upsertUserstorySubTypePopUp="satPopoverAnchor"
+              (click)="createUserstorySubTypePopupOpen(upsertUserstorySubTypePopUp);clearForm()"
+              *ngIf="!isArchivedTypes">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="userstorySubTypes"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{'USERSTORYSUBTYPE.USERSTORYSUBTYPENAME'|translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [sortable]="true" prop="userStorySubTypeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.userStorySubTypeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center"
+            title="{{'USERSTORYSUBTYPE.EDITUSERSTORYSUBTYPE' | translate | softLabelsPipe : softLabels}}"
+            *ngIf="!isArchivedTypes" [satPopoverAnchorFor]="upsertUserstorySubTypePopover"
+            #upsertUserstorySubTypePopUp="satPopoverAnchor"
+            (click)="editUserstorySubTypePopupOpen(row,upsertUserstorySubTypePopUp)" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'USERSTORYSUBTYPE.ARCHIVEUSERSTORYSUBTYPETITLE'|translate | softLabelsPipe : softLabels}}"
+            *ngIf="!isArchivedTypes" [satPopoverAnchorFor]="archiveUserstorySubTypePopOver"
+            #archiveUserstorySubTypePopUp="satPopoverAnchor"
+            (click)="archiveUserstorySubTypePopupOpen(row,archiveUserstorySubTypePopUp)" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'USERSTORYSUBTYPE.UNARCHIVEUSERSTORYSUBTYPETITLE' | translate | softLabelsPipe : softLabels }}"
+            *ngIf="isArchivedTypes" [satPopoverAnchorFor]="archiveUserstorySubTypePopOver"
+            #archiveUserstorySubTypePopUp="satPopoverAnchor"
+            (click)="archiveUserstorySubTypePopupOpen(row,archiveUserstorySubTypePopUp)" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- <div class="floating-right-fab-button" *ngIf="!isArchivedTypes">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{'USERSTORYSUBTYPE.CREATEUSERSTORYSUBTYPETOOLTIP' | translate | softLabelsPipe : softLabels}}"
+        [satPopoverAnchorFor]="upsertUserstorySubTypePopover" #upsertUserstorySubTypePopUp="satPopoverAnchor"
+        (click)="createUserstorySubTypePopupOpen(upsertUserstorySubTypePopUp);clearForm()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div> -->
+
+  <!--Edit Userstory sub type dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertUserstorySubTypePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ 'USERSTORYSUBTYPE.ADDOREDITUSERSTORYSUBTYPETITLE' | translate | softLabelsPipe : softLabels }}</div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="userstorySubTypeForm" novalidate #formDirective="ngForm"
+          (submit)="userstorySubTypeForm.valid && upsertUserStorySubType(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="userStorySubTypeName"
+                placeholder="{{ 'USERSTORYSUBTYPE.USERSTORYSUBTYPENAME' | translate | softLabelsPipe : softLabels}}"
+                required>
+              <mat-error *ngIf="userstorySubTypeForm.get('userStorySubTypeName').hasError('maxlength')">
+                {{ 'USERSTORYSUBTYPE.MAXLENGTHERROR' | translate | softLabelsPipe : softLabels}}</mat-error>
+              <mat-error
+                *ngIf="userstorySubTypeForm.get('userStorySubTypeName').hasError('required') && userstorySubTypeForm.get('userStorySubTypeName').touched">
+                {{ 'USERSTORYSUBTYPE.REQUIREDERROR' | translate | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage | softLabelsPipe : softLabels}}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!userstorySubTypeForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertUserstorySubTypePopup(formDirective)"
+              type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit Userstory sub type dialog-->
+
+  <!--Delete Userstory sub type dialog-->
+  <sat-popover backdropClass="backdrop-color" #archiveUserstorySubTypePopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+          {{ 'USERSTORYSUBTYPE.ARCHIVEUSERSTORYSUBTYPETITLE' | translate | softLabelsPipe : softLabels}}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+          {{ 'USERSTORYSUBTYPE.UNARCHIVEUSERSTORYSUBTYPETITLE' | translate | softLabelsPipe : softLabels }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+          {{ 'USERSTORYSUBTYPE.ARCHIVEUSERSTORYSUBTYPETEXT' | translate | softLabelsPipe : softLabels}}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchivedTypes">
+          {{ 'USERSTORYSUBTYPE.UNARCHIVEUSERSTORYSUBTYPETEXT' | translate | softLabelsPipe : softLabels}}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteUserstorySubType();">
+            <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteUserstorySubType();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeArchiveUserstorySubTypeDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete Userstory sub type dialog-->
+</div>
+
+<app-common-message-box
+  *ngIf="!canAccess_feature_ManageWorkItemSubType"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

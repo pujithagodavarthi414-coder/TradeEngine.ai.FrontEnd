@@ -1,0 +1,755 @@
+<mat-card class="p-0 unique-detail-height" id="style-1"
+  [ngStyle]="{ 'height': isFromUrl ? 'height: calc(100vh - 58px)' : 'calc(100vh - 158px)' }"
+  *ngIf="(isPermissionForViewUserStories || canAccess_entityType_feature_ViewAuditActions)">
+  <!-- <mat-progress-bar color="primary" *ngIf="(anyOperationInProgress$ | async) || (loadingEntityFeatures$|async)">
+  </mat-progress-bar> -->
+  <mat-progress-bar color="primary" mode="indeterminate"
+    *ngIf="((anyOperationInProgress$ | async) || (loadingEntityFeatures$|async) ) || loadingUserStory">
+  </mat-progress-bar>
+  <div fxLayout="row wrap" fxLayout.xs="column"
+    *ngIf="userStoryDetails && !userStoryDetails.userStoryParkedDateTime && !userStoryDetails.userStoryArchivedDateTime && (accessViewProjects || canAccess_entityType_feature_ViewAuditActions) && isProjectRole">
+    <div fxFlex="74" fxFlex.lt-md="100" fxLayoutGap="15px">
+      <mat-card-content class="p-05" fxLayout="column">
+        <div fxLayout="row wrap" *ngIf="notFromAudits">
+          <h6 class="p-05 m-0 unique-details-link hide-content-overflow" *ngIf="userStoryName">
+            <a matTooltip="{{ 'USERSTORYUNIQUE.CLICKHERETOGOTOPROJECTPAGE' | translate  | softLabelsPipe : softLabels}}"
+              class="userstory-unique unique-numbers-hover" (click)="redirectPage(); $event.stopPropagation();">
+              {{userStoryDetails.projectName}}
+            </a>&nbsp;/
+            <a class="userstory-unique unique-numbers-hover"
+              (click)="navigateToGoalDetailsPage(); $event.stopPropagation();">
+              <span
+                matTooltip="{{ 'USERSTORYUNIQUE.CLICKHERETOGOGOALDETAILPAGE' | translate  | softLabelsPipe : softLabels }}"
+                *ngIf="userStoryDetails.goalName && !isSprintUserStories">{{userStoryDetails.goalName}}</span>
+              <span matTooltip="{{ 'USERSTORYUNIQUE.CLICKHERETOGOSPRINTDETAILPAGE' | translate  }}"
+                *ngIf="userStoryDetails.sprintName && isSprintUserStories">{{userStoryDetails.sprintName}}</span>
+            </a>
+          </h6>
+          <div class="unique-details-link mt-02">
+            &nbsp;/&nbsp;
+            <a class="unique-numbers-cursor-text" (click)="$event.stopPropagation();">
+              {{userStoryDetails.userStoryUniqueName}}
+            </a>
+          </div>
+        </div>
+        <div fxLayout="row wrap" *ngIf="!notFromAudits">
+          <h6 class="p-05 m-0 unique-details-link hide-content-overflow" *ngIf="userStoryDetails.userStoryName">
+            <div class="unique-details-link mt-02">
+              <a class="unique-numbers-cursor-text" (click)="$event.stopPropagation();">
+                {{userStoryDetails.userStoryUniqueName}}
+              </a>
+            </div>
+          </h6>
+        </div>
+        <div fxLayout="row wrap" class="m-0 unique-details-text">
+          <div fxFlex class="ml-05">
+            <span *ngIf="!isEditWIName && checkUserStoryEditPermisison() " (dblclick)="showMatFormField()"
+              style="cursor: pointer;" class="unique-details-heading mr-05 mt-05">{{userStoryName}}</span>
+            <span *ngIf="!isEditWIName && !checkUserStoryEditPermisison() " style="cursor: pointer;"
+              class="unique-details-heading mr-05 mt-05">{{userStoryName}}</span>
+            <mat-form-field class="full-width mb-0" *ngIf="isEditWIName && checkUserStoryEditPermisison()">
+              <input matInput
+                placeholder="{{ 'USERSTORYUNIQUE.USERSTORYTITLE' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="userStoryNameDuplicate" (blur)="updateUserStoryName()" />
+            </mat-form-field>
+            <mat-error *ngIf="userStoryNameDuplicate && (userStoryNameDuplicate.length > 800)">
+              {{'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS'|translate | softLabelsPipe : softLabels}}</mat-error>
+          </div>
+          <div>
+            <button mat-icon-button [satPopoverAnchorFor]="editUserStoryMenuPopover"
+              class="pull-right unique-details-heading mr-05" *ngIf="checkToggleButton()"
+              (click)="editUserStoryMenuPopover.open(); $event.stopPropagation(); ">
+              <fa-icon icon="ellipsis-h" class="goal-unique-menu"></fa-icon>
+            </button>
+            <sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background"
+              #editUserStoryMenuPopover hasBackdrop [interactiveClose]="true" verticalAlign="below"
+              (click)="$event.stopPropagation()" horizontalAlign="end">
+              <mat-card class="filter-data p-0" fxLayout="column">
+                <div fxFlex fxLayoutAlign="start center"
+                  *ngIf="!userStoryDetails.userStoryParkedDateTime && isPermissionForArchiveUserStory">
+                  <button mat-menu-item [satPopoverAnchorFor]="archiveUserstoryPopover"
+                    (click)="archiveUserstoryPopover.open(); openArchivePopUp();">
+                    <mat-icon>archive</mat-icon>&nbsp;{{'USERSTORY.ARCHIVE' | translate}}
+                  </button>
+                </div>
+                <div fxFlex fxLayoutAlign="start center"
+                  *ngIf="!userStoryDetails.userStoryArchivedDateTime && isPermissionForParkUserStory && notFromAudits">
+                  <button mat-menu-item [satPopoverAnchorFor]="parkUserstoryPopover"
+                    (click)="parkUserstoryPopover.open(); openParkPopUp();">
+                    <mat-icon>local_parking</mat-icon>&nbsp;{{'USERSTORY.PARK' | translate}}
+                  </button>
+                </div>
+                <!-- <div fxFlex fxLayoutAlign="start center" *ngIf="checkUserStoryEditPermisison()">
+                  <button mat-menu-item [satPopoverAnchorFor]="editUserstoryPopover"
+                    (click)="editUserStoryName(); editUserstoryPopover.open();">
+                    <mat-icon>edit</mat-icon>&nbsp;{{'USERSTORY.EDIT' | translate}}
+                  </button>
+                </div> -->
+                <div fxFlex fxLayoutAlign="start center">
+                  <button mat-menu-item [satPopoverAnchorFor]="userstoryTagsPopover"
+                    *ngIf="!userStoryDetails.userStoryArchivedDateTime && !userStoryDetails.userStoryParkedDateTime"
+                    (click)="userstoryTagsPopover.open(); $event.stopPropagation();openTagsPopUp()">
+                    <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+                  </button>
+                </div>
+
+                <div fxFlex fxLayoutAlign="start center" *ngIf="notFromAudits">
+                  <button mat-menu-item [satPopoverAnchorFor]="createSubTaskPopover" *ngIf="!isBugBoard && isPermissionForVersionName && !parentUserStoryId  && (!isSuperagileBoard && isKanbanBoard) && 
+                  isCreatingSubTask" (click)="createSubTaskNew(); $event.stopPropagation()">
+                    <mat-icon>add</mat-icon> {{ 'USERSTORY.CREATESUBTASK' | translate }}
+                  </button>
+                </div>
+              </mat-card>
+            </sat-popover>
+          </div>
+        </div>
+        <div fxFlex class="unique-details-bg p-05" fxLayout="column">
+          <h5 class="unique-details-text">{{'USERSTORYUNIQUE.DESCRIPTION' | translate}}</h5>
+          <div fxLayout="row wrap" fxFlex="100" class="word-break">
+            <span *ngIf="descriptionSlug && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+              [innerHTML]=descriptionSlug>
+            </span>
+            <!-- <span *ngIf="descriptionSlug && !isEditorVisible">
+              <b>&nbsp;{{'USERSTORYUNIQUE.CLICKHERETOADDDESCRIPTION' | translate}}</b>
+            </span> -->
+            <span *ngIf="!descriptionSlug  && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;">
+              <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+            </span>
+          </div>
+          <div *ngIf="isEditorVisible">
+            <div class="full-width custom-input">
+              <editor class="dfree-header custom-logtime-comment"
+                apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" menubar="false" [init]="initSettings"
+                background="white" height="120" [(ngModel)]="descriptionSlug">
+              </editor>
+            </div>
+            <div class="mt-05">
+              <button mat-raised-button color="primary" class="mr-05" type="button" (click)="handleDescriptionEvent()"
+                [disabled]="(descriptionLoading$ | async)">
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-raised-button (click)="cancelDescription()" class="mr-05"
+                [disabled]="(descriptionLoading$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+              </button>
+              <button mat-raised-button color="primary" (click)="descriptionReset()"
+                [disabled]="(descriptionLoading$ | async)">
+                <fa-icon icon="undo" class="mr-05"></fa-icon> {{ 'ADVANCEDSEARCH.RESET' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-05 mb-05 p-05">
+          <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="userStoryId"
+            [selectedParentFolderId]="userStoryId" [selectedStoreId]="selectedStoreId" [isFromFeedback]="false"
+            [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true"></app-dropzone>
+        </div>
+        <div *ngIf="customFieldComponent">
+          <ndc-dynamic [ndcDynamicFactory]="customFieldComponent.component"
+            [ndcDynamicComponent]="customFieldComponent.component" [ndcDynamicInjector]="injector"
+            [ndcDynamicInputs]="customFieldComponent.inputs" [ndcDynamicOutputs]="customFieldComponent.outputs">
+          </ndc-dynamic>
+        </div>
+        <div fxFlex fxLayoutAlign="center center"
+          *ngIf="userStoryDetails.referenceId && userStoryDetails.referenceTypeId != questionReferenceTypeId">
+          <generic-type-status [userStoryId]="userStoryDetails.userStoryId"
+            [referenceTypeId]="userStoryDetails.referenceTypeId" [referenceId]="userStoryDetails.referenceId">
+          </generic-type-status>
+        </div>
+        <div fxLayout="row wrap" class="mt-05 p-05">
+          <div fxFlex="70px" fxLayoutAlign="start center">
+            <span>
+              <h6 class="unique-details-link custom-activity-margin-usu"> {{'USERSTORYUNIQUE.ACTIVITY' | translate}}
+              </h6>
+            </span>
+          </div>
+          <div fxFlex="150px" id="style-1" class="ml-05">
+            <mat-select (change)="selectchange($event)" [(ngModel)]="selectedTab">
+              <mat-option [value]="dropdown.value" *ngFor="let dropdown of dropdowns">
+                {{ dropdown.name | softLabelsPipe : softLabels}}
+              </mat-option>
+            </mat-select>
+          </div>
+        </div>
+        <div class="unqiue-activity-tab">
+          <div fxFlex *ngIf="selectedTab == 'Comment'">
+            <snovasys-comments *ngIf="userStoryId" [receiverId]="userStoryId" [componentModel]="componentModel"
+              [isPermissionExists]="isPermissionsForUserStoryComments">
+            </snovasys-comments>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'History'">
+            <app-pm-component-userstory-history *ngIf="userStoryId" [userStoryId]="userStoryId" class="ml-05">
+            </app-pm-component-userstory-history>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Worklog'" class="ml-05">
+            <app-pm-component-userstory-logtime [userStoryId]="userStoryId" [isFromAudits]=false>
+            </app-pm-component-userstory-logtime>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Sub tasks' && !parentUserStoryId" class="ml-05">
+            <app-pm-component-userstory-subtasks [userStoryId]="userStoryId" [goalId]="goalId" [sprintId]="sprintId"
+              [goalStatusId]="goalStatusId" [isDraggable]="checkIsDraggable()"
+              [isSprintUserStories]="isSprintUserStories" [userStories]="userStories">
+            </app-pm-component-userstory-subtasks>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Link work items'" class="ml-05">
+            <app-pm-component-userstory-links [userStoryId]="userStoryId" [projectId]="userStoryDetails.projectId"
+              [isSprintUserStories]="isSprintUserStories" [isAddPermission]="checkPermissionForAddLinks()"
+              [isArchivePermission]="checkPermissionForArchiveLinks()">
+            </app-pm-component-userstory-links>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Custom field history'" class="ml-05">
+            <app-custom-form-history [referenceId]="userStoryId">
+            </app-custom-form-history>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Bugs'" class="ml-05">
+            <userstory-bugs [userStoryData]="userStoryDetails" [isSprintUserStories]="isSprintUserStories"
+              [isUniquePage]=true>
+            </userstory-bugs>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Test cases'" class="ml-05">
+            <userstory-test-scenarios [userStoryData]="userStoryDetails" [isSprintUserStories]="isSprintUserStories">
+            </userstory-test-scenarios>
+          </div>
+          <div fxFlex *ngIf="selectedTab == 'Scenario history'" class="ml-05">
+            <userstory-scenario-history [userStoryData]="userStoryDetails">
+            </userstory-scenario-history>
+          </div>
+        </div>
+
+      </mat-card-content>
+    </div>
+    <div fxFlex="25" fxFlex.lt-md="100" class="mt-1 pr-05 pl-05 ">
+      <!-- <mat-card class="p-0 pr-05"> -->
+      <label class="ml-05 mb-0" (click)="$event.stopPropagation()"
+        *ngIf="((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage  && (!isSprintUserStories || (isSprintUserStories && isReplanGoalStatusId)) && notFromAudits"><b
+          class="f-15p">{{'USERDETAIL.PROJECT' | translate | softLabelsPipe : softLabels}}</b></label>
+      <ng-select placeholder="{{'USERDETAIL.SELECTPROJECT'|translate | softLabelsPipe : softLabels}}"
+        *ngIf="((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage  && (!isSprintUserStories || (isSprintUserStories && isReplanGoalStatusId)) && notFromAudits"
+        [disabled]="!isPermisisontoChangeGoal" (change)="getProjectChange($event)" [(ngModel)]="projectId"
+        [searchable]="true" [clearable]="false">
+        <ng-option *ngFor="let project of (projectsList)" [value]="project.projectId">
+          {{ project.projectName  }}
+        </ng-option>
+      </ng-select>
+      <label class="ml-05 mb-0" (click)="$event.stopPropagation()"
+        *ngIf="((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage  && (!isSprintUserStories || (isSprintUserStories && isReplanGoalStatusId)) && notFromAudits"><b
+          class="f-15p">{{'USERDETAIL.GOAL' | translate | softLabelsPipe : softLabels}}</b></label>
+      <ng-select placeholder="{{'USERDETAIL.SELECTGOAL'|translate | softLabelsPipe : softLabels}}"
+        *ngIf="((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage  && (!isSprintUserStories || (isSprintUserStories && isReplanGoalStatusId)) && notFromAudits"
+        [disabled]="!isPermisisontoChangeGoal || isLoadingGoals" (change)="getGoalChange($event)" [(ngModel)]="goalId"
+        [searchable]="true" [clearable]="false">
+        <ng-option *ngFor="let goal of (goals)" [value]="goal.goalId">
+          {{ goal.goalShortName? goal.goalShortName : goal.goalName  }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0" (click)="$event.stopPropagation()"
+        *ngIf="isSprintsConfiguration && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage && isPermisisontoChangeSprint && isSprintUserStories && notFromAudits"><b
+          class="f-15p">{{'USERDETAIL.SELECTSPRINT' | translate | softLabelsPipe : softLabels}}</b></label>
+      <ng-select placeholder="{{'USERDETAIL.SELECTSPRINT'|translate}}"
+        *ngIf="isSprintsConfiguration && ((!parentUserStoryId) || (parentUserStoryId && isBugBoard)) && isUserStoriesPage && isPermisisontoChangeSprint && isSprintUserStories && notFromAudits"
+        [disabled]="!isPermisisontoChangeSprint || isLoadingSprints" (change)="getSprintChange($event)"
+        [(ngModel)]="sprintId" [searchable]="true" [clearable]="false">
+        <ng-option *ngFor="let sprint of (sprintsList)" [value]="sprint.sprintId">
+          {{ sprint.sprintName  }}
+        </ng-option>
+      </ng-select>
+
+
+      <label class="ml-05 mb-0" (click)="$event.stopPropagation()"
+        *ngIf="(parentUserStoryId && !isBugBoard)  && isPermissionForMovingUserStoryTask && isUserStoriesPage && notFromAudits"><b
+          class="f-15p">{{'USERDETAIL.USERSTORY' | translate | softLabelsPipe : softLabels}}</b></label>
+      <!-- <div fxFlex = "355px" fxFlex.lt-md ="917px" fxFlex.lt-sm ="500px"> -->
+      <ng-select placeholder="{{'USERDETAIL.SELECTGOAL'|translate | softLabelsPipe : softLabels}}"
+        *ngIf="(parentUserStoryId && !isBugBoard) && isPermissionForMovingUserStoryTask && isUserStoriesPage && notFromAudits"
+        [disabled]="!isPermissionForMovingUserStoryTask && !isUserStoriesPage" (change)="getUserStoryChange($event)"
+        [(ngModel)]="parentUserStoryId" [searchable]="true" [clearable]="false">
+        <ng-option *ngFor="let userStory of userStories" [value]="userStory.userStoryId">
+          {{ userStory.userStoryName }}
+        </ng-option>
+      </ng-select>
+      <label class="ml-05 mt-1 mb-0" *ngIf="isSprintUserStories && notFromAudits"><b
+          class="f-15p">{{'USERDETAIL.RAGSTATUS' | translate}}</b></label>
+      <ng-select [searchable]="false" class="status-template" [clearable]="false"
+        *ngIf="isSprintUserStories && notFromAudits" (change)="setRagStatus($event)"
+        placeholder="{{'USERDETAIL.RAGSTATUS' | translate}}" [(ngModel)]="ragStatus">
+        <ng-option [value]="type.value" *ngFor="let type of (ragColors)">
+          {{ type.name }}
+        </ng-option>
+      </ng-select>
+      <label class="ml-05 mt-1 mb-0"><b class="f-15p">{{'USERSTORYUNIQUE.STATUS' | translate}}</b></label>
+      <ng-select [searchable]="false" class="status-template" [clearable]="false"
+        (change)="getUserStoryStatusChange($event)" [ngStyle]="{'background':userStoryStatusColor}"
+        placeholder="{{'ADVANCEDSEARCH.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}"
+        [disabled]="isUserStoryStatus || isReplanGoalStatusId" [(ngModel)]="userStoryStatusId">
+        <ng-option [value]="userStoryStatus.userStoryStatusId" *ngFor="let userStoryStatus of (workflowStatus)">
+          {{ userStoryStatus.userStoryStatusName }}
+        </ng-option>
+      </ng-select>
+      <label class="ml-05 mt-1 mb-0"><b
+          class="f-15p">{{'USERSTORYUNIQUE.WORKITEMTYPE' | translate | softLabelsPipe : softLabels}}</b></label>
+      <ng-select [searchable]="false" class="status-template" [clearable]="false"
+        (change)="getUserStoryTypeChange($event)" [disabled]="!isPermissionForUserStory"
+        placeholder="{{'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+        [(ngModel)]="userStoryTypeId" [disabled]="!notFromAudits">
+        <ng-option [value]="type.userStoryTypeId" *ngFor="let type of ( userStoryTypes$ | async)">
+          {{ type.userStoryTypeName }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1"><b class="f-15p">{{'USERSTORYUNIQUE.ASSIGNEE' | translate}}</b></label>
+      <div fxLayout="row wrap" class="mt-05">
+        <div fxFlex *ngIf="notFromAudits || !notFromAudits">
+          <ng-select [searchable]="true" class="custom-ng-select-template" [clearable]="isSuperagileBoard"
+            [disabled]="isPermissionForUserStoryOwner" placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}"
+            (change)="changeAssignee($event)" [(ngModel)]="assignee">
+            <ng-option *ngFor="let person of (projectMembers$ | async | dependencyFilter: 'id':dependencyUserId)"
+              [value]="person.projectMember.id">
+              {{ person.projectMember.name }}
+            </ng-option>
+          </ng-select>
+        </div>
+        <!-- <div fxFlex *ngIf="!notFromAudits">
+          <ng-select [searchable]="true" class="custom-ng-select-template" [clearable]="isSuperagileBoard"
+            [disabled]="isPermissionForUserStoryOwner" placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}"
+            (change)="changeAssignee($event)" [(ngModel)]="assignee">
+            <ng-option *ngFor="let person of userList" [value]="person.userId">
+              {{ person.userName }}
+            </ng-option>
+          </ng-select>
+        </div> -->
+        <!-- conduct question linking -->
+        <div fxFlex *ngIf="!notFromAudits">
+          <label class="ml-05 mb-0 mt-1"><b class="f-15p">{{ 'AUDIT.SELECTCONDUCTQUESTION' | translate | softLabelsPipe : softLabels}}</b></label>
+        <mat-form-field class="full-width">
+          <input type="text" [disabled]="checkCtrl()" class="search_goal" placeholder="{{ 'AUDIT.SELECTCONDUCTQUESTION' | translate | softLabelsPipe : softLabels}}" matInput [formControl] = "myControl"
+          (input)="searchQuestions($event)" [matAutocomplete]="auto" 
+          autocomplete="off" trim>
+      <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"
+          *ngIf="isQuestioinLoading"></i>
+      <span class="linked-userstory-close" *ngIf="questionName && !isQuestioinLoading">
+          <span *ngIf="!questionName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="questionName" class="icon-button custom-auto-close-timesheet"
+              aria-hidden="false" (click)="closeSearchQuestions()" style="cursor:pointer">
+              close</mat-icon>
+      </span>
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+          (optionSelected)="onChangeQuestion($event.option.value)">
+          <mat-option *ngFor="let question of  questions" [value]="question.conductQuestionId">
+              {{question.questionName}}
+          </mat-option>
+      </mat-autocomplete>                    
+      </mat-form-field>
+      </div>
+        <!--  -->
+        <div class="custom-unique-add-icon pt-2" fxFlex="20px"
+          *ngIf="notFromAudits && !checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))">
+          <fa-icon icon="user-plus" aria-hidden="false" aria-label="add"
+            matTooltip="{{'USERSTORY.ADDPROJECTMEMBER'|translate | softLabelsPipe : softLabels}}"
+            [satPopoverAnchorFor]="projectMemberPopover" (click)="projectMemberPopover.open();createProjectMember()">
+          </fa-icon>
+        </div>
+      </div>
+
+      <label class="ml-05 mb-0 mt-1" *ngIf=" (isSuperagileBoard || isKanbanBoard) && notFromAudits"><b
+          class="f-15p">{{'USERSTORYUNIQUE.DEPENDENCY' | translate}}</b></label>
+      <ng-select [searchable]="true" [disabled]="isPermissionForDependencyPerson" [clearable]="true"
+        *ngIf="(isSuperagileBoard || isKanbanBoard) && notFromAudits"
+        placeholder="{{'USERSTORYUNIQUE.SELECTDEPENDENCY' | translate}}" (change)="changeDependancy($event)"
+        [(ngModel)]="dependencyUserId">
+        <ng-option *ngFor="let person of (projectMembers$ | async | dependencyFilter: 'id':assignee)"
+          [value]="person.projectMember.id">
+          {{ person.projectMember.name }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1"><b
+          class="f-15p">{{'USERSTORYUNIQUE.ESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}</b></label>
+      <p class="ml-05 mb-0">
+        <app-common-estimatedTime [estimatedTime]="estimatedTime" *ngIf="notFromAudits"
+          [isDisabled]="((isUserStoriesPage && isPermissionForEstimatedTime) || !isUserStoriesPage || isReplanGoalStatusId)"
+          (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+        </app-common-estimatedTime>
+        <app-common-estimatedTime [estimatedTime]="estimatedTime" *ngIf="!notFromAudits"
+          [isDisabled]="!isPermissionForUserStory"
+          (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+        </app-common-estimatedTime>
+      </p>
+
+      <label class="ml-05 mb-0 mt-1" *ngIf="isSprintUserStories"><b
+          class="f-15p">{{'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}</b></label>
+      <p class="ml-05 mb-0">
+        <mat-form-field class="full-width" *ngIf="isSprintUserStories">
+          <input matInput [(ngModel)]="sprintEstimatedTime" (blur)="saveEstimatedTime()"
+            [disabled]="isPermissionForEstimatedTime"
+            placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}" amountOnly>
+        </mat-form-field>
+        <mat-error *ngIf="isValidation">
+          {{ 'USERSTORY.ESTIMATEDTIMEINSPCANNOTGREATERTHAN99HOURS' | translate }}
+        </mat-error>
+      </p>
+
+      <label class="ml-05 mb-0 mt-1"><b class="f-15p"
+          *ngIf="!isSprintUserStories">{{'USERDETAIL.STARTDATE' | translate | softLabelsPipe : softLabels}}</b></label>
+      <p class="ml-05 mb-0">
+        <mat-form-field class="full-width" *ngIf="isDateTimeConfiguration && !isSprintUserStories">
+          <input matInput [min]="onboardProcessDate" [(ngModel)]="startDate" (dateTimeChange)="changeStartDate()"
+            [owlDateTimeTrigger]="startDatePicker" [owlDateTime]="startDatePicker"
+            [disabled]="(isUserStoriesPage && isPermissionForDeadlineDate) || !isUserStoriesPage || isReplanGoalStatusId"
+            placeholder="{{ 'GOALS.STARTDATE' | translate | softLabelsPipe : softLabels}}">
+          <fa-icon icon="calendar" [owlDateTimeTrigger]="startDatePicker" style="float:right;position:absolute;right:0">
+          </fa-icon>
+          <owl-date-time #startDatePicker></owl-date-time>
+        </mat-form-field>
+        <mat-form-field class="full-width" *ngIf="!isDateTimeConfiguration && !isSprintUserStories">
+          <input matInput [min]="onboardProcessDate" [(ngModel)]="startDate" matInput [matDatepicker]="startDatePicker1"
+            (click)="startDatePicker1.open()"
+            placeholder="{{ 'GOALS.STARTDATE' | translate | softLabelsPipe : softLabels}}"
+            [disabled]="(isUserStoriesPage && isPermissionForDeadlineDate) || !isUserStoriesPage || isReplanGoalStatusId"
+            (dateChange)="changeStartDate()" />
+          <mat-datepicker-toggle matSuffix [for]="startDatePicker1"></mat-datepicker-toggle>
+          <mat-datepicker #startDatePicker1></mat-datepicker>
+        </mat-form-field>
+      </p>
+
+      <label class="ml-05 mb-0 mt-1"><b class="f-15p"
+          *ngIf="!isSprintUserStories">{{'USERSTORYUNIQUE.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}</b></label>
+      <p class="ml-05 mb-0">
+        <mat-form-field class="full-width" *ngIf="isDateTimeConfiguration && !isSprintUserStories">
+          <!-- <input matInput [min]="onboardProcessDate" [(ngModel)]="deadLineDate" [matDatetimepicker]="picker2" required
+            autocomplete="false" placeholder="{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}"
+            [disabled]="(isUserStoriesPage && isPermissionForDeadlineDate) || !isUserStoriesPage || isReplanGoalStatusId"
+            (dateChange)="changeDeadline()" (click)="picker2.open()">
+          <mat-datetimepicker-toggle [for]="picker2" matSuffix></mat-datetimepicker-toggle>
+          <mat-datetimepicker #picker2 type="datetime"></mat-datetimepicker> -->
+          <input matInput [min]="onboardProcessDate" [(ngModel)]="deadLineDate" (dateTimeChange)="changeDeadline()"
+            [owlDateTimeTrigger]="deadlineDatePicker" [owlDateTime]="deadlineDatePicker"
+            [disabled]="(isUserStoriesPage && isPermissionForDeadlineDate) || !isUserStoriesPage || isReplanGoalStatusId"
+            placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+          <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker"
+            style="float:right;position:absolute;right:0"></fa-icon>
+          <owl-date-time #deadlineDatePicker></owl-date-time>
+        </mat-form-field>
+        <mat-form-field class="full-width" *ngIf="!isDateTimeConfiguration && !isSprintUserStories">
+          <input matInput [min]="onboardProcessDate" [(ngModel)]="deadLineDate" matInput [matDatepicker]="picker"
+            (click)="picker.open()" placeholder="{{ 'USERSTORY.DEADLINE' | translate | softLabelsPipe : softLabels}}"
+            [disabled]="(isUserStoriesPage && isPermissionForDeadlineDate) || !isUserStoriesPage || isReplanGoalStatusId"
+            (dateChange)="changeDeadline()" />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </p>
+
+      <label class="ml-05 mb-0 mt-1"><b class="f-15p"
+          *ngIf="(isSuperagileBoard || (isKanbanBoard && !isSuperagileBoard)) && showSectionsDropDown && userStoryDetails?.isEnableTestRepo">{{'TESTMANAGEMENT.SECTION'  | translate}}</b></label>
+      <div fxLayout="row wrap" class="mt-05"
+        *ngIf="(isSuperagileBoard || (isKanbanBoard && !isSuperagileBoard)) && showSectionsDropDown && userStoryDetails?.isEnableTestRepo">
+        <div fxFlex>
+          <ng-select [searchable]="true" class="custom-ng-select-template" [disabled]="!isPermissionForSection"
+            placeholder="{{ 'TESTMANAGEMENT.SECTION' | translate }}" (change)="updateSection($event)"
+            [(ngModel)]="sectionId" [clearable]="true">
+            <ng-option *ngFor="let section of (sectionsList$ | async)" [value]="section.id">
+              {{ section.value }}
+            </ng-option>
+          </ng-select>
+        </div>
+        <div class="custom-unique-add-icon pt-2" fxFlex="20px"
+          *ngIf="userStoryDetails?.isEnableTestRepo && isPermissionForSection">
+          <fa-icon icon="plus" aria-hidden="false" aria-label="add"
+            matTooltip="{{'TESTMANAGEMENT.ADDSECTION' | translate}}" class="icon-style icon-button"
+            [satPopoverAnchorFor]="addSection" #addSectionPopover="satPopoverAnchor"
+            (click)="openSectionPopover(addSectionPopover)">
+          </fa-icon>
+        </div>
+      </div>
+
+      <mat-checkbox *ngIf="notFromAudits" [(ngModel)]="isRecurringWorkItem"
+        (change)="recurringWorkItem(addCronExpressionPopUp)" [satPopoverAnchorFor]="addCronExpressionPopovers"
+        #addCronExpressionPopUp="satPopoverAnchor">
+        {{'USERSTORY.RECURRINGWORKITEM' | translate}}</mat-checkbox>
+      <div>
+        <span *ngIf="isRecurringWorkItem && cronExpressionDescription && notFromAudits" class="pl-05"><b>(
+            {{cronExpressionDescription}} )</b>
+        </span>
+        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent pl-05"
+          [satPopoverAnchorFor]="addCronExpressionPopovers" #addCronExpressionPopUp="satPopoverAnchor"
+          *ngIf="isRecurringWorkItem && cronExpressionDescription && notFromAudits"
+          (click)="editCronExpressionPopup(addCronExpressionPopUp)">
+        </fa-icon>
+      </div>
+
+      <label class="ml-05 mb-0 mt-1" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits"><b
+          class="f-15p">{{'USERSTORYUNIQUE.COMPONENT' | translate}}</b></label>
+      <ng-select [searchable]="false" [clearable]="true" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits"
+        [(ngModel)]="projectFeatureId" placeholder="{{'USERSTORY.SELECTCOMPONENT'|translate}}"
+        (change)="updateProjectFeature($event)"
+        [disabled]="(isUserStoriesPage && !isPermissionForProjectFeature) || !isUserStoriesPage">
+        <ng-option [value]="feature.projectFeatureId" *ngFor="let feature of (projectFeatures$ | async)">
+          {{ feature.projectFeatureName }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits"><b
+          class="f-15p">{{'USERSTORYUNIQUE.BUGCAUSEDUSER' | translate}}</b></label>
+      <ng-select [searchable]="false" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits"
+        placeholder="{{'USERDETAIL.SELECTBUGCAUSEDUSER'|translate}}" (change)="updateBugCausedPerson($event)"
+        [(ngModel)]="bugCausedUserId" [clearable]="true"
+        [disabled]="(isUserStoriesPage && !isPermissionForBugCausedUser)|| !isUserStoriesPage">
+        <ng-option *ngFor="let person of (projectMembers$ | async)" [value]="person.projectMember.id">
+          {{ person.projectMember.name }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1"
+        *ngIf="((!isSuperagileBoard && !isKanbanBoard && !isSprintUserStories) || (!isSuperagileBoard && !isKanbanBoard && isSprintUserStories)) && notFromAudits"><b
+          class="f-15p">{{'USERSTORYUNIQUE.BUGPRIORITY' | translate}}</b></label>
+      <ng-select [searchable]="false" [clearable]="true"
+        *ngIf="((!isSuperagileBoard && !isKanbanBoard && !isSprintUserStories) || (!isSuperagileBoard && !isKanbanBoard && isSprintUserStories)) && notFromAudits"
+        [(ngModel)]="bugPriorityId" placeholder="{{'GOALS.SELECTBUGPRIORITY'|translate}}"
+        (change)="updateBugPrioity($event)"
+        [disabled]="((isUserStoriesPage && !isPermissionForBugPriority)) || !isUserStoriesPage">
+        <ng-option [value]="priority.bugPriorityId" *ngFor="let priority of (bugPriorities$ | async)">
+          {{ priority.priorityName }} - {{ priority.description }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1"
+        *ngIf="(isSprintUserStories && (isSuperagileBoard || isKanbanBoard)) || !notFromAudits"><b
+          class="f-15p">{{'GOALS.PRIORITY' | translate}}</b></label>
+      <ng-select [searchable]="false" [clearable]="true"
+        *ngIf="(isSprintUserStories && (isSuperagileBoard || isKanbanBoard)) || !notFromAudits"
+        [(ngModel)]="bugPriorityId" placeholder="{{'GOALS.PRIORITY'|translate}}" (change)="updateBugPrioity($event)">
+        <ng-option [value]="priority.bugPriorityId" *ngFor="let priority of (bugPriorities$ | async)">
+          {{ priority.description }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mb-0 mt-1" *ngIf="!notFromAudits"><b
+          class="f-15p">{{'AUDIT.ACTIONCATEGORY' | translate}}</b></label>
+      <ng-select [searchable]="false" [clearable]="true" *ngIf="!notFromAudits" [(ngModel)]="actionCategoryId"
+        placeholder="{{'AUDIT.ACTIONCATEGORY'|translate}}" (change)="updateActionCategory($event)">
+        <ng-option [value]="category.actionCategoryId" *ngFor="let category of actionCategories">
+          {{ category.actionCategoryName }}
+        </ng-option>
+      </ng-select>
+
+      <label class="ml-05 mt-1 mb-0" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits"><b
+          class="f-15p">{{'USERSTORYUNIQUE.VERSIONNAME' | translate}}</b></label>
+      <mat-form-field class="ml-05 full-width" *ngIf="!isSuperagileBoard && !isKanbanBoard && notFromAudits">
+        <input matInput placeholder="{{'USERSTORY.VERSIONNAME'|translate}}" [(ngModel)]="versionName"
+          (blur)="updateVersionName()" [disabled]="!isPermissionForVersionName" />
+      </mat-form-field>
+      <mat-error class="ml-05 mt-0" *ngIf="validationForVersionName">
+        <span> {{ 'USERSTORY.VERSIONAMEMAXLENGTH' | translate }} </span>
+      </mat-error>
+
+      <label class="ml-05 mt-1 mb-0" *ngIf="userStoryInputTags.length > 0"><b>
+          {{'USERSTORY.TAGS' | translate}}
+        </b></label><br />
+      <div class="tags-details-popup">
+        <div *ngFor="let tag of userStoryInputTags" class="tag-unque-display mt-08">
+          <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag }}"
+            matTooltipClass="tooltip-overflow">
+            {{tag}}
+          </span>
+        </div>
+      </div>
+      <!-- </mat-card> -->
+    </div>
+  </div>
+
+
+  <app-common-message-box
+    *ngIf="(!isPermissionForViewUserStories || !accessViewProjects || !isProjectRole) && notFromAudits || !userStoryDetails"
+    textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</mat-card>
+<!-- archive userstory popover start -->
+<sat-popover #archiveUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+  backdropClass="backdrop-color">
+  <mat-card class="filter-data m-1">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mb-1">{{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <app-pm-component-archive-userStory [userStory]="userStoryDetails" [isSubTaskPage]="false"
+      [userstoryUniquePage]="userstoryUniquePage" [isEditFromProjects]="true"
+      [isSprintUserStories]="isSprintUserStories"
+      (closePopup)="closeArchivePopUp($event); archiveUserstoryPopover.close();"
+      (submitclosePopup)="submitclosePopup($event);">
+    </app-pm-component-archive-userStory>
+  </mat-card>
+</sat-popover>
+<!-- archive userstory popover end -->
+
+<!-- park user story popover start -->
+<sat-popover #parkUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+  backdropClass="backdrop-color">
+  <mat-card class="filter-data m-1">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mb-1">{{ 'USERSTORY.PARKUSERSTORY' | translate | softLabelsPipe : softLabels}}</div>
+    </mat-card-title>
+    <app-pm-component-park-userStory [userStory]="userStoryDetails" [isSubTaskPage]="false"
+      [isSprintUserStories]="isSprintUserStories" [userstoryUniquePage]="userstoryUniquePage"
+      [isEditFromProjects]="true" (closePopup)="closeParkPopUp($event); parkUserstoryPopover.close();"
+      (submitclosePopup)="submitclosePopup($event);">
+    </app-pm-component-park-userStory>
+  </mat-card>
+</sat-popover>
+
+<!-- edit user story popover start -->
+<sat-popover #editUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+  backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0 m-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">
+        {{ 'USERSTORY.EDITUSERSTORYNAME' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <mat-form-field class="full-width mb-0">
+        <input matInput placeholder="{{ 'USERSTORYUNIQUE.USERSTORYTITLE' | translate | softLabelsPipe : softLabels}}"
+          [(ngModel)]="userStoryNameDuplicate" />
+      </mat-form-field>
+      <mat-error *ngIf="userStoryNameDuplicate && (userStoryNameDuplicate.length > 800)">
+        {{'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS'|translate | softLabelsPipe : softLabels}}</mat-error>
+      <div class="text-center p-05">
+        <button class="mr-1 ml-1" mat-button mat-raised-button color="primary"
+          (click)="updateUserStoryName(); editUserstoryPopover.close(); editUserStoryMenuPopover.close();"
+          [disabled]="(anyOperationInProgress$ | async) || (userStoryNameDuplicate && (userStoryNameDuplicate.length > 800))">
+
+          <fa-icon class="mr-05" icon="check"></fa-icon>{{ 'SAVE' | translate }}
+        </button>
+
+        <button class="mr-1" mat-button mat-raised-button (click)="editUserstoryPopover.close();"
+          [disabled]="(anyOperationInProgress$ | async)">
+          <fa-icon class="mr-05" icon="times"></fa-icon>{{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #projectMemberPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+  scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <app-pm-component-add-projectmember *ngIf="loadprojectMember" [projectId]="userStoryDetails.projectId"
+      [clearProjectForm]="clearProjectMemberForm" (closePopup)="closeProjectMemberDialog()"
+      (getProjectMembersCount)="getProjectMembersCount()">
+    </app-pm-component-add-projectmember>
+  </mat-card>
+</sat-popover>
+
+
+
+<sat-popover #userstoryTagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="start" backdropClass="backdrop-color">
+
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog($event);userstoryTagsPopover.close()">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-1 mat-bg-primary">
+          {{'USERSTORY.ADDTAGS' | translate}}
+        </div>
+      </mat-card-title>
+      <app-pm-component-tags *ngIf="isTagsPopUp" [userStoryId]="userStoryDetails.userStoryId" [goalId]=null
+        [isSprintUserStories]="isSprintUserStories" [isUniquePage]="isFromRouteParams"
+        (closeTagsPopUp)="closeTagsDialog($event);userstoryTagsPopover.close()" (emitUserStoryTags)="reloadUserStory()">
+      </app-pm-component-tags>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #createSubTaskPopover verticalAlign="below" horizontalAlign="end" [interactiveClose]="false"
+  backdropClass="backdrop-color" hasBackdrop>
+  <mat-card class="filter-data p-0">
+    <app-pm-component-create-userstory-subtask *ngIf="isCreateSubTask" [userStory]="userStoryDetails"
+      [isUniquePage]=true (closeDetailComponent)="closeUserStoryDetailWindow()"
+      [isSprintUserStories]="isSprintUserStories">
+    </app-pm-component-create-userstory-subtask>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #addCronExpressionPopovers verticalAlign="below" hasBackdrop horizontalAlign="center"
+  verticalAlign="center" backdropClass="backdrop-color" [interactiveClose]="false">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">Schedule</div>
+    </mat-card-title>
+    <div id="style-1" class="goal-create-height">
+      <div fxLayout="row" fxLayoutAlign="center center" class="full-width p-1">
+        <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions">
+        </cron-editor>
+      </div>
+      <div class="ml-1">
+        <div fxLayout="row"><span><b>{{'USERSTORY.ENDS' | translate}}</b></span></div>
+        <mat-radio-group [formControl]="scheduleType" aria-label="Ends" class="p-1">
+          <mat-radio-button class="p-1" *ngFor="let type of schedulingEnds" [value]="type.code"
+            (change)="onEndTypeChanged($event)">
+            <div fxLayout="row">{{type.endType}}</div>
+          </mat-radio-button>
+        </mat-radio-group>
+        <mat-form-field class="pr-1" (click)="$event.stopPropagation();" *ngIf="selectedSchedulingType == '2'">
+          <input [formControl]="endDate" matInput [matDatepicker]="picker" [min]="minDate" placeholder="End date"
+            (click)="picker.open()" required>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center center">
+          <span *ngIf="isPaused">{{'USERSTORY.RESUME' | translate}}</span>
+          <span *ngIf="!isPaused">{{'USERSTORY.PAUSE' | translate}}</span>
+          <mat-slide-toggle
+            [matTooltip]="isPaused == true ? ('USERSTORY.SWITCHTORESUME' | translate) : ('USERSTORY.SWITCHTOPAUSE' | translate)"
+            class="archive-switch" [(ngModel)]="isPaused" [checked]="isPaused">
+          </mat-slide-toggle>
+        </div>
+      </div>
+    </div>
+    <div class="mb-1 mt-1 text-center">
+      <button mat-raised-button color="primary" class="mr-1" (click)="upsertCronExpression(false)">
+        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+      </button>
+      <button mat-button mat-raised-button (click)="cancelCronExpressionPopUp()" type="button">
+        <fa-icon class="mr-05" icon="times"></fa-icon>
+        {{ 'CANCEL' | translate }}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+
+<!--------add Section dialog------>
+<sat-popover #addSection hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'TESTMANAGEMENT.ADDSECTION' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <!-- <testsuite-section-edit *ngIf="loadSection" [testSuiteId]="testSuiteId" [editingSection]="sectionEdit"
+        (closeSection)="closeSectionPopover()">
+      </testsuite-section-edit> -->
+      <ndc-dynamic *ngIf="loadSection" [ndcDynamicFactory]="testSuitSectionEdit.component"
+        [ndcDynamicComponent]="testSuitSectionEdit.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testSuitSectionEdit.inputs" [ndcDynamicOutputs]="testSuitSectionEdit.outputs">
+      </ndc-dynamic>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--------add Section dialog------>
+
+<div
+  *ngIf="userStoryDetails && (userStoryDetails.userStoryParkedDateTime || userStoryDetails.userStoryArchivedDateTime)">
+  <p *ngIf="redirect404();">
+  </p>
+</div>
+<!-- <div
+  *ngIf="(isPermissionForViewUserStories) && (userStoryDetails.length<0 || userStoryDetails==null || userStoryDetails==[])">
+  <mat-spinner [style.margin]="'auto'"></mat-spinner>
+</div> -->

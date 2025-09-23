@@ -1,0 +1,127 @@
+<div class="loader text-center" *ngIf="!isFormLoaded"></div>
+
+<div mat-dialog-content class="project-dialogContent" id="style-1" *ngIf="isFormLoaded">
+    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+        <div fxFlex="20" fxFlex.lt-md="100">
+            <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'Form type' | translate }}" [(ngModel)]="selectedFormType"
+                    [formControl]="selectedType" required>
+                    <mat-option *ngFor="let type of formTypes" [value]="type.id">
+                        {{type.formTypeName}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="selectedType.hasError('required')">
+                    {{ 'Please select the form type' | translate }}</mat-error>
+            </mat-form-field>
+        </div>
+        <div fxFlex="35px" *ngIf="!moduleId">
+            <button class="mt-02" mat-icon-button matTooltip="{{ 'Create form type' | translate }}"
+                (click)="createFormType()">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+            </button>
+        </div>
+        <div fxFlex="20" fxFlex.lt-md="100">
+            <mat-form-field class="full-width">
+                <input matInput [formControl]="nameFormControl" type="text" placeholder="{{ 'Form name' | translate }}"
+                    [(ngModel)]="formName" required>
+                <mat-error *ngIf="nameFormControl.hasError('required')">
+                    {{ 'Please fill the form name' | translate }}
+                </mat-error>
+                <mat-error *ngIf="nameFormControl.hasError('maxlength')">
+                    {{ 'Form name should not exceed 100 characters' | translate }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <div fxFlex="20" fxFlex.lt-md="100">
+            <mat-form-field class="full-width status-color mb-05">
+                <input [(ngModel)]="formBgColor" matInput placeholder="choose color" [(colorPicker)]="color"
+                    [cpPosition]="'bottom'" [style.background]="color" (colorPickerClose)="onChangeColor($event)"
+                    [value]="color" />
+            </mat-form-field>
+        </div>
+        <div fxFlex="25" fxFlex.lt-md="100">
+            <mat-form-field class="full-width">
+                <input matInput [formControl]="workflowTriggerField" type="text"
+                    placeholder="{{ 'Workflow trigger' | translate }}" [(ngModel)]="workflowTrigger">
+            </mat-form-field>
+        </div>
+        <div fxFlex fxFlex.lt-md="100">
+            <mat-checkbox mat-primary [formControl]="isAbleToLogin" required [(ngModel)]="isAbleToLoginField">
+                {{ 'Can able to login' | translate }}
+            </mat-checkbox>
+            <mat-checkbox mat-primary [formControl]="allowAnnonymous">
+                Can allow annonymous
+            </mat-checkbox>
+        </div>
+        <div fxFlex="33.33" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+                <mat-select placeholder="Select view roles" [formControl]="viewFormRoleIds"
+                    multiple [compareWith]="compareSelectedRoles" required>
+                    <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                        Select all
+                    </mat-option>
+                    <mat-option *ngFor="let role of rolesList" (click)="toggleUserPerOne()" [value]="role.roleId">
+                        {{role.roleName}}
+                    </mat-option>
+                </mat-select>
+                <mat-error>
+                    <span
+                        *ngIf="viewFormRoleIds.hasError('required') && viewFormRoleIds.touched">
+                        Select atleast one role</span>
+                    <span
+                        *ngIf="viewFormRoleIds.hasError('required') && viewFormRoleIds.untouched">
+                        Select atleast one role</span>
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <div fxFlex="33.33">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                <mat-select placeholder="Select edit roles" [formControl]="editFormRoleIds"
+                    multiple [compareWith]="compareSelectedRoles" required>
+                    <mat-option #allEditSelected (click)="toggleAllEditRolesSelected()" [value]="0">
+                        Select all
+                    </mat-option>
+                    <mat-option *ngFor="let role of rolesList" (click)="toggleEditUserPerOne()" [value]="role.roleId">
+                        {{role.roleName}}
+                    </mat-option>
+                </mat-select>
+                <mat-error>
+                    <span
+                        *ngIf="editFormRoleIds.hasError('required') && editFormRoleIds.touched">
+                        Select atleast one role</span>
+                    <span
+                        *ngIf="editFormRoleIds.hasError('required') && editFormRoleIds.untouched">
+                        Select atleast one role</span>
+                </mat-error>
+            </mat-form-field>
+        </div>
+    </div>
+
+    <div id="style-1" class="form-builder-height full-height" style="verflow-x: hidden;"
+        [ngStyle]="{'background-color': formBgColor}">
+        <!-- <input type="color" name="colorPicker" id="color" #colorPicker (change)="onChangeColor(colorPicker)"> -->
+        <form-builder #formio id="form-builder" [form]="form" [options]="options"
+            (change)="onChange($event)"></form-builder>
+    </div>
+    <button *ngIf="isFormEdit==false" mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+        [disabled]="checkDisable()" (click)="createAGenericForm()">
+        <!-- <fa-icon class="mr-05" icon="save"></fa-icon> -->
+        {{ 'Save form' | translate }}
+    </button>
+    <button *ngIf="isFormEdit==true" mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+        [disabled]="checkDisable()" (click)="createAGenericForm()">
+        <!-- <fa-icon class="mr-05" icon="sync"></fa-icon> -->
+        {{ 'Update form' | translate }}
+    </button>
+
+    <div *ngIf="render">
+        <formio [form]="basicForm"></formio>
+    </div>
+</div>
+
+
+
+<ng-template #formTypeDialogComponent let-data>
+    <app-add-form-type-component [data]=[data]></app-add-form-type-component>
+</ng-template>

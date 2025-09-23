@@ -1,0 +1,173 @@
+<div *ngIf="(canAccess_feature_PayrollTemplateConfiguration)" >
+  <mat-card-content class="mb-0">
+    <form [formGroup]="payRollTemplateconfigurationForm" novalidate (submit)="payRollTemplateconfigurationForm.valid && addPayRollTemplateConfiguration()">
+        <div class="card-content data-table-header">
+          <button class="text-center" (click)="showFilters()"  type="button"
+          matTooltip="{{'ASSETS.CLICKHERETOFILTERASSETS' | translate}}" mat-icon-button>
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isFiltersVisible ,'mat-color-accent': isFiltersVisible }">
+          </fa-icon>
+        </button>
+            <mat-form-field (click)="$event.stopPropagation();" class="ml-05 search_goalinput">
+                <mat-select formControlName="payRollComponentIds" 
+                    placeholder="{{ 'USERSTORY.SELECTCOMPONENT' | translate }}" multiple required>
+                    <mat-option #allSelected (click)="toggleAllComponentsSelected()" [value]="0">
+                        {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                    <mat-option [value]="component.payRollComponentId" *ngFor="let component of payRollComponents" #allSelected
+                        (click)="toggleComponentsPerOne(allSelected.value)">
+                        {{ component.componentName }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <button class="ml-1" mat-button mat-raised-button color="primary" type="button"
+            (click)="addPayRollTemplateConfiguration()" [disabled]="!payRollTemplateconfigurationForm.valid || isAnyOperationIsInprogress">
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'ADD' | translate }}
+           </button>
+        </div>
+    </form>
+</mat-card-content >
+
+<div class="activity-data payroll-table no-drag mb-05">
+  <kendo-grid id="payRollTemplateConfigurationsGrid" 
+  [data]="gridData"
+  [data]="gridData" 
+  [filterable]="isFiltersVisible"
+  [filter]="state.filter"  
+  (edit)="editHandler($event)" 
+  (cancel)="cancelHandler($event)"
+  (save)="saveHandler($event)" 
+  (remove)="removeHandler($event)"
+  [sortable]="true"
+  [sort]="state.sort"
+  (dataStateChange)="dataStateChange($event)"
+ >
+  <ng-template kendoGridNoRecordsTemplate>
+    {{ 'PAYROLLTEMPLATECONFIGURATION.NORECORDSAVAILABLE' | translate }}
+  </ng-template>
+  <kendo-grid-column field="payRollComponentName" title="{{ 'PAYROLLTEMPLATECONFIGURATION.PAYROLLCOMPONENTNAME' | translate }}"></kendo-grid-column>
+  <kendo-grid-column field="dependentType" title="{{ 'PAYROLLTEMPLATECONFIGURATION.DEPENDENTTYPE' | translate }}" >
+    <ng-template kendoGridCellTemplate let-dataItem="dataItem">
+      <span *ngIf="dataItem.dependentType == 0">{{ 'PAYROLLTEMPLATECONFIGURATION.COMPONENTNAME' | translate }} </span>
+      <span *ngIf="dataItem.dependentType == 1">{{ 'PAYROLLTEMPLATECONFIGURATION.ISCTCDEPENDENT' | translate }} </span>
+      <span *ngIf="dataItem.dependentType == 2">{{ 'PAYROLLTEMPLATECONFIGURATION.ISRELATEDTOPT' | translate }} </span>
+      <span *ngIf="dataItem.dependentType == 3">{{ 'PAYROLLTEMPLATECONFIGURATION.DEPENDENTONPAYROLLCOMPONENTNAME' | translate }}</span>
+    </ng-template>
+    <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+      <mat-select placeholder="dependent type" [(ngModel)]="dataItem.dependentType" (selectionChange)="changeDependentType($event.value,dataItem)">
+        <mat-option [value]="0">
+          {{ 'PAYROLLTEMPLATECONFIGURATION.COMPONENTNAME' | translate }}
+        </mat-option>
+        <mat-option [value]="1">
+          {{ 'PAYROLLTEMPLATECONFIGURATION.ISCTCDEPENDENT' | translate }}
+       </mat-option>
+       <mat-option [value]="2" *ngIf="dataItem.isDeduction && dataItem.relatedToContributionPercentage != true">
+          {{ 'PAYROLLTEMPLATECONFIGURATION.ISRELATEDTOPT' | translate }}
+       </mat-option>
+       <mat-option [value]="3">
+        {{ 'PAYROLLTEMPLATECONFIGURATION.DEPENDENTONPAYROLLCOMPONENTNAME' | translate }}
+     </mat-option>
+    </mat-select>
+    </ng-template>
+  </kendo-grid-column>
+  <kendo-grid-column field="componentName" editor="numeric" title="{{ 'PAYROLLTEMPLATECONFIGURATION.COMPONENTNAME' | translate }}">
+   <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+      <mat-select (selectionChange)="changeComponent($event.value,dataItem)" [(ngModel)]="dataItem.componentId" 
+      placeholder="{{'PAYROLLTEMPLATECONFIGURATION.COMPONENTNAME' | translate}}"  *ngIf="dataItem.dependentType == 0">
+      <mat-option [value]="component.componentId" *ngFor="let component of components">
+          {{component.componentName}}
+      </mat-option>
+    </mat-select>
+  </ng-template>
+  </kendo-grid-column>
+  <kendo-grid-column field="dependentPayRollComponentName" title="{{ 'PAYROLLTEMPLATECONFIGURATION.DEPENDENTPAYROLLCOMPONENTNAME' | translate }}">
+    <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+       <mat-select [(ngModel)]="dataItem.dependentPayRollComponentId" 
+       placeholder="{{'PAYROLLTEMPLATECONFIGURATION.DEPENDENTPAYROLLCOMPONENTNAME' | translate}}"  *ngIf="dataItem.dependentType == 3">
+       <mat-option [value]="payrollcomponent.payRollComponentId" 
+       *ngFor="let payrollcomponent of filterComponents(dataItem.payRollComponentId)" >
+           {{payrollcomponent.payRollComponentName}}
+       </mat-option>
+     </mat-select>
+   </ng-template>
+   </kendo-grid-column> 
+   <kendo-grid-column field="type" title="{{ 'PAYROLLTEMPLATECONFIGURATION.TYPE' | translate }}" >
+    <ng-template kendoGridCellTemplate let-dataItem="dataItem">
+      <span *ngIf="dataItem.type == 0">{{ 'PAYROLLTEMPLATECONFIGURATION.AMOUNT' | translate }} </span>
+      <span *ngIf="dataItem.type == 1">{{ 'PAYROLLTEMPLATECONFIGURATION.PERCENTAGE' | translate }} </span>
+    </ng-template>
+      <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+        <mat-select [disabled]="dataItem.relatedToContributionPercentage == true" *ngIf="dataItem.dependentType != 2" placeholder="{{'PAYROLLTEMPLATECONFIGURATION.SELECTTYPE'| translate }}" [(ngModel)]="dataItem.type" (selectionChange)="changeType($event.value,dataItem)">
+          <mat-option [value]="0" *ngIf="dataItem.dependentType != 3">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.AMOUNT' | translate }} 
+          </mat-option>
+          <mat-option [value]="1">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.PERCENTAGE' | translate }} 
+         </mat-option>
+        </mat-select>
+      </ng-template>
+  </kendo-grid-column>
+  <kendo-grid-column field="value" editor="number" title="{{ 'COMPANYSETTINGS.VALUE' | translate }}">
+   <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+    <mat-form-field ngClass.xs="full-width" *ngIf="dataItem.dependentType != 2">
+      <input [disabled]="dataItem.relatedToContributionPercentage == true" class="search_goal" matInput type="number" [(ngModel)]="dataItem.value" kendoGridFocusable name="value"/>
+    </mat-form-field>
+  </ng-template>
+  </kendo-grid-column>
+  <kendo-grid-column field="order" editor="number" title="{{ 'BUGPRIORITY.ORDER' | translate }}">
+    <ng-template kendoGridEditTemplate let-dataItem="dataItem">
+     <mat-form-field ngClass.xs="full-width">
+       <input class="search_goal" matInput type="number" [(ngModel)]="dataItem.order" kendoGridFocusable name="value"/>
+     </mat-form-field>
+   </ng-template>
+   </kendo-grid-column>
+  <kendo-grid-command-column  title="{{'ACTIONS'|translate}}" width="220">
+    <ng-template kendoGridCellTemplate let-isNew="isNew">
+        <button title="{{ 'EDIT' | translate }}" class="text-center" kendoGridEditCommand type="button" mat-icon-button><fa-icon style="cursor: pointer;" class="mat-color-accent" icon="edit"></fa-icon></button>
+        <button title="{{ 'DELETE' | translate }}" class="text-center" kendoGridRemoveCommand type="button" mat-icon-button><fa-icon style="cursor: pointer;" class="mat-color-accent" icon="trash"></fa-icon></button>
+        <button title="{{ 'SAVE' | translate }}" class="text-center" kendoGridSaveCommand type="button" mat-icon-button><fa-icon style="cursor: pointer;"class="mat-color-accent" icon="save"></fa-icon></button>
+        <button title="{{ 'CANCEL' | translate }}" class="text-center" kendoGridCancelCommand type="button" mat-icon-button><fa-icon style="cursor: pointer;" class="mat-color-accent" icon="times"></fa-icon></button>
+    </ng-template>
+</kendo-grid-command-column>
+</kendo-grid>
+      <!--Delete PAYROLLTEMPLATECONFIGURATION dialog-->
+      <sat-popover backdropClass="backdrop-color" #deletePayRollTemplateConfigurationPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="isArchived">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.ARCHIVEPAYROLLTEMPLATECONFIGURATIONTITLE' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="!isArchived">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.UNARCHIVEPAYROLLTEMPLATECONFIGURATIONTITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="isArchived">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.ARCHIVEPAYROLLTEMPLATECONFIGURATIONTEXT' | translate }}
+          </div>
+          <div class="card-content mb-1" *ngIf="!isArchived">
+            {{ 'PAYROLLTEMPLATECONFIGURATION.UNARCHIVEPAYROLLTEMPLATECONFIGURATIONTEXT' | translate }}
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center mb-1">
+            <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePayRollTemplateConfigurationDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete PAYROLLTEMPLATECONFIGURATION dialog-->
+</div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_PayrollTemplateConfiguration)"
+textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+<div *ngIf="(roleFeaturesIsInProgress$|async)">
+  Loading...
+</div>

@@ -1,0 +1,67 @@
+<mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+            <span *ngIf="isBugDialog">
+                {{'FEEDBACKS.SUBMITABUG' | translate}}
+            </span>
+            <span *ngIf="isFeatureDialog">
+                {{'FEEDBACKS.REQUESTAFEATURE' | translate}}
+            </span>
+        </div>
+    </mat-card-title>
+    <form [formGroup]="submitBugForm" #formDirective="ngForm" novalidate
+        (submit)="submitBugForm.valid && submitBugFeedback()">
+        <div class="card-content p-05">
+            <mat-form-field class="full-width">
+                <input formControlName="userStoryName" matInput placeholder="{{ 'FEEDBACKS.TITLE' | translate }}" trim
+                    required />
+                <mat-error>
+                    <span *ngIf="isBugDialog && 
+                            submitBugForm.get('userStoryName').hasError('required') &&
+                            submitBugForm.get('userStoryName').touched
+                                    ">{{ 'FEEDBACKS.PLEASEENTERBUGTITLE' | translate }}</span>
+                    <span *ngIf="isBugDialog && submitBugForm.get('userStoryName').hasError('maxlength')">
+                        {{ 'FEEDBACKS.BUGTITLECANNOTEXCEED800CHARACTERS' | translate }} </span>
+                    <span *ngIf="isFeatureDialog && 
+                                submitBugForm.get('userStoryName').hasError('required') &&
+                                submitBugForm.get('userStoryName').touched
+                                        ">{{ 'FEEDBACKS.PLEASEENTERFEATURENAME' | translate }}</span>
+                    <span *ngIf="isFeatureDialog && submitBugForm.get('userStoryName').hasError('maxlength')">
+                        {{ 'FEEDBACKS.FEATURENAMECANNOTEXCEED800CHARACTERS' | translate }} </span>
+                </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <textarea formControlName="description" matInput placeholder="{{ 'FEEDBACKS.DESCRIPTION' | translate }}"
+                    trim required></textarea>
+                <mat-error>
+                    <span *ngIf="
+                            submitBugForm.get('description').hasError('required') &&
+                            submitBugForm.get('description').touched
+                              ">{{ 'FEEDBACKS.PLEASEENTERDESCRIPTION' | translate }}</span>
+                </mat-error>
+            </mat-form-field>
+            <div class="custom-hrm-dropzone">
+                <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" *ngIf="isToUploadDropzone"
+                    [referenceId]="userStoryId" [isFromFeedback]="true" [selectedParentFolderId]="userStoryId"
+                    [selectedStoreId]="selectedStoreId" [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true"
+                    (closeFilePopup)="closeDialog(true)" (isFilesExist)="isFileExists($event)"
+                    [isToUploadFiles]="isToUploadFiles"></app-dropzone>
+            </div>
+            <br />
+            <div class="text-center mt-05">
+                <button mat-raised-button color="primary" class="mr-05" type="submit"
+                    [disabled]="!submitBugForm.valid || ((anyOperationInProgress$|async))">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="(anyOperationInProgress$|async)">
+                    </mat-progress-bar>
+                    <fa-icon icon="paper-plane" class="mr-05"></fa-icon>{{ 'FEEDBACKS.SUBMIT' | translate  }}
+                </button>
+                <button mat-raised-button (click)="closeDialog(false); (false)"
+                    [disabled]="(anyOperationInProgress$|async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'DISMISS' | translate }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+</mat-card>

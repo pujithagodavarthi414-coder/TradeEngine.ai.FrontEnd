@@ -1,0 +1,228 @@
+<div id="snovasys-callog">
+  <div>
+  <div class="pull-right mb-1" *ngIf="(canCreateRoom || !canJoinRoomOnly) && (!canJoinRoomOnly)">
+    <button mat-button mat-raised-button class="mr-1" color="primary" (click)="openCreteRoom();"
+      *ngIf="!isRoomConnected && canCreateRoom" [satPopoverAnchorFor]="createRoomPopover">
+      <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'CRM.CREATEROOM' | translate }}
+    </button>
+    <button mat-button mat-raised-button class="mr-1" (click)="openJoinRoom();" 
+      *ngIf="!canJoinRoomOnly && !isVideoCallFromPopup" [satPopoverAnchorFor]="joinRoomPopOver">
+      <fa-icon icon="external-link-alt" class="mr-05"> </fa-icon> {{ 'CRM.JOINROOM' | translate }}
+    </button>
+    <button mat-button mat-raised-button class="mr-1" (click)="openJoinRoomOnly();" 
+      *ngIf="!canJoinRoomOnly && isVideoCallFromPopup" [satPopoverAnchorFor]="joinRoomOnlyPopOver">
+      <fa-icon icon="external-link-alt" class="mr-05"> </fa-icon> {{ 'CRM.JOINROOM' | translate }}
+    </button>
+  </div>
+
+  <div class="m-1" *ngIf="canJoinRoomOnly">
+    <div>
+      <h6 class="p-05 m-0 hide-content-overflow">
+        <span style="cursor: pointer;" matTooltip="{{ 'CRM.ROOMNAME' | translate }}">{{ 'CRM.JOINROOM' | translate }} : {{ mobileNumber }}</span></h6>
+    </div>
+    <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+      <div fxFlex="40">
+        <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+          <input matInput [(ngModel)]="joiningParticipantName" placeholder="{{ 'CRM.ENTERNAME' | translate }}" required 
+            (input)="joiningParticipantNameChange()"/>
+        </mat-form-field>
+      </div>
+      <div fxFlex="20">
+        <button mat-raised-button color="primary" class="mr-1 mt-02" [disabled]="!enableJoin || anyOperationInProgress" (click)="joinRoomByName()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="external-link-alt"></fa-icon> {{ 'CRM.JOIN' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- <div *ngIf="isRoomConnected">
+      <div id="localmedia">
+
+      </div>
+    </div> -->
+  <div *ngIf="canViewVideoLog" class="autoOverflow">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationsInprogress">
+    </mat-progress-bar>
+    <div *ngFor="let call of videoCallLogs" class="comment-area p-05">
+      <mat-card-content class="user-comment p-0 ml-5">
+        <div class="ml-15">
+          <div fxLayout="row" fxLayoutGap="5px">
+            <div *ngIf="call.videoRecordingLink">
+              <span class="mb-1" matTooltip="{{ 'CRM.PLAYVIDEO' | translate }}">
+                <fa-icon class="ml-05 mat-color-accent" icon="play" style="cursor: pointer;"
+                  (click)="onVideoPlay(call.videoRecordingLink)"></fa-icon>
+              </span>
+              <!--   
+                <audio controls (onplaying)="onAudioPlay()" controlsList="nodownload">
+                  <source src={{call.videoRecordingLink}} type="video/mp4">
+                  {{ 'COMMENTS.YOURBROWSERDOESNOTSUPPORTVIDEOTAG' | translate }}
+                </audio> -->
+              <!-- <video controls (click)="toggleVideo()" #videoPlayer>
+                  <source src={{call.videoRecordingLink}} type="video/mp4" />
+                  {{ 'COMMENTS.YOURBROWSERDOESNOTSUPPORTVIDEOTAG' | translate }}
+                </video> -->
+            </div>
+          </div>
+          <div fxLayout="row" fxLayoutGap="5px">
+            <div fxFlex fxLayoutAlign="start center" (click)="goToProfile(call.userId)" style="cursor: pointer;">
+              <app-avatar *ngIf="!call.profileImage" [name]="call.userName" [isRound]="true" size="30">
+              </app-avatar>
+              <img class="employee_img" *ngIf="call.profileImage" src="{{call.profileImage}}">
+              &nbsp;&nbsp; {{ call.userName }}
+            </div>
+            <div fxFlex fxLayoutAlign="end center">
+              <span class="pull-right"
+                matTooltip="{{call.createdDateTime | date:'dd-MM-yyyy, h:mm a' }}">{{call.createdDateTime | timeago:
+                'live'}}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </div>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #createRoomPopover verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title>
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          <fa-icon class="mr-05" icon="user"></fa-icon> <b> {{ 'CRM.CREATEROOM' | translate }}</b>
+        </div>
+      </mat-card-title>
+      <!-- <a class="detail_close mt-05" color="warn" (click)="closeCeateRoomPopup()">
+        <fa-icon icon="times"></fa-icon>
+      </a> -->
+      <!-- <div style="height: 300px; overflow: auto;" id="style-1"> -->
+      <mat-card-content class="p-05">
+        <form [formGroup]="createRoomForm" novalidate #createRoomFormDirective="ngForm"
+          (submit)="createRoomForm.valid && createRoom(createRoomFormDirective)">
+          <div class="card-content mobile-view-popover" style="margin-right: -7px !important;" id="style-1">
+            <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="100">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                  <input matInput placeholder="{{ 'CRM.ROOMNAME' | translate }}" formControlName="roomName" required />
+                  <!-- <mat-error
+                    *ngIf="createRoomForm.get('roomName').hasError('required') && createRoomForm.get('roomName').touched">
+                    {{ 'CRM.ROOMNAMEREQUIRED' | translate }}
+                  </mat-error> -->
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mt-05">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!createRoomForm.valid || savingInProgress" type="submit">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeCeateRoomPopup(createRoomFormDirective); (false)" type="button">
+              <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+      <!-- </div> -->
+    </mat-card>
+  </sat-popover>
+  <sat-popover backdropClass="backdrop-color" #joinRoomPopOver verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title>
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          <fa-icon class="mr-05" icon="users"></fa-icon> <b> {{ 'CRM.JOINROOM' | translate }}</b>
+        </div>
+      </mat-card-title>
+      <a class="detail_close mt-02" color="warn" (click)="closeJoiningRoom()">
+        <fa-icon icon="times"></fa-icon>
+      </a>
+      <form [formGroup]="joinRoomForm" novalidate #joinRoomFormDirective="ngForm"
+        (submit)="joinRoomForm.valid && joinRoom(joinRoomFormDirective)">
+        <div class="card-content mobile-view-popover" style="margin-right: 0px !important;" id="style-1">
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="100">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput placeholder="{{ 'CRM.ROOMNAME' | translate }}" formControlName="roomName" required />
+                <!-- <mat-error
+                  *ngIf="joinRoomForm.get('roomName').hasError('required') && joinRoomForm.get('roomName').touched">
+                  {{ 'CRM.ROOMNAMEREQUIRED' | translate }}
+                </mat-error> -->
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="100">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput placeholder="{{ 'CRM.ENTERNAME' | translate }}" formControlName="participantName" required />
+                <!-- <mat-error
+                  *ngIf="joinRoomForm.get('participantName').hasError('required') && joinRoomForm.get('participantName').touched">
+                  {{ 'CRM.NAMEREQUIRED' | translate }}
+                </mat-error> -->
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-05" style="padding-left: 11px; padding-right: 11px; padding-bottom: 13px;">
+          <button mat-raised-button color="primary" class="mr-1" [disabled]="!joinRoomForm.valid || savingInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="external-link-alt"></fa-icon> {{ 'CRM.JOIN' | translate }}
+          </button>
+          <button mat-raised-button (click)="closeJoinRoom(joinRoomFormDirective); (false)">
+            <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>
+  <sat-popover backdropClass="backdrop-color" #joinRoomOnlyPopOver verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title>
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          <fa-icon class="mr-05" icon="users"></fa-icon> <b> {{ 'CRM.JOINROOM' | translate }}</b>
+        </div>
+      </mat-card-title>
+      <a class="detail_close mt-02" color="warn" (click)="closeJoiningRoomOnly()">
+        <fa-icon icon="times"></fa-icon>
+      </a>
+      <form [formGroup]="joinRoomOnlyForm" novalidate #joinRoomOnlyFormDirective="ngForm"
+        (submit)="joinRoomOnlyForm.valid && joinRoomOnly(joinRoomOnlyFormDirective)">
+        <div class="card-content mobile-view-popover" style="margin-right: 0px !important;" id="style-1">
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="100">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput placeholder="{{ 'CRM.ROOMNAME' | translate }}" formControlName="roomName" required />
+                <!-- <mat-error
+                  *ngIf="joinRoomForm.get('roomName').hasError('required') && joinRoomForm.get('roomName').touched">
+                  {{ 'CRM.ROOMNAMEREQUIRED' | translate }}
+                </mat-error> -->
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-05" style="padding-left: 11px; padding-right: 11px; padding-bottom: 13px;">
+          <button mat-raised-button color="primary" class="mr-1" [disabled]="!joinRoomOnlyForm.valid || savingInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="external-link-alt"></fa-icon> {{ 'CRM.JOIN' | translate }}
+          </button>
+          <button mat-raised-button (click)="closeJoinRoomOnly(joinRoomOnlyFormDirective); (false)">
+            <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<ng-template #videoCallDialog let-data>
+  <snova-video-call [data]=[data]></snova-video-call>
+</ng-template>
+
+<ng-template #videoCallPlayDialog let-data>
+  <snovasys-video-call-play [data]=[data]></snovasys-video-call-play>
+</ng-template>

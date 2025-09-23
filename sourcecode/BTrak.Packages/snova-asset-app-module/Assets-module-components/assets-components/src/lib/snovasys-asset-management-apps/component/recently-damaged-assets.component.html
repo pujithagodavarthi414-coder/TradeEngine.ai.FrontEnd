@@ -1,0 +1,102 @@
+<ng-container *ngIf="(canAccess_feature_RecentlyDamagedAssets)">
+  <div class="full-height">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+          <div class="card-title-text p-05 ml-05" fxLayoutAlign="start center" fxFlex class="p-05"
+            fxLayoutAlign.xs="center center">{{'ASSETS.RECENTLYDAMAGEDASSETS' | translate | titlecase}}
+          </div>
+          <div class="ml-05 mr-05 search_goalinput" fxLayout="row" fxFlex="260px" fxLayoutAlign.xs="center center"
+            fxLayoutAlign="end center">
+            <mat-form-field ngClass.xs="full-width">
+              <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="search()">
+            </mat-form-field>
+            <span class="close_icon" style="right: 90px !important">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <ng-container *ngIf="entities?.length > 1">
+              <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+              </button>
+            </ng-container>
+            <ng-container *ngIf="entities?.length > 1">
+              <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                <fa-icon icon="user-cog" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+            </ng-container>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+      <mat-card class="filter-data" (click)="$event.stopPropagation()">
+        <mat-form-field (click)="$event.stopPropagation()">
+          <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+            (selectionChange)="entityValues($event.value)">
+            <mat-option *ngFor="let entity of entities" [value]="entity.id">
+              {{entity.name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card>
+    </mat-menu>
+
+    <div class="activity-data filter-margin m-0 no-drag pagination-move-left">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [rows]="recentlyDamagedAssetsList$ | async" [columnMode]="'force'"
+        [headerHeight]="35" [footerHeight]="80" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+        [loadingIndicator]="recentlyDamagedAssetsDataLoading$ | async" [sorts]="[{prop: 'damagedDate', dir: 'desc'}]"
+        (sort)="onSort($event)" (page)='setPage($event)' [selectionType]="'single'" (select)='onSelect($event)'
+        [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate, selectedMessage: false}"
+        style="cursor: pointer;">
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.ASSETCODE' | translate}}" sortable="true" prop="assetNumber">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.ASSETNAME' | translate}}" sortable="true" prop="assetName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}<span *ngIf="checkForMACAddress(value)">&nbsp;({{row.assetUniqueNumber}})</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.DAMAGEDBY' | translate}}" sortable="true" prop="damagedByFullName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="(row.damagedByUserId != null)" class="icon-button" fxLayout="row"
+              (click)="goToProfile(row.damagedByUserId)">
+              <div *ngIf="row.damagedByProfileImage != null && row.damagedByProfileImage != ''">
+                <app-avatar [src]="row.damagedByProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                  size="30">
+                </app-avatar>
+              </div>
+              <div *ngIf="row.damagedByProfileImage == null || row.damagedByProfileImage == ''">
+                <app-avatar [name]="row.damagedByFullName | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.damagedByFullName}}"
+                matTooltipShowDelay="400" fxFlex>
+                {{ row?.damagedByFullName }}
+              </span>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.DAMAGEDDATE' | translate}}" sortable="true" prop="damagedDate">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.damagedDate != null">{{ row.damagedDate | date: "dd-MMM-yyyy"  }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+</ng-container>
+<ng-container *ngIf="!(canAccess_feature_RecentlyDamagedAssets) && !(roleFeaturesIsInProgress$|async)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

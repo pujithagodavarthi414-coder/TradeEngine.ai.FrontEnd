@@ -1,0 +1,156 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageContractStatus">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow" 
+                     matTooltipClass="tooltipClass-mat" matTooltip="{{ 'CONTRACTSTATUS.CONTRACTSTATUS' |  translate }}">{{ 'CONTRACTSTATUS.CONTRACTSTATUS' |  translate }}</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center" style="padding-right: 38px;">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="100" [rows]="contractStatusList" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'CONTRACTSTATUS.CONTRACTSTATUSNAME' |  translate }}" [flexGrow]="1"
+                [sortable]="true" prop="contractStatusName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.contractStatusName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'CONTRACTSTATUS.CONTRACTSTATUSCOLOR' |  translate }}"
+                [flexGrow]="1" [sortable]="true" prop="contractStatusColor">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div [ngStyle]="{ 'background' : row.contractStatusColor }" style="width:100px;">
+                        &nbsp;
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center"
+                        [satPopoverAnchorFor]="contractStatusPopover" #contractStatusPopup="satPopoverAnchor"
+                        (click)="editContractStatus(row,contractStatusPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" matTooltipClass="tooltipClass-mat" matTooltip="{{ 'CONTRACTSTATUS.EDITCONTRACTSTATUS' |  translate }}" style="cursor: pointer;" class="action-icon-color"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #contractStatusPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{contractStatus}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="contractStatusForm" #formDirective="ngForm" novalidate
+                    (submit)="contractStatusForm.valid && upsertContractStatus(formDirective)">
+                    <div>
+                        <mat-form-field>
+                            <input matInput formControlName="contractStatusName"
+                                placeholder="{{ 'CONTRACTSTATUS.CONTRACTSTATUSNAME' |  translate }}" required>
+                            <mat-error *ngIf="contractStatusForm.get('contractStatusName').hasError('maxlength')">
+                                {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="contractStatusForm.get('contractStatusName').hasError('required') && contractStatusForm.get('contractStatusName').touched">
+                                {{ 'CONTRACTSTATUS.PLEASEENTERCONTRACTSTATUSNAME' |  translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width status-color mb-05">
+                            <input formControlName="contractStatusColor" matInput
+                                placeholder="{{ 'CONTRACTSTATUS.CONTRACTSTATUSCOLOR' |  translate }}" [(colorPicker)]="color"
+                                [cpPosition]="'top'" [style.background]="color"
+                                (colorPickerChange)="contractStatusForm.get('contractStatusColor').setValue($event)"
+                                [value]="color" required />
+                            <mat-error
+                                *ngIf="contractStatusForm.get('contractStatusColor').hasError('required') && contractStatusForm.get('contractStatusColor').touched">
+                                {{ 'CONTRACTSTATUS.PLEASESELECTCONTRACTSTATUSCOLOR' |  translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="mt-1">
+                        <button mat-raised-button color="primary" class="mr-1 glossy-button-button"
+                            [disabled]="!contractStatusForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertContractStatusPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteContractStatusPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isContractStatusArchived">
+                    {{ 'CONTRACTSTATUS.ARCHIVECONTRACTSTATUS' |  translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isContractStatusArchived">
+                    {{ 'CONTRACTSTATUS.UNARCHIVECONTRACTSTATUS' |  translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isContractStatusArchived">
+                    {{ 'CONTRACTSTATUS.AREYOUSUREWANTTOARCHIVETHISCONTRACTSTATUS?' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isContractStatusArchived">
+                    {{ 'CONTRACTSTATUS.AREYOUSUREWANTTOUNARCHIVETHISCONTRACTSTATUS?' |  translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="isContractStatusArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteContractStatus();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button class="glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="!isContractStatusArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteContractStatus();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteContractStatusPopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageContractStatus"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

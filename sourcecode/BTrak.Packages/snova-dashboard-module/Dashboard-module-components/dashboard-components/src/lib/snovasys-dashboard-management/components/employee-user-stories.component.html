@@ -1,0 +1,147 @@
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeWorkItems)"
+  textToDisplay="Sorry,You don't have any permissions to access this feature">
+</app-common-message-box>
+<div *ngIf="(canAccess_feature_EmployeeWorkItems)" class="full-height">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100"
+            class="hide-content-overflow">{{'PRODUCTIVITYDASHBOARD.EMPLOYEEUSERSTORIES' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field>
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 8px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder=" {{'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="employeeId" (selectionChange)="getUserStoriesBasedOnEmployee($event.value)">
+                <mat-option *ngFor="let employee of employeeList" [value]="employee.id">
+                  <div fxLayout="row wrap" fxLayoutGap="5px">
+                    <div fxFlex="16">
+                      <app-avatar matTooltip="{{ employee.fullName }}"
+                        [name]="employee.fullName | removeSpecialCharacters" [src]="employee.profileImage"
+                        [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex="79">
+                      <p class="mat-body-2">
+                        {{ employee.fullName }}
+                      </p>
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'TESTMANAGEMENT.SELECTSTATUS' | translate}} " [(ngModel)]="selectedStatus"
+                (ngModelChange)="getUserStoriesBasedOnStatus()">
+                <mat-option *ngFor="let status of statusList" value="option" [value]="status.userStoryStatusId">
+                  {{status.userStoryStatusName}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput [(ngModel)]="dateFrom" [matDatepicker]="picker" autocomplete="off" (click)="picker.open()"
+                placeholder="{{'ADVANCEDSEARCH.FROMDATE' | translate}}" (dateChange)="getDateFrom($event.value)" />
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput [(ngModel)]="dateTo" [matDatepicker]="picker1" autocomplete="off" (click)="picker1.open()"
+                placeholder="{{'ADVANCEDSEARCH.TODATE' | translate}}" (dateChange)="getDateTo($event.value)" />
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <div class="activity-data filter-margin m-0 app-height-search-2 pagination-move-left" id="style-1">
+    <ngx-datatable #mydatatable class="btrak employeeuserstories_table" [columnMode]="'flex'" [offset]="pageNumber"
+      [loadingIndicator]="anyOperationInProgress" [rows]="employeeUserStories" [headerHeight]="35" [footerHeight]="35"
+      [rowHeight]="35" [limit]="10" [externalPaging]="true" [scrollbarH]="true" [virtualization]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [externalSorting]="true" [count]="totalCount" (sort)="onSort($event)" (page)='onPageChange($event)'>
+      <ngx-datatable-column [minWidth]="150" name="{{'PRODUCTIVITYDASHBOARD.DEVELOPERNAME' | translate}}" [sortable]="true"
+        [flexGrow]="1 " prop="ownerName">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="goToProfile(row.ownerUserId)">
+            <div *ngIf="row.ownerProfileImage != null && row.ownerProfileImage != ''">
+              <app-avatar [src]="row.ownerProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="row.ownerProfileImage == null || row.ownerProfileImage == ''">
+              <app-avatar [name]="row.ownerName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.userName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ value }}
+            </span>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [minWidth]="150" name="{{'USERSTORY.USERSTORY' | translate | softLabelsPipe : softLabels}}" [flexGrow]="1"
+        prop="userStoryName">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{ value }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [minWidth]="150" name="{{'MYPROFILE.ESTIMATEDTIME' | translate}}" [flexGrow]="1" prop="estimatedTime">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.estimatedTime }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [minWidth]="150" name="{{'PRODUCTIVITYDASHBOARD.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" prop="deadLineDate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.deadLineDate !=null"  matTooltip="{{row?.timeZoneName}}">{{ row.deadLineDate | date: "dd-MMM-yyyy"  }}
+            <span class="timezone-name" *ngIf="(row.deadLineDate | covertTimeIntoUtcTime) != Offset"
+            >{{row?.timeZoneAbbreviation }}
+            </span> 
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [minWidth]="150" name="{{'PRODUCTIVITYDASHBOARD.USERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" prop="userStoryStatusName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.userStoryStatusName }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

@@ -1,0 +1,366 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageCreditNote">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'CREDITNOTE.CREDITNOTE' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px">
+                    <button mat-icon-button matTooltip="{{ 'CREDITNOTE.ADDNEWCREDITNOTE' | translate }}"
+                        [satPopoverAnchorFor]="addCreditNotePopOver" #addCreditNotePopUp="satPopoverAnchor"
+                        (click)="openCreditNotePopUp(addCreditNotePopUp)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="creditNoteModel.length > 0">
+        <kendo-grid [data]="creditNoteModelList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isLoading"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="name" title="{{'CREDITNOTE.NAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.name }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="siteName" title="{{'SOLARLOG.SITENAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.siteName }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="grdName" title="{{'CREDITNOTE.GRDNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.grdName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+
+            <kendo-grid-column field="startDate" title="{{'SITE.STARTDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.startDate | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="endDate" title="{{'SITE.ENDDATE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.endDate | utcToLocalTime | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                        <button class="text-center mr-05" title="{{ 'CREDITNOTE.EDITCREDITNOTE' | translate}}"
+                            [satPopoverAnchorFor]="addCreditNotePopOver" #addCreditNotePopUp="satPopoverAnchor"
+                            (click)="$event.stopPropagation();editCreditNotePopUp(dataItem,addCreditNotePopUp)"
+                            mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="{{ 'CREDITNOTE.ARCHIVECREDITNOTE' | translate}}"
+                            [satPopoverAnchorFor]="archiveCreditNotePopOver" #archiveCreditNotePopUp="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteCreditNotePopUp(dataItem,archiveCreditNotePopUp)"
+                            mat-icon-button>
+                            <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="Generate credit note"
+                            *ngIf="!dataItem.isGenerateInvoice" [satPopoverAnchorFor]="convertInvoicePopover1"
+                            #convertInvoicePopup1="satPopoverAnchor"
+                            (click)="openConvertPopup1(dataItem,convertInvoicePopup1)" mat-icon-button>
+                            <fa-icon icon="file-invoice" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="Send email" mat-icon-button
+                            (click)="$event.stopPropagation();openMailpopup(dataItem)" *ngIf="dataItem.invoiceUrl && dataItem.isGenerateInvoice">
+                            <fa-icon icon="envelope" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="Download" mat-icon-button
+                            (click)="$event.stopPropagation();downloadInvoice(dataItem)" *ngIf="dataItem.invoiceUrl && dataItem.isGenerateInvoice">
+                            <fa-icon icon="download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag" *ngIf="!isLoading && creditNoteModel.length === 0"
+        textToDisplay="{{'CREDITNOTE.YOUDONTHAVEANYCREDITNOTE' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addCreditNotePopOver" #addCreditNotePopUp="satPopoverAnchor"
+                (click)="openCreditNotePopUp(addCreditNotePopUp)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'CREDITNOTE.ADDNEWCREDITNOTE' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+
+
+    <sat-popover #addCreditNotePopOver [interactiveClose]="false" hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+                <div class="card-title-text" *ngIf="!creditNoteId">{{ 'CREDITNOTE.CREATECREDITNOTE' | translate }}
+                </div>
+                <div class="card-title-text" *ngIf="creditNoteId">{{ 'CREDITNOTE.UPDATECREDITNOTE' | translate }}
+                </div>
+            </div>
+            <div class="card-content">
+
+                <form class="invoice-upsert-form" id="style-1" [formGroup]="creditNoteForm" #formDirective="ngForm"
+                    novalidate>
+                    <div class="m-4">
+                        <div fxLayout="column">
+                            <div fxLayout="row" fxLayoutAlign="space-around center">
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width">
+                                        <input formControlName="name" matInput
+                                            placeholder="{{'CREDITNOTE.NAME' | translate}}" required>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="creditNoteForm.get('name').hasError('required') && creditNoteForm.get('name').touched">{{'CREDITNOTE.PLEASEENTERNAME'
+                                                | translate}}
+                                            </span>
+                                            <span
+                                                *ngIf="creditNoteForm.get('name').hasError('maxlength')">{{'CREDITNOTE.NAMECANNOTEXCEED250CHARACTERS'
+                                                | translate}}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width">
+                                        <mat-label>{{'ENTITYFORM.SITE' | translate}}</mat-label>
+                                        <mat-select placeholder="{{'ENTITYFORM.SELECTSITE' | translate}}"
+                                            formControlName="siteId" (selectionChange)="getSiteSelected($event.value);"
+                                            required>
+                                            <mat-option *ngFor="let site of sites" [value]="site.id">
+                                                {{site.name}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="creditNoteForm.get('siteId').hasError('required') && creditNoteForm.get('siteId').touched">
+                                            {{'ENTITYFORM.PLEASESELECTSITE' | translate}}</mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width ml-05">
+                                        <mat-label>{{'ENTITYFORM.GRD' | translate}}</mat-label>
+                                        <mat-select placeholder="{{'ENTITYFORM.SELECTGRD' | translate}}"
+                                            formControlName="grdId" required>
+                                            <mat-option *ngFor="let grd of grds" [value]="grd.id">
+                                                {{grd.name}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="creditNoteForm.get('grdId').hasError('required') && creditNoteForm.get('grdId').touched">
+                                            {{'ENTITYFORM.PLEASESELECTGRD' | translate}}</mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width ml-05">
+                                        <mat-label> {{'ENTITYFORM.TERM' | translate}}</mat-label>
+                                        <mat-select placeholder=" {{'ENTITYFORM.SELECTTERM' | translate}}"
+                                            formControlName="term" required>
+                                            <mat-option *ngFor="let termo of terms" [value]="termo.name">
+                                                {{termo.name}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="creditNoteForm.get('term').hasError('required') && creditNoteForm.get('term').touched">
+                                            {{'ENTITYFORM.PLEASESELECTTERM' | translate}}</mat-error>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                            <div fxLayout="row" fxLayoutAlign="space-around center">
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width">
+                                        <mat-label>{{'SITE.STARTDATE' | translate}}</mat-label>
+                                        <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                            formControlName="startDate" placeholder="" required
+                                            (dateChange)="dateChange()">
+                                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                        <mat-datepicker #picker1></mat-datepicker>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="23">
+                                    <mat-form-field class="full-width ml-05">
+                                        <mat-label>{{'SITE.ENDDATE' | translate}}</mat-label>
+                                        <input matInput formControlName="endDate" (click)="picker2.open()"
+                                            [matDatepicker]="picker2" placeholder="" required
+                                            (dateChange)="dateChange()">
+                                        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                        <mat-datepicker #picker2></mat-datepicker>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="23">
+                                    <app-month-picker (monthEmit)="monthEmitHandled($event)" [month]="month"
+                                        [disabled]="false">
+                                    </app-month-picker>
+                                </div>
+                                <div fxFlex="23">
+                                    <app-year-picker (yearEmit)="yearEmitHandled($event)" [year]="year"
+                                        [disabled]="false">
+                                    </app-year-picker>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxLayout="row" fxLayoutAlign="space-around center">
+                            <div fxFlex="23">
+                                <mat-form-field class="full-width ml-05">
+                                    <mat-label>{{'EXPENSEBOOKING.ENTRYDATE' | translate}}</mat-label>
+                                    <input matInput [matDatepicker]="picker3" (click)="picker3.open()"
+                                        formControlName="entryDate" placeholder="" required>
+                                    <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker3></mat-datepicker>
+                                    <mat-error
+                                        *ngIf="creditNoteForm.get('entryDate').hasError('required') && creditNoteForm.get('entryDate').touched">
+                                        {{'EXPENSEBOOKING.PLEASESELECTENTRYDATE' | translate}}</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="23"></div>
+                            <div fxFlex="23"></div>
+                            <div fxFlex="23"></div>
+                        </div>
+                        <div fxLayout="column">
+                            <div fxLayout="column" fxFlex="100">
+                                <div fxFlex="100">
+                                    <span fxFlex="25"><b>M2</b></span>
+                                    <span fxFlex="20">{{selectedSite.m2 | number: '1.0'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="25"><b>CHF/M2</b></span>
+                                    <span fxFlex="20">{{selectedSite.chf | number: '1.0'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="25">{{'CREDITNOTE.PERANNUM' | translate}}</span>
+                                    <span fxFlex="20">{{selectedSite.m2*selectedSite.chf | number: '1.1-2'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="25">{{'CREDITNOTE.JOURS' | translate}}</span>
+                                    <span fxFlex="20">{{days | number: '1.0'}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxLayout="row">
+                            <div fxFlex="70"></div>
+                            <div fxLayout="column" fxFlex="30">
+                                <div fxFlex="100">
+                                    <span fxFlex="45"><b>{{'CREDITNOTE.PRORATA' | translate}}</b></span>
+                                    <span fxFlex="20">{{prorata | number: '1.1-2'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <mat-checkbox fxFlex="45" (change)="calculations()" formControlName="isTVAApplied"
+                                        mat-primary>TVA
+                                    </mat-checkbox>
+                                    <span fxFlex="20">{{tvaCal | number: '1.1-2'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="45">{{'CREDITNOTE.ARRONDI' | translate}}</span>
+                                    <span fxFlex="20">{{aroundi | number: '1.1-2'}}</span>
+                                </div>
+                                <div fxFlex="100">
+                                    <span fxFlex="45">{{'TOTAL' | translate}}</span>
+                                    <span fxFlex="20">{{wholeTotalValue | number: '1.1-2'}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mb-1 prl-1">
+                        <button mat-raised-button type="submit" color="primary" class="mr-1"
+                            [satPopoverAnchorFor]="convertInvoicePopover" #convertInvoicePopup="satPopoverAnchor"
+                            (click)="openConvertPopup(convertInvoicePopup)"
+                            [disabled]="!creditNoteForm.valid||isAddIsInProgress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAddIsInProgress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover [interactiveClose]="false" #archiveCreditNotePopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="p-1">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mb-1">{{ 'CREDITNOTE.AREYOUSUREWANTTODELETECREDITNOTE' | translate }}
+                </div>
+            </mat-card-title>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveSite();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+    <sat-popover backdropClass="backdrop-color" [interactiveClose]="false" #convertInvoicePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">Generate credit note
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1">
+                    Are you sure you want to generate credit note
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAddIsInProgress" (click)="convertToInvoice();">
+                        <fa-icon icon="file-invoice" style="cursor: pointer;"></fa-icon> Generate credit note
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeConvertInvoicePopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <sat-popover backdropClass="backdrop-color" [interactiveClose]="false" #convertInvoicePopover1 hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">Generate credit note
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1">
+                    Are you sure you want to generate credit note
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAddIsInProgress" (click)="convertToInvoice1();">
+                        <fa-icon icon="file-invoice" style="cursor: pointer;" ></fa-icon> Generate credit note
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeConvertInvoicePopup1();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+
+<app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}"
+    *ngIf="!canAccess_feature_ManageCreditNote">
+</app-common-message-box>
+<ng-template #maileDialogComponent let-data>
+    <mail-credit-note [data]=[data]></mail-credit-note>
+</ng-template>

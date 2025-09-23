@@ -1,0 +1,282 @@
+<div *ngIf="(canAccess_feature_ViewStatusReportingConfiguration)">
+    <div class="p-0" class="roles p-0">
+        <mat-card class="p-0">
+            <mat-card-title class="data-table-header">
+                <div fxLayout="row wrap" fxLayoutGap="0">
+                    <div fxFlex="90" fxFlex.md="84" fxFlex.sm="84" fxFlex.xs="59" fxLayoutAlign="start center">
+                        <div class="card-title-text pl-05">{{ 'STATUSREPORTING.STATUSCONFIGURATIONS' | translate }}
+                        </div>
+                    </div>
+                    <div fxFlex="10" fxLayoutAlign="end center"
+                    *ngIf="statusReportingConfigurationsList && statusReportingConfigurationsList.length > 0">
+                    <div class="handle">
+                        <button mat-icon-button color="accent" matTooltip="{{ 'STATUSREPORT.CREATECONFIGURATION' | translate }}"
+                            [satPopoverAnchorFor]="statusReporting" #statusReportingPopover="satPopoverAnchor"
+                            *ngIf="(canAccess_feature_AddOrUpdateStatusReportingConfiguration) && (canAccess_feature_ViewStatusReportingConfiguration)"
+                            (click)="clearConfigurationForm();openStatusReportingPopover(statusReportingPopover)">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                    </div>
+                    </div>
+                    <!-- <div fxFlex="10" fxFlex.md="15" fxFlex.sm="16" fxFlex.xs="40" fxLayoutAlign="end center">
+                        <button mat-button mat-raised-button color="primary" class="pull-right mr-1" type="button"
+                            *ngIf="(canAccess_feature_ViewStatusReports)"
+                            (click)="viewReports()">{{ 'STATUSREPORT.VIEWREPORTS' | translate }}
+                        </button>
+                    </div> -->
+                </div>
+                <mat-divider></mat-divider>
+            </mat-card-title>
+        </mat-card>
+        <div fxLayout="row wrap" *ngIf="isAnyOperationIsInprogress">
+            <div fxFlex="100" fxFlex.gt-sm="25" class="custom-card" *ngFor="let status of Arr(num).fill(1)">
+                <mat-card class="project-card project-dtl p-05">
+                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                        <div fxFlex fxFlex="20" class="img-bg loading-bg">
+                            <div class="img"></div>
+                        </div>
+                        <div fxFlex fxFlex="74">
+                            <div fxLayout="row wrap" fxLayoutGap="2px">
+                                <div fxFlex fxFlex="79"><a class="mat-body-1 empty-text loading-bg"></a></div>
+                                <div fxFlex fxFlex="19" class="text-center"> </div>
+                            </div>
+                            <p class="mat-body-1 empty-text loading-bg"></p>
+                            <p class="mat-small empty-text loading-bg"></p>
+                        </div>
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="(canAccess_feature_ViewStatusReportingConfiguration) && statusReportingConfigurationsList.length > 0" [ngStyle]="{ 'height': fullHeight ? 'calc(100vh - 122px)' : 'calc(100vh - 176px)' }" id="style-1">
+        <div fxLayout="row wrap" *ngIf="!isAnyOperationIsInprogress" [ngClass]="dashboardId ? 'statusReport-scroll-height' : ''">
+            <div fxFlex="100" fxFlex.sm="50" fxFlex.md="33" fxFlex.lg="33" fxFlex.gt-lg="25"
+                *ngFor="let status of statusReportingConfigurationsList">
+                <mat-card class="project-card status-config-card p-05" style="height: auto;">
+                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                        <div fxFlex="22" fxFlex.xl="20" fxFlex.sm="21" fxFlex.md="30" fxFlex.xs="22">
+                            <app-avatar initialsSize="2" [name]="status.formName" [isRound]="false" size="60">
+                            </app-avatar>
+                            <!-- <ngx-avatar name="{{status.configurationName}}" initialsSize="2" [round]="false" size="80">
+                            </ngx-avatar> -->
+                        </div>
+                        <div fxFlex="70" fxFlex.xl="76" fxFlex.sm="75" fxFlex.md="54" fxFlex.xs="70">
+                            <div fxLayout="row wrap" fxLayoutGap="2px">
+                                <div fxFlex fxFlex="80"><a class="mat-body-1">{{status.configurationName}}</a>
+                                </div>
+                            </div>
+                            <p class="mat-body-1 hide-content-overflow">
+                                {{status.formName}}</p>
+                            <p class="mat-body-2 person-name hide-content-overflow" #assignedToEmployees
+                                (mouseover)="checkTooltipStatus()"
+                                [matTooltip]="showTooltip ? status.assignedToEmployees : ''"
+                                matTooltipClass="tooltip-overflow"><b>
+                                    {{status.assignedToEmployees}}</b>
+                            </p>
+                            <p class="mat-small hide-content-overflow " matTooltip="{{status.reportingDays}}">
+                                {{status.reportingDays}}</p>
+                            <div fxLayout="row wrap">
+                                <div fxFlex="50">
+                                    <p class="mat-small person-name">
+                                        <b>{{status.assignedByUserName}}</b>
+                                    </p>
+                                </div>
+                                <div fxFlex="50">
+                                    <p class="mat-small text-right hide-content-overflow">
+                                        {{status.createdDateTime | date: "dd-MMM-yyyy"}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <mat-icon
+                            *ngIf="(canAccess_feature_ArchiveStatusReportConfiguration) || (canAccess_feature_AddOrUpdateStatusReportingConfiguration)"
+                            class="more_vert" [satPopoverAnchorFor]="iconMenu" (click)="iconMenu.toggle()">
+                            more_vert
+                        </mat-icon>
+
+                        <sat-popover #iconMenu hasBackdrop verticalAlign="below" horizontalAlign="end">
+                            <mat-card class="p-0">
+                                <button mat-menu-item
+                                    (click)="clearConfigurationForm();editReport(status, statusReportingPopover);iconMenu.close();"
+                                    *ngIf="(canAccess_feature_AddOrUpdateStatusReportingConfiguration)"
+                                    [satPopoverAnchorFor]="statusReporting" #statusReportingPopover="satPopoverAnchor">
+                                    <fa-icon icon="edit" class="mr-05"> </fa-icon>{{ 'EDIT' | translate }}
+                                </button>
+                                <button mat-menu-item
+                                    (click)="deleteReport(status,status.id, deleteConfigurationMenuPopup);iconMenu.close();"
+                                    *ngIf="(canAccess_feature_ArchiveStatusReportConfiguration)"
+                                    [satPopoverAnchorFor]="deleteConfigurationMenu"
+                                    #deleteConfigurationMenuPopup="satPopoverAnchor">
+                                    <fa-icon aria-hidden="false" icon="trash" class="mr-05"></fa-icon>
+                                    {{ 'DELETE' | translate }}
+                                </button>
+                            </mat-card>
+                        </sat-popover>
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+    <app-common-message-box
+        *ngIf="!isAnyOperationIsInprogress && statusReportingConfigurationsList.length === 0 && (canAccess_feature_AddOrUpdateStatusReportingConfiguration) && (canAccess_feature_ViewStatusReportingConfiguration)"
+        textToDisplay="{{'STATUSREPORT.YOUDONTHAVEANYCREATEDCONFIGURATIONS' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="statusReporting" #statusReportingPopover="satPopoverAnchor"
+                (click)="clearConfigurationForm();openStatusReportingPopover(statusReportingPopover)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'STATUSREPORT.CREATECONFIGURATION' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+</div>
+
+<!--<div class="floating-right-fab-button mr-8"
+    *ngIf="statusReportingConfigurationsList && statusReportingConfigurationsList.length > 0">
+    <div class="handle">
+        <button mat-fab color="accent" matTooltip="{{ 'STATUSREPORT.CREATECONFIGURATION' | translate }}"
+            [satPopoverAnchorFor]="statusReporting" #statusReportingPopover="satPopoverAnchor"
+            *ngIf="(canAccess_feature_AddOrUpdateStatusReportingConfiguration) && (canAccess_feature_ViewStatusReportingConfiguration)"
+            (click)="clearConfigurationForm();openStatusReportingPopover(statusReportingPopover)">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div>-->
+
+<sat-popover #statusReporting verticalAlign="below" [interactiveClose]="false" hasBackdrop horizontalAlign="end"
+    backdropClass="statusreport-popover">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{ 'STATUSREPORT.STATUSREPORTCONFIGURATION' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="card-content p-1 status-report-height" *ngIf="isCreateStatusConfiguration">
+            <div fxLayout="row wrap">
+                <div fxFlex="100" fxFlex.gt-sm="100">
+                    <mat-form-field class="full-width">
+                        <input matInput [formControl]="nameFormControl" type="text"
+                            placeholder="{{ 'STATUSREPORT.CONFIGURATIONNAME' | translate }}"
+                            [(ngModel)]="configurationName" required>
+                        <mat-error *ngIf="nameFormControl.hasError('required')">
+                            {{ 'STATUSREPORT.PLEASEFILLCONFIGURATIONNAME' | translate }}
+                        </mat-error>
+                        <mat-error *ngIf="nameFormControl.hasError('maxlength')">
+                            {{ 'STATUSREPORT.CONFIGURATIONNAMESHOULDNOTEXCEED100CHARACTERS' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                <div fxFlex="50">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{ 'STATUSREPORT.FORMTYPE' | translate }}"
+                            [(ngModel)]="selectedFormType" [formControl]="selectedType"
+                            (selectionChange)="getForms(selectedFormType)" required>
+                            <mat-option *ngFor="let type of formTypes" [value]="type.id">
+                                {{type.formTypeName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="selectedType.hasError('required')">
+                            {{ 'STATUSREPORT.PLEASECHOOSEFORMTYPE' | translate }}</mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{ 'STATUSREPORT.SELECTFORM' | translate }}" [(ngModel)]="selectedForm"
+                            [formControl]="selectedFormId" (selectionChange)="previewForm(selectedForm)" required>
+                            <mat-option *ngFor="let form of genericFormListDetails" [value]="form.id">
+                                {{form.formName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="selectedFormId.hasError('required')">
+                            {{ 'STATUSREPORT.PLEASECHOOSEAFORM' | translate }}</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row wrap">
+                <div fxFlex="120px" *ngIf="preview == true">
+                    <button mat-button mat-raised-button color="primary" class="mt-05 mr-05"
+                        (click)="viewForm(selectedForm)">
+                        <fa-icon class="mr-05" icon="eye"></fa-icon>{{ 'PREVIEW' | translate }}
+                    </button>
+                </div>
+                <div fxFlex="120px" *ngIf="(canAccess_feature_AddOrUpdateForm)">
+                    <button mat-button mat-raised-button color="primary" class="mt-05" (click)="addForm()">
+                        <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'STATUSREPORT.ADDFORM' | translate }}
+                    </button>
+                </div>
+            </div>
+            <div fxLayout="row wrap" class="mt-05">
+                <div fxFlex="100" fxFlex.gt-sm="100">
+                    <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                        <mat-select [formControl]="selectedUsers" [(ngModel)]="selectedUserIds"
+                            [compareWith]="compareSelectedTeamMembersFn"
+                            placeholder="{{ 'STATUSREPORT.SELECTEMPLOYEES' | translate | softLabelsPipe : softLabels}}"
+                            multiple required (selectionChange)="getUserslistByUserId()">
+                            <mat-select-trigger>
+                                {{selectedUsersList}}
+                            </mat-select-trigger>
+                            <mat-option #allSelected (click)="toggleAllUsersSelected()" [value]="0">{{
+                                'STATUSREPORT.SELECTALL' | translate }}
+                            </mat-option>
+                            <mat-option [value]="person.teamMemberId" *ngFor="let person of usersList" #allSelected
+                                (click)="getUserslistByUserId();toggleUserPerOne()">
+                                <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                                    [name]="person.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img" src="{{person.profileImage}}"
+                                    *ngIf="person.profileImage">{{person.teamMemberName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="selectedUsers.hasError('required')">
+                            {{ 'STATUSREPORT.PLEASESELECTATLEASTONEUSER' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <br>
+            <div fxLayout="row wrap">
+                <div fxFlex="100" style="display:block !important">
+                    <mat-checkbox *ngFor="let option of statusConfigurationOptions; let i=index" name="options-{{i}}"
+                        class="pb-1 mr-1 check-space" [(ngModel)]="configurationOptions[i].checked"
+                        (change)="selectConfigurationOptions(option,configurationOptions[i].checked)">
+                        {{ "STATUSREPORT."+option.displayName | translate }}
+                    </mat-checkbox>
+                </div>
+            </div>
+            <br>
+            <div class="text-center mb-1">
+                <button *ngIf="configurationId == null" mat-button mat-raised-button color="primary" class="mr-1 mb-05"
+                    [disabled]="checkStatusDisabled()" (click)="upsertStatusReportConfiguration()">
+                    <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'STATUSREPORT.ADDCONFIGURATION' | translate }}
+                </button>
+                <button *ngIf="configurationId != null" mat-button mat-raised-button color="primary" class="mr-1 mb-05"
+                    [disabled]="checkStatusDisabled()" (click)="upsertStatusReportConfiguration()">
+                    <fa-icon icon="pen" class="mr-05"></fa-icon>{{ 'STATUSREPORT.EDITCONFIGURATION' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="cancelConfiguration()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteConfigurationMenu hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1">{{ 'STATUSREPORT.AREYOUSUREWANTTODELETETHECONFIGURATION' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteConfiguration();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closedialog();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewStatusReportingConfiguration)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,380 @@
+<!-- <div fxLayout="row" style="margin: 10px;" *ngIf="canAccess_feature_PayrollRun" style="width: 1895px;">
+  <button mat-raised-button color="primary" (click)="triggerWorkflow()"
+    style="height: fit-content !important;margin-left: auto">{{'PAYROLL.ADDORUPDATEWORKFLOW' | translate}}</button>
+</div> -->
+<div *ngIf="canAccess_feature_PayrollRun">
+  <mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05">
+    <mat-card-title class="full-width data-table-header payrollrun-header-height">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+            {{'PAYROLL.PAYROLL' | translate | titlecase}}
+          </div>
+          <div fxFlex="calc(90% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchivedTypes == false) ? ('PAYROLLSTATUS.SEEARCHIVEDITEMS' | translate) : ('PAYROLLSTATUS.SEEUNARCHIVEDITEMS' | translate)"
+              class="mr-2 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+              (change)="getPayrollList()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-form-field>
+              <input class="search_goal" type="text" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                [formControl]="searchText" (input)="filterByName()">
+            </mat-form-field>
+            <span class="close_icon " fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!getSearchText"></span>
+              <mat-icon *ngIf="getSearchText" class="icon-button mr-2" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'PAYROLL.GENERATEPAYROLL' | translate }}"
+              [satPopoverAnchorFor]="upsertPayRollPopover" #upsertPayRollPopUp="satPopoverAnchor"
+              (click)="createPayRollPopupOpen(upsertPayRollPopUp);clearForm()" *ngIf="!isArchivedTypes && canAccess_feature_GenarateOrSubmitPayRoll">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+    </mat-card-title>
+  </mat-card>
+</div>
+
+<!-- <h2>Payroll run</h2> -->
+<ng-container *ngIf="canAccess_feature_PayrollRun">
+  <div class="activity-data ml-05 mr-05 mt-n1 payroll-table payroll-run-height paging-move" id="style-1">
+    <kendo-grid [data]="gridView" [resizable]="true" [filter]="state.filter" [filterable]="false" [scrollable]="true"
+      [pageSize]="state.take" [skip]="state.skip" [pageable]="true" (cellClick)="selectedRow($event);" [sortable]="true"
+      [sort]="state.sort" (dataStateChange)="dataStateChange($event)">
+      <kendo-grid-messages
+        pagerOf="{{ 'KENDOGRIDMESSAGES.OF' | translate }}"
+        pagerItems="{{ 'KENDOGRIDMESSAGES.ITEMS' | translate }}"
+        noRecords="{{ 'KENDOGRIDMESSAGES.NORECORDS' | translate }}">
+      </kendo-grid-messages>
+      <kendo-grid-column field="branchName" title="{{'PAYROLL.BRANCHNAME' | translate}}" width="120">
+      </kendo-grid-column>
+      <kendo-grid-column field="templateName" title="{{'PAYROLL.TEMPLATE' | translate}}" width="120">
+      </kendo-grid-column>
+      <kendo-grid-column field="employeeNames" title="{{'PAYROLL.EMPLOYEES' | translate}}" width="200">
+        <!-- <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex"
+          matTooltip="{{'TESTMANAGEMENT.VIEWALL' | translate}}">
+          <div *ngIf="dataItem.employeeNames != null">
+            <div (click)="openPayRollRunEmployeesDialog(dataItem);$event.stopPropagation()"
+              *ngIf="dataItem.employeeNames.length > 100">
+              {{dataItem.employeeNames | slice:0:100 }}</div>
+            <div (click)="openPayRollRunEmployeesDialog(dataItem);$event.stopPropagation()"
+              *ngIf="dataItem.employeeNames.length < 100">
+              {{dataItem.employeeNames}}</div>
+          </div> 
+        </ng-template> -->
+      </kendo-grid-column>
+      <kendo-grid-column field="employmentStatusNames" title="{{'PAYROLL.EMPLOYMENTTYPE' | translate}}" width="200">
+      </kendo-grid-column>
+      <kendo-grid-column field="runDate" title="{{'PAYROLL.RUNDATE' | translate}}" filter="date" format="{0:d}"
+        width="120">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          {{dataItem.runDate | date: "dd-MMM-yyyy"}}
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="payrollStartDate" title="{{'PAYROLL.PAYROLLSTARTDATE' | translate}}" filter="date"
+        format="{0:d}" width="120">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          {{dataItem.payrollStartDate | date: "dd-MMM-yyyy"}}
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="payrollEndDate" title="{{'PAYROLL.PAYROLLENDDATE' | translate}}" filter="date"
+        format="{0:d}" width="120">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          {{dataItem.payrollEndDate | date: "dd-MMM-yyyy"}}
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="payrollStatusName" title="{{'PAYROLL.STATUS' | translate}}" width="200">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div style="width: 300px;" (click)="$event.stopPropagation()">
+            <mat-select placeholder="Select status" [(ngModel)]="dataItem.payrollStatusId"
+              [disabled]='dataItem.payrollStatusName == "Paid" || isArchivedTypes || dataItem.totalEmployees == 0'
+              [ngStyle]="{'background-color': dataItem.payRollStatusColour}"
+              (selectionChange)="setColorForPayRollSatus($event,dataItem); updateStatus(dataItem.payrollStatusId,dataItem.id,dataItem.comments,dataItem);"
+              class="custom-chip-box payroll-customchipbox">
+              <mat-option *ngFor="let sts of status" [value]="sts.id" [disabled]="sts.isDisabled">
+                {{sts.payRollStatusName}}
+              </mat-option>
+            </mat-select>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="comments" title="{{'PAYROLL.COMMENTS' | translate}}" width="200">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <textarea matInput placeholder="Add comment" rows="2" [(ngModel)]="dataItem.comments"
+            (change)="updateStatus(dataItem.payrollStatusId,dataItem.id,dataItem.comments,dataItem)">
+          </textarea>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="bank submitted file pointer" title="{{'PAYROLL.BANKSUBMITTERPOINTER' | translate}}"
+        width="150">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <!--<div *ngIf="dataItem.bankSubmittedFilePointer == null && dataItem.payrollStatusName == 'Approved'">
+            <button class='k-button' color="primary"
+              (click)="runPayment(dataItem);$event.stopPropagation()">{{'PAYROLL.RUNPAY' | translate}}
+            </button>
+          </div> -->
+          <div style="width: 222px;" class="run-pay-text" (click)="$event.stopPropagation()"
+            *ngIf="dataItem.bankSubmittedFilePointer == null && dataItem.payrollStatusName == 'Approved'">
+            <mat-select placeholder="{{'PAYROLL.RUNPAY' | translate}}" (selectionChange)="runPayment(dataItem,$event.value);"
+              class="custom-chip-box payroll-customchipbox ml-08">
+              <mat-option *ngFor="let bankTemplate of bankTemplates" [value]="bankTemplate.templateValue">
+                {{bankTemplate.templateName}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div *ngIf="dataItem.bankSubmittedFilePointer != null">
+            <button class='k-button' color="primary"
+              (click)="downloadFile(dataItem.bankSubmittedFilePointer);$event.stopPropagation()">{{'PAYROLL.DOWNLOAD' | translate}}</button>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="isPayslipReleased" title="{{'PAYROLL.RELEASEPAYSLIP' | translate}}" width="150">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.isPayslipReleased != true && dataItem.payrollStatusName == 'Paid'">
+            <button class='k-button' color="primary"
+              (click)="sendEmailWithPayslip(dataItem.id);$event.stopPropagation()">{{'PAYROLL.RELEASEPAYSLIP' | translate}}</button>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+
+      <kendo-grid-column title="{{'PAYROLL.ACTIONS' | translate}}" width="200">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.userTasks != null">
+            <div
+              *ngIf="dataItem.userTasks.userRole == dataItem.userTasks.taskVariables.role || 'Super Admin' == dataItem.userTasks.taskVariables.role">
+              <button class='k-button' title="Approve"
+                (click)="completeUserTask(dataItem, true);$event.stopPropagation()" mat-icon-button>
+                <mat-icon color="primary">thumb_up</mat-icon>
+              </button>
+              <button class='k-button' title="Reject"
+                (click)="completeUserTask(dataItem, false);$event.stopPropagation()" mat-icon-button>
+                <mat-icon color="primary">thumb_down</mat-icon>
+              </button>
+            </div>
+          </div>
+          <button title="{{'PAYROLL.SEELEAVEMANUALADJUSTMENTDETAILS' | translate}}"
+            (click)="showEmployeeLeaveList(dataItem);$event.stopPropagation()" mat-icon-button>
+            <mat-icon color="primary">list</mat-icon>
+          </button>
+          <button class="text-center" title="{{ 'PAYROLLSTATUS.ARCHIVEPAYROLL' | translate }}"
+            [satPopoverAnchorFor]="deletePayRollPopover" #deletePayRollPopUp="satPopoverAnchor"
+            (click)="deletePayRollPopUpOpen(dataItem, deletePayRollPopUp);$event.stopPropagation()"
+            *ngIf="!isArchivedTypes && canAccess_feature_ArchivePayRoll && dataItem.payrollStatusName != 'Paid'"
+            mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+          <button class="text-center" title="{{ 'PAYROLLSTATUS.UNARCHIVEPAYROLL' | translate }}"
+            [satPopoverAnchorFor]="deletePayRollPopover" #deletePayRollPopUp="satPopoverAnchor"
+            (click)="deletePayRollPopUpOpen(dataItem, deletePayRollPopUp);$event.stopPropagation()"
+            *ngIf="isArchivedTypes && canAccess_feature_ArchivePayRoll" mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </kendo-grid-column>
+    </kendo-grid>
+    <div *ngIf="isPayRollRunInProgress" class="k-i-loading"></div>
+  </div>
+</ng-container>
+<app-common-message-box *ngIf="!canAccess_feature_PayrollRun"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>
+
+<!--Delete PAYROLL dialog-->
+<sat-popover backdropClass="backdrop-color" #deletePayRollPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1" *ngIf="isPayRollArchived">
+        {{ 'PAYROLLSTATUS.ARCHIVEPAYROLLSTATUSTITLE' | translate }}</div>
+      <div class="card-title-text mb-1" *ngIf="!isPayRollArchived">
+        {{ 'PAYROLLSTATUS.UNARCHIVEPAYROLLSTATUSTITLE' | translate }}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1" *ngIf="isPayRollArchived">
+        {{ 'PAYROLLSTATUS.ARCHIVEPAYROLLSTATUSTEXT' | translate }}
+      </div>
+      <div class="card-content mb-1" *ngIf="!isPayRollArchived">
+        {{ 'PAYROLLSTATUS.UNARCHIVEPAYROLLSTATUSTEXT' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" *ngIf="isPayRollArchived" mat-button mat-raised-button color="primary"
+          [disabled]="isPayRollArchiveIsInprogress" (click)="deletePayRoll();">
+          <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+        </button>
+        <button class="mr-1" *ngIf="!isPayRollArchived" mat-button mat-raised-button color="primary"
+          [disabled]="isPayRollArchiveIsInprogress" (click)="deletePayRoll();">
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeletePayRollDialog();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--Delete PAYROLL dialog-->
+
+<!--Add PAYROLL dialog-->
+<sat-popover backdropClass="backdrop-color" #upsertPayRollPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="start">
+  <mat-card class="p-0 mr-0" fxFlex="500px">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'PAYROLL.GENERATEPAYROLL' | translate }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <progress-bar [progress]="payrollCount" [color]="'#008b8b'"
+        *ngIf="payrollRunId != null && canAccess_feature_PayrollRun">
+      </progress-bar>
+      <form [formGroup]="payRollForm" #formDirective="ngForm" novalidate (submit)="payRollForm.valid && payrollRun()">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="activeFrom" formControlName="startDate" (click)="activeFrom.open();" required
+                placeholder="{{'PAYROLL.PAYROLLSTARTDATE' | translate}}">
+              <mat-datepicker-toggle matSuffix [for]="activeFrom"></mat-datepicker-toggle>
+              <mat-datepicker #activeFrom></mat-datepicker>
+              <mat-error class="P-06"
+                *ngIf="payRollForm.get('startDate').hasError('required') && payRollForm.get('startDate').touched">
+                {{ 'PAYROLL.STARTDATEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="activeTo" (click)="activeTo.open();" [min]="payRollForm.get('startDate').value"
+                required formControlName="endDate" placeholder="{{'PAYROLL.PAYROLLENDDATE' | translate}}">
+              <mat-datepicker-toggle matSuffix [for]="activeTo"></mat-datepicker-toggle>
+              <mat-datepicker #activeTo></mat-datepicker>
+              <mat-error class="P-06"
+                *ngIf="payRollForm.get('endDate').hasError('required') && payRollForm.get('endDate').touched">
+                {{ 'PAYROLL.ENDDATEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <mat-label>{{'PAYROLL.BRANCHNAME' | translate}}</mat-label>
+              <mat-select formControlName="branch" (selectionChange)="changeBranchOrTemplate()">
+                <mat-option *ngFor="let branch of branches" [value]="branch.branchId">
+                  {{branch.branchName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <mat-label>{{'PAYROLL.TEMPLATE' | translate}}</mat-label>
+              <mat-select formControlName="payRollTemplateId" (selectionChange)="changeBranchOrTemplate()">
+                <mat-option *ngFor="let payRollTemplate of payRollTemplates" [value]="payRollTemplate.payRollTemplateId">
+                  {{payRollTemplate.payRollName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+              <mat-select multiple formControlName="selectedEmployeeIds" placeholder="{{'PAYROLL.EMPLOYEES' | translate}}"
+                (selectionChange)="getSelectedEmployees()">
+                <mat-select-trigger>
+                  {{selectedEmployees}}
+                </mat-select-trigger>
+                <mat-option #allEmployeeSelected (click)="toggleAllEmployeesSelected();" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option #allEmployeeSelected (click)="toggleEmployeePerOne();" value="option"
+                  *ngFor="let employee of employeeListDataDetails$ | async" [value]="employee.employeeId">
+                  <div fxLayout="row wrap" fxLayoutGap="5px">
+                    <div fxFlex="35px">
+                      <app-avatar [name]="employee.userName | removeSpecialCharacters" [src]="employee.profileImage"
+                        [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div fxFlex>
+                      <p class="mat-body-2">
+                        {{employee.userName}}
+                      </p>
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <mat-label>{{'PAYROLL.EMPLOYMENTTYPE' | translate}}</mat-label>
+              <mat-select multiple formControlName="employmentStatusIds" (selectionChange)="getEmploymentStatusIdsList()">
+                <mat-select-trigger>
+                  {{selectedEmploymentStatus}}
+                </mat-select-trigger>
+                <mat-option #allSelected (click)="toggleAllEmploymentStatusesSelected();getEmploymentStatusIdsList();"
+                  [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option #allSelected *ngFor="let employmentStatus of selectEmploymentStatusDropDownListData$ | async"
+                  (click)="toggleEmploymentStatusPerOne()" [value]="employmentStatus.employmentStatusId">
+                  {{employmentStatus.employmentStatusName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="chequeDate" (click)="chequeDate.open();" formControlName="chequeDate"
+                placeholder="{{'PAYROLL.PAYROLLCHECKDATE' | translate}}">
+              <mat-datepicker-toggle matSuffix [for]="chequeDate"></mat-datepicker-toggle>
+              <mat-datepicker #chequeDate></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input formControlName="alphaCode" matInput placeholder="{{'PAYROLL.ALPHACODE' | translate}}">
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input formControlName="cheque" matInput placeholder="{{'PAYROLL.CHEQUE' | translate}}">
+            </mat-form-field>
+          </div>
+          <div fxFlex="50" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input formControlName="chequeNo" matInput mobileNumber placeholder="{{'PAYROLL.CHEQUENO' | translate}}">
+              <mat-error class="P-06"
+                *ngIf="payRollForm.get('chequeNo').hasError('maxlength') && payRollForm.get('chequeNo').touched">
+                {{ 'PAYROLL.CHEQUENUMBERSHOUNLDNOTEXCEEDSIXDIGITS' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div>
+          <div class="mt-05 mb-05 text-center">
+            <button mat-raised-button color="primary" type="button"
+              [disabled]="!payRollForm.valid || isCreatePayRollRunInProgress" (click)="payrollRun()"
+              class="mt-05 mr-1"
+              style="height: fit-content !important;">{{'PAYROLL.RUNPAYROLL' | translate}}</button>
+            <button mat-raised-button color="primary" type="button" [disabled]="isCreatePayRollRunInProgress"
+              (click)="resetForm()" class="mt-05 p-0 mr-1"
+              style="height: fit-content !important;">{{ 'PAYROLL.RESET' | translate }}</button>
+            <button mat-button mat-raised-button (click)="closeUpsertPayRollPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--Edit COMAPN dialog-->

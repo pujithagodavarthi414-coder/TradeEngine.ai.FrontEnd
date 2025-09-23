@@ -1,0 +1,602 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageShifttiming">
+
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span matTooltip="{{'SHIFTTIMING.SHIFTTIMINGS' | translate | titlecase}}">{{'SHIFTTIMING.SHIFTTIMINGS' |
+            translate | titlecase}}</span>
+        </div>
+
+        <div fxFlex="40px" fxLayoutAlign="end center" fxLayoutAlign.xs="25px" class="mr-05 ml-15">
+          <mat-slide-toggle
+            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getAllShiftTiming()">
+          </mat-slide-toggle>
+        </div>
+
+        <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap"
+          fxLayoutAlign.xs="start center">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+
+          <div fxFlex="20px">
+            <span class="close_icon" style="right: 0px !important;">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'SHIFTTIMING.CLICKHERETOCREATEASHIFTTIMING' | translate}}"
+            [satPopoverAnchorFor]="upsertShiftTimingPopover" #upsertShiftTimingPopup="satPopoverAnchor"
+            (click)="createShiftTiming(upsertShiftTimingPopup)"
+            *ngIf="canAccess_feature_ManageShifttiming && !isArchived">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="no-drag" style="overflow-x: auto;" id="widget-scroll-id">
+    <div fxLayout="row" fxLayout.xs="column">
+
+      <!-- SHIFT TIMING LIST (LEFT MENU) -->
+      <div fxFlex="230px" fxLayoutAlign="start start" style="overflow-y: auto;">
+        <div class="p-0 workFlow" style="width: 100%;">
+          <mat-card-content class="p-0 workflows-sec" id="style-1" *ngIf="isShow">
+            <mat-list class="compact-list">
+              <div fxLayout="row wrap" fxLayout.sm="column" fxLayoutGap="2px" *ngFor="let shiftTiming of shiftTimings"
+                class="configuration-list">
+                <div fxFlex fxLayout="row wrap" class="hide-content-overflow"
+                  (click)="selectedShiftTimingEdit(shiftTiming)"
+                  [ngStyle]="{ 'background-color':  shiftTiming.shiftTimingId === shiftHighLightId ? '#e6f5ff' : '' }">
+                  <p class="mat-body-2 pl-05" matTooltip="{{ shiftTiming.shift }}">
+                    {{ shiftTiming.shift }}
+                  </p>
+                </div>
+                <div fxFlex="20px"
+                  [ngStyle]="{ 'background-color':  shiftTiming.shiftTimingId === shiftHighLightId ? '#e6f5ff' : '' }"
+                  *ngIf="shiftTiming.isArchived != true" fxLayout="end center">
+                  <fa-icon style="font-size: 17px;" class="icon-button mat-color-accent" icon="copy"
+                    (click)="selectedShiftTimingClone(shiftTiming);$event.stopPropagation()"
+                    matTooltip="{{'SHIFTTIMING.COPYSHIFTTIMING'|translate}}"> </fa-icon>
+                </div>
+                <div fxFlex="30px"
+                  [ngStyle]="{ 'background-color':  shiftTiming.shiftTimingId === shiftHighLightId ? '#e6f5ff' : '' }"
+                  *ngIf="shiftTiming.isArchived != true" fxLayout="end center">
+                  <mat-icon style="cursor: pointer;" class="mat-color-accent mr-05"
+                    matTooltip="{{'SHIFTTIMING.UNARCHIVESHIFTTIMINGS' | translate}}"
+                    [satPopoverAnchorFor]="deleteShiftTimingPopover" #deleteShiftTimingPop="satPopoverAnchor"
+                    (click)="deleteShiftTimingPopUpOpen(shiftTiming,deleteShiftTimingPop);">archive</mat-icon>
+                </div>
+                <div fxFlex="30px" *ngIf="shiftTiming.isArchived == true" fxLayout="end center">
+                  <mat-icon style="cursor: pointer;" class="mat-color-accent mr-05"
+                    matTooltip="{{'SHIFTTIMING.ARCHIVESHIFTTIMINGS' | translate}}"
+                    [satPopoverAnchorFor]="deleteShiftTimingPopover" #deleteShiftTimingPop="satPopoverAnchor"
+                    (click)="deleteShiftTimingPopUpOpen(shiftTiming,deleteShiftTimingPop);">unarchive</mat-icon>
+                </div>
+              </div>
+            </mat-list>
+          </mat-card-content>
+          <app-common-message-box *ngIf="!isShow" textToDisplay="{{'NODATATODISPLAY'|translate}}">
+          </app-common-message-box>
+        </div>
+      </div>
+      <!-- SHIFT TIMING LIST (LEFT MENU) -->
+
+      <div fxFlex fxLayout="start start">
+        <div *ngIf="isHide" fxLayout="column" style="width: 100%;">
+
+          <!-- SHIFT TIMING DETAILS -->
+          <div class="p-0 workflow-datalist">
+            <mat-card-title class="">
+              <div class="card-title-text p-05" fxLayout="row" fxLayout.xs="column">
+                <mat-form-field class="mr-05">
+                  <input matInput [formControl]="shiftTitleForm" [(ngModel)]="shiftWeekTitle"
+                    (blur)="editShiftTimingPopupOpen(shiftWeekTitle, branchTitle,isDefault)"
+                    placeholder="{{ 'SHIFTTIMING.SHIFTTIMING' | translate }}" required>
+                  <mat-error *ngIf="shiftTitleForm.hasError('maxlength')">
+                    {{ 'SHIFTTIMING.MAXLENGTHERROR' | translate }}</mat-error>
+                  <mat-error *ngIf="shiftTitleForm.hasError('required') && shiftTitleForm.touched">
+                    {{ 'SHIFTTIMING.REQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field class="mr-05">
+                  <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                    [disabled]="isArchived" [formControl]="branchForm" [(ngModel)]="branchTitle"
+                    (selectionChange)="editShiftTimingPopupOpen(shiftWeekTitle, branchTitle,isDefault)" required>
+                    <mat-option *ngFor="let branch of (branchList)" [value]="branch.branchId">
+                      {{ branch.branchName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error class="P-06" *ngIf="branchForm.hasError('required') && branchForm.touched">
+                    {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <div class="ml-1 mt-1">
+                  <mat-checkbox [(ngModel)]="isDefault"
+                    (change)="editShiftTimingPopupOpen(shiftWeekTitle, branchTitle, $event.checked)">
+                  </mat-checkbox>
+                  <label class="ml-05">{{ 'TESTCASETYPE.ISDEFAULT' | translate }}</label>
+                </div>
+              </div>
+            </mat-card-title>
+          </div>
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingIndicator2">
+          </mat-progress-bar>
+
+          <div class="activity-data no-drag" *ngIf="scrollbarH2" id="table-1">
+            <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+              [limit]="100" [rows]="shiftWeeks" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+              [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+              <ngx-datatable-column name="{{'SHIFTTIMING.DAYOFWEEK'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="dayOfWeek">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.dayOfWeek}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.STARTTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="startTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.startTime | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.ENDTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="endTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.endTime | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'TIMEZONE.TIMEZONE'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="timeZoneName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ getTimezoneName() }}
+                </ng-template>
+              </ngx-datatable-column>
+
+              <ngx-datatable-column name="{{'SHIFTTIMING.LATETIMEALLOWANCE'|translate}}" [flexGrow]="1"
+                [sortable]="true" prop="deadLine">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.deadLine | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+
+              <ngx-datatable-column name="{{'SHIFTTIMING.ALLOWEDBREAKTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="allowedBreakTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.allowedBreakTime }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{ 'SHIFTTIMING.ISPAIDBREAK' | translate }}" [flexGrow]="1" [sortable]="true"
+                prop="isPaidBreak">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span [matTooltip]="(row?.isPaidBreak ? 'Yes' : 'No')">{{row?.isPaidBreak ? "Yes" : "No"}}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <button class="text-center" title="{{ 'SHIFTTIMING.EDITSHIFTTIMING' | translate }}"
+                    [satPopoverAnchorFor]="shiftWeekPopover" #shiftWeekPopup="satPopoverAnchor"
+                    (click)="editShiftWeekPopupOpen(row,shiftWeekPopup)" *ngIf="!isArchived" mat-icon-button>
+                    <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                  </button>
+
+                </ng-template>
+              </ngx-datatable-column>
+
+            </ngx-datatable>
+          </div>
+          <mat-divider></mat-divider>
+          <!-- SHIFT TIMING DETAILS -->
+
+          <!-- SHIFT EXCEPTION -->
+          <div class="p-0 workflow-datalist">
+            <mat-card-title class="">
+              <div class="card-title-text p-05" fxLayout="row">
+                <div fxFlex>
+                  <b>{{'SHIFTTIMING.SHIFTEXCEPTION'|translate}}</b>
+                </div>
+                <div fxFlex="40px" *ngIf="!isClone">
+                  <button mat-icon-button class="add_btn pull-right" [satPopoverAnchorFor]="upsertShiftExceptionPopover"
+                    #upsertShiftExceptionPopup="satPopoverAnchor"
+                    (click)="createShiftException(upsertShiftExceptionPopup)" matTooltip=" Add shift exeption">
+                    <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card-title>
+          </div>
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingIndicator">
+          </mat-progress-bar>
+
+          <div class="activity-data no-drag" *ngIf="scrollbarH" id="table-2">
+            <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+              [limit]="100" [rows]="shiftExceptions" [loadingIndicator]="isAnyOperationIsInprogressException"
+              [scrollbarH]="true"
+              [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+              <ngx-datatable-column name="{{'SHIFTTIMING.EXCEPTIONDATE'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="exceptionDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.exceptionDate | date: "dd-MMM-yyyy" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.STARTTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="startTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.startTime | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.ENDTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="endTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.endTime | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.LATETIMEALLOWANCE'|translate}}" [flexGrow]="1"
+                [sortable]="true" prop="deadLine">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.deadLine | utcToLocalTimeWithDate | date: "HH:mm" }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'SHIFTTIMING.ALLOWEDBREAKTIME'|translate}}" [flexGrow]="1" [sortable]="true"
+                prop="allowedBreakTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.allowedBreakTime }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="{{'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <button class="text-center" matTooltip="{{ 'SHIFTTIMING.EDITSHIFTEXCEPTION' | translate }}"
+                    mat-icon-button [satPopoverAnchorFor]="upsertShiftExceptionPopover"
+                    #upsertShiftExceptionPopup="satPopoverAnchor"
+                    (click)="editShiftExceptionPopupOpen(row,upsertShiftExceptionPopup)">
+                    <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                  </button>
+                  <button class="text-center" matTooltip="{{ 'SHIFTTIMING.ARCHIVESHIFTEXCEPTION' | translate }}"
+                    mat-icon-button [satPopoverAnchorFor]="deleteShiftExceptionPopover"
+                    #deleteShiftExceptionPopUp="satPopoverAnchor"
+                    (click)="deleteShiftExceptionPopUpOpen(row,deleteShiftExceptionPopUp)" mat-icon-button>
+                    <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                  </button>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+          <!-- SHIFT EXCEPTION -->
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertShiftTimingPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ shiftTiming }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="shiftTimingForm" #formDirective="ngForm" novalidate
+          (submit)="shiftTimingForm.valid && upsertShiftTiming()">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="shift" placeholder="{{ 'SHIFTTIMING.SHIFTTIMING' | translate }}"
+                required>
+              <mat-error *ngIf="shiftTimingForm.get('shift').hasError('maxlength')">
+                {{ 'SHIFTTIMING.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="shiftTimingForm.get('shift').hasError('required') && shiftTimingForm.get('shift').touched">
+                {{ 'SHIFTTIMING.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{ 'SHIFTTIMING.SELECTDAYS' | translate }}" multiple required
+                formControlName="shiftTimingOptions" multiple [compareWith]="compareSelecteddaysFn" required>
+                <mat-option #allDaysSelected (click)="toggleAllRolesSelected()" [value]="0">
+                  Select all
+                </mat-option>
+                <mat-option *ngFor="let shiftOption of shiftOptionsList" (click)="toggleUserPerOne()"
+                  [value]="shiftOption.displayName">
+                  {{shiftOption.displayName}}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="shiftTimingForm.get('shiftTimingOptions').hasError('required')">
+                {{ 'SHIFTTIMING.ATLEASTONEDAY' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                formControlName="branchId" required>
+                <mat-option *ngFor="let branch of (branchList)" [value]="branch.branchId">
+                  {{ branch.branchName }}
+                </mat-option>
+              </mat-select>
+              <mat-error class="P-06"
+                *ngIf="shiftTimingForm.get('branchId').hasError('required') && shiftTimingForm.get('branchId').touched">
+                {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <div class="full-width ml-02">
+              <mat-checkbox mat-primary formControlName="isDefault">
+                {{'TESTCASETYPE.ISDEFAULT' | translate}}
+              </mat-checkbox>
+              <!-- <label>{{ 'TESTCASETYPE.ISDEFAULT' | translate }}</label>
+              <mat-checkbox [(ngModel)]="isDefault"></mat-checkbox> -->
+            </div>
+          </div>
+          <div class="mt-1 mb-05 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!shiftTimingForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertShiftTimingPopup()" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #upsertShiftExceptionPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1"> {{ 'SHIFTTIMING.SHIFTEXCEPTION' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="shiftExceptionForm" #formDirective2="ngForm" novalidate
+          (submit)="shiftExceptionForm.valid && upsertShiftException(formDirective2)">
+          <div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                  <input matInput [matDatepicker]="picker" placeholder="{{ 'SHIFTTIMING.EXCEPTIONDATE' | translate }}"
+                    formControlName="exceptionDate" (click)="picker.open()" [min]="maxDate" required autocomplete="off">
+                  <mat-error
+                    *ngIf="shiftExceptionForm.get('exceptionDate').hasError('required') && shiftExceptionForm.get('exceptionDate').touched">
+                    {{ 'SHIFTTIMING.SELECTTHEDATE' | translate }}
+                  </mat-error>
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="startTime" placeholder="{{'SHIFTTIMING.STARTTIME'|translate}} "
+                    aria-label="24hr format" [ngxTimepicker]="startTime" [format]="24" readonly required />
+                  <ngx-material-timepicker #startTime>
+                  </ngx-material-timepicker>
+                  <mat-error
+                    *ngIf="shiftExceptionForm.get('deadLine').hasError('required') && shiftExceptionForm.get('deadLine').touched">
+                    {{'SHIFTTIMING.SELECTSTARTTIME'|translate}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="endTime" placeholder="{{'SHIFTTIMING.ENDTIME'|translate}} "
+                    aria-label="24hr format" [ngxTimepicker]="endTime" [format]="24" readonly />
+                  <ngx-material-timepicker #endTime>
+                  </ngx-material-timepicker>
+                </mat-form-field>
+              </div>
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="deadLine" placeholder="{{'SHIFTTIMING.LATETIMEALLOWANCE'|translate}}"
+                    aria-label="24hr format" [ngxTimepicker]="deadLine" [format]="24" readonly required />
+                  <ngx-material-timepicker #deadLine>
+                  </ngx-material-timepicker>
+                  <mat-error
+                    *ngIf="shiftExceptionForm.get('deadLine').hasError('required') && shiftExceptionForm.get('deadLine').touched">
+                    {{'SHIFTTIMING.SELECTDEADLINE'|translate | softLabelsPipe : softLabels}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="allowedBreakTime" mobileNumber
+                    placeholder="{{'SHIFTTIMING.ALLOWEDBREAKTIME'|translate}}">
+                  <mat-error *ngIf="shiftExceptionForm.get('allowedBreakTime').hasError('max')">
+                    {{'SHIFTTIMING.BREAKTIMES'|translate}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+          </div>
+          <div class="mt-1 mb-05 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!shiftExceptionForm.valid||isAnyOperationIsInprogressException">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogressException">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              <fa-icon icon="spinner" class="mr-05" *ngIf="isAnyOperationIsInprogressException"></fa-icon>
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertShiftExceptionPopup()" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #shiftWeekPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'SHIFTTIMING.SHIFTWEEK' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="shiftWeekForm" #formDirective3="ngForm" novalidate
+          (submit)="shiftWeekForm.valid && upsertShiftWeek(formDirective3) ">
+          <div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="dayOfWeek" placeholder="{{ 'SHIFTTIMING.DAYOFWEEK' | translate }}"
+                    readonly>
+                </mat-form-field>
+              </div>
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="startTime" placeholder="{{'SHIFTTIMING.STARTTIME'|translate}} "
+                    aria-label="24hr format" [ngxTimepicker]="fullTime4" [format]="24" readonly required />
+                  <ngx-material-timepicker #fullTime4></ngx-material-timepicker>
+                  <mat-error
+                    *ngIf="shiftWeekForm.get('startTime').hasError('required') && shiftWeekForm.get('startTime').touched">
+                    {{'SHIFTTIMING.SELECTSTARTTIME'|translate}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="endTime" placeholder="{{'SHIFTTIMING.ENDTIME'|translate}} "
+                    aria-label="24hr format" [ngxTimepicker]="fullTime5" [format]="24" readonly />
+                  <ngx-material-timepicker #fullTime5></ngx-material-timepicker>
+                </mat-form-field>
+              </div>
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width master-timepicker">
+                  <input matInput formControlName="deadLine" placeholder="{{'SHIFTTIMING.LATETIMEALLOWANCE'|translate}}"
+                    aria-label="24hr format" [ngxTimepicker]="fullTime6" [format]="24" readonly required />
+                  <ngx-material-timepicker #fullTime6></ngx-material-timepicker>
+                  <mat-error
+                    *ngIf="shiftWeekForm.get('deadLine').hasError('required') && shiftWeekForm.get('deadLine').touched">
+                    {{'SHIFTTIMING.SELECTDEADLINE'|translate | softLabelsPipe : softLabels}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+              <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="allowedBreakTime" mobileNumber
+                    placeholder="{{'SHIFTTIMING.ALLOWEDBREAKTIME'|translate}}">
+                  <mat-error *ngIf="shiftWeekForm.get('allowedBreakTime').hasError('max')">
+                    {{'SHIFTTIMING.BREAKTIMES'|translate}}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="50" class="mt-3" fxFlex.xs="100">
+                <mat-checkbox formControlName="isPaidBreak">{{'SHIFTTIMING.ISPAIDBREAK' | translate}}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <!-- <div class="mt-1 mb-05 text-center" fxLayout.xs="table-footer-group"> -->
+          <div class="mt-1 mb-05 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!shiftWeekForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              <fa-icon icon="spinner" class="mr-05" *ngIf="isAnyOperationIsInprogress"></fa-icon>
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertShiftWeekPopup();" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #deleteShiftTimingPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">
+          {{'SHIFTTIMING.ARCHIVESHIFTTIMING' | translate}}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{'SHIFTTIMING.UNARCHIVESHIFTTIMING'| translate}}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{'SHIFTTIMING.SHIFTTIMINGARCHIVETEXT'| translate}}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{'SHIFTTIMING.SHIFTTIMINGUNARCHIVETEXT' | translate}}
+        </div>
+
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="archiveShiftTiming();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="archiveShiftTiming();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button [disabled]="isAnyOperationIsInprogress" mat-button mat-raised-button
+            (click)="closeshiftTimingPopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #deleteShiftExceptionPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">
+          {{ 'SHIFTTIMING.ARCHIVESHIFTEXCEPTION' | translate }}</div>
+
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'SHIFTTIMING.SHIFTEXCEPTIONARCHIVETEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="archiveShiftException();" *ngIf="!isArchived">
+            <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'DELETE' | translate }}
+          </button>
+
+          <button mat-button mat-raised-button (click)="closeDeleteShiftExceptionDialog();"
+            [disabled]="isAnyOperationIsInprogress">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageShifttiming"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

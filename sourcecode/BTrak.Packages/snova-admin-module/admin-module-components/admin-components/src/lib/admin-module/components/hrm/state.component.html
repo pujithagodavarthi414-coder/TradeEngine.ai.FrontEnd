@@ -1,0 +1,153 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageState">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'STATE.STATETITLE' | translate | titlecase }}">{{ 'STATE.STATETITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" fxFlex.xs="25px">
+          <mat-slide-toggle [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getStates()">
+          </mat-slide-toggle>
+        </div>
+        <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center" style="position: absolute; right: -4px;">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{ 'STATE.CLICKHERETOCREATEASTATETYPE' | translate }}"
+            [satPopoverAnchorFor]="statePopover" #statePopup="satPopoverAnchor"
+            (click)="createState(statePopup);clearForm()" *ngIf="!isArchived">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="states" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [scrollbarH]="true" [virtualization]="false">
+      <ngx-datatable-column name="{{ 'STATE.STATENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="stateName" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row?.stateName}}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'STATE.EDITSTATE' | translate }}" [satPopoverAnchorFor]="statePopover"
+            #statePopup="satPopoverAnchor" (click)="editState(row,statePopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'STATE.ARCHIVESTATE' | translate }}"
+            [satPopoverAnchorFor]="deleteStatePopover" #deleteStatePopup="satPopoverAnchor"
+            (click)="deleteStatePopupOpen(row,deleteStatePopup)" *ngIf="!isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{'STATE.UNARCHIVESTATE' | translate }}"
+            [satPopoverAnchorFor]="deleteStatePopover" #deleteStatePopup="satPopoverAnchor"
+            (click)="deleteStatePopupOpen(row,deleteStatePopup)" *ngIf="isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- edit -->
+  <sat-popover backdropClass="backdrop-color" #statePopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ stateEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="stateForm" #formDirective="ngForm" novalidate
+          (submit)="stateForm.valid && upsertState(formDirective)">
+          <div>
+            <mat-form-field>
+              <input matInput formControlName="stateName" placeholder="{{ 'STATE.STATENAME' | translate }}" required>
+              <mat-error *ngIf="stateForm.get('stateName').hasError('maxlength')">
+                {{ 'STATE.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error *ngIf="stateForm.get('stateName').hasError('required') && stateForm.get('stateName').touched">
+                {{ 'STATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!stateForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeupsertStatePopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- edit -->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteStatePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isStateArchived">
+          {{ 'STATE.ARCHIVESTATE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isStateArchived">
+          {{ 'STATE.UNARCHIVESTATE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isStateArchived">
+          {{ 'STATE.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isStateArchived">
+          {{ 'STATE.DESIGNU' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isStateArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteState();">
+            <mat-icon  style="cursor: pointer;">archive</mat-icon> {{'STATE.ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isStateArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteState();">
+            <mat-icon  style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeStatePopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageState"
+  textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

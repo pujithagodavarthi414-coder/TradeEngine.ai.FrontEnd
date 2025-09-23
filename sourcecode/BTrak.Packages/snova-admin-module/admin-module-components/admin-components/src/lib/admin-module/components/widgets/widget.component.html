@@ -1,0 +1,205 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageSystemApps)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="50" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'APP.APPTITLE' | translate | titlecase }}">{{ 'APP.APPTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 226px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getWidgets()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput pr-05" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="widgets" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'APP.APPNAME' | translate }}" [flexGrow]="1" prop="widgetName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="hide-content-overflow"><span matTooltip="{{ row?.widgetName | softLabelsPipe : softLabels }}"
+              matTooltipClass="tooltip-overflow">{{ row?.widgetName | softLabelsPipe : softLabels }}</span></div>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}" [flexGrow]="1" prop="description">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="hide-content-overflow"><span matTooltip="{{ row?.description }}"
+              matTooltipClass="tooltip-overflow">{{ row?.description }}</span></div>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'USERSTORY.TAGS' | translate }}" [flexGrow]="1" prop="tags">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="hide-content-overflow"><span matTooltip="{{ row?.tags }}"
+              matTooltipClass="tooltip-overflow">{{ row?.tags }}</span></div>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'USERMANAGEMENT.ROLE' | translate }}" [flexGrow]="1" prop="roleNames">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="hide-content-overflow"><span matTooltip="{{ row?.roleNames }}"
+              matTooltipClass="tooltip-overflow">{{ row?.roleNames }}</span></div>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'APP.EDITAPP' | translate }}" [satPopoverAnchorFor]="widgetPopover"
+            #widgetPopup="satPopoverAnchor" (click)="editWidget(row,widgetPopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'APP.ARCHIVEAPP' | translate }}"
+            [satPopoverAnchorFor]="deletewidgetPopover" #deletewidgetPopup="satPopoverAnchor"
+            (click)="deleteWidgetPopUpOpen(row,deletewidgetPopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'APP.UNARCHIVEAPP' | translate }}"
+            [satPopoverAnchorFor]="deletewidgetPopover" #deletewidgetPopup="satPopoverAnchor"
+            (click)="deleteWidgetPopUpOpen(row,deletewidgetPopup)" *ngIf="isArchived" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'USERSTORY.TAGS' | translate }}" [satPopoverAnchorFor]="tagsPopover"
+            #tagsPopup="satPopoverAnchor" (click)="tagsPopupOpen(row,tagsPopup)" mat-icon-button *ngIf="!isArchived">
+            <fa-icon icon="tag" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<!-- editpopover -->
+<sat-popover backdropClass="backdrop-color" #widgetPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ widgetName | softLabelsPipe : softLabels }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="widgetForm" novalidate (submit)="widgetForm.valid && upsertWidget()" #formDirective="ngForm">
+        <div>
+          <mat-form-field class="full-width">
+            <textarea matInput formControlName="description" rows="2"
+              placeholder="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}"></textarea>
+            <mat-error
+              *ngIf="widgetForm.get('description').hasError('maxlength') && widgetForm.get('description').touched">
+              {{ 'APP.CUSTOMAPPDESCRIPTIONMAXLENGTHERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+            <mat-select formControlName="selectedRoles" placeholder="{{ 'USERMANAGEMENT.ROLE' | translate }}" multiple
+              required>
+              <app-select-all [model]="widgetForm.get('selectedRoles')" [values]="roleIds">
+              </app-select-all>
+              <!-- <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option> -->
+              <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                {{ roles.roleName }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="widgetForm.get('selectedRoles').hasError('required') && widgetForm.get('selectedRoles').touched">
+              {{ 'APP.SELECTANYROLE' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!widgetForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertWidgetPopup()" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deletewidgetPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1" *ngIf="isWidgetArchived">
+        {{ 'APP.ARCHIVEAPPS' | translate }}</div>
+      <div class="card-title-text mb-1" *ngIf="!isWidgetArchived">
+        {{ 'APP.UNARCHIVEAPPS' | translate }}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1" *ngIf="isWidgetArchived">
+        {{ 'APP.APPARCHIVETEXT' | translate }}
+      </div>
+      <div class="card-content mb-1" *ngIf="!isWidgetArchived">
+        {{ 'APP.APPUNARCHIVETEXT' | translate }}
+      </div>
+      <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isWidgetArchived"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteWidget();">
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+        </button>
+        <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isWidgetArchived"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteWidget();">
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteWidgetPopup();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<!-- tagspopover -->
+<sat-popover backdropClass="backdrop-color" #tagsPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-1 mat-bg-primary">
+          {{'USERSTORY.ADDTAGS' | translate}}
+        </div>
+      </mat-card-title>
+      <app-component-tags *ngIf="isTagsPage" [referenceId]="widgetId"
+        (closeTagsPopUp)="closeTagsPopup($event)"></app-component-tags>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageSystemApps)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

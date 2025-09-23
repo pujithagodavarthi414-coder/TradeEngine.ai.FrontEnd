@@ -1,0 +1,73 @@
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeSpentTime)"
+  textToDisplay="{{'EMPLOYEEWORKINGDAYS.PERMISSION' | translate}}">
+</app-common-message-box>
+<div class="p-0 full-height gridster-noset" *ngIf="(canAccess_feature_EmployeeSpentTime)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{'EMPLOYEESPENTTIME.EMPLOYEESPENTTIME' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}" icon="user-cog"
+              class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'FEEDTIMESHEET.EMPLOYEENAME'|translate | softLabelsPipe : softLabels}}"
+                (selectionChange)="selectedUser($event.value)" [(ngModel)]="userId">
+                <mat-option value="0">All</mat-option>
+                <mat-option [value]="person.id" *ngFor="let person of employeeList">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    src="{{person.profileImage}}">{{person.fullName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{'MYPROFILE.FROMDATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker1" [(ngModel)]="fromDate" (click)="picker1.open()"
+                autocomplete="off" (dateChange)="onDateFromChange($event)" class="date-picker" [(ngModel)]="dateFrom"
+                [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{'MYPROFILE.TODATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker2" [(ngModel)]="toDate" [min]="minDate"
+                (click)="picker2.open()" autocomplete="off" (dateChange)="onDateToChange($event)" class="date-picker"
+                [(ngModel)]="dateTo" [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <mat-datepicker #picker></mat-datepicker>
+  <mat-card class="m-0 p-0 app-height-4" id="style-1">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress"></mat-progress-bar>
+    <google-chart [data]="columnChart" (chartReady)="ready($event)" (chartError)='error($event)'></google-chart>
+  </mat-card>
+</div>

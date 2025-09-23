@@ -1,0 +1,122 @@
+<div>
+    <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+            {{ 'USERSTORY.CREATESUBTASK' | translate }}
+        </div>
+    </mat-card-title>
+    <form [formGroup]="subTaskForm" #formDirective="ngForm" novalidate
+        (submit)="subTaskForm.valid && saveUserStorySubTask()">
+        <div class="card-content p-05">
+            <div>
+                <div fxLayout="row wrap">
+                    <div fxFlex="100">
+                        <mat-form-field class="full-width">
+                            <textarea formControlName="userStoryName" matInput
+                                placeholder="{{ 'USERSTORY.SUBTASK' | translate | softLabelsPipe : softLabels}}" trim
+                                required></textarea>
+                            <!-- <mat-hint>{{ 'USERSTORY.WORKITEMHINT' | translate | softLabelsPipe : softLabels}}</mat-hint> -->
+                            <mat-error>
+                                <span
+                                    *ngIf="subTaskForm.get('userStoryName').hasError('required') && subTaskForm.get('userStoryName').touched">
+                                    {{ 'USERSTORY.PLEASEENTERUSERSTORYNAME' | translate | softLabelsPipe : softLabels}}
+                                </span>
+                                <span *ngIf="subTaskForm.get('userStoryName').hasError('maxlength')">
+                                    {{ 'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row wrap" class="mb-05">
+                    <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" class="mr-05">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                            <mat-select
+                                placeholder="{{ 'USERDETAIL.USERSTORYTYPE'|translate| softLabelsPipe : softLabels}}"
+                                formControlName="userStoryTypeId" required>
+                                <mat-option *ngFor="let userStoryType of (userStoryTypes$ | async)"
+                                    [value]="userStoryType.userStoryTypeId">
+                                    {{ userStoryType.userStoryTypeName | softLabelsPipe : softLabels}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="!subTaskForm.get('userStoryTypeId').valid && subTaskForm.get('userStoryTypeId').touched">
+                                    {{ 'USERSTORY.PLEASESELECTUSERSTORYTYPE' | translate | softLabelsPipe : softLabels}}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="ownerUserId"
+                                placeholder="{{ 'USERSTORY.SELECTOWNER' | translate }}"
+                                (selectionChange)="getAssigneeValue($event.value)">
+                                <mat-select-trigger>
+                                    {{selectedMember}}
+                                </mat-select-trigger>
+                                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                                <mat-option [value]="user.projectMember.id"  *ngFor="let user of (projectMembers$ | async)">
+                                  <app-avatar class="employee_img" matTooltip="{{ user.projectMember.name }}" *ngIf="!user.projectMember.profileImage"
+                                    [name]="user.projectMember.name| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                                  <img class="employee_img" matTooltip="{{ user.projectMember.name }}" *ngIf="user.projectMember.profileImage"
+                                    [src]="user.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.projectMember.name }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row wrap" class="mb-05">
+                    <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" class="mr-05">
+                        <app-common-estimatedTime [estimatedTime]="estimatedTime"
+                            (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap">
+                        <mat-form-field class="full-width" *ngIf="isDateTimeConfiguration && !isSprintUserStories">
+                            <!-- <input matInput formControlName="deadLineDate" [matDatetimepicker]="deadlineDatePicker"
+                                autocomplete="false"
+                                placeholder="{{ 'USERSTORY.DEADLINE' | translate | softLabelsPipe : softLabels}}">
+                            <mat-datetimepicker-toggle [for]="deadlineDatePicker" matSuffix></mat-datetimepicker-toggle>
+                            <mat-datetimepicker #deadlineDatePicker type="datetime">
+                            </mat-datetimepicker> -->
+                            <input matInput formControlName="deadLineDate" [owlDateTimeTrigger]="deadlineDatePicker"
+                                [owlDateTime]="deadlineDatePicker"
+                                placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+                            <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker"
+                                style="float:right;position:absolute;right:0">
+                            </fa-icon>
+                            <owl-date-time #deadlineDatePicker></owl-date-time>
+                        </mat-form-field>
+
+                        <mat-form-field class="full-width" *ngIf="!isDateTimeConfiguration && !isSprintUserStories">
+                            <input formControlName="deadLineDate" matInput [matDatepicker]="picker"
+                                (click)="picker.open()"
+                                placeholder="{{ 'USERSTORY.DEADLINE' | translate | softLabelsPipe : softLabels}}" />
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                        </mat-form-field>
+                        <mat-form-field class="full-width" *ngIf="isSprintUserStories">
+                            <input matInput formControlName="sprintEstimatedTime"
+                                (input)="saveSprintEstimatedTime($event.target.value)"
+                                placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}"
+                                amountOnly>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-05">
+                <button mat-raised-button color="primary" class="mr-05" type="submit"
+                    [disabled]="!subTaskForm.valid || (anyOperationInProgress$|async) || isButtonDisabled">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$|async)">
+                    </mat-progress-bar>
+                    <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'ADD' | translate }}
+                </button>
+                <button mat-raised-button (click)="resetSubTaskForm(); (false)"
+                    [disabled]="(anyOperationInProgress$|async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'DISMISS' | translate }}
+                </button>
+            </div>
+        </div>
+
+
+    </form>
+</div>

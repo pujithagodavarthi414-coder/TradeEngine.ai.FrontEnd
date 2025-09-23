@@ -1,0 +1,140 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageInductionWork)">
+
+    <mat-card class="p-0 canteen-manage m-0 ">
+        <mat-card-title class="full-width data-table-header drag-handler">
+
+            <div fxLayout="row wrap" fxLayout.xs="column">
+
+                <div fxFlex class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">                    
+                    <span matTooltip="{{'EXIT.EXITCONFIGURATIONS' | translate | titlecase }}">{{ 'EXIT.EXITCONFIGURATIONS' | translate | titlecase }}</span>
+                </div>
+
+                <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="start center">
+                   
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                                        
+                    <span class="close_icon" style="right: 0px !important;">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+
+                <div fxFlex="40px" fxLayoutAlign="end center">
+                    <button mat-icon-button matTooltip="{{'EXIT.CREATEEXITTASK'|translate}}"
+                        [satPopoverAnchorFor]="upsertExitPopover" #upsertExitPopUp="satPopoverAnchor"
+                        (click)="createExitPopupOpen(upsertExitPopUp);clearForm()">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <kendo-grid [data]="exits" [pageSize]="state.take" [skip]="state.skip" [pageable]="pagable"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isAnyOperationIsInprogress"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="exitName" title="{{'EXIT.TASKNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b class="cursor-auto">
+                        {{ dataItem.exitName   }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'PERFORMANCE.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="{{'EXIT.EDITEXITCONFIGURATION'|translate}}"
+                        (click)="editExitPopupOpen(dataItem,upsertExitPopUp)"
+                        [satPopoverAnchorFor]="upsertExitPopover" #upsertExitPopUp="satPopoverAnchor"
+                        mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <button class="text-center" matTooltip="{{'EXIT.ARCHIVECONFIGURATION'|translate}}"
+                        (click)="deleteExitPopUpOpen(dataItem,deleteExitPopUp)"
+                        [satPopoverAnchorFor]="deleteExitPopover" #deleteExitPopUp="satPopoverAnchor"
+                        mat-icon-button>
+                     <fa-icon class="mr-05" icon="archive"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #upsertExitPopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                    {{Exittype}}</div>
+            </mat-card-title>
+            <mat-card-content class="P-05" style="width: 450px;">
+                <form [formGroup]="ExitForm" #formDirective="ngForm" novalidate
+                    (submit)="ExitForm.valid && upsertExit(formDirective)">
+                    <mat-form-field class="full-width">
+                        <textarea matInput formControlName="exitName" rows="2"
+                            placeholder="{{'EXIT.EXITTASK'|translate}}" required></textarea>
+                        <mat-error *ngIf="ExitForm.get('exitName').hasError('maxlength')">
+                            {{'EXIT.MAXLENGTHERROR'|translate}}</mat-error>
+                        <mat-error
+                            *ngIf="ExitForm.get('exitName').hasError('required') && ExitForm.get('exitName').touched">
+                            {{'EXIT.REQUIREDERROR'|translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                    <div class="mt-1 text-center">
+                        <button mat-raised-button type="submit" color="primary" class="mr-1"
+                            [disabled]="!ExitForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertExitPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #deleteExitPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">
+                    {{'EXIT.ARCHIVECONFIGURATION'|translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1">
+                    {{'EXIT.ARCHIVECONFIGURATIONTEXT'|translate}}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteExit();">
+                        <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'EXIT.ARCHIVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteExitPopUp();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageInductionWork) && !(roleFeaturesIsInProgress$|async)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

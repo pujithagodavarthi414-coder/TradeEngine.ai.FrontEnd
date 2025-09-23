@@ -1,0 +1,222 @@
+<mat-card class="p-0 canteen-manage m-0">
+  <mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" *ngIf="!data.rateTagsList">
+      {{'RATETAG.ADDRATETAGS' | translate}}</div>
+    <div class="card-title-text mat-bg-primary p-05"
+      *ngIf="data.rateTagsList && data.roleBranchOrEmployeeInputModel.isInHerited != true">
+      {{'RATETAG.EDITRATETAGS' | translate}}</div>
+    <div class="card-title-text mat-bg-primary p-05"
+      *ngIf="data.rateTagsList && data.roleBranchOrEmployeeInputModel.isInHerited == true">
+      {{'RATETAG.OVERRIDERATETAGS' | translate}}</div>
+  </mat-card-title>
+</mat-card>
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<div class="activity-data ml-1 mr-1 mt-1">
+  <form novalidate>
+    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+      <div fxFlex="20" fxFlex.xs="100">
+        <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+          <mat-select [(ngModel)]="rateTagInsertDetails.rateTagCurrencyId" [ngModelOptions]="{standalone: true}"
+            placeholder="{{ 'RATESHEET.PLEASESELECTCURRENCY' | translate }}" required disabled>
+            <mat-option value="option" *ngFor="let currency of (currencyList)" [value]="currency.currencyId">
+              {{ currency.currencyName }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="!rateTagInsertDetails.rateTagCurrencyId">
+            {{ 'RATESHEET.PLEASESELECTRATESHEETFORNAME' | translate }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div fxFlex="25" fxFlex.xs="100">
+        <mat-form-field class="full-width">
+          <input matInput [(ngModel)]="rateTagInsertDetails.rateTagStartDate" [matDatepicker]="picker1"
+            [ngModelOptions]="{standalone: true}" (click)="picker1.open()"
+            [disabled]="data.roleBranchOrEmployeeInputModel.isDisabled"
+            placeholder="{{'RATETAG.RATESTARTDATE' | translate}}" autocomplete="off" required>
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div fxFlex="25" fxFlex.xs="100">
+        <mat-form-field class="full-width">
+          <input matInput [(ngModel)]="rateTagInsertDetails.rateTagEndDate" [matDatepicker]="picker2"
+            [disabled]="data.roleBranchOrEmployeeInputModel.isDisabled" [min]="rateTagInsertDetails.rateTagStartDate"
+            [ngModelOptions]="{standalone: true}" (click)="picker2.open()"
+            placeholder="{{'RATETAG.RATEENDDATE' | translate}}" autocomplete="off" required>
+          <mat-datepicker-toggle matSuffix [for]="picker2"> </mat-datepicker-toggle>
+          <mat-datepicker #picker2></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div fxFlex="30" fxFlex.xs="100">
+        <button class="pull-right priority" type="button" matTooltip="{{ 'RATETAG.CREATETOOLTIP' | translate }}"
+          mat-raised-button (click)="choseFromLibrary();">
+          {{ 'RATETAG.CHOOSEFROMLIBRARY' | translate }}
+        </button>
+      </div>
+    </div>
+    <div fxLayout="row">
+      <div fxFlex>
+        <ngx-datatable id="style1" #table class='btrak' [columnMode]="'flex'" [rowHeight]="35" [headerHeight]="35"
+          [scrollbarH]="isScrollTrue" [footerHeight]="35" [rows]="rateTagInsertDetails.rateTagDetails"
+          [loadingIndicator]="isRateTagDetailsLoading" [limit]="10">
+          <ngx-datatable-column [flexGrow]="0.5">
+            <ng-template ngx-datatable-cell-template let-row="row">
+              <mat-checkbox [(ngModel)]="row.isSelected" [checked]="row.isSelected" (change)="onCheckChange()"
+                [ngModelOptions]=" {standalone: true}">
+              </mat-checkbox>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATETAGTITLENAME' | translate}}" [sortable]="true" [flexGrow]="1"
+            prop="rateTagName">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div> {{ row?.rateTagName }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1.5" name="{{'RATETAG.RATETAGTYPE' | translate}}" prop="rateTagForNames">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div matTooltip="{{row?.rateTagForNames}}">{{ row?.rateTagForNames }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURSHORT' | translate}}" prop="ratePerHour">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHour | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHour" [(ngModel)]="row.ratePerHour"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURMONSHORT' | translate}}"
+            prop="ratePerHourMon">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourMon | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourMon" [(ngModel)]="row.ratePerHourMon"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURTUESHORT' | translate}}"
+            prop="ratePerHourTue">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourTue | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourTue" [(ngModel)]="row.ratePerHourTue"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURWEDSHORT' | translate}}"
+            prop="ratePerHourWed">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourWed | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourWed" [(ngModel)]="row.ratePerHourWed"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURTHUSHORT' | translate}}"
+            prop="ratePerHourThu">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourThu | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input type="number" matInput [value]="row.ratePerHourThu" [(ngModel)]="row.ratePerHourThu"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURFRISHORT' | translate}}"
+            prop="ratePerHourFri">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourFri | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourFri" [(ngModel)]="row.ratePerHourFri"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURSATSHORT' | translate}}"
+            prop="ratePerHourSat">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourSat | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourSat" [(ngModel)]="row.ratePerHourSat"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.RATEPERHOURSUNSHORT' | translate}}"
+            prop="ratePerHourSun">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourSun | currency : selectedCurrency.currencyCode}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input matInput type="number" [value]="row.ratePerHourSun" [(ngModel)]="row.ratePerHourSun"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [hidden]="true" [draggable]="false" [resizeable]="false" [sortable]="false"
+            [cellClass]="'p-0'" [flexGrow]="0.1">
+            <ng-template ngx-datatable-cell-template>
+              <span>&nbsp;&nbsp;&nbsp;</span>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [flexGrow]="1" name="{{'RATETAG.PRIORITY' | translate}}" prop="priority">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+              <div [hidden]="isEditable[rowIndex]">{{ row?.priority}}
+              </div>
+              <mat-form-field [hidden]="!isEditable[rowIndex]">
+                <input type="number" matInput [value]="row.priority" [(ngModel)]="row.priority"
+                  [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </ng-template>
+          </ngx-datatable-column>
+          <!-- Column: Editing Mode-->
+          <ngx-datatable-column [flexGrow]="1.5" name="{{'ACTIONS' | translate}}">
+            <ng-template let-value="value" let-row="row" let-rowIndex="rowIndex" ngx-datatable-cell-template>
+              <button class="text-center" matTooltip="{{'RATETAG.EDITRATETAG' | translate}}"
+                *ngIf="!this.isEditable[rowIndex]" (click)="this.isEditable[rowIndex]=!this.isEditable[rowIndex]"
+                mat-icon-button>
+                <fa-icon icon="pen" class="mat-color-accent"></fa-icon>
+              </button>
+              <button class="text-center" matTooltip="{{'RATETAG.SAVERATETAG' | translate}}"
+                *ngIf="this.isEditable[rowIndex]" (click)="save(row, rowIndex);" mat-icon-button>
+                <fa-icon icon="save" class="mat-color-accent"></fa-icon>
+              </button>
+              <button class="text-center" matTooltip="{{'RATETAG.CANCELRATETAG' | translate}}"
+                *ngIf="this.isEditable[rowIndex]" (click)="delete(rowIndex)" mat-icon-button>
+                <fa-icon icon="times" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+    <div class="mt-1 text-center mb-1">
+      <button mat-raised-button type="button" color="primary" class="mr-1" (click)="saveRateTagConfigurations(true)"
+        [disabled]="((!(rateTagInsertDetails.rateTagCurrencyId && rateTagInsertDetails.rateTagEndDate && rateTagInsertDetails.rateTagStartDate) 
+          || upsertRateTagConfigurationsInProgress == true))">
+        <mat-progress-bar *ngIf="upsertRateTagConfigurationsInProgress" color="primary" mode="indeterminate">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+      </button>
+      <button mat-button mat-raised-button (click)="closePopover();onNoClick();" type="button">
+        <fa-icon class="mr-05" icon="times"></fa-icon>
+        {{ 'CANCEL' | translate }}
+      </button>
+    </div>
+  </form>
+</div>

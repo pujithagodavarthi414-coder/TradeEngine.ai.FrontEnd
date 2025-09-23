@@ -1,0 +1,119 @@
+<div *ngIf="(canAccess_feature_ManageLeaveStatus)">
+
+<div class="full-height">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'LEAVESTATUS.LEAVESTATUSTITLE' | translate | titlecase }}">{{ 'LEAVESTATUS.LEAVESTATUSTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="close_icon mr-lg-n5" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider> 
+    </mat-card-title>
+  </mat-card>
+  
+  <div class="custom-table-height" id="style-1" *ngIf="(canAccess_feature_ManageLeaveStatus)">
+    <div class="activity-data pagination-move-left">
+      <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="100" [rows]="leaveStatuss" [loadingIndicator]="isAnyOperationIsInprogress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'LEAVESTATUS.LEAVESTATUSNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+          prop="leaveStatusName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.leaveStatusName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'LEAVESTATUS.LEAVESTATUSCOLOUR' | translate}}" [flexGrow]="1"
+        [sortable]="true" prop="leaveStatusColour">
+    
+        <ng-template let-row="row" ngx-datatable-cell-template>
+            <div [ngStyle]="{'background':(row.leaveStatusColour == null)?'':row.leaveStatusColour}"
+                style="width:100px;border-radius: 15px;">
+                &nbsp;
+            </div> 
+        </ng-template>
+    </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'LEAVESTATUS.EDITLEAVESTATUS' | translate }}" mat-icon-button
+              [satPopoverAnchorFor]="upsertLeaveStatusPopover" #upsertLeaveStatusPopUp="satPopoverAnchor"
+              (click)="editLeaveStatusPopupOpen(row,upsertLeaveStatusPopUp)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <!--Edit Leave Status dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertLeaveStatusPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ leaveStatusEdit }}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+          <form [formGroup]="leaveStatusForm" #formDirective="ngForm" novalidate
+            (submit)="leaveStatusForm.valid && upsertLeaveStatus(formDirective)">
+            <div>
+              <mat-form-field class="full-width">
+                <input matInput formControlName="leaveStatusName"
+                  placeholder="{{ 'LEAVESTATUS.LEAVESTATUSNAME' | translate }}" required>
+                <mat-error *ngIf="leaveStatusForm.get('leaveStatusName').hasError('maxlength')">
+                  {{ 'LEAVESTATUS.MAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="leaveStatusForm.get('leaveStatusName').hasError('required') && leaveStatusForm.get('leaveStatusName').touched">
+                  {{ 'LEAVESTATUS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            </div>
+            <div>
+              <mat-form-field>
+                  <input matInput formControlName="leaveStatusColour" 
+                      placeholder="{{'LEAVESTATUS.LEAVESTATUSCOLOUR'| translate}}"
+                      [(colorPicker)]="color" [cpPosition]="'below'"
+                      [value]="color"
+                      (colorPickerChange)="leaveStatusForm.get('leaveStatusColour').setValue($event)" />
+              </mat-form-field>
+          </div>
+            <div class="mt-1">
+              <button mat-raised-button color="primary" class="mr-1" [disabled]="isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertLeaveStatusPopup(formDirective)" type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Edit Leave Status dialog-->
+  </div>
+</div>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageLeaveStatus)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

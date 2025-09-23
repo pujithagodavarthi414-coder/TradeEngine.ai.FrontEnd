@@ -1,0 +1,308 @@
+<app-common-message-box *ngIf="!( canAccess_feature_ViewInvoice)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height invoice-manager" *ngIf="(canAccess_feature_ViewInvoice)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{ 'CLIENTS.INVOICES' | translate }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="mr-05">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="changeArchiveInvoices(isArchived)">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event,searchText)" trim>
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon close_icon_billing" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <!-- <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button mat-icon-button (click)="showFilters = !showFilters">
+                        <fa-icon icon="filter" class="filter mat-color-accent"
+                            matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}">
+                        </fa-icon>
+                    </button>
+                </div> -->
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="(canAccess_feature_AddOrUpdateInvoice) && !isArchived">
+                    <button mat-icon-button (click)="addInvoice()">
+                        <fa-icon matTooltip="{{'BILLINGMANAGEMENT.ADDINVOICE' | translate}}"
+                            class="filter mat-color-accent" icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength == 0 && canAccess_feature_AddOrEditCustomFieldsForInvoices">
+                    <button mat-icon-button (click)="openCustomForm();$event.stopPropagation()">
+                        <fa-icon matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}" class="filter mat-color-accent"
+                            icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForInvoices">
+                    <button mat-icon-button (click)="editCustomForm();$event.stopPropagation()">
+                        <fa-icon matTooltip="{{'GENERICFORM.EDITCUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+                            icon="edit">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForInvoices">
+                    <button mat-icon-button (click)="deleteCustomForm();$event.stopPropagation()">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                        </mat-progress-bar>
+                        <fa-icon matTooltip="{{'GENERICFORM.DELETECUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+                            icon="trash">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="projects-list-grid grid-wrapper no-drag">
+        <kendo-grid #grid class="invoice-area-apps" [data]="invoiceList" id="style-1" [pageSize]="state.take" [skip]="state.skip"
+            [sort]="state.sort" [sortable]="true" [filter]="state.filter" [pageable]="true" [filterable]="false"
+            [scrollable]="true" [selectable]="true" 
+            (cellClick)="cellClickHandler($event)" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}" pagerItems="{{'ITEMS' | translate}}"
+                pagerOf="{{'OF' | translate}}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="invoiceNumber" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.INVOICENUMBER' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.invoiceNumber}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.invoiceNumber }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="clientName" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.CLIENTNAME' | translate | softLabelsPipe : softLabels}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.clientName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.clientName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="totalInvoiceAmount" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.INVOICEAMOUNT' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.symbol }}{{ dataItem?.totalInvoiceAmount.toFixed(2) | number }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="invoiceStatusName" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'CLIENTS.INVOICESTATUS' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="dataItem?.invoiceStatusColor"
+                        (click)="$event.stopPropagation(); cellMiniClickHandler(dataItem)">
+                        {{ dataItem.invoiceStatusName }}
+                    </mat-chip>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="issueDate" [filterable]="false" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.ISSUEDATE' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.issueDate | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="dueDate" [filterable]="false" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.DUEDATE' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.dueDate | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column [filterable]="false" width="250">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'TESTMANAGEMENT.ACTIONS' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                        <button *ngIf="(canAccess_feature_AddOrUpdateInvoice) && !isArchived" class="text-center mr-05"
+                            title="{{ 'BILLINGMANAGEMENT.EDITINVOICE' | translate }}"
+                            (click)="$event.stopPropagation();editInvoice(dataItem)" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_DownloadOrShareInvoice)" class="text-center mr-05"
+                            title="{{ 'BILLINGMANAGEMENT.DOWNLOADINVOICE' | translate }}"
+                            (click)="$event.stopPropagation();downloadForInvoice(dataItem,rowIndex)" mat-icon-button
+                            [ngStyle]="{ 'pointer-events': pdfOrMailOperationIsInprogress ? 'none' : '' }">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="rowIndex == kendoRowIndex && pdfOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon icon="download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_DownloadOrShareInvoice)" class="text-center mr-05"
+                            title="{{ 'BILLINGMANAGEMENT.SENDMAILINVOICE' | translate }}"
+                            [satPopoverAnchorFor]="mailInvoice" #mailInvoicePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();sendInvoice(dataItem,mailInvoicePopover,rowIndex)"
+                            mat-icon-button
+                            [ngStyle]="{ 'pointer-events': pdfOrMailOperationIsInprogress ? 'none' : '' }">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="rowIndex == kendoRowIndex && mailOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon icon="share-square" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveInvoice) && !isArchived" class="text-center"
+                            title="{{ 'BILLINGMANAGEMENT.ARCHIVEINVOICE' | translate }}"
+                            [satPopoverAnchorFor]="deleteInvoice" #deleteInvoicePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteInvoiceItem(dataItem,deleteInvoicePopover)"
+                            mat-icon-button>
+                            <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveInvoice) && isArchived" class="text-center"
+                            title="{{ 'BILLINGMANAGEMENT.UNARCHIVEINVOICE' | translate }}"
+                            [satPopoverAnchorFor]="deleteInvoice" #deleteInvoicePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteInvoiceItem(dataItem,deleteInvoicePopover)"
+                            mat-icon-button>
+                            <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': anyOperationIsInprogress}"></div>
+    </div>
+</div>
+
+<ng-template #addInvoiceDialogComponent let-data>
+    <add-invoice-dialog [data]=[data]></add-invoice-dialog>
+</ng-template>
+
+<ng-template #detailsInvoiceDialogComponent let-data>
+    <invoice-details-dialog [data]=[data]></invoice-details-dialog>
+</ng-template>
+
+
+<ng-template #customFormsComponent let-data>
+    <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)"></app-custom-form-component>
+</ng-template>
+
+<!--Delete dialog-->
+<sat-popover #deleteInvoice hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar>
+            <div class="card-content p-05" *ngIf="!isArchived">
+                {{'BILLINGMANAGEMENT.REALLYARCHIVETHEINVOICE' | translate}}
+            </div>
+            <div class="card-content p-05" *ngIf="isArchived">
+                {{'BILLINGMANAGEMENT.REALLYUNARCHIVETHEINVOICE' | translate}}
+            </div>
+            <div class="text-center">
+                <button *ngIf="!isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeInvoiceAtIndex(true)" [disabled]="deleteOperationIsInprogress">
+                    <!-- <fa-icon class="mr-05" icon="archive"></fa-icon>  -->
+                    <mat-icon style="cursor: pointer;" class="mr-05">archive</mat-icon>
+                    {{'TESTCASETYPE.ARCHIVE' | translate}}
+                </button>
+                <button *ngIf="isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeInvoiceAtIndex(false)" [disabled]="deleteOperationIsInprogress">
+                    <!-- <fa-icon class="mr-05" icon="archive"></fa-icon>  -->
+                    <mat-icon style="cursor: pointer;" class="mr-05">unarchive</mat-icon>
+                    {{'TESTCASETYPE.UNARCHIVE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteInvoiceDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete dialog-->
+
+<!-- Mail dialog -->
+<sat-popover #mailInvoice hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'BILLINGMANAGEMENT.SENDMAILINVOICE' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05" style="width: 300px;">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.PLEASEENTERONEMAILPERLINE' | translate}}
+            </div>
+            <div fxLayout="row wrap">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.TO' | translate}}" [(ngModel)]="to"></textarea>
+                    <!-- <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}</mat-hint> -->
+                </mat-form-field>
+            </div>
+            <div fxLayout="row wrap">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.CC' | translate}}" [(ngModel)]="cc"></textarea>
+                    <!-- <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}</mat-hint> -->
+                </mat-form-field>
+            </div>
+            <div fxLayout="row wrap" class="mb-1">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.BCC' | translate}}"
+                        [(ngModel)]="bcc"></textarea>
+                    <!-- <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}</mat-hint> -->
+                </mat-form-field>
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="pdfOrMailOperationIsInprogress || (!to && !cc && !bcc)" (click)="shareInvoice()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="pdfOrMailOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{'BILLINGMANAGEMENT.SEND' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeSendInvoicePopover()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- Mail dialog -->

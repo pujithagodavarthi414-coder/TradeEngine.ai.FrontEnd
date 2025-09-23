@@ -1,0 +1,183 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+</mat-progress-bar>
+<div class="mb-05"
+    *ngIf="!(!isConductEditable || isConductArchived || isConductSubmitted) && question.canAddAction && canAddAction">
+    <a class="new-testcase" [satPopoverAnchorFor]="addBug" #addBugPopover="satPopoverAnchor"
+        (click)="openBugPopover(addBugPopover)">
+        <fa-icon icon="plus" class="mr-05  add-icon"></fa-icon>
+        <b>{{'AUDIT.ADDACTION' | translate | softLabelsPipe :softLabels}}</b>
+    </a>
+</div>
+
+<div class="p-05" *ngIf="!showLinkAction && !(!isConductEditable || isConductArchived || isConductSubmitted) && question.canAddAction && canLinkAction">
+    <a (click)="showActionInput()" class="new-userstory">
+        <fa-icon icon="plus" class="mr-05"></fa-icon>
+        <span>
+            {{ 'AUDIT.CREATEACTIONLINK' | translate | softLabelsPipe : softLabels}}
+        </span>
+    </a>
+</div>
+
+<div class="mt-05 mb-05" *ngIf="showLinkAction && !(!isConductEditable || isConductArchived || isConductSubmitted) && question.canAddAction && canLinkAction">
+    <form [formGroup]="createActionLink" #formDirective="ngForm" novalidate
+        (submit)="createActionLink.valid && saveActionLink()">
+            <div fxFlex fxLayout="column wrap" class="full-width">
+                <mat-form-field class="full-width">
+                    <input type="text" class="search_goal" placeholder="{{ 'USERSTORY.SELECTUSERSTORY' | translate | softLabelsPipe : softLabels}}" matInput formControlName = "userStoryName"
+                        (input)="searchUserStories($event)" [matAutocomplete]="auto" 
+                        autocomplete="off" trim required>
+                    <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"
+                        *ngIf="anyOperationInProgress"></i>
+                    <span class="linked-userstory-close" *ngIf="userStoryName && !(anyOperationInProgress)">
+                        <span *ngIf="!userStoryName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="userStoryName" class="icon-button custom-auto-close-timesheet"
+                            aria-hidden="false" (click)="closeSearchUserStories()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                        (optionSelected)="onChangeUserStoryId($event.option.value)">
+                        <mat-option *ngFor="let userStory of  (userStories)" [value]="userStory.userStoryId">
+                            {{userStory.userStoryName}}
+                        </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
+
+        <div class="text-center p-05">
+            <button mat-raised-button color="primary"
+                [disabled]="!createActionLink.valid || isButtonDisabled" class="mr-05" type="submit"
+                title="{{ 'ADD' | translate }}">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="addOp">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'ADD' | translate }}
+            </button>
+            <button mat-raised-button type="button" title="Cancel" (click)="showActionInput();(false)"
+                [disabled]="(isButtonDisabled)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- 
+<div class="mb-05"
+*ngIf="!(!isConductEditable || isConductArchived || isConductSubmitted) && question.canAddAction && canAddAction">
+    <label class="ml-05 mb-0 mt-1"><b class="f-15p">{{ 'AUDIT.SELECTCONDUCTQUESTION' | translate | softLabelsPipe : softLabels}}</b></label>
+  <mat-form-field class="full-width">
+    <input type="text" class="search_goal" placeholder="{{ 'AUDIT.SELECTCONDUCTQUESTION' | translate | softLabelsPipe : softLabels}}" matInput [formControl] = "myControl"
+    (input)="searchQuestions($event)" [matAutocomplete]="auto" 
+    autocomplete="off" trim>
+<i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"
+    *ngIf="isQuestioinLoading"></i>
+<span class="linked-userstory-close" *ngIf="questionName && !isQuestioinLoading">
+    <span *ngIf="!questionName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <mat-icon *ngIf="questionName" class="icon-button custom-auto-close-timesheet"
+        aria-hidden="false" (click)="closeSearchQuestions()" style="cursor:pointer">
+        close</mat-icon>
+</span>
+<mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+    (optionSelected)="onChangeQuestion($event.option.value)">
+    <mat-option *ngFor="let question of  questions" [value]="question.conductQuestionId">
+        {{question.questionName}}
+    </mat-option>
+</mat-autocomplete>                    
+</mat-form-field>
+</div> -->
+<mat-card *ngIf="(!(anyOperationInProgress$ | async) && showBugs == false)" class="p-0 test-display" fxFlex="100"
+    fxFlex.gt-sm="100">
+    <div fxLayout="row" fxFlex="100" class="p-05">
+        <fa-icon icon="info-circle"></fa-icon>
+        <p class="ml-1">{{'AUDIT.THREEARENOACTIONS' | translate | softLabelsPipe : softLabels}}</p>
+    </div>
+</mat-card>
+<div id="style-1" *ngIf="(!(anyOperationInProgress$ | async)) && showBugs"
+    class="ml-05 mt-05 fit-content-conduct-question-actions-height" style="height: calc(100vh - 220px)">
+    <div class="mb-05" fxLayout="row">
+        <span class="section-description">{{'AUDIT.ACTIONSPRESENT' | translate | softLabelsPipe :softLabels}}
+        </span>
+        <span matTooltip="{{'AUDIT.ACTIONSCOUNT' | translate | softLabelsPipe :softLabels}}"
+            class="ml-05 badge-item test-case-count-number">{{actionsCount}}
+        </span>
+    </div>
+    <mat-card-content class="p-0">
+        <mat-list class="compact-list ml-02 mb-1">
+            <mat-list-item class="userstory-case-scenario" *ngFor="let case of (userStoryBugs$ | async)">
+                <div class="userstory-test-case-details" fxFlex="100" fxLayout="row" 
+                [matMenuTriggerFor]="unLinkAction" [matMenuTriggerData]="{actionData: case}"
+                #auditMenuTrigger="matMenuTrigger">
+                    <div class="section-cases-operations userstory-bugs-padding"
+                        [ngStyle]="{ 'border-left': 'solid 2px ' + case.bugPriorityColor}" fxFlex="100" fxLayout="row">
+                        <div fxFlex="5" class="ml-02 mr-05 mt-03">
+                            <fa-icon matTooltip="{{ case.bugPriorityName }} ({{case.bugPriorityDescription}})"
+                                icon="{{case.bugPriorityIcon}}"
+                                [ngStyle]="setColorForBugPriorityTypes(case.bugPriorityColor)">
+                            </fa-icon>
+                        </div>
+                        <div fxFlex class="userStory-name" #bugTitle>
+                            <span class="allgoals_txt userStory-name-control user-select-text"
+                                matTooltip="{{case.userStoryName}}" matTooltipShowDelay="500">
+                                {{case.userStoryName}}
+                            </span>
+                        </div>
+                        <mat-chip matTooltip="{{'AUDIT.ACTIONSTATUS' | translate | softLabelsPipe :softLabels}}" fxFlex="18"
+                            class="ml-05 allgoals_process text-center" mat-sm-chip
+                            [style.backgroundColor]="case.statusHexValue">
+                            {{ case.status }}
+                        </mat-chip>
+                    </div>
+                </div>
+            </mat-list-item>
+        </mat-list>
+        <mat-menu #unLinkAction="matMenu" [overlapTrigger]="false">
+            <ng-template matMenuContent let-actionData="actionData">
+                <button mat-menu-item [satPopoverAnchorFor]="deleteAction"
+                *ngIf="canLinkAction"
+                (click)="openArchiveActionPopover(actionData); $event.stopPropagation()">
+                <mat-icon>archive</mat-icon> <span>{{ 'USERSTORY.ARCHIVEUSERSTORYLINK' | translate}}</span>
+      </button>
+            </ng-template>
+        </mat-menu>
+    </mat-card-content>
+</div>
+
+<!--------add bug dialog------>
+<sat-popover #addBug hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05"> {{'AUDIT.ADDACTION' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <conduct-question-action *ngIf="loadBug" [questionData]="question" [loadBugs]=true
+                [selectedConduct]="selectedConduct" (closeAction)="closeBugPopover()">
+            </conduct-question-action>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--------add bug dialog------>
+
+<sat-popover #deleteAction hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="actionRequiredData">
+      <div class="card-content mb-1">
+        {{'AUDIT.REALLYUNLINKTHEACTION' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary"
+          [disabled]="disableActionDelete" (click)="deleteSelectedAction()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(deleteOperationInProgress)">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'USERSTORY.ARCHIVEUSERSTORYLINK' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteActionPopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

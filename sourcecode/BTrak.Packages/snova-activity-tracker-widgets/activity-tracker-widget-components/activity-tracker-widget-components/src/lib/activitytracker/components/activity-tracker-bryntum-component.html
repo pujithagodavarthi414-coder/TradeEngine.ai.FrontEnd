@@ -1,0 +1,191 @@
+<app-common-message-box
+  *ngIf="!( canAccess_feature_ViewEmployeeAppTrackerCompleteReport)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height" *ngIf="(canAccess_feature_ViewEmployeeAppTrackerCompleteReport)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{ 'ACTIVITYTRACKER.BRYNTUMVIEWTITLE' | translate}}
+          </span>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <button mat-icon-button matTooltip="{{'ROSTER.ZOOMIN' | translate}}" (click)="zoomIn()">
+            <mat-icon class="filter mat-color-accent">zoom_in</mat-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <button mat-icon-button matTooltip="{{'ROSTER.ZOOMOUT' | translate}}" (click)="zoomOut()">
+            <mat-icon class="filter mat-color-accent">zoom_out</mat-icon>
+          </button>
+        </div>
+        <div fxFlex="118px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <mat-checkbox [(ngModel)]="activityTrackerChecker" class="activity-checkbox"
+            (change)="overLayHandel($event)">
+            {{'ACTIVITYTRACKER.ACTIVITYTRACKER' | translate}}</mat-checkbox>
+        </div>
+        <div fxFlex="160px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <mat-checkbox [(ngModel)]="timesheetOverlayChecker" class="activity-checkbox"
+            (change)="overLayHandel($event)">
+            {{'ACTIVITYTRACKER.LOADTIMESHEET' | translate}}</mat-checkbox>
+        </div>
+        <div fxFlex="160px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <mat-checkbox [(ngModel)]="userStoryOverlayChecker" class="activity-checkbox"
+            (change)="overLayHandel($event)">
+            {{'ACTIVITYTRACKER.LOADUSERSTORY' | translate}}</mat-checkbox>
+        </div>
+        <div fxFlex="160px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <mat-checkbox [(ngModel)]="idleTimeOverlayChecker" class="activity-checkbox"
+            (change)="overLayHandel($event)">
+            <!-- {{'ACTIVITYTRACKER.IDLETIMEOVERLAY' | translate}} -->
+            Idle time overlay
+          </mat-checkbox>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="isSubmitted">
+          <button mat-icon-button matTooltip="{{'ACTIVITYTRACKER.SHOWFILTERS' | translate}}" (click)="showFilter()">
+            <fa-icon class="filter mat-color-accent" icon="filter"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-divider></mat-divider>
+  </mat-card>
+  <div class="activity-data">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading$| async">
+    </mat-progress-bar>
+    <div *ngIf="!isSubmitted" class="m-2">
+      <form [formGroup]="activityTrackerInputForm" #formDirective="ngForm" novalidate
+        (submit)="activityTrackerInputForm.valid && getWebAppTimeusage()">
+        <div>
+          <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="startDate" [matDatepicker]="inputpicker1" (click)="inputpicker1.open()"
+                  readonly [max]="maxDate" placeholder="{{'ACTIVITYTRACKER.STARTDATE' | translate}}"
+                  (input)="inputFormstartDateChange();" (dateChange)="inputFormstartDateChange();" class="date-picker" autocomplete="off"
+                  required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker1"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker1></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('startDate').hasError('required') && activityTrackerInputForm.get('startDate').touched">
+                    {{'HRMANAGAMENT.PLEASESELECTSTARTDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="endDate" [matDatepicker]="inputpicker2" (click)="inputpicker2.open()"
+                  readonly [min]="minDateForEndDateForInput" [max]="maxDate" class="date-picker"
+                  placeholder="{{'ACTIVITYTRACKER.ENDDATE' | translate}}" autocomplete="off" required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker2"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker2></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('endDate').hasError('required') && activityTrackerInputForm.get('endDate').touched">
+                    {{'HRMANAGAMENT.PLEASESELECTENDDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'ACTIVITYTRACKER.DEPARTMENT' | translate }}" formControlName="department"
+                  panelClass="dropdown-custom-class" multiple required (selectionChange)="departmentChange()">
+                  <mat-option #alldepartmentsSelected (click)="toggleAlldepartmentsSelected()" [value]="0">
+                    {{ 'ACTIVITYTRACKER.SELECTALL' | translate }}</mat-option>
+                  <mat-option [value]="component.departmentId" *ngFor="let component of departmentList" #alldepartmentsSelected (click)="toggledepartmentSelected()">
+                    {{ component.departmentName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('department').hasError('required') && activityTrackerInputForm.get('department').touched">
+                    {{'ACTIVITYTRACKER.PLEASESELECTDEPARTMENT' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'ACTIVITYTRACKER.BRANCH' | translate }}" formControlName="branchId"
+                  panelClass="dropdown-custom-class" multiple required>
+                  <!-- (selectionChange)="getUsersList(this.activityTrackerInputForm.value.branchId)" -->
+                  <mat-option #allbranchSelected (click)="toggleAllBranchSelected($event)" [value]="0">
+                    {{ 'ACTIVITYTRACKER.SELECTALL' | translate }}</mat-option>
+                  <mat-option [value]="component.branchId" *ngFor="let component of branchesList" (click)="toggleBranchSelected()">
+                    {{ component.branchName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="activityTrackerInputForm.get('branchId').hasError('required') && activityTrackerInputForm.get('branchId').touched">
+                    {{'ACTIVITYTRACKER.PLEASESELECTBRANCH' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'ACTIVITYTRACKER.EMPLOYEE' | translate }}" formControlName="employee"
+                  panelClass="dropdown-custom-class" multiple required>
+                  <mat-option #allEmployeesSelected (click)="toggleAllEmployeesSelected($event)" [value]="0">
+                    {{ 'ACTIVITYTRACKER.SELECTALL' | translate }}</mat-option>
+                  <mat-option [value]="component.userId"
+                    *ngFor="let component of employeeListDataDetails | rosterEmployeeActivityFilter: null: activityTrackerInputForm.get('department').value"
+                    (click)="toggleEmployeeSelected()">
+                    {{ component.firstName }} {{component?.surName}}
+                  </mat-option>
+                </mat-select>
+
+                <mat-error> 
+                  <span
+                    *ngIf="activityTrackerInputForm.get('employee').hasError('required') && activityTrackerInputForm.get('employee').touched">
+                    {{'ACTIVITYTRACKER.PLEASESELECTEMPLOYEE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <div>
+                {{'ACTIVITYTRACKER.GROUPBY' | translate}} :
+              </div>
+              <div>
+                <mat-radio-group class="radio-group mt-05 mb-05" formControlName="groupType">
+                  <div fxLayout="row wrap">
+                    <mat-radio-button value="true" [checked]="groupType">
+                      {{'ACTIVITYTRACKER.GROUPBYEMPLOYEE' | translate}}
+                    </mat-radio-button>
+                    <mat-radio-button class="ml-1" value="false">
+                      {{'ACTIVITYTRACKER.GROUPBYDATE' | translate}}
+                    </mat-radio-button>
+                  </div>
+                </mat-radio-group>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+          <button class="mr-1" mat-button mat-raised-button color="primary"
+            [disabled]="activityTrackerInputForm.invalid">
+
+            <fa-icon class="mr-05" icon="edit"></fa-icon> {{'ACTIVITYTRACKER.FILTER' | translate}}
+          </button>
+          <button type="button" mat-button mat-raised-button
+            *ngIf="activityTrackerInputForm.value.rostName" matTooltip="{{'ACTIVITYTRACKER.CANCEL' | translate}}">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'ACTIVITYTRACKER.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </div>
+    <div [style.visibility]="isSubmitted ? 'visible' : 'hidden' ">
+      <activity-bry-scheduler #scheduler1 [columns]="schedulerConfig.columns" [endDate]="schedulerConfig.endDate"
+        [events]="schedulerConfig.events" [minHeight]="schedulerConfig.minHeight"
+        [resources]="schedulerConfig.resources" [startDate]="schedulerConfig.startDate"
+        [eventContextMenuFeature]="schedulerConfig.eventContextMenuFeature" [viewPreset]="schedulerConfig.viewPreset"
+        [treeFeature]="schedulerConfig.treeFeature" [stripeFeature]="schedulerConfig.stripeFeature"
+        [eventTooltipFeature]="schedulerConfig.eventTooltipFeature" [employeeList]="employeeListDataDetails"
+        [trackerData]="appUsageData" [groupType]="groupType" [requestData]="activityTrackerInputForm.value">
+      </activity-bry-scheduler>
+    </div>
+  </div>
+</div>

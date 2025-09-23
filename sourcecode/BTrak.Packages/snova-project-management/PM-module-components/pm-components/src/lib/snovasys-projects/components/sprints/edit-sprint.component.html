@@ -1,0 +1,157 @@
+<form [formGroup]="sprintForm" novalidate (submit)="sprintForm.valid && saveSprint()">
+    <div class="card-content p-05">
+
+        <div fxLayout="row wrap" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                <mat-form-field class="full-width">
+                    <input formControlName="sprintName" matInput placeholder="{{ 'SPRINTS.SPRINTNAME' | translate }}"
+                        trim required />
+                    <mat-error>
+                        <span
+                            *ngIf="sprintForm.get('sprintName').hasError('required') && sprintForm.get('sprintName').touched">{{ 'SPRINTS.PLEASEENTERSPRINTNAME' | translate }}
+                        </span>
+                        <span
+                            *ngIf="sprintForm.get('sprintName').hasError('maxlength')">{{ 'SPRINTS.SPRINTNAMECANNOTEXCEED50CHARACTERS' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'SPRINTS.RESPONSIBLEPERSON' | translate  }}"
+                        formControlName="sprintResponsiblePersonId" (selectionChange)="getAssigneeValue($event.value)">
+                        <mat-select-trigger>
+                            {{selectedMember}}
+                        </mat-select-trigger>
+                        <mat-option [value]="member.projectMember.id" *ngFor="let member of (projectMembers$ | async)">
+                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                <div fxFlex="35px">
+                                    <app-avatar [name]="member.projectMember.name | removeSpecialCharacters"
+                                        [src]="member.projectMember.profileImage" [isRound]="true" size="30">
+                                    </app-avatar>
+                                </div>
+                                <div fxFlex="75">
+                                    <p class="mat-body-2">
+                                        {{ member.projectMember.name }}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'GOALS.BOARDTYPE' | translate }}" formControlName="boardTypeId" required
+                        (selectionChange)="selectConfiguration($event.value)">
+                        <mat-option [value]="boardType.boardTypeId" *ngFor="let boardType of (boardTypes$ | async)">
+                            {{ boardType.boardTypeName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="sprintForm.get('boardTypeId').hasError('required') && sprintForm.get('boardTypeId').touched">{{ 'GOALS.PLEASESELECTBOARDTYPE' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showAPI">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'GOALS.SELECTAPI' | translate }}" formControlName="boardTypeApiId">
+                        <mat-option [value]="boardtypeapiObj.boardTypeApiId"
+                            *ngFor="let boardtypeapiObj of (boardTypesApi$ | async)">
+                            {{ boardtypeapiObj.apiName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span *ngIf="
+                            !sprintForm.get('boardTypeApiId').valid &&
+                            sprintForm.get('boardTypeApiId').touched
+                          ">{{ 'GOALS.PLEASESELECTBOARDTYPEAPI' | translate }}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showVersion">
+                <mat-form-field class="full-width">
+                    <input formControlName="version" matInput placeholder="{{ 'GOALS.VERSION' | translate }}"
+                        (input)="checkMaxLengthValidation($event)" />
+                    <mat-error>
+                        <span
+                            *ngIf="sprintForm.get('version').hasError('maxlength')">{{ 'GOALS.VERSIONCANNOTEXCEED50CHARACTERS' | translate }}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" *ngIf="showTestSuite && isEnableTestRepo">
+                <div fxLayout="row wrap">
+                    <div fxFlex="89" fxFlex.gt-sm="86">
+                        <mat-form-field class="full-width">
+                            <mat-select
+                                placeholder="{{'TESTMANAGEMENT.TESTSUITE' | translate | softLabelsPipe : softLabels}}"
+                                formControlName="testSuiteId" (selectionChange)="changeTestSuiteId($event.value)"
+                                (selectionChange)="changeTestSuiteId($event.value)">
+                                <mat-option value="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                                <mat-option *ngFor="let suite of (testSuitesList$ | async)" [value]="suite.testSuiteId">
+                                    {{suite.testSuiteName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="22px" fxLayoutAlign="end center">
+                        <a *ngIf="(canAccess_entityType_feature_AddOrUpdateScenario) && isEnableTestRepo"
+                            class="add-test-suite-section"
+                            matTooltip="{{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe : softLabels}}"
+                            [satPopoverAnchorFor]="addTestSuite" #addTestSuitePopover="satPopoverAnchor"
+                            (click)="openTestSuiteDialog(addTestSuitePopover)">
+                            <fa-icon class="add-section-square" icon="plus-square"></fa-icon>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <editor class="dfree-header custom-logtime-comment" [(ngModel)]="description"
+            apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" menubar="false" [init]="initSettings"
+            background="white" height="120" formControlName="description" (onKeyUp)="checkCharactersLength($event)">
+        </editor>
+
+        <mat-error *ngIf="isDescriptionValidation">
+            {{ 'SPRINTS.SPRINTDESCRIPTIONCANNOTEXCEED50CHARACTERS' | translate }}
+        </mat-error>
+
+
+        <div class="text-center">
+            <button mat-raised-button type="submit" color="primary" class="mr-05"
+                [disabled]="!sprintForm.valid || (sprintOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(sprintOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="edit" class="mr-05"></fa-icon> {{ 'SPRINTS.UPDATE' | translate }}
+            </button>
+            <button mat-raised-button type="button" (click)="cancelSprintPopup()"
+                [disabled]="(sprintOperationInProgress$| async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'ASSETS.NO' | translate }}
+            </button>
+        </div>
+    </div>
+</form>
+
+
+<!-- Add Testsuite -->
+<sat-popover backdropClass="backdrop-color" #addTestSuite verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <!-- <app-testrail-testsuite-edit *ngIf="loadAddTestSuite" [projectId]="sprint.projectId"
+            (closeTestSuite)="closeTestSuiteDialog()">
+        </app-testrail-testsuite-edit>  -->
+        <ndc-dynamic *ngIf="loadAddTestSuite" [ndcDynamicFactory]="testSuitEdit.component"
+            [ndcDynamicComponent]="testSuitEdit.component" [ndcDynamicInjector]="injector"
+            [ndcDynamicInputs]="testSuitEdit.inputs" [ndcDynamicOutputs]="testSuitEdit.outputs">
+        </ndc-dynamic>
+    </mat-card>
+</sat-popover>

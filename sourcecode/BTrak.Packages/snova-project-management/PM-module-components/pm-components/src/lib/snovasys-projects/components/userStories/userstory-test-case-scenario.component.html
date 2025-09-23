@@ -1,0 +1,193 @@
+<div class="userstory-test-case-details" fxFlex="100" fxLayout="row">
+    <div class="section-cases-operations" [ngStyle]="{ 'background-color': caseSelected == true ? '#cac5c5' : '',
+        'border-left': 'solid 2px ' + caseDetail.statusColor }" fxFlex="100" fxLayout="row"
+        (click)="previewTestcase(caseScenarioStatusPopover)" [satPopoverAnchorFor]="caseScenarioStatus"
+        #caseScenarioStatusPopover="satPopoverAnchor">
+        <div fxFlex="50px" class="mr-05 mt-03 text-overflow-wrap">
+            <span>{{caseDetail.testCaseIdentity}}</span>
+        </div>
+        <div fxFlex class="userStory-name">
+            <div class="m-0" #testSuiteCaseTitle>
+                <!-- (mouseover)="checkTitleTooltipStatus()" -->
+                <span class="allgoals_txt userStory-name-control user-select-text" matTooltip="{{caseDetail.title}}"
+                    matTooltipShowDelay="500">
+                    {{caseDetail.title}}
+                </span>
+                <!-- [matTooltip]="showTitleTooltip ? caseDetail.title : ''" -->
+            </div>
+        </div>
+        <div fxFlex="80px" fxLayout="row" fxLayoutAlign="end center" class="m-0 ml-02 testsuite-cases-operations"
+            (click)="$event.stopPropagation()">
+            <div fxFlex="40px" (click)="$event.stopPropagation()" *ngIf="caseDetail.bugsCount > 0">
+                <a matTooltip="{{'TESTMANAGEMENT.BUGSCOUNT' | translate}}" [satPopoverAnchorFor]="scenarioBugs"
+                    #scenarioBugsPopover="satPopoverAnchor"
+                    (click)="$event.stopPropagation();openBugsPopover(scenarioBugsPopover)">
+                    <fa-icon icon="bug"></fa-icon>
+                </a>
+                <span class="testsuite-sections-count scenario-bugs-place scenario-bugs-count-padding">
+                    {{caseDetail.bugsCount}}
+                </span>
+            </div>
+            <div fxFlex="25px" (click)="$event.stopPropagation()">
+                <a matTooltip="{{'TESTMANAGEMENT.EDITCASE' | translate}}"
+                    *ngIf="(canAccess_entityType_feature_AddOrUpdateTestcases)"
+                    [satPopoverAnchorFor]="editTestCase" #editTestCasePopover="satPopoverAnchor"
+                    (click)="$event.stopPropagation();editTestCaseScenario(editTestCasePopover)">
+                    <fa-icon icon="edit"></fa-icon>
+                </a>
+            </div>
+            <div fxFlex="25px" (click)="$event.stopPropagation()">
+                <a class="ml-02" matTooltip="{{'TESTMANAGEMENT.DELETECASE' | translate}}"
+                    *ngIf="(canAccess_entityType_feature_DeleteTestcases)" [satPopoverAnchorFor]="deleteCase"
+                    #deleteCasePopover="satPopoverAnchor"
+                    (click)="$event.stopPropagation();deleteCases(caseDetail,deleteCasePopover)">
+                    <fa-icon icon="trash"></fa-icon>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit test case -->
+<sat-popover backdropClass="testrun-popover" #editTestCase hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'TESTMANAGEMENT.EDITTESTCASE' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="userstory-case-scenario-edit">
+            <testcase-scenario-edit *ngIf="loadEditTestCase" [testCaseDetails]="caseDetail"
+                [isSprintUserStories]="isSprintUserStories" (closeEditTestCase)="closeEditTestCaseDialog()">
+            </testcase-scenario-edit>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- Edit test case -->
+
+<!-- Edit test case status scenario -->
+<sat-popover backdropClass="testrun-popover" #caseScenarioStatus hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <button *ngIf="!(canAccess_entityType_feature_AddOrUpdateStatus) 
+            || userStoryData.goalStatusId != goalActiveId.toLowerCase()" class="inline_edit_close btn" color="warn"
+            (click)="closeEditTestCaseStatusScenarioDialog()">
+            <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+            <div *ngIf="(canAccess_entityType_feature_AddOrUpdateStatus)
+                && userStoryData.goalStatusId == goalActiveId.toLowerCase()"
+                class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'TESTMANAGEMENT.EDITTESTCASESTATUS' | translate}}
+            </div>
+            <div *ngIf="!(canAccess_entityType_feature_AddOrUpdateStatus)
+                || userStoryData.goalStatusId != goalActiveId.toLowerCase()"
+                class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'TESTMANAGEMENT.CASEDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="userstory-case-scenario-status-edit">
+            <testcase-scenario-status-edit *ngIf="loadEditTestCaseStatusScenario"
+                [isSprintUserStories]="isSprintUserStories" [testCaseStatuses]="(testCaseStatusList$ | async)"
+                [testCaseDetails]="caseDetail" [userStoryData]="userStoryData"
+                (closeEditTestCaseStatusScenario)="closeEditTestCaseStatusScenarioDialog()">
+            </testcase-scenario-status-edit>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- Edit test case status scenario -->
+
+<!--Delete Case dialog-->
+<sat-popover #deleteCase hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.AREYOUSUREDELETETHECASE' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableDeleteTestCase"
+                    (click)="removeTestCase()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteCaseDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete Case dialog-->
+
+<!-- Scenario bugs dialog -->
+<sat-popover backdropClass="backdrop-color" #scenarioBugs hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+            <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'USERDETAIL.BUGS' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="goal-bugs" id="style-1">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <div fxLayout="column" *ngIf="!(anyOperationInProgress$ | async)" fxLayoutGap="5px">
+                <div fxLayout="row" *ngFor="let bug of testCaseBugs;let i = index" fxLayoutGap="5px">
+                    <div fxFlex="15px">
+                        <fa-icon matTooltip="{{ bug.bugPriorityName }} ({{bug.bugPriorityDescription}})"
+                            icon="{{bug.bugPriorityIcon}}"
+                            [ngStyle]="setColorForBugPriorityTypes(bug.bugPriorityColor)">
+                        </fa-icon>
+                    </div>
+                    <div fxFlex="70" class="word-break display-pre-line" (click)="getSelectedBugUserStory(bug)"
+                        class="goal-cursor">
+                        <span>{{bug.userStoryName}}</span>
+                    </div>
+                    <mat-chip matTooltip="{{ bug.status | translate}}" fxFlex class="allgoals_process text-center"
+                        mat-sm-chip [style.backgroundColor]="bug.statusHexValue"
+                        [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                        (click)="$event.stopPropagation();saveUserStoryStatus(inLineEditUserStoryPopup,bug)">
+                        {{ bug.status }}
+                    </mat-chip>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- Scenario bugs dialog -->
+
+<sat-popover #inLineEditUserStoryPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+    hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+
+    <mat-card class="filter-data p-0">
+        <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="(anyOperationInProgress$|async) ||  (workItemInProgress)">
+        </mat-progress-bar>
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="closeUserStoryDialogWindow()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-1 mat-bg-primary">
+                    {{titleText }}
+                </div>
+            </mat-card-title>
+
+            <app-inline-editing-userstory-component
+                *ngIf="isInlineEdit || isInlineEditForEstimatedTime || isInlineEditForUserStoryStatus || isInlineEditForUserStoryOwner || isInlineEditForSprintEstimatedTime"
+                [userStory]="inLineUserStory" [isInlineEditForEstimatedTime]="isInlineEditForEstimatedTime"
+                [isFromBugsCount]="isFromBugsCount" [isInlineEditForUserStoryOwner]="isInlineEditForUserStoryOwner"
+                [isInlineEdit]="isInlineEdit" [isInlineEditForUserStoryStatus]="isInlineEditForUserStoryStatus" [isBugsTab] = "isBugsTab"
+                [isInlineEditForSprintEstimatedTime]="isInlineEditForSprintEstimatedTime" [goalReplanId]="goalReplanId"
+                [isAllGoalsPage]="isAllGoalsPage" [isEditFromProjects]="isEditFromProjects"
+                [isSprintsView]="isSprintUserStories">
+            </app-inline-editing-userstory-component>
+        </div>
+    </mat-card>
+</sat-popover>

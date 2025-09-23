@@ -1,0 +1,257 @@
+<div fxFlex="100" fxFlex.gt-sm="100" class="case-details-view">
+    <mat-progress-bar color="primary" class="pl-1" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <mat-card-content class="p-0" *ngIf="!(anyOperationInProgress$ | async) && loadDetails">
+        <div fxLayout="row wrap" class="">
+            <div fxLayout="row wrap">
+            </div>
+            <div fxFlex="100" fxLayout="row wrap" fxLayout.xs="column">
+                <div fxFlex="100" class="ml-1" fxFlex.gt-xs="20" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.TYPE' | translate}}</b></p>
+                    <p>{{singleTestCaseDetails.typeName}}</p>
+                </div>
+                <div fxFlex="100" class="ml-1" fxFlex.gt-xs="20" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.PRIORITY' | translate}}</b></p>
+                    <p>{{singleTestCaseDetails.priorityType}}</p>
+                </div>
+                <div fxFlex="100" class="ml-1" fxFlex.gt-xs="20" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.ESTIMATE' | translate}}</b></p>
+                    <p
+                        *ngIf="!(singleTestCaseDetails.estimate == null) && !(singleTestCaseDetails.estimate == '') && !(singleTestCaseDetails.estimate == 0)">
+                        {{singleTestCaseDetails.estimate | estimationTime}}
+                    </p>
+                    <p *ngIf="singleTestCaseDetails.estimate == null || singleTestCaseDetails.estimate == ''">
+                        None</p>
+                </div>
+                <div fxFlex="100" class="ml-1" fxFlex.gt-xs="20" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.AUTOMATIONTYPE' | translate}}</b></p>
+                    <p class="mb-0">{{singleTestCaseDetails.automationType}}</p>
+                </div>
+            </div>
+            <!-- <mat-card fxFlex="100" fxFlex.gt-sm="100"
+                *ngIf="!(singleTestCaseDetails.references == null) && !(singleTestCaseDetails.references == '')">
+                <div fxFlex="100" fxLayout="row wrap" fxLayout.xs="column">
+                    <div fxFlex="100" fxLayout="column wrap">
+                        <p class="m-0 pb-2"><b>{{'TESTMANAGEMENT.REFERENCES' | translate}}</b></p>
+                        <div *ngFor="let references of singleTestCaseDetails.referencesList" class="pl-1">
+                            <a (click)="navigateToReferencePage(references)"
+                                class="test-trail-references-hover word-break">{{references}}</a>
+                        </div>
+                    </div>
+                </div>
+            </mat-card> -->
+        </div>
+        <div fxLayout="row wrap">
+            <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                aria-orientation="horizontal">
+            </mat-divider>
+            <div fx-Flex="100" class="ml-1" fxFlex.gt-xs="100" fxLayout="column wrap">
+                <p class="m-0"><b>{{'TESTMANAGEMENT.REFERENCES' | translate}}</b></p>
+                <ng-container
+                    *ngIf="!(singleTestCaseDetails.references == null) && !(singleTestCaseDetails.references == '')">
+                    <div *ngFor="let references of singleTestCaseDetails.referencesList" class="pl-1">
+                        <a (click)="navigateToReferencePage(references)"
+                            class="test-trail-references-hover word-break"
+                            *ngIf="validateUrl(references)">{{references}}</a>
+                        <label *ngIf="!validateUrl(references)">{{references}}</label>
+                    </div>
+                </ng-container>
+
+            </div>
+        </div>
+        <div fxLayout="row wrap" *ngIf="(showSteps || showText)">
+            <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                aria-orientation="horizontal">
+            </mat-divider>
+            <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                <p class="m-0"><b>{{'TESTMANAGEMENT.PRECONDITIONS' | translate}}</b></p>
+                <p class="m-0 word-break display-pre-line ml-05 p-05" *ngIf="!(singleTestCaseDetails.precondition == null) 
+                && !(singleTestCaseDetails.precondition == '')">{{singleTestCaseDetails.precondition}}</p>
+            </div>
+        </div>
+        <div *ngIf="preFilePath.length > 0 && (showSteps || showText)"
+            class="mt-05 mb-05 ml-2 userStory-name min-width-overflow" fxFlex="100" fxLayout="column">
+            <span fxLayout="row" *ngFor="let img of preFilePath;let i = index">
+                <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                    class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                    matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+            </span>
+        </div>
+        <div fxLayout="row wrap" class="p-05" *ngIf="showSteps">
+            <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                aria-orientation="horizontal">
+            </mat-divider>
+            <div fxFlex="100" class="ml-1 mb-05">
+                <p class="m-0"><b>{{'TESTMANAGEMENT.STEPS' | translate}}</b></p>
+            </div>
+            <div fxFlex="100" class="mb-05 ml-05 test-suite-steps p-03" fxLayout="row wrap" fxHide fxHide.gt-xs="false">
+                <div fxFlex="7"></div>
+                <div fxFlex="47"><b>{{'TESTMANAGEMENT.STEP' | translate}}</b></div>
+                <div fxFlex="45"><b>{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}</b>
+                </div>
+            </div>
+            <div fxFlex="100" fxLayout="row wrap" fxLayout.xs="column"
+                *ngFor="let step of singleTestCaseDetails.testCaseSteps;let i = index" class="ml-05 p-05">
+                <div fxFlex="7" fxFlex.lg="10" fxFlex.xs="100" fxHide fxHide.gt-xs="false">
+                    <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                </div>
+                <div fxFlex="44" fxFlex.lg="38" fxFlex.xs="100" fxLayout="column" class="word-break display-pre-line" fxHide
+                    fxHide.gt-xs="false">
+                    <div fxFlex class="mb-05" *ngIf="step.stepText">
+                        {{step.stepText}}
+                    </div>
+                    <div class="userStory-name min-width-overflow" fxFlex="100" fxLayout="column"
+                        *ngIf="step.stepTextFilePath != null && step.stepTextFilePath.trim().length > 0">
+                        <span fxLayout="row" *ngFor="let img of getStepTextImagesArray(i);let ind = index">
+                            <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                            <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                                class="add-test-case allgoals_txt userStory-name-control"
+                                [matTooltip]="img | fileNamePipe" matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="100" class="word-break display-pre-line" fxShow fxShow.gt-xs="false">
+                    <span>
+                        <span class="badge-item test-case-step-count count-padding mr-05">{{i + 1}}</span>
+                        <span> {{step.stepText}}</span>
+                    </span>
+                </div>
+                <div fxFlex="100" fxLayout="column"
+                    class="mt-05 word-break display-pre-line userStory-name min-width-overflow" fxShow
+                    fxShow.gt-xs="false"
+                    *ngIf="step.stepTextFilePath != null && step.stepTextFilePath.trim().length > 0">
+                    {{'TESTMANAGEMENT.STEPTEXTIMAGES' | translate}}:
+                    <span fxLayout="row" *ngFor="let img of getStepTextImagesArray(i);let ind = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                            matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                    </span>
+                </div>
+                <div fxFlex="100" class="mt-05" fxShow fxShow.gt-xs="false">
+                    <b>{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}</b>
+                </div>
+                <div fxFlex="44" fxFlex="44" fxFlex.xs="100" fxLayout="column" class="word-break display-pre-line ml-1" fxHide
+                    fxHide.gt-xs="false">
+                    <div fxFlex class="mb-05" *ngIf="step.stepExpectedResult">
+                        {{step.stepExpectedResult}}
+                    </div>
+                    <div fxFlex="100" fxLayout="column" class="userStory-name min-width-overflow"
+                        *ngIf="step.stepExpectedResultFilePath != null && step.stepExpectedResultFilePath.trim().length > 0">
+                        <span fxLayout="row" *ngFor="let img of getStepResultImagesArray(i);let ind = index">
+                            <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                            <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                                class="add-test-case allgoals_txt userStory-name-control"
+                                [matTooltip]="img | fileNamePipe" matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="100" class="mt-05" fxShow fxShow.gt-xs="false">
+                    <b>{{step.stepExpectedResult}}</b>
+                </div>
+                <div fxFlex="100" fxLayout="column" fxShow fxShow.gt-xs="false"
+                    class="mt-05 word-break display-pre-line userStory-name min-width-overflow"
+                    *ngIf="step.stepExpectedResultFilePath != null && step.stepExpectedResultFilePath.trim().length > 0">
+                    {{'TESTMANAGEMENT.STEPEXPECTEDRESULTIMAGES' | translate}}:
+                    <span fxLayout="row" *ngFor="let img of getStepResultImagesArray(i);let ind = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                            matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="showText">
+            <div fxLayout="row wrap">
+                <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                    aria-orientation="horizontal">
+                </mat-divider>
+                <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.STEPS' | translate}}</b></p>
+                    <p class="m-0 word-break display-pre-line ml-05 p-05" *ngIf="singleTestCaseDetails.steps">
+                        {{singleTestCaseDetails.steps}}</p>
+                </div>
+            </div>
+            <div *ngIf="stepMostFilePath.length > 0" class="mt-05 ml-2" fxFlex="100" fxFlex.gt-sm="100">
+                <span class="mr-05" *ngFor="let img of stepMostFilePath;let i = index">
+                    <a target="_blank" [href]="sanitizeUrl(img)" class="add-test-case">{{img | fileNamePipe}}</a>
+                </span>
+            </div>
+            <div fxLayout="row wrap">
+                <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                    aria-orientation="horizontal">
+                </mat-divider>
+                <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}</b></p>
+                    <p class="m-0 word-break display-pre-line ml-05 p-05" *ngIf="singleTestCaseDetails.expectedResult">
+                        {{singleTestCaseDetails.expectedResult}}</p>
+                </div>
+            </div>
+            <div *ngIf="expectedMostFilePath.length > 0" class="mt-05 ml-2" fxFlex="100" fxFlex.gt-sm="100">
+                <span class="mr-05" *ngFor="let img of expectedMostFilePath;let i = index">
+                    <a target="_blank" [href]="sanitizeUrl(img)" class="add-test-case">{{img | fileNamePipe}}</a>
+                </span>
+            </div>
+        </div>
+        <div *ngIf="showExploratory">
+            <div fxLayout="row wrap">
+                <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                    aria-orientation="horizontal">
+                </mat-divider>
+                <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.MISSION' | translate}}</b></p>
+                    <p class="m-0 word-break display-pre-line ml-05 p-05" *ngIf="singleTestCaseDetails.mission">
+                        {{singleTestCaseDetails.mission}}</p>
+                </div>
+                <div *ngIf="testCaseMissionFilePath.length > 0"
+                    class="mt-05 mb-05 ml-2 userStory-name min-width-overflow" fxFlex="100" fxLayout="column">
+                    <span fxLayout="row" *ngFor="let img of testCaseMissionFilePath;let i = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                            matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                    </span>
+                </div>
+            </div>
+            <div fxLayout="row wrap">
+                <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                    aria-orientation="horizontal">
+                </mat-divider>
+                <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.GOALS' | translate | softLabelsPipe : softLabels}}</b></p>
+                    <p class="m-0 word-break display-pre-line ml-05 p-05" *ngIf="singleTestCaseDetails.goals">
+                        {{singleTestCaseDetails.goals}}</p>
+                </div>
+                <div *ngIf="testCaseGoalFilePath.length > 0" class="mt-05 mb-05 ml-2 userStory-name min-width-overflow"
+                    fxFlex="100" fxLayout="column">
+                    <span fxLayout="row" *ngFor="let img of testCaseGoalFilePath;let i = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                            matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="testCaseFilePath.length > 0">
+            <div fxLayout="row wrap">
+                <mat-divider class="mat-divider-position ml-05 mr-05 mat-divider mt-05 mb-05" role="separator"
+                    aria-orientation="horizontal">
+                </mat-divider>
+                <div fx-Flex="100" class="ml-1" fxFlex.gt-sm="100" fxLayout="column wrap">
+                    <p class="m-0"><b>{{'TESTMANAGEMENT.TESTCASEFILES' | translate}}</b></p>
+                </div>
+                <div class="mt-05 mb-05 ml-2 userStory-name min-width-overflow" fxFlex="100" fxLayout="column">
+                    <span fxLayout="row" *ngFor="let img of testCaseFilePath;let i = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img | fileNamePipe"
+                            matTooltipShowDelay="300">{{img | fileNamePipe}}</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </mat-card-content>
+</div>

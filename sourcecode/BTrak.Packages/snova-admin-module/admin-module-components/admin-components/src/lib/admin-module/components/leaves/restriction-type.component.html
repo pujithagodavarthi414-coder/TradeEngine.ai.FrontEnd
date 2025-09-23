@@ -1,0 +1,210 @@
+<div *ngIf="(canAccess_feature_ManageRestrictionType)">
+    <mat-card class="p-0 canteen-manage m-0 ">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'RESTRICTIONTYPE.RESTRICTIONTYPETITLE' | translate | titlecase }}">{{
+                        'RESTRICTIONTYPE.RESTRICTIONTYPETITLE' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="getAllRestrictionTypes()"></mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="mr-5 shift-timing-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-lg-n4" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button mat-icon-button matTooltip="{{'RESTRICTIONTYPE.CREATETOOLTIP' | translate}}"
+                            [satPopoverAnchorFor]="upsertRestrictionTypePopover"
+                            #upsertRestrictionTypePopUp="satPopoverAnchor"
+                            (click)="createRestrictionType(upsertRestrictionTypePopUp);clearForm()" *ngIf="!isArchived">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+
+                </div>
+            </div>
+        </mat-card-title>
+        <mat-divider></mat-divider>
+    </mat-card>
+
+    <div class="activity-data pagination-move-left">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="10" [rows]="restrictionTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{'RESTRICTIONTYPE.RESTRICTIONTYPE' | translate}}" [flexGrow]="1"
+                [sortable]="true" prop="restrictionType">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.restrictionType }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'RESTRICTIONTYPE.LEAVESCOUNT' | translate}}" [flexGrow]="1"
+                [sortable]="true" prop="leavesCount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.leavesCount }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'RESTRICTIONTYPE.RESTRICTIONCATEGORY' | translate}}"
+                [flexGrow]="1" [sortable]="true" prop="type">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.type}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'RESTRICTIONTYPE.EDITRESTRICTIONTYPE' | translate }}"
+                        *ngIf="!isArchived" [satPopoverAnchorFor]="upsertRestrictionTypePopover"
+                        #upsertRestrictionTypePopUp="satPopoverAnchor"
+                        (click)="editRestrictionType(row,upsertRestrictionTypePopUp)" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <button class="text-center" title="{{ 'RESTRICTIONTYPE.ARCHIVERESTRICTIONTYPTTITLE' | translate }}"
+                        (click)="deleteRestrictionTypePopUpOpen(row,deleteRestrictionTypePopup)"
+                        [satPopoverAnchorFor]="deleteRestrictionTypePopover"
+                        #deleteRestrictionTypePopup="satPopoverAnchor" *ngIf="!isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+
+                    <button class="text-center"
+                        title="{{ 'RESTRICTIONTYPE.UNARCHIVERESTRICTIONTYPTTITLE' | translate }}"
+                        (click)="deleteRestrictionTypePopUpOpen(row,deleteRestrictionTypePopup)"
+                        [satPopoverAnchorFor]="deleteRestrictionTypePopover"
+                        #deleteRestrictionTypePopup="satPopoverAnchor" *ngIf="isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!--Edit popup-->
+    <sat-popover backdropClass="backdrop-color" #upsertRestrictionTypePopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                    {{ restrictionTypeTitle }}</div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="restrictionTypeForm" #formDirective="ngForm" novalidate
+                    (submit)="restrictionTypeForm.valid && upsertRestrictionType(formDirective)">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="restrictionType"
+                                placeholder="{{'RESTRICTIONTYPE.RESTRICTIONTYPE' | translate}}" required>
+                            <mat-error *ngIf="restrictionTypeForm.get('restrictionType').hasError('maxlength')">
+                                {{ 'RESTRICTIONTYPE.RESTRICTIONNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="restrictionTypeForm.get('restrictionType').hasError('required') && restrictionTypeForm.get('restrictionType').touched">
+                                {{ 'RESTRICTIONTYPE.RESTRICTIONTYPEREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="leavesCount"
+                                placeholder="{{'RESTRICTIONTYPE.NOOFLEAVES' | translate}}" type="number" required>
+                            <mat-error
+                                *ngIf="restrictionTypeForm.get('leavesCount').hasError('required') && restrictionTypeForm.get('leavesCount').touched">
+                                {{ 'RESTRICTIONTYPE.LEAVESCOUNTREQUIRED' | translate }}
+                            </mat-error>
+                            <mat-error *ngIf="restrictionTypeForm.get('leavesCount').hasError('max')">
+                                {{ 'RESTRICTIONTYPE.LEAVESLENGTHERROR' | translate }}</mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="restrictionCategory"
+                                placeholder="{{'RESTRICTIONTYPE.RESTRICTIONCATEGORY' | translate}}" required>
+                                <mat-option value="option" [value]="1">Weekly </mat-option>
+                                <mat-option value="option" [value]="2"> Monthly </mat-option>
+                                <mat-option value="option" [value]="3"> Quarterly </mat-option>
+                                <mat-option value="option" [value]="4"> Half yearly </mat-option>
+                                <mat-option value="option" [value]="5"> Yearly </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="restrictionTypeForm.get('restrictionCategory').hasError('required') && restrictionTypeForm.get('restrictionCategory').touched">
+                                {{ 'RESTRICTIONTYPE.RESTRICTIONCATEGORYREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div class="mt-1 text-center mb-1">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!restrictionTypeForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                            <fa-icon icon="spinner" class="mr-05" *ngIf="isAnyOperationIsInprogress"></fa-icon>
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertRestrictionTypePopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Edit popup-->
+
+    <sat-popover backdropClass="backdrop-color" #deleteRestrictionTypePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="!isArchived">
+                    {{ 'RESTRICTIONTYPE.ARCHIVERESTRICTIONTYPTTITLE' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="isArchived">
+                    {{ 'RESTRICTIONTYPE.UNARCHIVERESTRICTIONTYPTTITLE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{ 'RESTRICTIONTYPE.ARCHIVERESTRICTIONTYPTEXT' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{ 'RESTRICTIONTYPE.UNARCHIVERESTRICTIONTYPTEXT' | translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteRestrictionType();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteRestrictionType();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteRestrictionTypeDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageRestrictionType)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+
+<!-- <app-common-message-box
+    *ngIf="!(roleFeaturesIsInProgress$|async)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->

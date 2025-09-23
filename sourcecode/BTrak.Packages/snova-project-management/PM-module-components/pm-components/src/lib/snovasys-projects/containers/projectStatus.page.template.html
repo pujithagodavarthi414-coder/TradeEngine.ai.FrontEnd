@@ -1,0 +1,776 @@
+
+
+<div class="project-select list-project" *ngIf="project && (accessViewProjects$ || accessAudits$)">
+  <div class="project-select-container" (click)="openProjectsDialog()">
+    <div class="project-value-container">
+      <app-chip *ngIf="project?.fullName" [matTooltip]="project?.fullName" [isNameRequired]="false"
+        [src]="project.profileImage| fetchSizedAndCachedImage: '25':''"
+        [name]="project?.fullName | removeSpecialCharacters" avatarClass="select-avatar" [size]="25">
+      </app-chip>
+      <span class="select-label" matTooltip="{{project.projectName}}">{{project.projectName}}</span>
+    </div>
+    <span class="select-arrow-wrapper">
+      <span class="ng-arrow"></span>
+    </span>
+  </div>
+  <!-- <button mat-icon-button [satPopoverAnchorFor]="editThreeDotsPopover" 
+  *ngIf="(canAccess_entityType_feature_ViewProjectFeatures$ | async) || 
+  (canAccess_entityType_feature_ViewTemplates$ | async) || (canAccess_feature_ViewTestrepoReports$ | async) || (canAccess_entityType_feature_ViewProjectMembers$ | async)
+  (canAccess_entityType_feature_ViewProjectSettings$ | async) || (canAccess_entityType_feature_ViewGoals$ | async)  ||
+  (canAccess_entityType_feature_AddOrUpdateVersion$ | async)"
+    (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="project-select pull-right mr-n3 mt-n1"> canAccess_feature_ViewTestrepoReports$ | async-->
+  <button mat-icon-button [satPopoverAnchorFor]="editThreeDotsPopover"
+    *ngIf="(isHavingPermissions) || (accessTestRepo$)" (click)="$event.stopPropagation();editThreeDotsPopover.open()"
+    class="project-select pull-right mr-n3 mt-n1" matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}">
+    <fa-icon icon="ellipsis-h" class="goal-unique-menu"></fa-icon>
+  </button>
+  <button mat-icon-button [satPopoverAnchorFor]="addAction" #addActionPopover="satPopoverAnchor"
+    *ngIf="canAccess_entityType_feature_CanAddAuditAction && isAuditsEnable && selectedTab == 'actions'"
+    (click)="$event.stopPropagation();openAddActionPopover(addActionPopover)"
+    class="project-select pull-right mr-n3 mt-n1" matTooltip="{{ translateCode('AUDIT.ADDACTION') }}">
+    <fa-icon icon="plus-square" class="mr-05 add-section-square mat-color-accent"></fa-icon>
+  </button>
+  <button mat-icon-button class="project-select pull-right mt-n1"
+    *ngIf="((selectedTab == 'reports') && (accessDragApps$)) || (selectedTab == 'audit-analytics' && isAuditsEnable)">
+    <fa-icon icon="store" matTooltip="{{ 'APP.APPSTORE' | translate}}" (click)="openAppsSettings(false)"
+      class="goal-unique-menu"></fa-icon>
+  </button>
+  <button mat-icon-button class="project-select pull-right mt-n1"
+    *ngIf="!listView && (selectedTab == 'reports' || selectedTab == 'audit-analytics')">
+    <fa-icon icon="bars" matTooltip="Apps vertical" (click)="openAppsView()"
+      class="mat-color-accent cursor-pointer kanban-icon-dashboard" [ngClass]="{'active': !listView}"></fa-icon>
+  </button>
+  <button mat-icon-button class="project-select pull-right mt-n1"
+    *ngIf="listView && (selectedTab == 'reports' || selectedTab == 'audit-analytics' )">
+    <fa-icon icon="bars" (click)="openAppsView()" matTooltip="Apps Horizontal" class="mat-color-accent cursor-pointer"
+      [ngClass]="{'active': listView}"></fa-icon>
+  </button>
+  <button mat-icon-button [matMenuTriggerFor]="filterthreeDotsPopOver" class="project-select pull-right mt-n1"
+    *ngIf="selectedTab == 'reports'">
+    <fa-icon icon="sliders-h" class="goal-unique-menu"></fa-icon>
+  </button>
+</div>
+
+<div fxLayout="row wrap" *ngIf="(accessViewProjects$ || accessAudits$)">
+  <div class="p-02 full-width project-statuslist projectStatus-page projectStatus-page-header" fxLayout="row wrap">
+    <div fxFlex="140px" *ngIf="(canAccess_entityType_feature_ViewGoals && accessViewProjects$)"
+      style="margin-top:13px;">
+      <mat-label fxFlex="130px" (click)="onChangeGoalsTabFilter(previousTab)"
+        class="custom-select-matform primary-text projects-tab-dropdown-list projects-label"
+        *ngIf="(selectedTab != 'active-goals' && selectedTab != 'backlog-goals' && selectedTab != 'replan-goals' && selectedTab != 'archived-goals' && selectedTab != 'parked-goals') && previousTab != 'null'">
+        <span *ngIf="previousTab == 'active-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.ACTIVEGOALS'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf="(activeGoalsCount$ | async) > 0 ">{{ activeGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="previousTab == 'backlog-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.BACKLOG'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf="(backLogGoalsCount$ | async) > 0 ">{{ backLogGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="previousTab == 'replan-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.UNDERREPLAN'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (underReplanGoalsCount$ | async) > 0 ">{{ underReplanGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="previousTab == 'archived-goals'">
+          <span class="hide-content-overflow">
+            {{'PROJECTS.ARCHIVEDGOALS'|translate | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (archivedGoalsCount$ | async) > 0">{{ archivedGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="previousTab == 'parked-goals'">
+          <span class="hide-content-overflow"> {{'PROJECTS.PARKEDGOALS'|translate | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (parkedGoalsCount$ | async) > 0">{{ parkedGoalsCount$ | async }}</span>
+        </span>
+        <fa-icon icon="sort-down" [matMenuTriggerFor]="tabChange" class="status-icon"
+          (click)="$event.stopPropagation()"></fa-icon>
+      </mat-label>
+      <mat-label fxFlex="130px" class="custom-select-matform primary-text projects-tab-dropdown-list projects-label"
+        *ngIf="(selectedTab == 'active-goals' || selectedTab == 'backlog-goals' || selectedTab == 'replan-goals' || selectedTab == 'archived-goals' || selectedTab == 'parked-goals' || previousTab == 'null')">
+        <span *ngIf="selectedTab == 'active-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.ACTIVEGOALS'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf="(activeGoalsCount$ | async) > 0 ">{{ activeGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="selectedTab == 'backlog-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.BACKLOG'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf="(backLogGoalsCount$ | async) > 0 ">{{ backLogGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="selectedTab == 'replan-goals'">
+          <span class="hide-content-overflow">{{'PROJECTS.UNDERREPLAN'| translate  | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (underReplanGoalsCount$ | async) > 0">{{ underReplanGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="selectedTab == 'archived-goals'">
+          <span class="hide-content-overflow">
+            {{'PROJECTS.ARCHIVEDGOALS'|translate | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (archivedGoalsCount$ | async) > 0">{{ archivedGoalsCount$ | async }}</span>
+        </span>
+        <span *ngIf="selectedTab == 'parked-goals'">
+          <span class="hide-content-overflow"> {{'PROJECTS.PARKEDGOALS'|translate | softLabelsPipe :softLabels}}</span>
+          <span class="ml-05 projects-tab-dropdown-span select-goal-trigger"
+            *ngIf=" (parkedGoalsCount$ | async) > 0">{{ parkedGoalsCount$ | async }}</span>
+        </span>
+        <fa-icon icon="sort-down" [matMenuTriggerFor]="tabChange" class="status-icon"
+          (click)="$event.stopPropagation()"></fa-icon>
+      </mat-label>
+    </div>
+    <mat-menu #tabChange="matMenu" (click)="$event.stopPropagation();">
+      <mat-card class="filter-data p-0" fxLayout='column'>
+        <div fxFlex fxLayoutAlign="start center"
+          [style.background-color]="selectedTab == 'active-goals' ? '#e0e0e0' : 'white'">
+          <button mat-menu-item (click)="onChangeGoalsTabFilter('active-goals')" class="goal-cursor">
+            <div fxLayoutAlign="row">
+              <div fxFlex>
+                {{'PROJECTS.ACTIVEGOALS'| translate  | softLabelsPipe :softLabels}} <span
+                  class="active-goals projects-tab-dropdown-span"
+                  *ngIf="(activeGoalsCount$ | async) > 0  && (canAccess_entityType_feature_ViewGoals)">{{ activeGoalsCount$ | async }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center"
+          [style.background-color]="selectedTab == 'backlog-goals' ? '#e0e0e0' : 'white'">
+          <button mat-menu-item (click)="onChangeGoalsTabFilter('backlog-goals')" class="goal-cursor">
+            <div fxLayoutAlign="row">
+              <div fxFlex>
+                {{'PROJECTS.BACKLOG'| translate}}
+                <span class="backlog-goals projects-tab-dropdown-span"
+                  *ngIf="(backLogGoalsCount$ | async) > 0  && (canAccess_entityType_feature_ViewGoals)">{{ backLogGoalsCount$ | async }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center"
+          [style.background-color]="selectedTab == 'replan-goals' ? '#e0e0e0' : 'white'">
+          <button mat-menu-item (click)="onChangeGoalsTabFilter('replan-goals')" class="goal-cursor">
+            <div fxLayoutAlign="row">
+              <div fxFlex>
+                {{'PROJECTS.UNDERREPLAN'| translate}}
+                <span class="under-replan projects-tab-dropdown-span"
+                  *ngIf="(underReplanGoalsCount$ | async) > 0 && (canAccess_entityType_feature_ViewGoals)">{{ underReplanGoalsCount$ | async }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center"
+          [style.background-color]="selectedTab == 'archived-goals' ? '#e0e0e0' : 'white'">
+          <button mat-menu-item (click)="onChangeGoalsTabFilter('archived-goals')" class="goal-cursor">
+            <div fxLayoutAlign="row">
+              <div fxFlex>
+                {{'PROJECTS.ARCHIVEDGOALS'|translate | softLabelsPipe :softLabels}}
+                <span class="under-replan projects-tab-dropdown-span"
+                  *ngIf="(archivedGoalsCount$ | async) > 0 && (canAccess_entityType_feature_ViewGoals)">{{ archivedGoalsCount$ | async }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center"
+          [style.background-color]="selectedTab == 'parked-goals' ? '#e0e0e0' : 'white'">
+          <button mat-menu-item (click)="onChangeGoalsTabFilter('parked-goals')" class="goal-cursor">
+            <div fxLayoutAlign="row">
+              <div fxFlex>
+                {{'PROJECTS.PARKEDGOALS'|translate | softLabelsPipe :softLabels}}
+                <span class="under-replan projects-tab-dropdown-span"
+                  *ngIf="(parkedGoalsCount$ | async) > 0 && (canAccess_entityType_feature_ViewGoals)">{{ parkedGoalsCount$ | async }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
+      </mat-card>
+    </mat-menu>
+    <div fxFlex [ngClass]="{'tab-class': accessViewProjects$, 'audit-tab-class': !(accessViewProjects$)}">
+      <mat-tab-group class="projectStatus-tabs project-tabs-container" [selectedIndex]="selectedTabIndex"
+        (selectedTabChange)="onTabClick($event)" [@.disabled]="true">
+        <mat-tab label="empty"></mat-tab>
+        <mat-tab label="Documents" *ngIf="accessViewProjects$">
+          <ng-template mat-tab-label>
+            {{'DOCUMENTS' | translate}}
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Reports" *ngIf="accessViewProjects$">
+          <ng-template mat-tab-label>
+            {{'MYPROFILE.REPORTS' | translate}}
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Scenarios" *ngIf="accessViewProjects$ && (accessTestRepo$) && isTestrailEnable">
+          <ng-template mat-tab-label>
+            {{'TESTMANAGEMENT.SCENARIOS' | translate | softLabelsPipe :softLabels}}<span
+              class="ml-05 badge-item testsuites-count count-padding"
+              *ngIf="(testSuitesCount$ | async) > 0">{{ testSuitesCount$ | async }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Runs" *ngIf="accessViewProjects$ && (accessTestRepo$) && isTestrailEnable">
+          <ng-template mat-tab-label>
+            {{'TESTMANAGEMENT.RUNS' | translate | softLabelsPipe :softLabels}}<span
+              class="ml-05 badge-item testruns-count count-padding"
+              *ngIf="(testRunsCount$ | async) > 0">{{ testRunsCount$ | async }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Activity" *ngIf="accessViewProjects$">
+          <ng-template mat-tab-label>
+            {{'MYPROFILE.ACTIVITY' | translate}}
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Audits" *ngIf="(accessAudits$) && isAuditsEnable">
+          <ng-template mat-tab-label>
+            <!-- {{'AUDIT.AUDITS' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.AUDITS') }}
+            <!-- canAccess_feature_ViewAudit -->
+            <span class="ml-05 badge-item testsuites-count count-padding"
+              *ngIf="canAccess_entityType_feature_ViewAudit && (activeAuditsCount$ | async) > 0">{{ activeAuditsCount$ | async }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Conducts" *ngIf="(accessAudits$) && isAuditsEnable">
+          <ng-template mat-tab-label>
+            <!-- {{'AUDIT.CONDUCTS' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.CONDUCTS') }}
+            <!-- canAccess_feature_ViewAuditConducts -->
+            <span class="ml-05 badge-item testruns-count count-padding"
+              *ngIf="canAccess_entityType_feature_ViewAuditConducts && (activeAuditConductsCount$ | async) > 0">{{ activeAuditConductsCount$ | async }}</span>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Timeline" *ngIf="(accessAudits$) && isAuditsEnable">
+          <ng-template mat-tab-label>
+            <!-- {{'AUDIT.TIMELINE' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.TIMELINE') }}
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Actions" *ngIf="(accessAudits$) && isAuditsEnable">
+          <ng-template mat-tab-label>
+            <!-- {{'AUDIT.ACTIONS' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.ACTIONS') }}
+            <!-- canAccess_feature_ViewAuditActions -->
+            <span class="ml-05 badge-item audit-actions-count count-padding"
+              *ngIf="canAccess_entityType_feature_ViewAuditActions && (actionsCount$ | async) > 0">{{ actionsCount$ | async }}</span>
+          </ng-template>
+        </mat-tab>
+        <!-- <commeneted activity tab> -->
+      </mat-tab-group>
+    </div>
+  </div>
+  <div class="full-width project-statuslist projectStatus-page gridster-list">
+    <div *ngIf="selectedTab == 'active-goals'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-goal-browse-board [goalSearchCriteria]="activeGoalsSearchCriteria"
+        [isSprintsEnable]="isSprintsEnable && isSprintsShow" [isTestrailEnable]="isTestrailEnable"
+        *ngIf="activeGoalsSearchCriteria && (canAccess_entityType_feature_ViewGoals) && selectedTab == 'active-goals'">
+      </app-pm-goal-browse-board>
+
+    </div>
+
+    <div *ngIf="selectedTab == 'backlog-goals'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-goal-browse-board [goalSearchCriteria]="backlogGoalsSearchCriteria"
+        [isSprintsEnable]="isSprintsEnable  && isSprintsShow" [isTestrailEnable]="isTestrailEnable"
+        *ngIf="(canAccess_entityType_feature_ViewGoals) && selectedTab == 'backlog-goals' && (backLogGoalsCount$ | async) > 0">
+      </app-pm-goal-browse-board>
+      <app-common-message-box *ngIf="!(projectSummaryViewLoading$|async) && (backLogGoalsCount$ | async) == 0 
+                && (canAccess_entityType_feature_ViewGoals) && (canAccess_entityType_feature_AddOrUpdateGoal)"
+        textToDisplay="{{'PROJECTS.YOUDONTHAVEGOALSADDANEWGOAL'|translate  | softLabelsPipe :softLabels}}">
+        <ng-template ng-message-tmp>
+          <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="(canAccess_entityType_feature_AddOrUpdateGoal) && (project && !project.isArchived) && (canAccess_entityType_feature_ViewGoals)"
+            [satPopoverAnchorFor]="addOrEditGoalPopover" #addGoalPopover="satPopoverAnchor"
+            (click)="addGoalPopover.openPopover();clearGoalForm()">
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{'GOALS.ADDGOAL'|translate | softLabelsPipe :softLabels}}
+          </button>
+        </ng-template>
+      </app-common-message-box>
+      <app-common-message-box *ngIf="!(projectSummaryViewLoading$|async) && (backLogGoalsCount$ | async) == 0 
+               && (canAccess_entityType_feature_ViewGoals) && !(canAccess_entityType_feature_AddOrUpdateGoal)"
+        textToDisplay="{{'PROJECTS.YOUDONTHAVEGOALS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'replan-goals'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-goal-browse-board [goalSearchCriteria]="replanGoalsSearchCriteria"
+        [isSprintsEnable]="isSprintsEnable  && isSprintsShow" [isTestrailEnable]="isTestrailEnable"
+        *ngIf="(canAccess_entityType_feature_ViewGoals) && selectedTab == 'replan-goals' &&  (isSprintsEnable  || (!isSprintsEnable && (underReplanGoalsCount$ | async) > 0 ))">
+      </app-pm-goal-browse-board>
+      <app-common-message-box
+        *ngIf="((underReplanGoalsCount$ | async) == 0 && !isSprintsEnable) && !(projectViewStatusViewLoading$|async) && (canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'PROJECTS.THEREARENOGOALSINUNDERREPLAN'|translate  | softLabelsPipe :softLabels}} ">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'archived-goals'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-goal-browse-board
+        *ngIf="selectedTab == 'archived-goals' && (archivedGoalsCount$ | async) > 0 && (canAccess_entityType_feature_ViewGoals)"
+        [goalSearchCriteria]="archivedGoalsSearchCriteria" [isSprintsEnable]="isSprintsEnable && isSprintsShow"
+        [isTestrailEnable]="isTestrailEnable">
+      </app-pm-goal-browse-board>
+
+      <app-common-message-box *ngIf="(archivedGoalsCount$ | async) == 0 && (canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'PROJECTS.THEREARENOGOALSINARCHIVEDGOALS'|translate  | softLabelsPipe :softLabels}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'parked-goals'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-goal-browse-board [goalSearchCriteria]="parkedGoalsSearchCriteria"
+        [isSprintsEnable]="isSprintsEnable && isSprintsShow" [isTestrailEnable]="isTestrailEnable"
+        *ngIf="selectedTab == 'parked-goals' && (parkedGoalsCount$ | async) > 0 && (canAccess_entityType_feature_ViewGoals)">
+      </app-pm-goal-browse-board>
+      <app-common-message-box
+        *ngIf="(parkedGoalsCount$ | async) == 0 && !(projectViewStatusViewLoading$|async) && (canAccess_entityType_feature_ViewGoals)"
+        textToDisplay="{{'PROJECTS.THEREARENOGOALSINPARKEDGOALS' |translate  | softLabelsPipe :softLabels}} ">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="(accessTestRepo$) && selectedTab == 'scenarios'">
+      <!-- <app-testrail-testsuites-view *ngIf="isTestrailEnable">
+      </app-testrail-testsuites-view> -->
+      <ndc-dynamic *ngIf="isTestrailEnable && isTestrailLoaded" [ndcDynamicFactory]="testSuitView.component"
+        [ndcDynamicComponent]="testSuitView.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testSuitView.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!isTestrailEnable"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURETESTRAILSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="(accessTestRepo$) && selectedTab == 'runs'">
+      <!-- <app-testrail-component-testruns-view *ngIf="isTestrailEnable">
+      </app-testrail-component-testruns-view> -->
+      <ndc-dynamic *ngIf="isTestrailEnable && isTestrailLoaded" [ndcDynamicFactory]="testRunView.component"
+        [ndcDynamicComponent]="testRunView.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testRunView.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!isTestrailEnable"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURETESTRAILSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'reports' && selectedWorkspaceId" style="height: 100%;">
+      <ndc-dynamic [ndcDynamicFactory]="dashboard.component" [ndcDynamicComponent]="dashboard.component"
+        *ngIf="selectedWorkspaceId && dashboard" [ndcDynamicInjector]="injector" [ndcDynamicInputs]="dashboard.inputs"
+        [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+    </div>
+
+    <div *ngIf="selectedTab == 'activity' && selectedActivityWorkspaceId" style="height: 100%;">
+      <!-- <ndc-dynamic [ndcDynamicFactory]="dashboard.component" [ndcDynamicComponent]="dashboard.component"
+        *ngIf="selectedActivityWorkspaceId && dashboard" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic> -->
+      <app-pm-component-selected-goal-activity [dashboardFilters]="dashboardFilter">
+      </app-pm-component-selected-goal-activity>
+    </div>
+
+
+    <div *ngIf="selectedTab == 'documents' && fileElement">
+      <!-- <app-document-store [fileElement]="fileElement" [isComponentRefresh]="isComponentRefresh">
+      </app-document-store> -->
+      <div *ngIf="documentsModuleLoaded">
+        <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+          [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+          [ndcDynamicInputs]="documentStoreComponent.inputs" [ndcDynamicOutputs]="documentStoreComponent.outputs">
+        </ndc-dynamic>
+      </div>
+    </div>
+
+    <div *ngIf="selectedTab == 'project-members'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && (selectedTab == 'project-members' && (accessViewProjects$ && !(canAccess_entityType_feature_ViewProjectMembers)))"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && (selectedTab == 'project-members' && (!(accessViewProjects$) && accessAudits$ && isAuditsEnable && !(canAccess_entityType_feature_ViewAuditProjectMembers)))"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <div
+        *ngIf="!(accessViewProjects$ && !(canAccess_entityType_feature_ViewProjectMembers)) &&
+                  !(!(accessViewProjects$) && accessAudits$ && isAuditsEnable && !(canAccess_entityType_feature_ViewAuditProjectMembers))">
+        <app-pm-component-members [projectId]="projectId">
+        </app-pm-component-members>
+      </div>
+    </div>
+
+    <div *ngIf="selectedTab == 'project-features'">
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && (selectedTab == 'project-features' && !(canAccess_entityType_feature_ViewProjectFeatures))"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+      <app-pm-component-feature [projectId]="projectId" (hideComponentButton)="hideAddComponentButton($event)"
+        *ngIf="selectedTab == 'project-features'">
+      </app-pm-component-feature>
+    </div>
+
+    <div *ngIf="selectedTab == 'templates'">
+      <app-pm-component-templates *ngIf="(canAccess_entityType_feature_ViewTemplates)" [projectId]="projectId">
+      </app-pm-component-templates>
+
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewTemplates)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+
+
+    <div *ngIf="(accessTestRepo$ ) && selectedTab == 'versions'">
+      <!-- <app-testrail-component-milestone *ngIf="isTestrailEnable">
+      </app-testrail-component-milestone> -->
+      <ndc-dynamic *ngIf="isTestrailEnable && isTestrailLoaded" [ndcDynamicFactory]="testMileStone.component"
+        [ndcDynamicComponent]="testMileStone.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testMileStone.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!isTestrailEnable"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURETESTRAILSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="(accessTestRepo$) && selectedTab == 'test-reports'" class="ml-05">
+      <!-- <app-testrail-reports-view *ngIf="isTestrailEnable"></app-testrail-reports-view> -->
+      <ndc-dynamic *ngIf="isTestrailEnable && isTestrailLoaded" [ndcDynamicFactory]="testReportsView.component"
+        [ndcDynamicComponent]="testReportsView.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testReportsView.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!isTestrailEnable"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURETESTRAILSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'project-settings'">
+      <app-pm-project-settings *ngIf="canAccess_entityType_feature_ViewProjectSettings" [referenceId]="projectId"
+        [referenceTypeId]="projectReferenceTypeId">
+      </app-pm-project-settings>
+      <app-common-message-box
+        *ngIf=" !(loadingEntityFeaturesinProgress$ |async) && !(canAccess_entityType_feature_ViewProjectSettings)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'completed-sprints'">
+      <app-pm-sprints-browse-board
+        *ngIf="(canAccess_entityType_feature_ViewSprints) && (completedSprintsCount$|async) > 0 && isSprintsEnable"
+        [sprintSearchCriteriaModel]="sprintSearchCriteriaModel" [isSprint]="isSprint">
+      </app-pm-sprints-browse-board>
+      <app-common-message-box *ngIf="(completedSprintsCount$|async) == 0 && isSprintsEnable && isSprintsShow"
+        textToDisplay="{{'PROJECTS.THEREARENOCOMPLETEDSPRINTS' |translate}} ">
+      </app-common-message-box>
+
+      <app-common-message-box *ngIf="!(canAccess_entityType_feature_ViewSprints) && isSprintsEnable && isSprintsShow"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+
+      <app-common-message-box *ngIf="(!isSprintsEnable || !isSprintsShow)"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURESPRINTSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'replan-sprints'">
+      <app-pm-sprints-browse-board
+        *ngIf="(canAccess_entityType_feature_ViewSprints) && (replanSprintsCount$|async) > 0 && isSprintsEnable && isSprintsShow"
+        [sprintSearchCriteriaModel]="sprintSearchCriteriaModel" [isSprint]="isSprint">
+      </app-pm-sprints-browse-board>
+      <app-common-message-box *ngIf="(replanSprintsCount$|async) == 0 && isSprintsEnable && isSprintsShow"
+        textToDisplay="{{'PROJECTS.THEREARENOREPLANSPRINTS' |translate}} ">
+      </app-common-message-box>
+
+      <app-common-message-box *ngIf="!(canAccess_entityType_feature_ViewSprints) && isSprintsEnable && isSprintsShow"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+      </app-common-message-box>
+
+      <app-common-message-box *ngIf="!isSprintsEnable || !isSprintsShow"
+        textToDisplay="{{'PROJECTS.PLEASECONFIGURESPRINTSETTINGS'|translate}}">
+      </app-common-message-box>
+    </div>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="!isAuditsLoaded && (
+    selectedTab == 'audits' || selectedTab == 'conducts' || selectedTab == 'timeline' || selectedTab == 'actions'
+    || selectedTab == 'audit-reports' || selectedTab == 'audit-activity' || selectedTab == 'audit-analytics')">
+    </mat-progress-bar>
+    <div *ngIf="selectedTab == 'audits'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded" [ndcDynamicFactory]="auditView.component"
+        [ndcDynamicComponent]="auditView.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="auditView.inputs" [ndcDynamicOutputs]="auditView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'conducts'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded"
+        [ndcDynamicFactory]="conductView.component" [ndcDynamicComponent]="conductView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="conductView.inputs"
+        [ndcDynamicOutputs]="conductView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'timeline'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded"
+        [ndcDynamicFactory]="timelineView.component" [ndcDynamicComponent]="timelineView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="timelineView.inputs"
+        [ndcDynamicOutputs]="timelineView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'actions'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded"
+        [ndcDynamicFactory]="actionView.component" [ndcDynamicComponent]="actionView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="actionView.inputs" [ndcDynamicOutputs]="actionView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'audit-reports'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded"
+        [ndcDynamicFactory]="auditReportView.component" [ndcDynamicComponent]="auditReportView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="auditReportView.inputs"
+        [ndcDynamicOutputs]="auditReportView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'audit-activity'">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded"
+        [ndcDynamicFactory]="auditActivityView.component" [ndcDynamicComponent]="auditActivityView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="auditActivityView.inputs"
+        [ndcDynamicOutputs]="auditActivityView.outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+    <div *ngIf="selectedTab == 'audit-analytics' && canAccess_entityType_feature_CanViewAuditAnalytics">
+      <ndc-dynamic *ngIf="(accessAudits$) && isAuditsEnable && loaded" [ndcDynamicFactory]="dashboard.component"
+        [ndcDynamicComponent]="dashboard.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+      </ndc-dynamic>
+      <app-common-message-box *ngIf="!(accessAudits$) || !isAuditsEnable"
+        textToDisplay="{{translateCode('PROJECTS.PLEASECONFIGUREAUDITSETTINGS')}}">
+      </app-common-message-box>
+    </div>
+
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+  hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()" horizontalAlign="end">
+  <mat-card class="filter-data p-0" fxLayout='column'>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="(canAccess_entityType_feature_ViewProjectMembers || canAccess_entityType_feature_ViewAuditProjectMembers)">
+      <button mat-menu-item (click)="openMembersTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="user"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'PROJECTS.MEMBERS'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="(canAccess_entityType_feature_ViewProjectFeatures) && accessViewProjects$">
+      <button mat-menu-item (click)="openComponentsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="puzzle-piece"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'PROJECTS.COMPONENTS'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="(canAccess_entityType_feature_ViewTemplates) && accessViewProjects$">
+      <button mat-menu-item (click)="openTemplatesTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-alt"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALS.TEMPLATES'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <div fxFlex fxLayoutAlign="start center" *ngIf="accessViewProjects$ && (accessTestRepo$) && isTestrailEnable">
+      <button mat-menu-item (click)="openVersionsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="code-branch"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'TESTMANAGEMENT.VERSIONS'|translate | softLabelsPipe :softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="(canAccess_entityType_feature_ViewSprints) && isSprintsShow && isSprintsEnable">
+      <button mat-menu-item (click)="openCompleteSprintsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="tasks"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'SPRINTS.COMPLETEDPRINTS'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center" *ngIf="accessViewProjects$ && (accessTestRepo$) && isTestrailEnable">
+      <button mat-menu-item (click)="openTestReportsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="signal"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'TESTMANAGEMENT.TESTREPORTS'|translate | softLabelsPipe :softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="canAccess_entityType_feature_ViewProjectSettings && accessViewProjects$">
+      <button mat-menu-item (click)="openProjectSettingsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="sliders-h"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'GOALS.PROJECTSETTINGS'|translate | softLabelsPipe :softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center" *ngIf="(accessAudits$) && isAuditsEnable">
+      <button mat-menu-item (click)="openAuditReportsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="signal"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            <!-- {{'AUDIT.AUDITREPORTS' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.AUDITREPORTS') }}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center" *ngIf="(accessAudits$) && isAuditsEnable">
+      <button mat-menu-item (click)="openAuditActivityTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="history"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            <!-- {{'AUDIT.AUDITACTIVITY' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.AUDITACTIVITY') }}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center"
+      *ngIf="(accessAudits$) && isAuditsEnable && canAccess_entityType_feature_CanViewAuditAnalytics">
+      <button mat-menu-item (click)="openAuditAnalyticsTab();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="chart-line"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            <!-- {{'AUDIT.AUDITANALYTICS' | translate | softLabelsPipe :softLabels}} -->
+            {{ translateCode('AUDIT.AUDITANALYTICS') }}
+          </div>
+        </div>
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+
+<mat-menu class="goal-options" #filterthreeDotsPopOver="matMenu">
+
+  <button mat-menu-item (click)="ResetToDefaultDashboardPersistance()">
+    <fa-icon icon="history" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'APP.RESETTODEFAULT' | translate}}">{{'APP.RESETTODEFAULT' | translate}}</span>
+  </button>
+
+  <button mat-menu-item *ngIf="(accessPublishBoard$)" (click)="SaveAsDefaultPersistance()">
+    <fa-icon icon="save" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'APP.SAVEASDEFAULT' | translate}}">{{'APP.SAVEASDEFAULT' | translate}}</span>
+  </button>
+
+  <button mat-menu-item (click)="refreshDashboard()">
+    <fa-icon icon="sync-alt" class="mat-color-accent mr-08"></fa-icon>
+    <span matTooltip="{{'BILLINGDASHBOARD.REFRESH' | translate}}">{{'BILLINGDASHBOARD.REFRESH' | translate }}</span>
+  </button>
+</mat-menu>
+
+
+
+<sat-popover #addOrEditGoalPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-05 mat-bg-primary">
+          {{'GOALS.ADDGOAL'|translate  | softLabelsPipe :softLabels}}
+        </div>
+      </mat-card-title>
+      <app-pm-component-goal-create *ngIf="openGoalForm" [projectId]="projectId" [clearCreateForm]="clearCreateForm"
+        [isTestrailEnable]="isTestrailEnable" (closePopup)="closeGoalDialog()"></app-pm-component-goal-create>
+    </div>
+  </mat-card>
+</sat-popover>
+<app-common-message-box *ngIf="(!(accessViewProjects$) && !(accessAudits$) && !isAuditsEnable)"
+  textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box>
+<!-- Float buttons start -->
+
+<sat-popover #addAction hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{translateCode('AUDIT.ADDACTION')}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="(accessAudits$) && isAuditsEnable && isAuditsLoaded && loadAction">
+      <!-- <conduct-question-action *ngIf='loadAction' [loadBugs]=false (closeAction)="closeActionPopover()">
+            </conduct-question-action> -->
+      <ndc-dynamic [ndcDynamicFactory]="addActionView.component" [ndcDynamicComponent]="addActionView.component"
+        [ndcDynamicInjector]="injector" [ndcDynamicInputs]="addActionView.inputs"
+        [ndcDynamicOutputs]="addActionView.outputs">
+      </ndc-dynamic>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

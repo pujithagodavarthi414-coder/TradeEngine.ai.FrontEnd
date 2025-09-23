@@ -1,0 +1,168 @@
+<mat-card-content class="testrun-add-width m-0 mb-05">
+  <mat-horizontal-stepper [linear]="isLinear" #stepper>
+    <mat-step [stepControl]="firstFormGroup">
+      <form [formGroup]="firstFormGroup">
+        <ng-template matStepLabel>{{'TESTMANAGEMENT.TESTRUN' | translate | softLabelsPipe : softLabels}}</ng-template>
+
+        <form [formGroup]="addTestRunForm" novalidate (submit)="addTestRunForm.valid && addNewTestRun()">
+          <div fxLayout="row wrap">
+            <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+              <input matInput placeholder="{{'TESTMANAGEMENT.NAME' | translate}}" required
+                formControlName="testRunName">
+              <mat-hint>{{'TESTMANAGEMENT.EITHERREUSETHETESTSUITENAME' | translate | softLabelsPipe : softLabels}}
+              </mat-hint>
+              <mat-error
+                *ngIf="addTestRunForm.get('testRunName').hasError('required') && addTestRunForm.get('testRunName').touched">
+                {{'TESTMANAGEMENT.PLEASEFILLTESTCASETITLE' | translate}}
+              </mat-error>
+              <mat-error *ngIf="addTestRunForm.get('testRunName').hasError('maxlength')">
+                {{'TESTMANAGEMENT.TESTRUNNAMEEXCEED150CHARACTERS' | translate | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+              <mat-select placeholder="{{'TESTMANAGEMENT.MILESTONES' | translate | softLabelsPipe : softLabels}}"
+                formControlName="milestoneId">
+                <mat-option *ngFor="let mileStone of (mileStoneDropdownList$ | async)" [value]="mileStone.id">
+                  {{mileStone.value}}
+                </mat-option>
+              </mat-select>
+              <mat-hint>{{'TESTMANAGEMENT.THEMILESTONETESTBELONGSTO' | translate | softLabelsPipe : softLabels}}
+              </mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+              <mat-select placeholder="{{'TESTMANAGEMENT.ASSIGNTO' | translate}}" formControlName="assignToId">
+                <mat-option *ngFor="let user of (usersList$ | async)" [value]="user.id">
+                  {{user.value}}
+                </mat-option>
+              </mat-select>
+              <mat-hint>{{'TESTMANAGEMENT.ASSIGNTOFIELDHINT' | translate | softLabelsPipe : softLabels}}
+              </mat-hint>
+            </mat-form-field>
+            <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+              <textarea matInput placeholder="{{'TESTMANAGEMENT.DESCRIPTION' | translate }}"
+                formControlName="description"></textarea>
+              <mat-hint>{{'TESTMANAGEMENT.DESCRIPTIONFIELDHINT' | translate | softLabelsPipe : softLabels}}</mat-hint>
+              <mat-error *ngIf="addTestRunForm.get('description').hasError('maxlength')">
+                {{'TESTMANAGEMENT.TESTRUNDESCRIPTIONEXCEED300CHARACTERS' | translate | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+            <mat-radio-group class="radio-group mt-05" formControlName="isIncludeAllCases">
+              <div fxLayout="row wrap">
+                <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+                  <mat-radio-button value="true" [checked]="addTestRunForm.value.isIncludeAllCases === true"
+                    (change)="isCompleted=false;selectAllCases()">
+                    <b>{{'TESTMANAGEMENT.INCLUDEALLTESTCASES' | translate}}</b>
+                    <p class="wrap-mat-radio-label m-0">
+                      {{'TESTMANAGEMENT.SELECTTHISOPTIONTOINCLUDEALLTESTCASES' | translate | softLabelsPipe : softLabels}}
+                    </p>
+                  </mat-radio-button>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+                  <mat-radio-button class="mb-05" fxFlex="100" fxFlex.gt-sm="100" value="false"
+                    [checked]="addTestRunForm.value.isIncludeAllCases === false" (change)="unSelectAllCases()">
+                    <b>{{'TESTMANAGEMENT.SELECTSPECIFICTESTCASES' | translate}}</b>
+                    <span *ngIf="specificCasesIncluded">
+                      <b> ( <span class="add-test-case">{{specificCasesSelected}}</span></b>
+                      <b class="ml-05">{{'TESTMANAGEMENT.TESTCASESINCLUDED' | translate}} )</b>
+                    </span>
+                    <p class="wrap-mat-radio-label m-0">
+                      {{'TESTMANAGEMENT.YOUCANALTERNATIVELYSELCTTESTCASE' | translate | softLabelsPipe : softLabels}}
+                    </p>
+                  </mat-radio-button>
+                </div>
+              </div>
+            </mat-radio-group>
+            <div fxFlex="100" *ngIf="editTestRun">
+              <mat-checkbox formControlName="isCompleted"><b> {{'TESTMANAGEMENT.COMPLETED' | translate}} </b>
+              </mat-checkbox>
+            </div>
+            <!-- <mat-card fxFlex="100" fxFlex.gt-sm="100" class="ml-1 mr-1">
+                        0 test cases Included.(<a>change selection</a>)
+                    </mat-card> -->
+            <button *ngIf="!editTestRun" mat-button mat-raised-button type="submit" color="primary"
+              [disabled]="disableTestRun">
+              <fa-icon icon="edit" class="mr-05"></fa-icon>
+              {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+            </button>
+            <button *ngIf="editTestRun" mat-button mat-raised-button type="submit" color="primary"
+              [disabled]="disableTestRun">
+              <fa-icon icon="edit" class="mr-05"></fa-icon>
+              {{'TESTMANAGEMENT.SAVETESTRUN' | translate | softLabelsPipe : softLabels}}
+            </button>
+            <button mat-button mat-raised-button class="ml-05 mr-05" type="button" (click)="cancelTestRun()">
+              <fa-icon icon="times" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.CANCEL' | translate}}
+            </button>
+            <button mat-raised-button mat-button color="primary" type="button" [disabled]="!isCompleted" matStepperNext>
+              <fa-icon icon="arrow-right" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.NEXT' | translate}}
+            </button>
+          </div>
+        </form>
+      </form>
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup" *ngIf="isCompleted">
+      <form [formGroup]="secondFormGroup">
+        <ng-template matStepLabel>{{'TESTMANAGEMENT.SELECTTESTCASES' | translate}}</ng-template>
+        <div class="mb-05" *ngIf="showSelectAllNone">
+          <b>{{'TESTMANAGEMENT.CASES' | translate}} - {{'TESTMANAGEMENT.SELECT' | translate}}
+            <a class="cases-select-all-none" (click)="selectingAll()">{{'TESTMANAGEMENT.ALL' | translate}}</a> |
+            <a class="cases-select-all-none" (click)="selectingNone()">{{'TESTMANAGEMENT.NONE' | translate}}</a>
+          </b>
+          <a *ngIf="!expandAll" class="add-test-case ml-05" matTooltip="{{'TESTMANAGEMENT.EXPANDSECTIONS' | translate}}"
+            (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+              icon="caret-square-right"></fa-icon>
+          </a>
+          <a *ngIf="expandAll" class="add-test-case ml-05"
+            matTooltip="{{'TESTMANAGEMENT.COLLAPSESECTIONS' | translate}}" (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+              icon="caret-square-down"></fa-icon>
+          </a>
+        </div>
+        <div class="testsuite-tab" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="5px">
+          <div fxFlex="25" fxFlex.xs="100">
+            <mat-card class="p-0 m-0">
+              <testrun-cases-list (sectionsSelected)="getSectionsSelected($event)"
+                (casesSelected)="getCasesSelected($event)" (selectedSections)="getSelectedSectionId($event)"
+                (selectedSectionData)="getSelectedSectionData($event)"
+                (sectionCasesCount)="getSectionCasesCount($event)" (sectionsData)="getSectionsData($event)"
+                [sectionSelected]="sectionSelected" [testRunId]="testRunId" [testSuiteId]="testSuiteId"
+                [unSelectSectionId]="unselectSectionId" [sectionToCheck]="sectionToCheck"
+                [selectAllNone]="selectAllNone" [sectionCollapse]="expandAll" [checkFilterCases]="filteredCasesData">
+              </testrun-cases-list>
+            </mat-card>
+          </div>
+          <div fxFlex>
+            <mat-card class="p-0 mt-0">
+              <testrun-select-test-case-view (checkSection)="getSectionTocheck($event)"
+                (unselectSection)="getUnselectedSection($event)" (selectedCaseDetails)="getListOfTestCases($event)"
+                (selectedCaseDetailsAllNone)="getListOfTestCasesAllNone($event)"
+                (sectionCasesData)="getSectionCasesData($event)" [testRunId]="testRunId"
+                [selectedSection]="selectedSectionIdData" [selectedSectionData]="sectionData"
+                [selectAllNone]="selectAllNone" [testSuitesId]="testSuiteId" [checkFilterCases]="filteredCasesData">
+              </testrun-select-test-case-view>
+            </mat-card>
+          </div>
+        </div>
+        <div class="mt-05">
+          <button *ngIf="!editTestRun" mat-button mat-raised-button type="submit" color="primary"
+            (click)="addNewTestRun()" [disabled]="!addTestRunForm.valid || disableTestRun">
+            <fa-icon icon="edit" class="mr-05"></fa-icon>
+            {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+          </button>
+          <button *ngIf="editTestRun" mat-button mat-raised-button type="submit" color="primary"
+            (click)="addNewTestRun()" [disabled]="!addTestRunForm.valid || disableTestRun">
+            <fa-icon icon="edit" class="mr-05"></fa-icon>
+            {{'TESTMANAGEMENT.SAVETESTRUN' | translate | softLabelsPipe : softLabels}}
+          </button>
+          <button mat-button mat-raised-button class="ml-05 mr-05" type="button" (click)="cancelTestRun()">
+            <fa-icon icon="times" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+          <button mat-raised-button mat-button color="primary" type="button" matStepperPrevious
+            (click)="checkSpecificCasesSelected()">
+            <fa-icon icon="arrow-left" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.BACK' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-step>
+  </mat-horizontal-stepper>
+</mat-card-content>

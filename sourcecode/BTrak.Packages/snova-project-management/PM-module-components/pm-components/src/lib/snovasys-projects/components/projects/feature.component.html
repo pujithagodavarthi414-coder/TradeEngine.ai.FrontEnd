@@ -1,0 +1,286 @@
+<mat-card class="p-0" *ngIf="(canAccess_entityType_feature_ViewProjectFeatures)" fxLayout="column">
+  <!-- <mat-card-title class="p-0 full-width data-table-header">
+    <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+
+    </div>
+  </mat-card-title> -->
+  <mat-card-title class="p-0 full-width data-table-header">
+    <div fxLayout="row wrap" fxLayout.xs="column">
+      <div fxFlex class="p-3" >
+        <div class="filter-section archive-toggle">
+          <div class="archive-toggle" style="display: inline-block !important;" >
+            <span class="hide-content-overflow">
+              {{'PROJECTS.COMPONENTS'| translate}}
+            </span>
+            <span *ngIf="!isArchived && (componentsCount$|async) > 0">({{componentsCount$|async}})</span>
+            <span
+              *ngIf="isArchived && (projectFeature$ | async).length > 0">({{(projectFeature$ | async).length}})</span>&nbsp;&nbsp;
+            <span class="mr-1">{{ 'ARCHIVE' | translate }}</span>
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              [disabled]="(featureOperationInProgress$|async)" (change)="LoadProjectFeature();toggleArchiveButton()">
+            </mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+        fxLayoutAlign.xs="center center">
+        <mat-form-field class="full-width custom-searchbar mr-1">
+          <input matInput placeholder="{{ 'COMPONENTS.SEARCHBYCOMPONENTNAME' | translate }} "
+            [(ngModel)]="searchText" />
+        </mat-form-field>
+        <span class="close_icon mr-1" style="left:100px;margin-top:4px;">
+          <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">close</mat-icon>
+        </span>
+        <button mat-icon-button color="accent" style="margin-top: 11px;"
+          *ngIf="(canAccess_entityType_feature_AddOrUpdateProjectFeature) && (canAccess_entityType_feature_ViewProjectFeatures)"
+          matTooltip="{{'PROJECTS.ADDPROJECTCOMPONENT'|translate | softLabelsPipe : softLabels}}"
+          [satPopoverAnchorFor]="projectFeaturePopover" (click)="projectFeaturePopover.open();createProjectFeature()">
+          <fa-icon icon="plus" class="filter mat-color-accent">
+          </fa-icon>
+        </button>
+      </div>
+    </div>
+  </mat-card-title>
+  <div fxFlex class="p-05" fxLayout="row">
+    <mat-chip disableRipple matRipple class="mr-08">
+      <b>{{ 'ARCHIVE' | translate }}:&nbsp;</b>
+      <span *ngIf="isArchived">
+        {{ 'PROJECTS.YES' | translate }}
+      </span>
+      <span *ngIf="!isArchived">
+        {{ 'PROJECTS.NO' | translate }}
+      </span>
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearToggle()">
+      </fa-icon>
+    </mat-chip>
+    <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+      <b>{{'SEARCH' | translate}}:&nbsp;</b>
+      {{ searchText }}
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+      </fa-icon>
+    </mat-chip>
+  </div>
+</mat-card>
+<div fxLayout="row wrap"
+  *ngIf="(featureOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectFeatures)">
+  <div fxFlex="100" fxFlex.gt-sm="25" fxFlex.sm="50" *ngFor="let form of featureLoop(featureLoaderNumber).fill(1)">
+    <mat-card class="loading-card project-dtl p-05">
+      <div fxLayout="row wrap" fxLayoutGap="5px">
+        <div fxFlex="14" fxFlex.md="20" fxFlex.gt-lg="20" class="img-bg loading-bg">
+          <div class="loading-image"></div>
+        </div>
+        <div fxFlex="82" fxFlex.md="76" fxFlex.gt-lg="76">
+          <p class="mat-body-1 empty-text loading-bg mb-05"></p>
+
+          <div fxFlex="100">
+            <p class="mat-small empty-text loading-bg"></p>
+          </div>
+
+          <div fxLayout="row">
+            <div fxFlex="75">
+              <p class="mat-small empty-text loading-bg"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>
+<div>
+
+  <sat-popover #deleteFeatureComponent verticalAlign="below" hasBackdrop horizontalAlign="end"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+      <div>
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">
+            <div *ngIf="!isArchived">
+              {{'COMPONENTS.ARCHIVECOMPONENT'|translate}}
+            </div>
+            <div *ngIf="isArchived">
+              {{'COMPONENTS.UNARCHIVECOMPONENT'|translate}}
+            </div>
+          </div>
+        </mat-card-title>
+
+        <div class="card-content p-05">
+          <div *ngIf="!isArchived">{{'COMPONENTS.AREYOUSUREWANTTOARCHIVETHISCOMPONENT'|translate}}
+          </div>
+          <div *ngIf="isArchived">{{'COMPONENTS.AREYOUSUREWANTTOUNARCHIVETHISCOMPONENT'|translate}}
+          </div>
+          <div class="text-center p-05">
+            <button type="button" mat-raised-button color="primary" class="mr-1"
+              (click)="$event.stopPropagation(); DeleteFeature()" [disabled]="(anyOperationInProgress$ | async)">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+              </mat-progress-bar>
+              <fa-icon icon="check" class="mr-05"></fa-icon> {{'YES' | translate}}
+            </button>
+            <button mat-raised-button class="mr-1" (click)="closeDeleteDialog()"
+              [disabled]="(anyOperationInProgress$ | async)">
+              <fa-icon icon="times" class="mr-05"></fa-icon> {{'NO' | translate}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<div id="style-1" class="members-component-height">
+  <mat-card-content class="p-0"
+    *ngIf="!(featureOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectFeatures)">
+    <div *ngIf="
+    !(anyOperationInProgress$ | async) && (canAccess_entityType_feature_ViewProjectFeatures) &&
+     (projectFeature$ | async | resultfilter: searchText:'componentName')
+       ?.length == 0
+   ">
+      <app-common-message-box textToDisplay="{{ 'COMPONENTS.COMPONENTSNOTFOUND' | translate }}">
+      </app-common-message-box>
+    </div>
+    <div fxLayout="row wrap">
+      <div fxFlex="100" fxFlex.gt-sm="25" fxFlex.sm="50"
+        *ngFor="let projFeature of (projectFeature$ | async) | resultfilter: searchText:'componentName'">
+        <mat-card class="project-card p-05 component-card">
+          <div fxLayout="row wrap" fxLayoutGap="5px">
+            <div fxFlex="20" fxFlex.lt-md="15" fxFlex.md="25">
+
+              <app-avatar fxHide fxHide.gt-lg="false" [name]="projFeature.projectFeatureName | removeSpecialCharacters"
+                [src]="projFeature.projectFeatureResponsiblePerson.profileImage | fetchSizedAndCachedImage: '80':''"
+                [isRound]="false" size="80">
+              </app-avatar>
+              <app-avatar fxShow fxShow.gt-lg="false" [name]="projFeature.projectFeatureName | removeSpecialCharacters"
+                [src]="projFeature.projectFeatureResponsiblePerson.profileImage | fetchSizedAndCachedImage: '80':''"
+                [isRound]="false" size="50">
+              </app-avatar>
+            </div>
+            <div fxFlex="calc(80%-5px)" fxFlex.md="calc(75%-5px)" fxFlex.lt-md="calc(85%-5px)" fxLayout="column">
+              <div fxLayout="row wrap" fxLayoutGap="2px">
+                <div fxFlex="calc(100%-42px)">
+                  <a class="mat-body-1" matTooltip="{{ projFeature.projectFeatureName }}"
+                    matTooltipClass="tooltip-overflow">{{
+                  projFeature.projectFeatureName
+                }}</a>
+                </div>
+                <div fxFlex="40px" fxLayoutAlign="end center">
+                  <mat-icon class="more_vert" [matMenuTriggerFor]="menu2" matTooltip="{{'MENU' | translate}}"
+                    (click)="$event.stopPropagation()"
+                    *ngIf="(canAccess_entityType_feature_ArchiveProjectFeature) || (canAccess_entityType_feature_AddOrUpdateProjectFeature)">
+                    more_vert</mat-icon>
+                </div>
+              </div>
+              <div fxFlex="100">
+                <p class="mat-body-1  hide-content-overflow person-name">
+                  {{ projFeature.projectFeatureResponsiblePerson.name }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+        <mat-menu #menu2="matMenu" class="dialog_window" (click)="$event.stopPropagation()">
+          <button type="button" mat-menu-item [satPopoverAnchorFor]="editFeatureComponent"
+            #editFeatureComponentPopover="satPopoverAnchor"
+            (click)="EditFeature(projFeature,editFeatureComponentPopover)"
+            *ngIf="!isArchived && (canAccess_entityType_feature_AddOrUpdateProjectFeature)">
+            <mat-icon aria-hidden="false" aria-label="Example">edit</mat-icon>
+            <span>{{'UPDATE' | translate}} </span>
+          </button>
+          <button type="button" mat-menu-item [satPopoverAnchorFor]="deleteFeatureComponent"
+            #deleteFeatureComponentPopover="satPopoverAnchor"
+            (click)="deleteProjectFeature(projFeature,deleteFeatureComponentPopover)"
+            *ngIf="(canAccess_entityType_feature_ArchiveProjectFeature)">
+            <mat-icon aria-hidden="false" aria-label="Example">archive</mat-icon>
+            <span *ngIf="!isArchived">{{'ARCHIVE' | translate}} </span>
+            <span *ngIf="isArchived"> {{'UNARCHIVE' | translate}}</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <sat-popover #editFeatureComponent verticalAlign="below" [interactiveClose]="false" hasBackdrop horizontalAlign="end"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+      <div>
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text p-05">{{ titletext }}</div>
+        </mat-card-title>
+        <form [formGroup]="projectFeatureForm" #formDirective="ngForm" novalidate
+          (submit)="(projectFeatureForm.valid && isAllowSpecialCharacter) && SaveProjectFeature()">
+          <div class="card-content p-05">
+            <input type="hidden" formControlName="projectFeatureId"
+              placeholder="{{'COMPONENTS.PROJECTFEATUREID'|translate | softLabelsPipe : softLabels}}" />
+
+            <mat-form-field class="full-width">
+              <input formControlName="projectFeatureName" matInput (keypress)="omitSpecialChar($event)"
+                (keyup)="removeSpecialCharacter()" (blur)="clearValidations()"
+                placeholder="{{'COMPONENTS.ENTERCOMPONENTNAME'|translate}}" trim required />
+              <mat-error>
+                <span *ngIf="
+                projectFeatureForm.get('projectFeatureName')
+                  .hasError('required') &&
+                projectFeatureForm.get('projectFeatureName')
+                  .touched
+              ">{{'COMPONENTS.PLEASEENTERCOMPONENTNAME'|translate}}</span>
+                <span *ngIf="
+                projectFeatureForm
+                  .get('projectFeatureName')
+                  .hasError('maxlength')
+              ">{{'COMPONENTS.COMPONENTNAMECANNOTEXCEED250CHARACTERS'|translate}}</span>
+              </mat-error>
+            </mat-form-field>
+            <mat-error>
+              <span
+                *ngIf="!isAllowSpecialCharacter">{{ 'COMPONENTS.COMPONENTNAMECANNOTSTARTWITHSPECIALCHARACTERS' | translate }}</span>
+            </mat-error>
+            <mat-form-field class="full-width">
+              <mat-select formControlName="projectFeatureResponsiblePersonId"
+                placeholder="{{'COMPONENTS.SELECTEMPLOYEENAME'|translate | softLabelsPipe : softLabels}}"
+                (selectionChange)="getProjectResponsiblePerson($event.value)">
+                <mat-select-trigger *ngIf="selectedMember">
+                  {{selectedMember}}
+                </mat-select-trigger>
+                <mat-select-trigger *ngIf="!selectedMember">
+                  {{'COMPONENTS.SELECT' | translate}}
+                </mat-select-trigger>
+                <mat-option [value]="0">{{'COMPONENTS.SELECTNONE' | translate}}</mat-option>
+                <mat-option value="option" *ngFor="let user of (allUsers$ | async)" [value]="user.id">
+                  <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                    [name]="user.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="user.profileImage"
+                    [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.fullName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="text-center">
+              <button mat-raised-button color="primary" class="mr-05"
+                [disabled]="!projectFeatureForm.valid ||(anyOperationInProgress$ | async)|| !isAllowSpecialCharacter "
+                (click)="$event.stopPropagation()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="{{ buttonicon }}" class="mr-05"></fa-icon>
+                {{ buttontext }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeEditFeatureComponent();false"
+                [disabled]="(anyOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{'CANCEL'|translate}}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </mat-card>
+  </sat-popover>
+</div>
+
+
+<sat-popover #projectFeaturePopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+  scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <app-pm-component-create-project-feature *ngIf="loadprojectFeature" [projectId]="projectId"
+      [clearProjectFeatureForm]="clearProjectFeatureForm" (closeProjectFeatureDialog)="closeProjectFeatureDialog()">
+    </app-pm-component-create-project-feature>
+  </mat-card>
+</sat-popover>

@@ -1,0 +1,103 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="saveProductDetailsOperationInProgress$ | async">
+</mat-progress-bar>
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" *ngIf="!productDetailsId">{{'ASSETS.ADDNEWPRODUCT' | translate}}
+    </div>
+    <div class="card-title-text mat-bg-primary p-05" *ngIf="productDetailsId">{{'ASSETS.EDITPRODUCT' | translate}}</div>
+</mat-card-title>
+<form [formGroup]="productDetailsForm" novalidate #formDirective="ngForm"
+    (submit)="productDetailsForm.valid && saveProductDetails(formDirective)">
+    <div class="card-content p-05">
+        <div fxLayout="row wrap">
+            <div fxFlex fxFlex.gt-xs="92">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}" formControlName="productId" required>
+                        <mat-option value="option" *ngFor="let product of productsList$ | async"
+                            [value]="product.productId">{{product.productName}}</mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="productDetailsForm.get('productId').hasError('required') && productDetailsForm.get('productId').touched">
+                            {{'ASSETS.PLEASESELECTAPRODUCT' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-xs="6" fxFlex.lt-sm="3" fxFlexOffset="3px" fxFlex.lt-md="6">
+                <mat-icon aria-hidden="false" aria-label="add" class="mat-bg-primary plus_icon"
+                    [satPopoverAnchorFor]="addNewProduct" (click)="addNewProduct.open()"> add </mat-icon>
+            </div>
+        </div>
+        <mat-form-field class="full-width">
+            <input matInput formControlName="productCode" placeholder="{{'ASSETS.PRODUCTCODE' | translate}}">
+            <mat-error>
+                <span *ngIf="productDetailsForm.get('productCode').hasError('maxlength')">
+                    {{'ASSETS.PRODUCTCODESHOULDNOTEXCEED250CHARACTERS' | translate}}</span>
+            </mat-error>
+        </mat-form-field>
+        <mat-form-field class="full-width">
+            <input matInput formControlName="manufacturerCode" placeholder="{{'ASSETS.MANUFACTURERCODE' | translate}}">
+            <mat-error>
+                <span *ngIf="productDetailsForm.get('manufacturerCode').hasError('maxlength')">
+                    {{'ASSETS.MANUFACTURECODESHOULDNOTEXCEED100CHARACTERS' | translate}}</span>
+            </mat-error>
+        </mat-form-field>
+        <div fxLayout="row wrap">
+            <div fxFlex fxFlex.gt-xs="92">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'ASSETS.VENDOR' | translate}}" formControlName="supplierId" required>
+                        <mat-option value="option" *ngFor="let supplier of suppliersList$ | async"
+                            [value]="supplier.supplierId">{{supplier.supplierName}}</mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="productDetailsForm.get('supplierId').hasError('required') && productDetailsForm.get('supplierId').touched">
+                            {{'ASSETS.PLEASESELECTASUPPLIER' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-xs="6" fxFlex.lt-sm="3" fxFlexOffset="3px" fxFlex.lt-md="6"
+                *ngIf="(canAccess_feature_AddOrUpdateVendor)">
+                <mat-icon aria-hidden="false" aria-label="add" class="mat-bg-primary plus_icon"
+                    [satPopoverAnchorFor]="addNewSupplier" (click)="addNewSupplier.open()" aria-hidden="true"
+                    (click)="createSupplier()"> add </mat-icon>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mb-1">
+        <button type="submit" [disabled]="!productDetailsForm.valid || (anyOperationInProgress$ | async)"
+            *ngIf="!productDetailsId" color="primary" mat-button mat-raised-button class="mr-1"
+            matTooltip="{{'ASSETS.SAVEPRODUCTDETAILS' | translate}}">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="saveProductDetailsOperationInProgress$ | async">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="save"></fa-icon> {{'ASSETS.SAVE' | translate}}
+        </button>
+        <button type="submit" [disabled]="!productDetailsForm.valid || (anyOperationInProgress$ | async)"
+            *ngIf="productDetailsId" color="primary" mat-button mat-raised-button class="mr-1"
+            matTooltip="{{'ASSETS.UPDATEPRODUCTDETAILS' | translate}}">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="saveProductDetailsOperationInProgress$ | async">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="pen"></fa-icon>{{'ASSETS.UPDATE' | translate}}
+        </button>
+        <button mat-button mat-raised-button matTooltip="{{'ASSETS.CANCELPRODUCTDETAILS' | translate}}"
+            [disabled]="saveProductDetailsOperationInProgress$ | async"
+            (click)="closeProductDetailsForm(formDirective);(false)">
+            <fa-icon class="mr-1" icon="times"></fa-icon> {{'ASSETS.CANCEL' | translate}}
+        </button>
+    </div>
+</form>
+
+<sat-popover #addNewSupplier [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0  mr-0">
+        <app-supplier (closePopup)="closeSupplierForm()" [editSupplier]="editSupplier"></app-supplier>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addNewProduct [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <app-am-component-product (closePopup)="closeAddProductForm()"></app-am-component-product>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,121 @@
+<mat-card class="report-item-padding" [ngStyle]="{ 'background-color': reportSelected == true ? '#e1f0ff' : '' }">
+    <mat-card-title>
+        <div fxLayout="row" fxLayoutGap="0px">
+            <div fxFlex class="report-title-overflow" #reportTitle (mouseover)="checkTitleTooltipStatus()">
+                <span class="reports-on-hover primary-text"
+                    [ngStyle]="{ 'font-weight': reportSelected == true ? 'bold' : '' }"
+                    [matTooltip]="showTitleTooltip ? reportData.auditReportName : ''">
+                    {{reportData.auditReportName}}
+                </span>
+            </div>
+            <div fxFlex="50px" fxLayoutAlign="end" class="mr-05">
+                <span class="milestone-count" matTooltip="{{'AUDIT.CONDUCTSCORE' | translate | softLabelsPipe :softLabels}}: {{reportData.conductScore}}
+                            ,{{'AUDIT.TOTALQUESTIONS' | translate | softLabelsPipe :softLabels}}: {{reportData.questionsCount}}
+                            , {{'AUDIT.ANSWEREDCOUNT' | translate}}: {{reportData.answeredCount}}
+                            , {{'AUDIT.UNANSWEREDCOUNT' | translate}}: {{reportData.unAnsweredCount}}">
+                    {{reportData.conductScore}}
+                </span>
+            </div>
+        </div>
+    </mat-card-title>
+    <div fxLayout="row wrap" class="mt-05">
+        <div fxFlex="25px" class="report-display">
+            <app-avatar matTooltip="{{'TESTMANAGEMENT.CREATEDBY' | translate}} {{reportData.createdByUserName}}"
+                [name]="reportData.createdByUserName | removeSpecialCharacters" [src]="reportData.createdByProfileImage"
+                [isRound]="true" size="22">
+            </app-avatar>
+        </div>
+        <div fxFlex class="hide-content-overflow">
+            <span class="ml-05" matTooltip="{{reportData.createdDateTime | utcToLocalTime | date:'mediumDate'}}">
+                {{reportData.createdDateTime | utcToLocalTime | date:'mediumDate'}} </span>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" *ngIf="canAccess_entityType_feature_DownloadOrShareAuditReports">
+            <a class="reports-on-hover" matTooltip="{{'AUDIT.DOWNLOADREPORT' | translate | softLabelsPipe : softLabels}}">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="downldInProgress && reportData.auditReportId == selectedDwnldId">
+                </mat-progress-bar>
+                <fa-icon icon="download" class="accent" (click)="$event.stopPropagation();downloadReport(reportData)">
+                </fa-icon>
+            </a>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" *ngIf="canAccess_entityType_feature_DownloadOrShareAuditReports">
+            <a class="reports-on-hover ml-05" matTooltip="{{'AUDIT.SHAREREPORT' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon icon="share-square" [satPopoverAnchorFor]="shareReport"
+                    (click)="$event.stopPropagation();shareAuditReport()"></fa-icon>
+            </a>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center"
+            *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAuditReports && !reportData.isArchived">
+            <a class="reports-on-hover ml-05" matTooltip="{{'AUDIT.ARCHIVEREPORT' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon icon="archive" color="accent" [satPopoverAnchorFor]="deleteReport"
+                    (click)="$event.stopPropagation();deleteTestRailReport()">
+                </fa-icon>
+            </a>
+        </div>
+    </div>
+</mat-card>
+
+<sat-popover #deleteReport hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'AUDIT.AREYOUSUREARCHIVEREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableReportDelete"
+                    (click)="deleteSelectedReport(reportData)">
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> {{'AUDIT.ARCHIVE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="deleteReport.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #shareReport hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'AUDIT.SHAREREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05" style="width: 300px;">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.PLEASEENTERONEMAILPERLINE' | translate}}
+            </div>
+            <div fxLayout="row wrap">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.TO' | translate}}" [(ngModel)]="to"></textarea>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row wrap">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.CC' | translate}}" [(ngModel)]="cc"></textarea>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row wrap" class="mb-1">
+                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                    <textarea matInput placeholder="{{'BILLINGMANAGEMENT.BCC' | translate}}"
+                        [(ngModel)]="bcc"></textarea>
+                </mat-form-field>
+            </div>
+            <div class="text-center">
+                <button type="button" class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="disableReportShare || validateMail()" (click)="shareAsAuditReport()">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableReportShare">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="save"></fa-icon> {{'BILLINGMANAGEMENT.SEND' | translate}}
+                </button>
+                <button type="button" mat-button mat-raised-button (click)="closeSendReportPopover()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

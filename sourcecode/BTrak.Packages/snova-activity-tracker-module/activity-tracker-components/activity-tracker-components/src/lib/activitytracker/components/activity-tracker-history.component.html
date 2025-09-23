@@ -1,0 +1,99 @@
+<div *ngIf="(canAccess_feature_ManageActivityConfig)">
+    <mat-card class="p-0 canteen-manage m-0" id="history-1" >
+        <mat-card-title class="data-table-header drag-handler tracker-helper-icon">
+            <div  fxFlex fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                <div fxLayout="row" fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                    {{'ACTIVITYTRACKER.ACTIVITYTRACKERCONFIGURATIONHISTORY'|translate}}
+                    <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-03 pl-05"
+                            matTooltip="Here we can see category and action performed."></fa-icon>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" id="history-2">
+                    <button mat-icon-button matTooltip="Reload" (click)="reLoad()">
+                        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" id="history-3">
+                    <button type="submit" mat-icon-button [matMenuTriggerFor]="filterMenu">
+                        <fa-icon matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}" icon="user-cog"
+                            class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading">
+    </mat-progress-bar>
+
+    <ng-container *ngIf="historyDetails != null && historyDetails[0]?.totalCount > 0 && !(loading)">
+        <div class="no-drag tracker-history">
+            <mat-card-content class="p-0 mb-0" id="style-1">
+                <div *ngFor="let history of historyDetails">
+                    <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05"
+                        style="border-bottom: solid;border-width: 1px; background-color: white;">
+                        <div *ngIf="history.profileImage != null && history.profileImage != ''" mat-card-avatar
+                            fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13"
+                            (click)="profilePage(history.createdByUserId);$event.stopPropagation();">
+                            <img class="employee_img" src="{{history?.profileImage}}" style="float: none;"
+                                *ngIf="history.profileImage" />
+                        </div>
+                        <div *ngIf="history.profileImage == null || history.profileImage == ''" mat-card-avatar
+                            fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13"
+                            (click)="profilePage(history.createdByUserId);$event.stopPropagation();">
+                            <app-avatar [name]="history.userName | removeSpecialCharacters" [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                            <div fxLayout="row">
+                                <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45">
+                                    {{history.userName}}
+                                </div>
+                                <div fxFlex>
+                                    <span class="pull-right"
+                                        matTooltip="{{history.createdDateTime| date:'dd-MM-yyyy, h:mm a ' }}">{{history.createdDateTime | utcToLocalTime | timeago}}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <b>Category&nbsp;:</b>&nbsp;{{history.category}}
+                            </div>
+                            <div fxLayout="row">
+                                <span [innerHTML]="history.description"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-card-content>
+        </div>
+        <ng-container *ngIf="!(historyDetails[0].totalCount < 20)">
+            <mat-divider></mat-divider>
+            <div class="pagination-position">
+                <mat-paginator [length]="historyDetails[0].totalCount" [pageSize]="pageSize" [pageIndex]="pageIndex"
+                    [pageSizeOptions]="pageSizeOptions" (page)="getFilteredAssetComments($event)">
+                </mat-paginator>
+            </div>
+        </ng-container>
+    </ng-container>
+    <ng-container *ngIf="historyDetails.length == 0">
+        <div fxLayoutAlign="center center" fxLayout="column">
+            {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+        </div>
+    </ng-container>
+
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+        <mat-card class="filter-data mat-card-fx-col" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+                <mat-label>Select category</mat-label>
+                <mat-select (selectionChange)="searchByCategory($event.value)" [(value)]="selectedCategory">
+                    <mat-option value="trackAppsUrls">{{'ACTIVITYAPPS.TRACKAPPANDURLS' | translate}}</mat-option>
+                    <mat-option value="screenShotFrequency">{{'ACTIVITYAPPS.SCREENSHOTFREQUENCY' | translate}}
+                    </mat-option>
+                    <mat-option value="deleteScreenShots">{{'ACTIVITYAPPS.DELETESCREENSHOTS' | translate}}</mat-option>
+                    <mat-option value="keyboard">{{'ACTIVITYAPPS.RECORDACTIVITY' | translate}}</mat-option>
+                    <mat-option value="mouseTracking">{{'ACTIVITYAPPS.MOUSETRACKING' | translate}}</mat-option>
+                    <mat-option value="idealTime">{{'ACTIVITYAPPS.IDEALTIME' | translate}}</mat-option>
+                    <mat-option value="offlineTracking">{{'ACTIVITYAPPS.OFFLINETRACKING' | translate}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </mat-card>
+    </mat-menu>
+</div>

@@ -1,0 +1,186 @@
+<div class="p-0 full-height gridster-noset">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div class="p-05">
+            {{ 'PROJECTUSAGEREPORT.PROJECTUSAGEREPORT' | translate }}
+        </div>
+    </mat-card-title>
+    <div id="widget-scroll-id">
+        <mat-divider></mat-divider>
+        <app-projectreportsfilters [type]=2 (getResults)="getResults($event)"></app-projectreportsfilters>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isProjectReportDataIsInprogress">
+        </mat-progress-bar>
+        <div fxFlex="100" class="full-width project-usage-report" 
+            *ngIf="(canAccess_feature_ProjectUsageReport)">
+            <kendo-grid class="project-usage-table" [kendoGridBinding]="reportData" [pageSize]="state.take"
+                [skip]="state.skip" [sort]="state.sort" [group]="state.group" [sortable]="true" [pageable]="true"
+                [groupable]="{ showFooter: true, enabled: false  }" (dataStateChange)="dataStateChange($event)"
+                [filterable]="true" [scrollable]="true">
+                <kendo-grid-column field="goalName" title="{{ 'RESOURCEUSAGEREPORT.GOAL' | translate }}" width="200">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="startDate" title="{{ 'PROJECTUSAGEREPORT.STARTDATE' | translate }}"
+                    width="200">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.startDate != null">
+                            {{ dataItem.startDate | date: 'dd MMM yyyy' }}
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="endDate" title="{{ 'PROJECTUSAGEREPORT.ENDDATE' | translate }}" width="200">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.endDate != null">
+                            {{ dataItem.endDate | date: 'dd MMM yyyy' }}
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="goalEstimatedHours"
+                    title="{{ 'PROJECTUSAGEREPORT.GOALESTIMATEDHOURS' | translate }}" width="200">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                    <ng-template kendoGridGroupCellTemplate let-dataItem="dataItem">
+                        <span>
+                            {{ dataItem.goalEstimatedHours }}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                        let-dataItem="dataItem">
+                        {{ aggregates?.goalEstimatedHours.sum | number }}
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="goalUsedHours" title="{{ 'PROJECTUSAGEREPORT.LOGGEDHOURS' | translate }}"
+                    width="150">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                    <ng-template kendoGridGroupCellTemplate let-dataItem="dataItem">
+                        <span>
+                            {{ dataItem.goalUsedHours }}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                        let-dataItem="dataItem">
+                        <span>
+                            {{ aggregates.goalUsedHours.sum | number }}
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="goalPendingHours" title="{{ 'PROJECTUSAGEREPORT.PENDINGHOURS' | translate }}"
+                    width="200">
+                    <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                        <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                        </kendo-grid-string-filter-cell>
+                    </ng-template>
+                    <ng-template kendoGridGroupCellTemplate let-dataItem="dataItem">
+                        <span>
+                            {{ dataItem.goalPendingHours }}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                        let-dataItem="dataItem">
+                        {{ aggregates?.goalPendingHours.sum | number }}
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="200">
+                    <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates">
+                        <div fxLayout="row wrap" [ngStyle]="{width: '125px'}">
+                            <div fxLayout="row" fxFlex="100">
+                                <div fxFlex="{{group.items[0].projectAllocatedHoursPercentage}}"
+                                    *ngIf="group.items[0].projectAllocatedHours != 0"
+                                    matTooltip="{{ group.items[0].projectAllocatedHours }} - {{'RESOURCEUSAGEREPORT.ALLOCATEDHOURS' | translate}}">
+                                    <span class="cursor-pointer"
+                                        (click)="openProjectUsageReportDetails(group.items[0],false)">
+                                        <mat-progress-bar mode="determinate" value="100" class="allcated-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                                <div fxFlex="{{ group.items[0].projectUsedHoursPercentage }}"
+                                    *ngIf="group.items[0].projectUsedHours != 0"
+                                    matTooltip="{{group.items[0].projectUsedHours }} - {{'PROJECTUSAGEREPORT.LOGGEDHOURS' | translate}}">
+                                    <span class="cursor-pointer"
+                                        (click)="openProjectUsageReportDetails(group.items[0],false)">
+                                        <mat-progress-bar mode="determinate" value="100" class="used-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                                <div fxFlex="{{ group.items[0].projectNonAllocatedHoursPercentage}}"
+                                    *ngIf="group.items[0].projectNonAllocatedHours != 0"
+                                    matTooltip="{{ group.items[0].projectNonAllocatedHours }} - {{'PROJECTUSAGEREPORT.NONALLOCATEDHOURS' | translate}}">
+                                    <span class="cursor-pointer"
+                                        (click)="openProjectUsageReportDetails(group.items[0],false)">
+                                        <mat-progress-bar mode="determinate" value="100" class="nonallcated-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                            </div>
+                            <div fxLayout="row" fxLayoutAlign="center center" fxFlex="100">
+                                {{ group.items[0].projectAllocatedHours + group.items[0].projectUsedHours +
+                                group.items[0].projectNonAllocatedHours }}
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-group="group" let-aggregates="aggregates"
+                        let-dataItem="dataItem">
+                        <div fxLayout="row wrap" [ngStyle]="{width: '125px'}">
+                            <div fxLayout="row" fxFlex="100">
+                                <div fxFlex="{{ dataItem?.goalAllocatedHoursPercentage }}"
+                                    *ngIf="dataItem?.goalAllocatedHours != 0"
+                                    matTooltip="{{dataItem?.goalAllocatedHours}} - {{'RESOURCEUSAGEREPORT.ALLOCATEDHOURS' | translate}}">
+                                    <span class="cursor-pointer" (click)="openProjectUsageReportDetails(dataItem,true)">
+                                        <mat-progress-bar mode="determinate" value="100" class="allcated-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                                <div fxFlex="{{ dataItem?.goalUsedHoursPercentage}}"
+                                    *ngIf="dataItem?.goalUsedHours != 0"
+                                    matTooltip="{{dataItem?.goalUsedHours }} - {{'PROJECTUSAGEREPORT.LOGGEDHOURS' | translate}}">
+                                    <span class="cursor-pointer" (click)="openProjectUsageReportDetails(dataItem,true)">
+                                        <mat-progress-bar mode="determinate" value="100" class="used-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                                <div fxFlex="{{ dataItem?.goalNonAllocatedHoursPercentage }}"
+                                    *ngIf="dataItem?.goalNonAllocatedHours != 0"
+                                    matTooltip="{{dataItem?.goalNonAllocatedHours }} - {{'PROJECTUSAGEREPORT.NONALLOCATEDHOURS' | translate}}">
+                                    <span class="cursor-pointer" (click)="openProjectUsageReportDetails(dataItem,true)">
+                                        <mat-progress-bar mode="determinate" value="100" class="nonallcated-color"
+                                            [ngStyle]="{height:'12px'}">
+                                        </mat-progress-bar>
+                                    </span>
+                                </div>
+                            </div>
+                            <div fxLayout="row" fxLayoutAlign="center center" fxFlex="100">
+                                {{ dataItem?.goalAllocatedHours + dataItem?.goalUsedHours +
+                                dataItem?.goalNonAllocatedHours }}
+                            </div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_ProjectUsageReport)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+<ng-template #projectUsageReportDialog let-data>
+    <app-projectusagereportdrilldown [data]=[data]></app-projectusagereportdrilldown>
+</ng-template>

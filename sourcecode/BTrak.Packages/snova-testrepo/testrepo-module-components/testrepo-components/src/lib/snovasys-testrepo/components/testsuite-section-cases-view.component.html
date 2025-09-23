@@ -1,0 +1,240 @@
+<div class="p-0 test-suite-details-list" id="style-1">
+  <mat-progress-bar color="primary" mode="indeterminate"
+    *ngIf="(anyOperationInProgress$ | async) || (reOrderOperationInProgress$ | async)">
+  </mat-progress-bar>
+  <div class="p-0 m-0" [ngStyle]="{ 'max-height': isHierarchical ? 'calc(100vh - 103px)' : '',
+    'overflow': isHierarchical ? 'auto' : ''}" [attr.id]="isHierarchical ? 'style-1' : ''">
+    <div class="p-0 test-suite-section-cases" *ngIf="sectionsLoadedOnDelete || sectionsLoaded" style="position: sticky; top: 0;z-index: 1;background: white;">
+      <div *ngIf="!(anyOperationInProgress$ | async)">
+        <div class="p-05 testsuite-description">
+          <div class="ml-05 pull-right" fxLayout="row">
+            <div class="mr-05" fxFlex>
+              <span class="pull-right">
+                <fa-icon matTooltip="{{'TESTMANAGEMENT.COPYORMOVECASES' | translate}}" icon="copy"
+                  class="mat-color-accent filter-operation" (click)="copyOrMoveCasesDailogOpen()"
+                  *ngIf="(canAccess_entityType_feature_CopyOrMoveCases) && !fromCustomApp">
+                </fa-icon>
+                <fa-icon *ngIf="sectionData" matTooltip="{{'TESTMANAGEMENT.CLICKHERETOADVANCESEARCH' | translate}}"
+                  icon="filter" class="ml-1 mat-color-accent filter-operation" (click)="filterOpen = !filterOpen">
+                </fa-icon>
+              </span>
+            </div>
+          </div>
+          <div *ngIf="visibleDescription">
+            <span>
+              <b><span class="word-break user-select-text testsuite-text{"
+                  matTooltip="{{'TESTMANAGEMENT.TESTSUITENAME' | translate | softLabelsPipe : softLabels}}">{{suiteName}}
+                </span></b>
+              <span class="ml-02 word-break user-select-text" *ngIf="suiteDescription && suiteDescription.length > 0"
+                matTooltip="{{'TESTMANAGEMENT.TESTSUITEDESCRIPTION' | translate | softLabelsPipe : softLabels}}">({{suiteDescription}})
+              </span>
+            </span>
+            <span class="ml-05" *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_CopyOrMoveCases)">
+              <fa-icon class="update-status" icon="file-export"
+                matTooltip="{{ 'TESTMANAGEMENT.MOVECASES' | translate }}" (click)="openMoveCasesPopover()"
+                [satPopoverAnchorFor]="moveCasesPopover">
+              </fa-icon>
+            </span>
+            <span class="ml-05" *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_CopyOrMoveCases)">
+              <fa-icon class="update-status" icon="copy" matTooltip="{{ 'TESTMANAGEMENT.COPYCASES' | translate }}"
+                (click)="openCopyCasesPopover()" [satPopoverAnchorFor]="moveCasesPopover">
+              </fa-icon>
+            </span>
+            <span class="ml-05" *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_DeleteTestcases)">
+              <fa-icon class="update-status" icon="trash" matTooltip="{{ 'TESTMANAGEMENT.DELETECASES' | translate }}"
+                [satPopoverAnchorFor]="deleteCasePopover" (click)="openDeleteCasesPopover()">
+              </fa-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="openFilter">
+        <testcases-filter [hidden]="!(filterOpen && !(anyOperationInProgress$ | async))" [testSuitesId]="testSuiteId"
+          [selectedSectionData]="sectionData?.sectionId" [isTestsuites]="isTestSuiteOrNot"
+          [isHierarchical]="isHierarchical" [isTestCasesFilter]="casesFilter">
+        </testcases-filter>
+      </div>
+    </div>
+    <!-- <div *ngIf="openFilter">
+      <testcases-filter [hidden]="!(filterOpen && !(anyOperationInProgress$ | async))" [testSuitesId]="testSuiteId"
+        [selectedSectionData]="sectionData?.sectionId" [isTestsuites]="isTestSuiteOrNot"
+        [isHierarchical]="isHierarchical" [isTestCasesFilter]="casesFilter">
+      </testcases-filter>
+    </div> -->
+    <div class="p-0 test-suite-section-cases" *ngIf="sectionsLoadedOnDelete || sectionsLoaded">
+      <div *ngIf="!(anyOperationInProgress$ | async)">
+        <mat-card *ngIf="isSectionsPresent" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="95" class="p-05">
+              <p *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection)" class="m-0">
+                {{'TESTMANAGEMENT.THREEARENOSECTIONSAVILABLEINTESTSUITE' | translate | softLabelsPipe : softLabels}}
+              </p>
+              <p *ngIf="!(canAccess_entityType_feature_AddOrUpdateScenarioSection)" class="m-0">
+                {{'TESTMANAGEMENT.NOTHREEARENOSECTIONSAVILABLEINTESTSUITE' | translate | softLabelsPipe : softLabels}}
+              </p>
+            </div>
+          </div>
+        </mat-card>
+        <div *ngIf="!isHierarchical">
+          <div class="ml-1 mt-05 testsuite-text" fxLayout="row" *ngIf="isTestCasePresent">
+            <mat-checkbox *ngIf="(canAccess_entityType_feature_CopyOrMoveCases) && (casesCount > 0)" class="mr-05"
+              [(ngModel)]="isMultiCasesSelected" (change)="changeStatus($event.checked)"
+              style="position: relative; top: 3px;">
+            </mat-checkbox>
+            <span *ngIf="!sectionName" class="word-break user-select-text"
+              matTooltip="{{'TESTMANAGEMENT.SECTIONNAME' | translate}}">{{sectionData.sectionName}}</span>
+            <span *ngIf="sectionName" class="word-break user-select-text"
+              matTooltip="{{'TESTMANAGEMENT.SECTIONNAME' | translate}}">{{sectionName}}</span>
+            <span matTooltip="{{'TESTMANAGEMENT.CASESCOUNT' | translate}}"
+              class="ml-05 badge-item test-case-count-number">{{casesCount}}</span>
+            <span *ngIf="totalEstimate > 0">
+              <b>
+                <mat-icon icon="clock" class="ml-05 mr-05 mat-color-accent clock-icon"
+                  matTooltip="{{totalEstimate | estimationTime}}">access_time
+                </mat-icon>
+              </b>
+            </span>
+            <span *ngIf="totalEstimate == 0">
+              <b>
+                <mat-icon icon="clock" class="ml-05 mr-05 mat-color-accent clock-icon" matTooltip="0h">access_time
+                </mat-icon>
+              </b>
+            </span>
+          </div>
+          <div *ngIf="isTestCasePresent">
+            <div class="ml-1">
+              <span *ngIf="!sectionDescription && sectionData.description != null && sectionData.description.length > 0"
+                class="section-description word-break user-select-text mb-05"
+                matTooltip="{{'TESTMANAGEMENT.SECTIONDESCRIPTION' | translate}}">{{sectionData.description}}</span>
+              <span *ngIf="sectionDescription" class="section-description word-break user-select-text mb-05"
+                matTooltip="{{'TESTMANAGEMENT.SECTIONDESCRIPTION' | translate}}">{{sectionDescription}}</span>
+            </div>
+          </div>
+          <mat-card-content class="p-0 test-suit-sections-height mb-0" *ngIf="!isSectionsPresent" id="style-1"
+            [ngClass]="{ 'testsuit-sections-addtestcase-height': isAddTestCaseOpened, 'addtestcase-filter-height': (isAddTestCaseOpened && filterOpen)}"
+            [ngStyle]="{ 'max-height': filterOpen ? 'calc(100vh - 269px)' : 'calc(100vh - 225px)' }">
+            <mat-list class="compact-list mb-05" dragula="testcases" [(dragulaModel)]="testCasesModel"
+              [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+              <mat-divider class="mat-divider-position" *ngIf="visibleDescription || isTestCasePresent">
+              </mat-divider>
+              <mat-list-item *ngFor="let case of (testCases$ | async)" [attr.data-testCaseId]="case.testCaseId"
+                [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                <testsuite-case class="full-width" (click)="handleClick(case)"
+                  (casePreviewDetails)="getCasePreviewDetails($event)" (caseSelection)="getCaseSelection($event)"
+                  (casesSelected)="getCasesSelected($event)" [caseSelected]="case.testCaseId === selectedCaseId"
+                  [caseDetails]="case" [allCasesSelect]="selection">
+                </testsuite-case>
+              </mat-list-item>
+            </mat-list>
+          </mat-card-content>
+          <div *ngIf="(canAccess_entityType_feature_AddOrUpdateTestcases)" class="mt-02">
+            <div fxLayout="row" *ngIf="!isAddTestCaseOpened && isTestCasePresent">
+              <div fxFlex="100" class="mb-05 mt-02">
+                <a class="ml-1 mt-1 new-testcase" matTooltip="{{'TESTMANAGEMENT.ADDTESTCASE' | translate}}"
+                  *ngIf="!isAddTestCaseOpened" (click)="openAddTestCase()">
+                  <fa-icon icon="plus" class="mr-05  add-icon"></fa-icon>
+                  <b>{{'TESTMANAGEMENT.ADDCASE' | translate}}</b>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="isAddTestCaseOpened">
+            <div class="full-width p-05">
+              <textarea rows="3" class="add-testcase-inputbox-width-fix testcase-custom-input"
+                placeholder="{{'TESTMANAGEMENT.ADDNEWTESTCASE' | translate}}" [(ngModel)]="testCaseName"></textarea>
+            </div>
+            <div class="p-05">
+              <button mat-raised-button color="primary" class="mr-05" type="button"
+                matTooltip="{{'TESTMANAGEMENT.ADD' | translate}}"
+                [disabled]="testCaseName.trim().length == 0 || disableAddCase" (click)="addTestCase()">
+                <fa-icon icon="plus" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.ADD' | translate}}
+              </button>
+              <button mat-raised-button type="button" matTooltip="{{'TESTMANAGEMENT.CANCEL' | translate}}"
+                (click)="openAddTestCase()">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-1" *ngIf="isHierarchical && loadHierarchicalCases">
+          <hierarchical-cases (casePreviewDetails)="getCasePreviewDetails($event)"
+            (caseSelection)="getCaseSelection($event)" (casesSelected)="getCasesSelected($event)"
+            [hierarchicalData]="hierarchicalSectionsData" [casesData]="(testCases$ | async)" [testSuiteId]="testSuiteId"
+            [hierarchicalSectionId]="hierarchicalSectionsData.sectionId" [selectedCase]="testCaseFromPreview"
+            [allCasesSelect]="selection">
+          </hierarchical-cases>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #moveCasesPopover verticalAlign="below" hasBackdrop
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="filter-data p-0" style="max-width: 250px;">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{loadCopyCases==true ? ('TESTMANAGEMENT.COPYCASES' | translate) : ('TESTMANAGEMENT.MOVECASES' | translate)}}
+      </div>
+    </mat-card-title>
+    <mat-card-content *ngIf="loadMoveCases">
+      <form [formGroup]="moveCasesForm" novalidate (submit)="moveCasesForm.valid && moveCasesToSection()">
+        <mat-form-field class="full-width" (click)="removeSearch()">
+          <mat-select placeholder="{{'TESTMANAGEMENT.SECTION' | translate}}" formControlName="sectionId" required>
+            <input #sectionSearch class="move-copy-sections" matInput type="text"
+              placeholder="{{'EXPENSEMANAGEMENT.SEARCH' | translate}}" (keyup)="onKey($event.target.value)">
+            <mat-option *ngFor="let section of filteredList" [value]="section.sectionId"
+              matTooltip="{{section.sectionName}}" matTooltipShowDelay="1000">
+              <pre class="sections-order-cases">{{getSectionName(section)}}</pre>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="moveCasesForm.get('sectionId').hasError('required')">
+            {{'TESTMANAGEMENT.PLEASESELECTSECTON' | translate}}
+          </mat-error>
+        </mat-form-field>
+        <span style="color: red; font-size: 11px;" class="mt-05" *ngIf="sectionSameError">
+          {{'TESTMANAGEMENT.SECTIONSAMEERROR' | translate}}
+        </span>
+        <div class="text-center mt-05">
+          <button class="mr-1" type="submit" mat-button mat-raised-button color="primary" [disabled]="disableMoveCases">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(moveOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <fa-icon icon="sync" class="mr-05"></fa-icon>
+            {{loadCopyCases==true ? ('ROLES.COPY' | translate) : ('TESTMANAGEMENT.MOVE' | translate)}}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="closeMoveCasesPopover()">
+            <fa-icon icon="times" class="mr-05"></fa-icon>
+            {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<!--Delete Case dialog-->
+<sat-popover #deleteCasePopover hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'TESTMANAGEMENT.AREYOUSUREMULTIPLEDELETETHECASE' | translate}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableDeleteTestCase"
+          (click)="removeTestCase()">
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteCaseDialog();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--Delete Case dialog-->

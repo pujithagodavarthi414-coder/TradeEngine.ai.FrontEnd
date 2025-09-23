@@ -1,0 +1,313 @@
+<mat-card class="default" class="p-0 mt-02 filter-card mat-card-fx-col">
+    <mat-card-title class="full-width data-table-header">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="0" fxLayoutGap.xs="5px">
+            <div fxFlex="40px" fxFlex.xs="35px" fxLayoutAlign="start center" id="client-3">
+                <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                    matTooltip=" {{'BRANCH.SEARCHTOOLTIP' | translate}}">
+                    <fa-icon icon="filter" class="filter mat-color-accent">
+                    </fa-icon>
+                </button>
+                <div fxShow.xs="true" fxShow.gt-xs="false" class="p-03 mt-02">
+                </div>
+            </div>
+            <div fxFlex fxLayoutAlign="start center">
+                <div class="filter-section" [hidden]="!isOpen">
+                    <ul>
+                        <li>
+                            <span class="archive-label">{{ 'PROJECTS.ARCHIVE' | translate }}:</span>
+                            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived"
+                                [checked]="isArchived" (change)="archive()" matTooltip="Click here for archived list"
+                                id="client-7">
+                            </mat-slide-toggle>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="ml-1 search_goalinput" fxLayout="row wrap" id="client-6">
+                <div fxFlex fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                </div>
+                <span class="close_icon" style="top: 13px !important; right: 0px !important;">
+                    <span *ngIf="!searchText"></span>
+                    <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                        style="cursor:pointer">
+                        close</mat-icon>
+                </span>
+            </div>
+            <div class="mt-03" ngClass.sm="mt-08" fxShow.xs="false"
+                *ngIf="(canAccess_feature_ManageImportOrExportClient) && clientsList?.length > 0" id="client-4">
+                <fa-icon class="mat-color-accent cursor-pointer ng-fa-icon mat-icon-button" icon="file-excel"
+                    (click)="exportAsXLSX()"
+                    matTooltip="Click here to download the {{'CLIENTS.CLIENTS' | translate | softLabelsPipe : softLabels}} list">
+                </fa-icon>
+            </div>
+        </div>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+            <b>{{'HRMANAGAMENT.SEARCH' | translate}}:&nbsp;</b>
+            {{ searchText }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="branchName">
+            <b>{{'ASSETS.BRANCH' | translate}}:&nbsp;</b>
+            {{ branchName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearBranchFilter()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="productName">
+            <b>{{'CLIENTS.PROJECTTYPE' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+            {{ productName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearProjectFilter()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08">
+            <b>{{ 'PROJECTS.ARCHIVE' | translate }}:&nbsp;</b>
+            <span *ngIf="isArchived == true">
+                {{ 'PROJECTS.YES' | translate }}
+            </span>
+            <span *ngIf="isArchived == false">
+                {{ 'PROJECTS.NO' | translate }}
+            </span>
+            <fa-icon icon="times" *ngIf="isArchived == true" class="ml-05 mat-color-accent cursor-pointer"
+                (click)="clearArchiveFilter()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+</mat-card>
+<div class="activity-data filter-margin mt-0 clients-table-height" *ngIf="(canAccess_feature_AddOrUpdateClient)">
+    <ngx-datatable #mydatatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35"
+        [scrollbarH]="scrollbarH" [rowHeight]="35" [limit]="pageSize" [rows]="clientsList" [externalPaging]="true"
+        [selectAllRowsOnPage]="false" [selectionType]="'checkbox'" [selected]="selectedRowValue"
+        [loadingIndicator]="anyOperationInProgress" [offset]="page.pageNumber" (sort)="onSort($event)"
+        [externalSorting]="true" (page)='setPage($event)' (activate)="editClientDetails($event)"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+        (select)="onSelect($event)" [count]="totalCount" [sorts]="[{prop: 'name', dir: 'desc'}]">
+        <ngx-datatable-column [headerCheckboxable]="true" [checkboxable]="true" maxWidth="60" minWidth="60">
+            <ng-template let-row="row" ngx-datatable-header-template>
+                <fa-icon aria-hidden="false" [satPopoverAnchorFor]="archiveclient" (click)="archiveclient.toggle()"
+                    *ngIf="selectedRowValue.length > 0" icon="archive"
+                    class="cursor-pointer client-archive mat-color-accent">
+                </fa-icon>
+            </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="{{ 'EXPERIENCE.COMPANY' | translate }}" [flexGrow]="1" prop="companyName"
+            *ngIf="selectedTab == 'supplier'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.companyName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.COUNTRY' | translate }}" [flexGrow]="1" prop="countryName"
+            *ngIf="selectedTab == 'supplier'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.countryName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.EMAILID' | translate }}" [flexGrow]="1" prop="email"
+            *ngIf="selectedTab == 'supplier'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.email }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.KYCSTATUS' | translate }}" [flexGrow]="1" prop="kycCompleted"
+            *ngIf="selectedTab == 'supplier'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="row?.statusColor" *ngIf="row.kycStatusName">
+                        {{ row.kycStatusName }}
+                </mat-chip>
+            </ng-template>
+        </ngx-datatable-column>
+
+
+        <ngx-datatable-column name="{{ 'EXPERIENCE.COMPANY' | translate }}" [flexGrow]="1" prop="companyName"
+            *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.companyName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.COUNTRY' | translate }}" [flexGrow]="1" prop="countryName"
+            *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.countryName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.KYCSTATUS' | translate }}" [flexGrow]="1" prop="kycCompleted"
+            *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="row?.statusColor" *ngIf="row.kycStatusName">
+                        {{ row.kycStatusName }}
+                </mat-chip>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.TOTALCREDITLIMIT' | translate }}" [flexGrow]="1" prop="creditLimit"
+            *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.creditLimit | number: '1.2-2' }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.AVAILABLECREDITLIMIT' | translate }}" [flexGrow]="1"
+            prop="availableCreditLimit" *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.availableCreditLimit | number: '1.2-2' }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.USEDCREDITLIMIT' | translate }}" [flexGrow]="1" prop="usedCreditLimt"
+            *ngIf="selectedTab == 'buyer'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.creditLimit - row?.availableCreditLimit | number: '1.2-2' }}
+            </ng-template>
+        </ngx-datatable-column>
+
+
+        <ngx-datatable-column name="Primary Contact" [flexGrow]="1" prop="name" *ngIf="selectedTab == 'other'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <!-- <span [ngClass]="isArchived ? '' : 'cursor-pointer'" (click)="singleClientpage(row.clientId)" -->
+                <span [ngClass]="isArchived ? '' : 'cursor-pointer'" matTooltip="{{row.name }}">
+                    {{ row?.firstName }}
+                    {{ row?.lastName }}</span>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CLIENTS.ORGANIZATION' | translate }}" [flexGrow]="1" prop="companyName"
+            *ngIf="selectedTab == 'other'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.companyName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.COUNTRY' | translate }}" [flexGrow]="1" prop="countryName"
+            *ngIf="selectedTab == 'other'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.countryName }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Contact Number" [flexGrow]="1" prop="businessNumber" *ngIf="selectedTab == 'other'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.businessNumber }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'CONTRACT.KYCSTATUS' | translate }}" [flexGrow]="1" prop="kycCompleted"
+            *ngIf="selectedTab == 'other'">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="row?.statusColor" *ngIf="row.kycStatusName">
+                        {{ row.kycStatusName }}
+                </mat-chip>
+            </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column *ngIf="!isArchived && (canAccess_feature_AddOrUpdateClient)"
+            name="{{ 'TESTMANAGEMENT.ACTIONS'| translate }}" [sortable]="false">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <div id="client-5">
+                    <!-- <button mat-icon-button type="submit" class="cursor-pointer">
+                        <fa-icon icon="edit" class="mr-05 mat-color-accent" (click)="editClientDetails(row)"
+                            matTooltip="Click here to edit the {{'CLIENTS.CLIENT' | translate | softLabelsPipe : softLabels}} details">
+                        </fa-icon>
+                    </button> -->
+                    <button class="text-center" matTooltip="{{ 'CONTRACT.CREATELEAD' |  translate }}" mat-icon-button
+                        (click)="createLead(row)"
+                        *ngIf="row.clientTypeName == 'Buyer' && canAccess_feature_CreateLeads">
+                        <fa-icon icon="user" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button mat-icon-button type="submit" class="cursor-pointer"
+                        *ngIf="row.clientTypeName == 'Buyer' && canAccess_feature_AddContracts"
+                        (click)="intializeRowData(row);openDialog('SGT3',row)">
+                        <fa-icon icon="pager" class="mat-color-accent" matTooltip="Create contract">
+                        </fa-icon>
+                    </button>
+                    <button mat-icon-button type="submit" class="cursor-pointer"
+                        *ngIf="row.clientTypeName == 'Supplier' && canAccess_feature_AddContracts"
+                        (click)="intializeRowData(row);openPurchaseContractForm(row)">
+                        <fa-icon icon="pager" class="mat-color-accent" matTooltip="Create contract">
+                        </fa-icon>
+                    </button>
+                    <button mat-icon-button type="submit" class="cursor-pointer"
+                        *ngIf="canAccess_feature_ManageClientSettings">
+                        <fa-icon icon="cog" class="mr-05 mat-color-accent" (click)="counterPartySettings(row)"
+                            matTooltip="{{'CLIENTSETTINGS.CLIENTSETTINGS' | translate | softLabelsPipe : softLabels}}">
+                        </fa-icon>
+                    </button>
+                    <!-- <button mat-icon-button type="submit" class="cursor-pointer" [satPopoverAnchorFor]="updateClientKyc"
+                        #updateClientKycPopup="satPopoverAnchor"
+                        *ngIf="row.statusName=='Submited' || row.statusName == null"
+                        (click)="openClientPopup(row,updateClientKycPopup)">
+                        <fa-icon icon="user-check" class="mr-05 mat-color-accent" matTooltip="Verify kyc form">
+                        </fa-icon>
+                    </button> -->
+                </div>
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
+</div>
+<sat-popover #archiveclient verticalAlign="start" hasBackdrop horizontalAlign="before">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05" *ngIf="!isArchived">
+                {{'CLIENTS.ARCHIVECLIENTS' | translate | softLabelsPipe : softLabels}}</div>
+            <div class="card-title-text mat-bg-primary p-05" *ngIf="isArchived">
+                {{'CLIENTS.UNARCHIVECLIENTS' | translate | softLabelsPipe : softLabels}}</div>
+        </mat-card-title>
+        <p class="p-05 m-0" *ngIf="!isArchived">{{ 'CLIENTS.AREYOUSUREYOUWANTTOARCHIVETHISCLIENTS'| translate |
+            softLabelsPipe : softLabels}}
+        </p>
+        <p class="p-05 m-0" *ngIf="isArchived">
+            {{ 'CLIENTS.AREYOUSUREYOUWANTTOUNARCHIVETHISCLIENTS'| translate | softLabelsPipe : softLabels}}</p>
+        <div class="text-center p-05">
+            <button type="button" mat-raised-button color="primary" class="mr-1"
+                (click)="archiveAll();archiveclient.close()">
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{'YES' | translate}}
+            </button>
+            <button mat-raised-button class="mr-1" (click)="archiveclient.close()" [disabled]="anyOperationInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'PERMISSIONHISTORY.NO' | translate}}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+<sat-popover #updateClientKyc verticalAlign="start" hasBackdrop horizontalAlign="before">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                Verify KYC Form</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                Are you sure want to verify kyc form?
+            </div>
+            <div class="text-center">
+                <button type="button" mat-raised-button color="primary" class="mr-1"
+                    (click)="updateClient()" [disabled]="kycLoadingForm">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="kycLoadingForm">
+                    </mat-progress-bar>
+                    <fa-icon icon="check" class="mr-05"></fa-icon> {{'YES' | translate}}
+                </button>
+                <button mat-raised-button class="mr-1" (click)="closeKycPopup()"
+                    [disabled]="kycLoadingForm">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'PERMISSIONHISTORY.NO' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<mat-menu #leadDrop="matMenu">
+    <mat-card class="filter-data p-0" (click)="$event.stopPropagation()">
+        <div fxFlex="180px" class="ml-05 mr-05">
+            <mat-form-field class="full-width">
+                <mat-select placeholder="Select lead template" [(ngModel)]="selectedLeadTemplateId"
+                    (selectionChange)="upsertClient($event.value)">
+                    <mat-option *ngFor="let template of templatesList" [value]="template.templateId">
+                        {{template.formName}}
+                        <!-- <fa-icon class="mat-color-accent cursor-pointer mr-1 pull-right" icon="eye"
+                            matTooltip="{{ 'PROBATION.PREVIEWFORM' | translate}}" *ngIf="selectedLeadTemplateId == template.templateId"
+                            (click)="openDialog(selectedLeadTemplateId)"></fa-icon> -->
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </mat-card>
+</mat-menu>

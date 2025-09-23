@@ -1,0 +1,133 @@
+<div id="style-1" [ngClass]="setClassForUserStories()">
+    <app-pm-sprints-board
+        *ngIf="sprint && sprint.sprintStartDate || isUniquePage || sprintSearchCriteriaModel.isGoalsPage"
+        [sprint]="sprint" [isBoardLayout]=isBoardLayOut [showHeader]="showCheckBox" [isDocumentView]=false
+        (eventClicked)="boardChange($event)" (reportsBoardClicked)="reportsBoardClicked()"
+        (getDocumentDetails)="getDocumentView($event)" (selectedOwnerUserId)="filterOwnerList($event)"
+        (emitReplanId)="selectReplanType($event)" (getCalenderViewClicked)="getCalenderView($event)"
+        (saveMultipleUserStories)="updateMultipleUserStoriesFromSprint($event)"
+        (selectedUserStoryStatus)="filterUserStoriesBySelectedStatus($event)">
+    </app-pm-sprints-board>
+
+
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(reOrderOperationInProgress$ | async)">
+    </mat-progress-bar>
+
+    <mat-card-content class="p-0  mb-0" id="style-1" *ngIf="(canAccess_entityType_feature_ViewWorkItem)"
+        [ngClass]="{ 'goalstatus-backlog': (selectedTab == 'backlog-goals' || selectedTab == 'replan-goals' || selectedTab == 'active-goals' || sprint.sprintId == '00000000-0000-0000-0000-000000000000'), 'goalstatus-height' : (selectedTab == 'backlog-goals' || selectedTab == 'replan-goals' || selectedTab == 'active-goals') && (isVisible),
+    'all-goals-height': sprint.sprintId == '00000000-0000-0000-0000-000000000000' ,'all-goals-filter-height':sprint.sprintId == '00000000-0000-0000-0000-000000000000'}">
+        <mat-list class=" compact-list p-0">
+            <div fxLayout="row wrap" class="full-width mt-05" *ngIf="(anyOperationInProgress$|async)">
+                <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+                    <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+                        <div fxFlex="92" fxFlexOffset="10px">
+                            <div fxLayout="row p-05">
+
+                                <div fxFlex="39">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlex="1" fxFlexOffset="28">
+                                    <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                                </div>
+                                <div fxFlex="3" fxFlexOffset="3">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                                <div fxFlexOffset="6" fxFlex="13">
+                                    <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div
+                    *ngIf="!(anyOperationInProgress$ | async) && (userStories$ | async | searchSubTasksfilter :userStoryStatusList | userStoryfilter: 'ownerUserId':ownerUserId)?.length == 0">
+                    <app-common-message-box *ngIf="!(loadingEntityFeaturesinProgress$|async)"
+                        textToDisplay="{{ 'USERSTORY.USERSTORIESSNOTFOUND' | translate | softLabelsPipe : softLabels }}">
+                    </app-common-message-box>
+                </div>
+                <div dragula="reOrderItems" [(dragulaModel)]="userStories"
+                    [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                    <div class="user-story-list"
+                        *ngFor="let userStory of (userStories$ | async | userStoryfilter: 'ownerUserId':ownerUserId  | searchSubTasksfilter :userStoryStatusList | sortByComponent:'order')"
+                        [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }"
+                        [attr.data-userStoryId]="userStory.userStoryId">
+                        <div fxLayout="row wrap">
+                            <div fxFlex="100"
+                                [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                                <gc-userstory-summary class="full-width" [userStory]="userStory"
+                                    [userStorySelected]="highLightedSelectedUserStoryId(userStory.userStoryId)"
+                                    [isDeadlinedispaly]=true [isSubTasksPage]=false [isUserStoriesPage]=true
+                                    [goalReplanId]="replanTypeId" [isSprintUserStories]=true [isEditFromProjects]=true
+                                    [isSprintView]=false [page]="true"
+                                    [isAddUserStory]="(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                                    [treeStructure]="checkisTreeStructureEnabled(userStory.userStoryId)"
+                                    (selectedSprintToggleEvent)="toggleSubChilds($event)"
+                                    (selectSprintUserStory)="selectedUserStoryDetails($event)"
+                                    (UserStorylist)="updateMultipleUserStories($event)"
+                                    (selectShiftButtonUserStorylist)="selectedShiftUserStoriesList($event)"
+                                    (updateAutoLog)="LogAction($event)">
+                                </gc-userstory-summary>
+                            </div>
+                            <div fxFlex fxFlexOffset="1.5%"
+                                [hidden]="!(userStory.userStoryId == userStoryId && showSubChilds)">
+                                <div *ngIf="userStory.subUserStoriesList && userStory.subUserStoriesList.length > 0"
+                                    class="user-story-list">
+                                    <div dragula="reOrderItems" [(dragulaModel)]="userStory.subUserStoriesList"
+                                        [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                                        <div *ngFor="let userStorySubTask of (userStory.subUserStoriesList | userStoryfilter: 'ownerUserId':ownerUserId | searchSubTasksfilter :userStoryStatusList | sortByComponent:'order')"
+                                            [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }"
+                                            [attr.data-userStoryId]="userStorySubTask.userStoryId">
+                                            <gc-userstory-summary class="full-width" [userStory]="userStorySubTask"
+                                                [isEditFromProjects]=true [isDeadlinedispaly]=true
+                                                [isSubTasksPage]=false [isSprintUserStories]=true
+                                                [goalReplanId]="replanTypeId" [page]="true"
+                                                [userStorySelected]="highLightedSelectedUserStoryId(userStorySubTask.userStoryId)"
+                                                [isUserStoriesPage]=true [isSprintView]=false
+                                                [isAddUserStory]="(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                                                (selectSprintUserStory)="selectedUserStoryDetails($event)"
+                                                (UserStorylist)="updateMultipleUserStories($event)"
+                                                (selectShiftButtonSubUserStorylist)="selectedShiftSubUserStoriesList($event)">
+                                            </gc-userstory-summary>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="add-userstory">
+                                    <app-pm-component-create-userstory
+                                        *ngIf="isAddUserStory && (canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem) && !sprint.isBugBoard && !sprint.isComplete && sprint.sprintId != '00000000-0000-0000-0000-000000000000'"
+                                        [sprintId]="sprintSearchCriteriaModel.sprintId" [goalStatusId]="goalStatusId"
+                                        [goalReplanId]="replanTypeId" [userStoryId]="userStory.userStoryId">
+                                    </app-pm-component-create-userstory>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div></div>
+        </mat-list>
+    </mat-card-content>
+
+    <app-common-message-box
+        *ngIf="!(loadingEntityFeaturesinProgress$|async) && !(canAccess_entityType_feature_ViewWorkItem)"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+    </app-common-message-box>
+
+    <mat-paginator
+        *ngIf="(userStoryCount > 50) && !(anyOperationInProgress$ | async) && sprint.sprintId == '00000000-0000-0000-0000-000000000000'"
+        [length]="userStoryCount" class="mr-8" [pageSize]="pageSize" [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions" (page)="setPageEvent($event)">
+    </mat-paginator>
+
+    <div class="add-userstory"
+        *ngIf=" !isSprintUserStories  && isAddUserStory && (canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem) && !sprint.isComplete && sprint.sprintId != '00000000-0000-0000-0000-000000000000'">
+        <app-pm-component-create-userstory [sprintId]="sprintSearchCriteriaModel.sprintId" [goalReplanId]="replanTypeId"
+            [goalStatusId]="goalStatusId" (openNewUserStory)="openNewUserStory($event)">
+        </app-pm-component-create-userstory>
+    </div>
+</div>

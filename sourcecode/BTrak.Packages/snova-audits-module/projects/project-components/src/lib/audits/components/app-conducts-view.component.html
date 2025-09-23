@@ -1,0 +1,200 @@
+<mat-card-title *ngIf="dashboardFilters" class="full-width data-table-header drag-handler"
+    style="margin-bottom: 0.5rem !important;">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+            <span class="assets-comments">
+                {{'AUDIT.CONDUCTS' | translate | softLabelsPipe : softLabels}}
+            </span>
+            <span class="ml-05 badge-item testsuites-count count-padding"
+                *ngIf="!isFromDashboard && (activeAuditConductsCount$ | async) > 0"
+                style="line-height: 14px;">{{ activeAuditConductsCount$ | async }}</span>
+        </div>
+    </div>
+</mat-card-title>
+<div class="audits-tab" [ngClass]="{'p-02': dashboardFilters}" fxLayout="row wrap" fxLayout.lt-sm="column"
+    (window:resize)="onResize()"
+    *ngIf="canAccess_entityType_feature_ViewAuditConducts && ((activeAuditConductsCount$ | async) > 0 || (archivedAuditConductsCount$ | async) > 0) && !isFromDashboard">
+    <div fxFlex="30px" fxHide.xs>
+        <div class='custom-label veritcal-label'>
+            <div class='custom-label-content' (click)="isAuditConduct = !isAuditConduct">
+                {{'AUDIT.CONDUCTS' | translate | softLabelsPipe : softLabels}} <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+                        [ngClass]="{'rotate-icon-down': isAuditConduct}">
+                    </fa-icon>
+                </span></div>
+            <div class='custom-label-content' (click)="isConductCategories = !isConductCategories"
+                [hidden]="loadDocuments">
+                {{'AUDIT.CATEGORIES' | translate}} <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+                        [ngClass]="{'rotate-icon-down': isConductCategories}">
+                    </fa-icon>
+                </span></div>
+        </div>
+    </div>
+    <div fxFlex="17" fxFlex.sm="48" fxFlex.xs="100" fxFlex.md="45" fxFlex.lg="17" [hidden]="isAuditConduct"
+        class="audit-custom">
+        <conducts-list-view (selectedConduct)="getSelectedConduct($event)"
+            (loadConductRelatedData)="getLoadConductRelatedData($event)"></conducts-list-view>
+    </div>
+    <div fxFlex="18" fxFlex.sm="46.5" fxFlex.xs="100" fxFlex.md="50" fxFlex.lg="18"
+        [hidden]="isConductCategories || loadDocuments" class="namesection-custom">
+        <conduct-category-list-view (selectedConductCategoryData)="getSelectedConductCategoryData($event)"
+            (loadConductCategoryRelatedData)="getLoadConductCategoryRelatedData($event)"
+            (hierarchicalQuestions)="getHierarchicalQuestions($event)" [selectedConduct]="selectedConduct"
+            [categorySelected]="categorySelected" [loadConductRelatedData]="loadConductRelatedData"
+            [categoryDataForAnswer]="categoryDataForAnswer">
+        </conduct-category-list-view>
+    </div>
+    <div fxFlex fxFlex.lt-sm="100" *ngIf="!loadDocuments">
+        <as-split direction="horizontal" unit="percent" gutterSize="5">
+            <as-split-area size="*" minSize="45">
+                <conduct-questions-list-view (questionPreview)="getQuestionStatusPreview($event)"
+                    (documents)="getDocumentsView($event)" [loadConductRelatedData]="loadConductRelatedData"
+                    [selectedConduct]="selectedConduct"
+                    [loadConductCategoryRelatedData]="loadConductCategoryRelatedData" [categorySelected]="categoryData"
+                    [categoryTemporaryData]="categoryTemporaryData" [selectedQuestion]="selectedQuestionFromPreview"
+                    [isHierarchical]="isHierarchical">
+                </conduct-questions-list-view>
+            </as-split-area>
+            <as-split-area size="37" minSize="36" maxSize="54"
+                *ngIf="(showQuestionStatusPreview) && (screenWidth > 1279) && selectedConduct != 'empty'">
+                <div fxFlex="100" *ngIf="showQuestionStatusPreview">
+                    <conduct-question-operation (closePreview)="closePreviewDialog()"
+                        [question]="showQuestionStatusPreview" [selectedConduct]="selectedConductData"
+                        [isHierarchical]="isHierarchical" (questionPreview)="getQuestionStatusPreview($event)">
+                    </conduct-question-operation>
+                </div>
+            </as-split-area>
+        </as-split>
+    </div>
+    <div class="audit-documents-custom" fxFlex="81" fxFlex.md="99" fxFlex.sm="99" fxFlex.xs="99"
+        *ngIf="loadDocuments && documentsModuleLoaded" style="position: relative;">
+        <div style="position: absolute; right: 5px; top: 10px;" *ngIf="auditDocumentId">
+            <fa-icon icon="ellipsis-v" [satPopoverAnchorFor]="editThreeDotsPopover"
+                (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+                matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}" style="cursor: pointer; font-size: 16px;">
+            </fa-icon>
+        </div>
+        <div style="position: absolute; right: 5px; top: 25px;" *ngIf="conductDocumentId">
+            <fa-icon icon="ellipsis-v" [satPopoverAnchorFor]="editThreeDotsPopover"
+                (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+                matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}" style="cursor: pointer; font-size: 16px;">
+            </fa-icon>
+        </div>
+        <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+            [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+            [ndcDynamicInputs]="documentStoreComponent.inputs" [ndcDynamicOutputs]="documentStoreComponent.outputs">
+        </ndc-dynamic>
+    </div>
+    <div fxFlex="100"
+        *ngIf="showQuestionStatusPreview && !(screenWidth > 1279) && !loadDocuments && selectedConduct != 'empty'">
+        <conduct-question-operation (closePreview)="closePreviewDialog()" [question]="showQuestionStatusPreview"
+            [selectedConduct]="selectedConductData" [isHierarchical]="isHierarchical"
+            (questionPreview)="getQuestionStatusPreview($event)">
+        </conduct-question-operation>
+    </div>
+</div>
+<div class="p-1" *ngIf="dashboardFilters && isFromDashboard">
+    <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+        <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+        {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+    </span>
+</div>
+
+<app-common-message-box
+    *ngIf="!isFromDashboard && canAccess_entityType_feature_AddOrUpdateAuditConduct && ((activeAuditConductsCount$ | async) == 0 && (archivedAuditConductsCount$ | async) == 0)"
+    textToDisplay="{{'AUDIT.YOUDONTHAVEANYAUDITCONDUCTS' | translate | softLabelsPipe :softLabels}}">
+    <ng-template ng-message-tmp>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="canAccess_entityType_feature_AddOrUpdateAuditConduct" [satPopoverAnchorFor]="addConduct"
+            #addAuditConductsPopover="satPopoverAnchor" (click)="openAuditConductDialog(addAuditConductsPopover)">
+            <fa-icon class="mr-05" icon="plus"></fa-icon>
+            {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}
+        </button>
+    </ng-template>
+</app-common-message-box>
+
+<app-common-message-box
+    *ngIf="!isFromDashboard && canAccess_entityType_feature_ViewAuditConducts && !canAccess_entityType_feature_AddOrUpdateAuditConduct"
+    textToDisplay="{{'AUDIT.NOYOUDONTHAVEANYAUDITCONDUCTS' | translate | softLabelsPipe :softLabels}}">
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!isFromDashboard && !canAccess_entityType_feature_ViewAuditConducts"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>
+
+<!-- <div class="floating-right-fab-button" *ngIf="canAccess_entityType_feature_AddOrUpdateAuditConduct$ | async">
+    <div class="handle">
+        <button mat-fab color="accent" matTooltip="{{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}"
+            [satPopoverAnchorFor]="addConduct" #addAuditConductsPopover="satPopoverAnchor"
+            (click)="openAuditConductDialog(addAuditConductsPopover)">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div> -->
+
+<sat-popover backdropClass="backdrop-color" #addConduct verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-form-field class="full-width">
+                <mat-select placeholder="{{'AUDIT.AUDIT' | translate | softLabelsPipe : softLabels}}	*"
+                    [formControl]="selectedAudit">
+                    <mat-option *ngFor="let audit of (auditList$ | async)" [value]="audit">
+                        {{audit.auditName}}
+                    </mat-option>
+                </mat-select>
+                <mat-hint>{{'AUDIT.PLEASECHOOSEAUDIT' | translate | softLabelsPipe :softLabels}}
+                </mat-hint>
+            </mat-form-field>
+            <div class="text-center mt-1">
+                <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+                    [disabled]="checkStatusDisabled()" [satPopoverAnchorFor]="addAuditConduct" (click)="addConducts()">
+                    <fa-icon icon="plus" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.ADD' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeNewConductDialog()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>
+                    {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="testrun-popover" #addAuditConduct hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <conduct-add-or-edit *ngIf="loadAddAuditConduct" [selectedAudit]="selectedAudit"
+            (closeConduct)="closeAuditConductDialog()">
+        </conduct-add-or-edit>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+    hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <div fxFlex fxLayoutAlign="start center">
+            <button mat-menu-item (click)="normalView();closeMenuPopover();">
+                <div fxLayoutAlign="row">
+                    <div fxFlex="25px">
+                        <fa-icon icon="bars"></fa-icon>
+                    </div>
+                    <div fxFlex class="ml-05">
+                        {{'AUDIT.NORMALVIEW' | translate}}
+                    </div>
+                </div>
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>

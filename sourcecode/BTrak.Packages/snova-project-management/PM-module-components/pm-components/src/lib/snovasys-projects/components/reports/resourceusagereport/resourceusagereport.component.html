@@ -1,0 +1,167 @@
+<div *ngIf="(canAccess_feature_ResourceUsageReport)" class="p-0 full-height gridster-noset">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip="{{ 'PAYROLLREPORTS.SALARYREGISTER' |  translate | titlecase }}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{ 'RESOURCEUSAGEREPORT.RESOURCEUSAGEREPORT' | translate }}</span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <span class="pull-right mr-1" (click)="exportToExcel(grid)"
+                    matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}">
+                    <fa-icon class="mat-color-accent cursor-pointer" icon="file-excel">
+                    </fa-icon>
+                </span>
+            </div>
+        </div>
+    </mat-card-title>
+    <div id="widget-scroll-id">
+        <mat-divider></mat-divider>
+        <app-projectreportsfilters [type]=1 (getResults)="getResults($event)"></app-projectreportsfilters>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isReportDataIsInprogress"></mat-progress-bar>
+            <div fxFlex="100" class="full-width resource-usage-report">
+                <kendo-grid #grid class="resource-usage-table" [kendoGridBinding]="reportData" [pageSize]="state.take"
+                    [skip]="state.skip" [sort]="state.sort" [group]="state.group" [sortable]="true" [pageable]="true"
+                    [groupable]="{ showFooter: true, enabled: false  }" (dataStateChange)="dataStateChange($event)"
+                    [filterable]="true" [scrollable]="true">
+                    <kendo-grid-column field="userStoryName" title="{{ 'RESOURCEUSAGEREPORT.TASKNAME' | translate }}"
+                        width="250">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="userStoryAllocatedHours"
+                        title="{{ 'RESOURCEUSAGEREPORT.ALLOCATEDHOURS' | translate }}" width="150">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                            let-dataItem="dataItem">
+                            <span>
+                                {{ aggregates.userStoryAllocatedHours.sum | number }}
+                            </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="userStoryUsedHours"
+                        title="{{ 'RESOURCEUSAGEREPORT.USEDHOURS' | translate }}" width="200">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                            let-dataItem="dataItem">
+                            <span>
+                                {{ aggregates.userStoryUsedHours.sum | number }}
+                            </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="userStoryBalanceHours"
+                        title="{{ 'RESOURCEUSAGEREPORT.BALANCEHOURS' | translate }}" width="150">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                            let-dataItem="dataItem">
+                            <span>
+                                {{ aggregates.userStoryBalanceHours.sum | number }}
+                            </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="resourceUtilizationPercentage"
+                        title="{{ 'RESOURCEUSAGEREPORT.RESOURCEUTILIZATION' | translate }}%" width="150">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridCellTemplate let-dataItem="dataItem">
+                            <span>
+                            </span>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates">
+                            <span *ngIf="group.field == 'userName' && noOfHours != 0">
+                                {{ (aggregates.userStoryAllocatedHours.sum/noOfHours)*100 | number}}
+                            </span>
+                            <span *ngIf="group.field == 'userName' && noOfHours == 0">
+                                 0
+                            </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="completionPercentage"
+                        title="{{ 'RESOURCEUSAGEREPORT.COMPLETION' | translate }}%" width="150">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridCellTemplate let-dataItem="dataItem">
+                            <span>
+                            </span>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates">
+                            <span
+                                *ngIf="group.field == 'userName' && aggregates.userStoryAllocatedHours.sum == 0">0</span>
+                            <span *ngIf="group.field == 'userName' && aggregates.userStoryAllocatedHours.sum != 0">
+                                {{ ((aggregates.estimatedApprovedHours.sum +
+                                aggregates.loggedApprovedHours.sum)/aggregates.userStoryAllocatedHours.sum)*100 |
+                                number}}
+                            </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="resourceAvailable"
+                        title="{{ 'RESOURCEUSAGEREPORT.RESOURCEAVAILABLE' | translate }}" width="150">
+                        <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                            <kendo-grid-string-filter-cell [showOperators]="true" [column]="column" [filter]="filter">
+                            </kendo-grid-string-filter-cell>
+                        </ng-template>
+                        <ng-template kendoGridCellTemplate let-dataItem="dataItem" let-group>
+                            <span>
+                            </span>
+                        </ng-template>
+                        <ng-template kendoGridGroupHeaderColumnTemplate let-group="group" let-aggregates="aggregates"
+                            let-dataItem="dataItem">
+                            <span *ngIf="group.field == 'userName' && noOfHours != 0">
+                                {{ (noOfHours-aggregates.userStoryUsedHours.sum) | number}}
+                            </span>
+                            <span *ngIf="group.field == 'userName' && noOfHours == 0">
+                                0
+                           </span>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-excel fileName="Resource-usage-report.xlsx"></kendo-grid-excel>
+                </kendo-grid>
+            </div>
+            <!-- <div fxFlex="100" class="full-width">               
+                <mat-card-title class="full-width data-table-header text-center">
+                    <div class="p-05">
+                        {{ 'RESOURCEUSAGEREPORT.USERSUTILIZATIONPERCENTAGE' | translate }}
+                    </div>
+                </mat-card-title>
+                <mat-progress-bar mode="indeterminate" color="primary" *ngIf="isChartDataIsInprogress">
+                </mat-progress-bar>
+                <div class="resource-usage-chart" style="height:300px;">
+                    <app-common-message-box *ngIf="pieData.length == 0 && !isChartDataIsInprogress"
+                        textToDisplay="{{ 'PAYROLLREPORTS.NODATATODISPLAY' |  translate }}">
+                    </app-common-message-box>
+                    <kendo-chart *ngIf="pieData.length > 0" (seriesClick)="onClick($event)">
+                        <kendo-chart-series>
+                            <kendo-chart-series-item [autoFit]="autofit" type="pie" [data]="pieData"
+                                categoryField="kind" field="share">
+                                <kendo-chart-series-item-labels position="outsideEnd" color="#000"
+                                    [content]="labelContent">
+                                </kendo-chart-series-item-labels>
+                            </kendo-chart-series-item>
+                        </kendo-chart-series>
+                        <kendo-chart-legend [visible]="true" position="bottom"></kendo-chart-legend>
+                    </kendo-chart>
+                </div>
+            </div> -->
+    </div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_ResourceUsageReport)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+<ng-template #resourceUsageReportDialog let-data>
+    <app-resourceusagereportdrilldown [data]=[data]></app-resourceusagereportdrilldown>
+</ng-template>

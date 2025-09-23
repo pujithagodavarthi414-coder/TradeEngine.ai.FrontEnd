@@ -1,0 +1,128 @@
+<mat-progress-bar color="primary" class="pl-1" mode="indeterminate" *ngIf="anyOperationInProgress$ | async">
+</mat-progress-bar>
+<div fxLayoutAlign="end center" class="mb-1">
+    <span class="mr-05">{{'TESTMANAGEMENT.TESTCASEVIEWED' | translate}}</span>
+    <mat-slide-toggle [(ngModel)]="isCaseViewed" [checked]="isCaseViewed">
+    </mat-slide-toggle>
+</div>
+<div *ngIf="!(anyOperationInProgress$ | async)" class="ml-08">
+    <div *ngFor="let caseStatus of (testCaseHistory$ | async)">
+        <div fxLayout="row wrap" fxLayoutGap="10px"
+            *ngIf="caseStatus.fieldName != 'TestCaseViewed' && caseStatus.fieldName != 'TestCaseStatusChanged' && checkPermission(caseStatus.description ,caseStatus.userStoryId)">
+            <div mat-card-avatar fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13">
+                <app-avatar matTooltip="{{ caseStatus.testedByName }}"
+                    [name]="caseStatus.testedByName | removeSpecialCharacters"
+                    [src]="caseStatus.testedByProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                    size="20">
+                </app-avatar>
+            </div>
+            <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                <div fxLayout="row">
+                    <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45">
+                        <b>{{caseStatus.testedByName}}</b>
+                    </div>
+                    <div fxFlex>
+                        <span class="pull-right">{{caseStatus.createdDateTime | utcToLocalTime | timeago }}</span>
+                    </div>
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="caseStatus.fieldName == 'CaseStatus'">
+                    <span>
+                        <b>{{'TESTMANAGEMENT.TESTMARKEDAS' | translate}}</b>
+                        <b><i>{{caseStatus.newValue}}</i></b>
+                    </span>
+                </div>
+                <div fxLayout="row" *ngIf="caseStatus.fieldName == 'StatusComment'">
+                    <b *ngIf="caseStatus.newValue && caseStatus.newValue != ''">{{'TESTMANAGEMENT.STATUSCOMMENTCHANGEDTO' | translate}}
+                    </b>
+                    <b class="mb-05"
+                        *ngIf="caseStatus.newValue && caseStatus.newValue == ''">{{'TESTMANAGEMENT.STATUSCOMMENTREMOVED' | translate}}
+                    </b>
+                    <span class="ml-05" [innerHTML]="caseStatus.newValue"></span>
+                </div>
+                <div fxLayout="row" *ngIf="caseStatus.fieldName == 'AssignToComment'">
+                    <b *ngIf="caseStatus.newValue && caseStatus.newValue != ''">{{'TESTMANAGEMENT.ASSIGNCOMMENTCHANGEDTO' | translate}}
+                    </b>
+                    <b class="mb-05"
+                        *ngIf="caseStatus.newValue && caseStatus.newValue == ''">{{'TESTMANAGEMENT.ASSIGNCOMMENTCHANGEDTO' | translate}}
+                    </b>
+                    <span class="ml-05" [innerHTML]="caseStatus.newValue"></span>
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="caseStatus.fieldName == 'Assignee'">
+                    <b>{{'TESTMANAGEMENT.ASSIGNEECHANGEDTO' | translate}}</b>
+                    <span class="ml-05"><b><i>{{caseStatus.newValue}}</i></b></span>
+                </div>
+                <div *ngIf="caseStatus.fieldName == 'ActualResult'">
+                    <div fxLayout="row">
+                        <b>{{'TESTMANAGEMENT.STEP' | translate}}</b>
+                    </div>
+                    <div fxLayout="row" class="mt-05 word-break display-pre-line">
+                        {{caseStatus.step}}
+                    </div>
+                    <div fxLayout="row" class="mt-05">
+                        <b>{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}</b>
+                    </div>
+                    <div fxLayout="row" class="mt-05 word-break display-pre-line">
+                        {{caseStatus.expectedResult}}
+                    </div>
+                    <div fxLayout="row" class="mt-05">
+                        <b>{{'TESTMANAGEMENT.ACTUALRESULTCHANGEDTO' | translate}}</b>
+                    </div>
+                    <div fxLayout="row" class="mt-05 word-break">
+                        <span [innerHTML]="caseStatus.newValue"></span>
+                    </div>
+                </div>
+                <div *ngIf="caseStatus.fieldName == 'StepStatus'">
+                    <div fxLayout="row">
+                        <b>{{'TESTMANAGEMENT.STEP' | translate}}</b>
+                    </div>
+                    <div fxLayout="row" class="mt-05 word-break display-pre-line">
+                        {{caseStatus.step}}
+                    </div>
+                    <div fxLayout="row" class="mt-05">
+                        <b>{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}</b>
+                    </div>
+                    <div fxLayout="row" class="mt-05 word-break display-pre-line">
+                        {{caseStatus.expectedResult}}
+                    </div>
+                    <div fxLayout="row" class="mt-05 mb-05">
+                        <span>
+                            <b>{{'TESTMANAGEMENT.STEPSTATUS' | translate}}</b>
+                            <b><i>{{caseStatus.newValue}}</i></b>
+                        </span>
+                    </div>
+                </div>
+                <!-- <div class="mb-05" fxLayout="row"
+                    *ngIf="!isCaseViewed && caseStatus.fieldName == 'TestCaseViewed' && caseStatus.configurationId !=null">
+                    <span>
+                        <b>{{ caseStatus.testedByName }}&nbsp;{{'TESTMANAGEMENT.HADSEENTHISTESTCASE' | translate}}</b>
+                    </span>
+                </div> -->
+            </div>
+        </div>
+        <div fxLayout="row wrap" fxLayoutGap="10px"
+            [hidden]="!(isCaseViewed && caseStatus.fieldName == 'TestCaseViewed' && caseStatus.configurationId != null && checkPermission(caseStatus.description ,caseStatus.userStoryId))">
+            <div mat-card-avatar fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13">
+                <app-avatar matTooltip="{{ caseStatus.testedByName }}"
+                    [name]="caseStatus.testedByName | removeSpecialCharacters"
+                    [src]="caseStatus.testedByProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                    size="20">
+                </app-avatar>
+            </div>
+            <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                <div fxLayout="row">
+                    <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45">
+                        <b>{{caseStatus.testedByName}}</b>
+                    </div>
+                    <div fxFlex>
+                        <span class="pull-right">{{caseStatus.createdDateTime | utcToLocalTime | timeago }}</span>
+                    </div>
+                </div>
+                <div class="mb-05" fxLayout="row">
+                    <span>
+                        <b>{{ caseStatus.testedByName }}&nbsp;{{'TESTMANAGEMENT.HADSEENTHISTESTCASE' | translate}}</b>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

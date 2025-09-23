@@ -1,0 +1,183 @@
+<!-- <div fxLayout="row" class="m-1">
+  <div fxFlex="25px" fxLayoutAlign="start center">
+    <a routerLink="/admindashboard">
+      <fa-icon icon="arrow-left" matTooltip="{{ 'GOBACKTOADMINDASHBOARD' | translate }}"></fa-icon>
+    </a>
+  </div>
+  <div fxFlex fxLayoutAlign="start center" class="card-title-text">
+    {{ 'PERMISSIONREASON.PERMISSIONREASONTITLE' | translate }}</div>
+</div> -->
+
+<div class="full-height" *ngIf="canAccess_feature_ManagePermissionReason">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'PERMISSIONREASON.PERMISSIONREASONTITLE' | translate | titlecase }}">{{ 'PERMISSIONREASON.PERMISSIONREASONTITLE' | translate | titlecase }}</span>
+        </div>
+          <div fxFlex="40px" fxLayoutAlign="end center" fxLayoutAlign.xs="25px" class="mr-05 ml-08">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              (change)="getAllPermissionReasons()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap"
+            fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+              <div fxFlex="20px">
+                <span class="close_icon mr-lg-n5" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+              </div>
+          </div>
+          <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+            <button mat-icon-button matTooltip="{{ 'PERMISSIONREASON.CREATEPERMISSIONREASONTOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertPermissionReasonPopover" #upsertPermissionReasonPopUp="satPopoverAnchor"
+              (click)="createPermissionReasonPopUp(upsertPermissionReasonPopUp);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent"> 
+              </fa-icon>
+            </button>
+          </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}" [rowHeight]="50"
+      [limit]="100" [rows]="permissionReasons" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+      [virtualization]="false">
+      <ngx-datatable-column name="{{ 'PERMISSIONREASON.PERMISSIONREASONTITLE' | translate }}" [flexGrow]="1"
+      [sortable]="true" prop="permissionReason" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.permissionReason }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'PERMISSIONREASON.EDITPERMISSIONREASON' | translate }}"
+            *ngIf="!isArchived" mat-icon-button [satPopoverAnchorFor]="upsertPermissionReasonPopover"
+            #upsertPermissionReasonPopUp="satPopoverAnchor"
+            (click)="editPermissionReasonPopupOpen(row, upsertPermissionReasonPopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'PERMISSIONREASON.ARCHIVEPERMISSIONREASONTITLE' | translate }}"
+            *ngIf="!isArchived" mat-icon-button [satPopoverAnchorFor]="deletePermissionReasonPopover"
+            #deletePermissionReasonPopUp="satPopoverAnchor"
+            (click)="deletePermissionReasonPopUpOpen(row,deletePermissionReasonPopUp)">
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{'PERMISSIONREASON.UNARCHIVEPERMISSIONREASONTITLE' | translate }}"
+            *ngIf="isArchived" mat-icon-button [satPopoverAnchorFor]="deletePermissionReasonPopover"
+            #deletePermissionReasonPopUp="satPopoverAnchor"
+            (click)="deletePermissionReasonPopUpOpen(row,deletePermissionReasonPopUp)">
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- <div class="floating-right-fab-button" *ngIf="!isArchived">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{ 'PERMISSIONREASON.CREATEPERMISSIONREASONTOOLTIP' | translate }}"
+        [satPopoverAnchorFor]="upsertPermissionReasonPopover" #upsertPermissionReasonPopUp="satPopoverAnchor"
+        (click)="createPermissionReasonPopUp(upsertPermissionReasonPopUp);clearForm()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div> -->
+
+  <sat-popover backdropClass="backdrop-color" #upsertPermissionReasonPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ permissionEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="permissionReasonForm" novalidate #formDirective="ngForm"
+          (submit)="permissionReasonForm.valid && upsertPermissionReason(formDirective)">
+          <div>
+            <mat-form-field>
+              <input matInput formControlName="permissionReason"
+                placeholder="{{ 'PERMISSIONREASON.PERMISSIONREASONNAME' | translate }}" required>
+              <mat-error *ngIf="permissionReasonForm.get('permissionReason').hasError('maxlength')">
+                {{ 'PERMISSIONREASON.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="permissionReasonForm.get('permissionReason').hasError('required') && permissionReasonForm.get('permissionReason').touched">
+                {{ 'PERMISSIONREASON.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!permissionReasonForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertPermissionReasonPopup(formDirective)"
+              type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <!--Delete PermissionReason dialog-->
+  <sat-popover backdropClass="backdrop-color" #deletePermissionReasonPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">
+          {{ 'PERMISSIONREASON.ARCHIVEPERMISSIONREASONTITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'PERMISSIONREASON.UNARCHIVEPERMISSIONREASONTITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'PERMISSIONREASON.ARCHIVEPERMISSIONREASONTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'PERMISSIONREASON.UNARCHIVEPERMISSIONREASONTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" (click)="deletePermissionReason();"
+            [disabled]="deletePermissionIsInprogress" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" (click)="deletePermissionReason();"
+            [disabled]="deletePermissionIsInprogress" *ngIf="isArchived">
+            <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeletePermissionDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete PermissionReason dialog-->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManagePermissionReason"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

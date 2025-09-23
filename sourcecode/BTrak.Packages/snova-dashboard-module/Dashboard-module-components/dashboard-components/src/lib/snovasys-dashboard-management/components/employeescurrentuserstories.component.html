@@ -1,0 +1,120 @@
+<div class="p-0 m-0 full-height" *ngIf="(canAccess_feature_EmployeesCurrentWorkingOrBacklogWorkItems)">
+    <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row wrap">
+            <div fxFlex="50" fxFlex.xs="100">
+                <div class=" card-title-text pt-1">
+                    {{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.EMPLOYEESCURRENT/BACKLOGUSERSTORIES'| translate | softLabelsPipe : softLabels | titlecase}}
+                </div>
+            </div>
+            <div fxFlex="50" class="ml-05 mr-05 search_goalinput" fxFlex fxLayoutAlign="end center"
+                fxLayoutAlign.xs="center start" fxFlexOffset.xs="10px" fxLayout="row wrap">
+                <div class="mr-05 search_goalinput" fxFlex="48" fxFlex.xs="100" fxFlexOffset.xs="20px">
+                    <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon" style="right:8px !important">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02"
+                    *ngIf="entities?.length > 1">
+                    <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="entities?.length > 1">
+                    <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                        [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </mat-card-title>
+    <mat-divider></mat-divider>
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field (click)="$event.stopPropagation()">
+                <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                    (selectionChange)="entityValues($event.value)">
+                    <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                        {{entity.name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </mat-card>
+    </mat-menu>
+    <div class="activity-data app-height-search-2 no-drag pagination-move-left" id="style-1">
+        <ngx-datatable class="btrak" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+            [limit]="10" [rows]="employeesCurrentUserStoriesOutputRecords" [externalPaging]="true" [count]="count"
+            [offset]="pageNumber" [limit]="10" (page)='setPage($event)'
+            [scrollbarH]="true" [virtualization]="false"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+            [loadingIndicator]="anyOperationInProgress" [externalSorting]="true" (sort)="onSort($event)">
+            <ngx-datatable-column [minWidth]="150" name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.USERNAME'| translate}}" [flexGrow]="1"
+                prop="ownerName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="icon-button" fxLayout="row" (click)="goToProfile(row.ownerUserId)">
+                        <div *ngIf="row.ownerProfileImage != null && row.ownerProfileImage != ''">
+                            <app-avatar [src]="row.ownerProfileImage | fetchSizedAndCachedImage: '30':''"
+                                [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div *ngIf="row.ownerProfileImage == null || row.ownerProfileImage == ''">
+                            <app-avatar [name]="row.ownerName | removeSpecialCharacters" [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.ownerName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ row?.ownerName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [minWidth]="150"
+                name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.PROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="projectName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.projectName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [minWidth]="150"
+                name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.GOAL'| translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="goalName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.goalName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [minWidth]="150"
+                name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.SPRINT'| translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="sprintName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.sprintName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [minWidth]="150"
+                name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.USERSTORY'| translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="userStoryName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div><span matTooltip="  {{ row?.userStoryName }}"> {{ row?.userStoryName }}</span></div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [minWidth]="150"
+                name="{{'EMPLOYEESCURRENT/BACKLOGUSERSTORIES.ESTIMATE'| translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="estimatedTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.estimatedTime }}
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeesCurrentWorkingOrBacklogWorkItems)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

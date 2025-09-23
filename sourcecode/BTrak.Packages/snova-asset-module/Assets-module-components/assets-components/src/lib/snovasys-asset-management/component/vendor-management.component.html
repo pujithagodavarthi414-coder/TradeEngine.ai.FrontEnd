@@ -1,0 +1,167 @@
+<ng-container *ngIf="(canAccess_feature_ViewVendors)">
+  <div class="full-height">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutAlign="start center">
+          <div fxFlex class="card-title-text p-05">{{'ASSETS.VENDORLIST' | translate}}
+          </div>
+          <div fxFlex="260px" fxFlex.xs="100" fxLayout="row" fxLayoutAlign="end center">
+            <button mat-icon-button *ngIf="(canAccess_feature_AddOrUpdateVendor)" (click)="closeSearch()"
+              [satPopoverAnchorFor]="supplier" #supplierPopover="satPopoverAnchor"
+              (click)="createSupplier(supplierPopover)">
+              <fa-icon class="filter mat-color-accent" icon="user"
+                matTooltip="{{'ASSETS.ADDVENDORDETAILS' | translate}}">
+              </fa-icon>
+            </button>
+            <button mat-icon-button (click)="closeSearch()">
+              <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}"></fa-icon>
+            </button>
+            <div class="ml-05 mr-05 search_goalinput" fxFlex="180px">
+              <mat-form-field fxLayoutAlign="end center">
+                <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="searchSuppliersList()">
+              </mat-form-field>
+              <span class="close_icon">
+                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data filter-margin m-0 no-drag pagination-move-left" id="style-1">
+      <ngx-datatable class="btrak" [rows]="suppliersList$ | async" [columnMode]="'force'" [headerHeight]="35"
+        [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [scrollbarH]="isScroll" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+        [sorts]="[{prop: 'supplierName', dir: 'asc'}]" [loadingIndicator]="vendorListGridSpinner$ | async"
+        (sort)="onSort($event)" (page)='setPage($event)'
+        [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{'ASSETS.VENDORNAME' | translate}}" sortable="true" prop="supplierName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span [matTooltip]="(row?.supplierName.length > 10) ? row.supplierName : '' ">{{ row?.supplierName}}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.CREATEDDATE' | translate}}" sortable="true" prop="createdDate">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.createdDate != null">{{ row.createdDate | date: "dd-MMM-yyyy"  }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.COMPANYNAME' | translate}}" sortable="true" prop="supplierCompanyName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.CONTACTPERSON' | translate}}" sortable="true" prop="contactPerson">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.CONTACTPOSITION' | translate}}" sortable="true" prop="contactPosition">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.COMPANYPHONENUMBER' | translate}}" sortable="true"
+          prop="companyPhoneNumber">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.CONTACTPHONENUMBER' | translate}}" sortable="true"
+          prop="contactPhoneNumber">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.VENDORINTRODUCEDBY' | translate}}" sortable="true"
+          prop="vendorIntroducedBy">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.STARTEDWORKINGFROM' | translate}}" sortable="true"
+          prop="startedWorkingFrom">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.startedWorkingFrom != null">{{ row.startedWorkingFrom | date: "dd-MMM-yyyy"  }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS' | translate}}" [sortable]="false"
+          *ngIf="(canAccess_feature_AddOrUpdateVendor)">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <button class="text-center" [satPopoverAnchorFor]="supplier" #supplierPopover="satPopoverAnchor"
+              (click)="EditSupplier(row,supplierPopover)" matTooltip="{{'ASSETS.EDITVENDOR' | translate}}"
+              mat-icon-button>
+              <fa-icon class="icon-button mat-color-accent" icon="edit"> </fa-icon>
+            </button>
+            <button class="text-center" *ngIf="(canAccess_feature_AddOrUpdateVendor)"
+            [matTooltip]="(isArchived == true) ? ('ASSETS.UNARCHIVEVENDOR' | translate) : ('ASSETS.ARCHIVEVENDOR' | translate)"
+            mat-icon-button [satPopoverAnchorFor]="archiveVendorPopover"
+            #archiveVendorPopUp="satPopoverAnchor"
+            (click)="archiveVendorPopupOpen(row,archiveVendorPopUp);$event.stopPropagation();">
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+        </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <sat-popover #supplier [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+      [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <app-supplier (closePopup)="closeDialog()" [editSupplier]="editSupplier"
+          [selectedSupplierDetails]="selectedSupplierDetails"></app-supplier>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #archiveVendorPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="isArchived">
+                {{'ASSETS.UNARCHIVEVENDOR' | translate}}
+            </div>
+            <div class="card-title-text mb-1" *ngIf="!isArchived">
+                {{'ASSETS.ARCHIVEVENDOR' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="isArchived">
+                {{'ASSETS.UNARCHIVEVENDORTEXT' | translate}}
+            </div>
+            <div class="card-content mb-1" *ngIf="!isArchived">
+                {{'ASSETS.ARCHIVEVENDORTEXT' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="(savingVendorInProgress$ | async)" (click)="archiveVendor();" *ngIf="!isArchived">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(savingVendorInProgress$ | async)">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+                </button>
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="(savingVendorInProgress$ | async)" (click)="archiveVendor();" *ngIf="isArchived">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(savingVendorInProgress$ | async)">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeArchiveVendorDialog();"
+                    [disabled]="(savingVendorInProgress$ | async)">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+  </div>
+</ng-container>
+
+<ng-container *ngIf="!(canAccess_feature_ViewVendors) && !(roleFeaturesIsInProgress$|async)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

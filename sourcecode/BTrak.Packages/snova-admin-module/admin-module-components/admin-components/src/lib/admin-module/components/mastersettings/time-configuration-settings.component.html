@@ -1,0 +1,112 @@
+<app-common-message-box
+    *ngIf="!canAccess_feature_ManageTimeConfigurationSettings"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height" *ngIf="canAccess_feature_ManageTimeConfigurationSettings && isTestTrailEnable">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'TIMECONFIGURATIONSETTINGS.TIMECONFIGURATIONSETTINGSTITLE' | translate | titlecase }}">{{ 'TIMECONFIGURATIONSETTINGS.TIMECONFIGURATIONSETTINGSTITLE' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon mr-lg-n5" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+            [limit]="100" [rows]="configurations" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'TIMECONFIGURATIONSETTINGS.CONFIGURATIONNAME' | translate }}" [flexGrow]="1"
+                prop="configurationName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow"><span matTooltip="{{ row?.configurationName }}"
+                            matTooltipClass="tooltip-overflow">{{ row?.configurationName | softLabelsPipe : softLabels}}</span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{ 'TIMECONFIGURATIONSETTINGS.CONFIGURATIONTIME' | translate }}" [flexGrow]="1"
+                prop="configurationTime">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow"><span
+                            matTooltipClass="tooltip-overflow">{{ row?.configurationTime }}</span></div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column minWidth="150" name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'TIMECONFIGURATIONSETTINGS.EDITCONFIGURATION' | translate }}"
+                        [satPopoverAnchorFor]="configurationPopover" #configurationEditPopover="satPopoverAnchor"
+                        (click)="editConfiguration(row,configurationEditPopover)" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <!-- <button class="text-center"
+                        title="{{ 'TIMECONFIGURATIONSETTINGS.ARCHIVECONFIGURATION' | translate }}" mat-icon-button>
+                        <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button> -->
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<!-- editpopover -->
+<sat-popover backdropClass="backdrop-color" #configurationPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                {{ 'TIMECONFIGURATIONSETTINGS.EDITCONFIGURATION' | translate }}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="configurationForm" novalidate
+                (submit)="configurationForm.valid && upsertConfiguration()">
+                <mat-form-field>
+                    <input matInput formControlName="configurationTime"
+                        placeholder="{{ 'TIMECONFIGURATIONSETTINGS.CONFIGURATIONTIME' | translate }}">
+                    <mat-error *ngIf="configurationForm.get('configurationTime').hasError('pattern')">
+                        {{'TIMECONFIGURATIONSETTINGS.PLEASEENTERVALIDFORMAT' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <div class="mt-05">
+                    <button mat-raised-button color="primary" class="mr-1" [disabled]="configurationForm.get('configurationTime').value === '' || 
+                        !configurationForm.valid || isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertConfigurationDialog()" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+
+
+<app-common-message-box
+  *ngIf="!isTestTrailEnable"
+  textToDisplay="{{ 'PROJECTS.PLEASECONFIGURETESTRAILSETTINGS' | translate }}">
+</app-common-message-box>

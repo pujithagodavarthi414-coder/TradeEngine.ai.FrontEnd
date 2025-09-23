@@ -1,0 +1,181 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageWebhook">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'WEBHOOK.WEBHOOKTITLE' | translate | titlecase }}">{{ 'WEBHOOK.WEBHOOKTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getwebhook()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="shift-timing-close mr-1" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'WEBHOOK.CLICKHERETOCREATEAWEBHOOKTYPE' | translate }}"
+              [satPopoverAnchorFor]="webhookPopover" #webhookPopup="satPopoverAnchor"
+              (click)=" createWebHook(webhookPopup);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="webhook" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="150" name="{{ 'WEBHOOK.WEBHOOKNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="webHookName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.webHookName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'WEBHOOK.WEBHOOKURL' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="webHookUrl">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <ng-container *ngIf="!(row.webHookUrl == null) && !(row.webHookUrl == '')">
+            <a (click)="navigateToPage(row.webHookUrl)" class="test-trail-references-hover word-break"
+              *ngIf="validateUrl(row.webHookUrl)">{{row.webHookUrl}}</a>
+            <label *ngIf="!validateUrl(row.webHookUrl)">{{row.webHookUrl}}</label>
+          </ng-container>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'WEBHOOK.EDITWEBHOOK' | translate }}"
+            [satPopoverAnchorFor]="webhookPopover" #webhookPopup="satPopoverAnchor"
+            (click)="editWebHook(row,webhookPopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+
+          <button class="text-center" title="{{ 'WEBHOOK.ARCHIVEWEBHOOK' | translate }}"
+            [satPopoverAnchorFor]="deleteWebHookPopover" #deleteWebHookPopup="satPopoverAnchor"
+            (click)="deleteWebHookPopupOpen(row,deleteWebHookPopup)" *ngIf="!isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'WEBHOOK.UNARCHIVEWEBHOOK' | translate }}"
+            [satPopoverAnchorFor]="deleteWebHookPopover" #deleteWebHookPopup="satPopoverAnchor"
+            (click)="deleteWebHookPopupOpen(row,deleteWebHookPopup)" *ngIf="isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- edit -->
+  <sat-popover backdropClass="backdrop-color" #webhookPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ webhookEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="webhookForm" #formDirective="ngForm" novalidate
+          (submit)="webhookForm.valid && upsertWebHook(formDirective)">
+          <div class="mb-05">
+            <mat-form-field>
+              <input matInput formControlName="webHookName" placeholder="{{ 'WEBHOOK.WEBHOOKNAME' | translate }}"
+                required>
+              <mat-error *ngIf="webhookForm.get('webHookName').hasError('maxlength')">
+                {{ 'WEBHOOK.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="webhookForm.get('webHookName').hasError('required') && webhookForm.get('webHookName').touched">
+                {{ 'WEBHOOK.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <!-- <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error> -->
+          </div>
+          <div>
+            <mat-form-field>
+              <input matInput formControlName="webHookUrl" placeholder="{{ 'WEBHOOK.WEBHOOKURL' | translate }}"
+                required>
+              <mat-error
+                *ngIf="webhookForm.get('webHookUrl').hasError('required') && webhookForm.get('webHookUrl').touched">
+                {{ 'WEBHOOK.WEBHOOKURLEREQ' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!webhookForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeupsertWebHookPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- edit -->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteWebHookPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isWebHookArchived">
+          {{ 'WEBHOOK.ARCHIVEWEBHOOK' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isWebHookArchived">
+          {{ 'WEBHOOK.UNARCHIVEWEBHOOK' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isWebHookArchived">
+          {{ 'WEBHOOK.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isWebHookArchived">
+          {{ 'WEBHOOK.DESIGNU' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isWebHookArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteWebHook();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isWebHookArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteWebHook();">
+            <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeWebHookPopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageWebhook" textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

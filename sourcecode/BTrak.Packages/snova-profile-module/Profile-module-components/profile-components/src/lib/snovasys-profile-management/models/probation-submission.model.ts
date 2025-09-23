@@ -1,0 +1,35 @@
+export class ProbationSubmissionModel {
+    probationId: string;
+    configurationId: string;
+    probationDetailsId: string;
+    isOpen: boolean;
+    isShare: boolean;
+    isArchived: boolean;
+    pdfUrl: string;
+    ofUserId: string;
+    formData: string;
+    formJson: string;
+    submissionFrom: number;
+    isCompleted: boolean;
+    submittedBy: string;
+    submittedByName: string;
+    submittedByProfileImage: string;
+    createdDateTime: any;
+    submittedOn: Date;
+    totalCount: number;
+    pageSize: number;
+    pageNumber: number;
+    sortBy: string;
+    sortDirectionAsc: boolean;
+    searchText: string;
+    createdByUserId: string;
+    createdByUserName: string;
+    createdByUserImage: string;
+    closedByUserId: string;
+    closedByUserName: string;
+    closedByUserImage: string;
+    latestModificationOn: Date;
+    configurationName: string;
+    employeeId: string;
+    ofUserName: string;
+}

@@ -1,0 +1,21 @@
+export const ApiUrls = {
+  GetAllUsers: `User/UsersApi/GetAllUsers`,
+  GetAllFoodOrders: `FoodOrders/FoodOrderManagementApi/GetAllFoodOrders`,
+  SearchFoodOrder: `FoodOrders/FoodOrderManagementApi/SearchFoodOrder`,
+  UpsertFoodOrder: `FoodOrders/FoodOrderManagementApi/UpsertFoodOrder`,
+  ChangeFoodOrderStatus: `FoodOrders/FoodOrderManagementApi/ChangeFoodOrderStatus`,
+  GetRecentFoodOrders: `FoodOrders/FoodOrderManagementApi/GetRecentFoodOrders`,
+  GetMonthlyFoodOrderReport: `FoodOrders/FoodOrderManagementApi/GetMonthlyFoodOrderReport`,
+  SearchFile: `File/FileApi/SearchFile`,
+  UpsertMultipleFiles: `File/FileApi/UpsertMultipleFiles`,
+  DeleteFile: `File/FileApi/DeleteFile`,
+  GetFileDetailById: `File/FileApi/GetFileDetailById`,
+  DownloadFile: `FileStore/FileStoreApi/DownloadFile`,
+  GetEntityDropDown: 'ProductivityDashboard/ProductivityDashboardApi/GetEntityDropDown',
+  GetCurrencies: `HrManagement/HrManagementApi/GetCurrencies`,
+  UploadFile: `File/FileApi/UploadFile`,
+  GetSoftLabelConfigurations: `MasterData/MasterDataManagementApi/GetSoftLabelConfigurations`,
+  UpsertSoftLabelConfigurations: `MasterData/MasterDataManagementApi/UpsertSoftLabelConfigurations`,
+  GetSoftLabelById: `MasterData/MasterDataManagementApi/GetSoftLabelById`,
+  GetStoreConfiguration: `DocumentManagement/StoreManagementApi/GetStoreConfiguration`
+}

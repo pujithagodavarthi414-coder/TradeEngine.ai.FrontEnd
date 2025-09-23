@@ -1,0 +1,346 @@
+<mat-progress-bar color="primary" mode="indeterminate"
+    *ngIf="(isPermissionForViewGoals == null || isPermissionForViewGoals == undefined) && accessViewProjects">
+</mat-progress-bar>
+<div *ngIf="(isPermissionForViewGoals == true) && accessViewProjects">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(getGoalByIdLoading$ | async)">
+    </mat-progress-bar>
+    <mat-card class="p-0 unique-detail-height" id="style-1">
+        <div fxLayout="row wrap" fxLayout.xs="column" *ngIf="goalDetails">
+            <div fxFlex class="mt-05" fxLayoutGap="5px" class="goal-unique-page-height" id="style-1">
+                <mat-card-content class="p-0" fxLayout="column">
+                    <h6 class="p-05 m-0 unique-details-link ml-05" *ngIf="goalName">
+                        <a matTooltip="{{ 'USERSTORYUNIQUE.CLICKHERETOGOTOPROJECTPAGE' | translate | softLabelsPipe : softLabels}}"
+                            class="userstory-unique unique-numbers-hover"
+                            (click)="redirectPage(); $event.stopPropagation(); ">
+                            {{goalDetails.projectName}}
+                        </a>&nbsp;/
+                        <a class="unique-numbers-cursor-text" (click)="$event.stopPropagation();">
+                            {{goalDetails.goalUniqueName}}
+                        </a>
+                    </h6>
+                    <div fxLayout="row wrap" class="m-0 ml-05" *ngIf="goalName">
+                        <div fxFlex class="ml-05 unique-details-text ">
+                            <span class="unique-details-heading mt-02">
+                                {{ goalDetails.goalName }}(</span>
+                            <span class="unique-details-small-heading">{{ goalDetails.goalShortName }}</span>
+                            <span class="unique-details-heading mr-05">)</span>
+                            <button mat-icon-button [satPopoverAnchorFor]="editGoalMenuPopover"
+                                class="pull-right unique-details-heading mr-05" *ngIf="checkPermissionsForMatMenu()"
+                                (click)="editGoalMenuPopover.open(); editGoalMenuPopupOpen(); $event.stopPropagation(); ">
+                                <fa-icon icon="ellipsis-h" class="goal-unique-menu"></fa-icon>
+                            </button>
+                            <sat-popover backdropClass="backdrop-color"
+                                class="goal-options custom-goal-unique-background" #editGoalMenuPopover hasBackdrop
+                                [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()"
+                                horizontalAlign="end">
+                                <mat-card class="filter-data p-0">
+                                    <div *ngIf="isArchived && !goalDetails.parkedDateTime">
+                                        <app-pm-component-goal-archive *ngIf="checkPermissionForArchiveGoal()"
+                                            [goalId]="goalDetails.goalId" [projectId]="goalDetails.projectId"
+                                            [isGoalUniquePage]="isGoalUniquePage" [isArchived]="isArchivedGoal"
+                                            [timeStamp]="goalDetails.timeStamp" (submitClosePopup)="redirectPage();"
+                                            (closePopup)="closeMenu(); editGoalMenuPopover.close();">
+                                        </app-pm-component-goal-archive>
+                                    </div>
+                                    <div *ngIf="isParked && !goalDetails.inActiveDateTime">
+                                        <app-pm-component-goal-park *ngIf="checkPermissionForParkGoal()"
+                                            [goalId]="goalDetails.goalId" [projectId]="goalDetails.projectId"
+                                            [isGoalUniquePage]="isGoalUniquePage" [isParked]="isParkedGoal"
+                                            [timeStamp]="goalDetails.timeStamp" (submitClosePopup)="redirectPage();"
+                                            (closePopup)="closeMenu(); editGoalMenuPopover.close();">
+                                        </app-pm-component-goal-park>
+                                    </div>
+
+                                    <button mat-menu-item [satPopoverAnchorFor]="editgoalPopover"
+                                        *ngIf="isEdit && checkPermissionForEditGoal() && !goalDetails.inActiveDateTime && !goalDetails.parkedDateTime"
+                                        (click)="editgoalPopover.open();editGoal(); $event.stopPropagation()">
+                                        <mat-icon>edit</mat-icon>
+                                        <span>{{ 'GOALS.EDITGOAL' | translate | softLabelsPipe : softLabels}}</span>
+                                    </button>
+
+                                    <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="tagsPopover"
+                                        (click)="tagsPopover.open(); $event.stopPropagation();openTagsPopUp()"
+                                        *ngIf="!goalDetails.inActiveDateTime && !goalDetails.parkedDateTime && isPermissionForViewGoals">
+                                        <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+                                    </button>
+                                </mat-card>
+                            </sat-popover>
+
+                            <sat-popover #editgoalPopover verticalAlign="below" [autoFocus]="false"
+                                [interactiveClose]="false" hasBackdrop horizontalAlign="end"
+                                backdropClass="backdrop-color">
+                                <mat-card class="filter-data p-0">
+                                    <mat-card-title class="text-center">
+                                        <div class="card-title-text mat-bg-primary p-05">
+                                            {{ 'GOALS.EDITGOAL' | translate | softLabelsPipe : softLabels}}
+                                        </div>
+                                    </mat-card-title>
+                                    <div>
+                                        <app-pm-component-goal-create *ngIf="editGoalForm"
+                                            [isGoalUniquePage]="isGoalUniquePage" [projectId]="goalDetails.projectId"
+                                            [goal]="goalDetails" [isTestrailEnable] = "goalDetails.isEnableTestRepo"
+                                            (submitClosePopup)="submitCloseGoalPopup($event);  editGoalMenuPopover.close();"
+                                            (closePopup)="closeGoalPopup(); editGoalMenuPopover.close();">
+                                        </app-pm-component-goal-create>
+                                    </div>
+                                </mat-card>
+                            </sat-popover>
+
+                            <sat-popover #tagsPopover verticalAlign="below" [autoFocus]="false"
+                                [interactiveClose]="false" hasBackdrop horizontalAlign="start"
+                                backdropClass="backdrop-color">
+
+                                <mat-card class="filter-data p-0">
+                                    <mat-progress-bar color="primary" mode="indeterminate"
+                                        *ngIf="(goalOperationInProgress$ | async)|| (goalTagsOperationIsInProgress$|async)">
+                                    </mat-progress-bar>
+                                    <div>
+                                        <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog();tagsPopover.close()">
+                                            <fa-icon icon="times"></fa-icon>
+                                        </button>
+                                        <mat-card-title class="text-center">
+                                            <div class="card-title-text p-1 mat-bg-primary">
+                                                {{'USERSTORY.ADDTAGS' | translate}}
+                                            </div>
+                                        </mat-card-title>
+                                        <app-pm-component-tags *ngIf="isTagsPopUp" [userStoryId]=null
+                                            [goalId]="goalDetails.goalId"
+                                            (closeTagsPopUp)="closeTagsDialog();tagsPopover.close()">
+                                        </app-pm-component-tags>
+                                    </div>
+                                </mat-card>
+                            </sat-popover>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" class="pl-1 m-0" *ngIf="goalDetails">
+                        <div *ngIf="goalDetails.goalResponsibleUserName"
+                            class="unique-background-color custom-goal-padding mr-1 mt-05 mb-1">
+                            <div fxLayout="row wrap">
+                                <div fxFlex fxLayoutAlign="start center" class="hide-content-overflow">
+                                    <h6 class="goal-unique-font-bold m-0">
+                                        {{ 'GOALUNIQUE.GOALRESPONSIBLEPERSON' | translate | softLabelsPipe : softLabels}}
+                                        &nbsp;</h6>
+                                    <app-avatar *ngIf="!goalDetails.goalResponsibleProfileImage"
+                                        [name]="goalDetails.goalResponsibleUserName | removeSpecialCharacters"
+                                        [isRound]="true" size="20">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="goalDetails.goalResponsibleProfileImage"
+                                        src="{{ goalDetails.goalResponsibleProfileImage }}">
+                                    &nbsp;{{ goalDetails.goalResponsibleUserName }}
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="goalDetails.onboardProcessDate" class="mt-05">
+                            <h6 class="unique-background-color p-05 mr-1">
+                                {{ 'GOALS.STARTDATE' | translate }}:&nbsp;{{ goalDetails.onboardProcessDate | date: 'dd/MM/yyyy'}}
+                            </h6>
+                        </div>
+                        <div *ngIf="goalDetails.endDate" class="mt-05">
+                            <h6 class="unique-background-color p-05 mr-1">
+                                {{ 'GOALS.ENDDATE' | translate }}:&nbsp;{{ goalDetails.endDate | date: 'dd/MM/yyyy'}}
+                            </h6>
+                        </div>
+                        <div *ngIf="goalDetails.boardTypeName" class="mt-05">
+                            <h6 class="unique-background-color p-05 mr-1">
+                                {{ 'GOALUNIQUE.BOARDTYPE' | translate }} &nbsp;{{ goalDetails.boardTypeName }}
+                            </h6>
+                        </div>
+                        <div *ngIf="goalDetails.activeUserStoryCount" class="mt-05">
+                            <h6 class="unique-background-color p-05 mr-1">
+                                {{ 'GOALUNIQUE.USERSTORIESCOUNT' | translate | softLabelsPipe : softLabels}}&nbsp;
+                                {{ goalDetails.activeUserStoryCount }}
+                            </h6>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" class="m-0 ml-05" *ngIf="goalDetails.tag">
+                        <div fxFlex class="ml-05">
+                            <h6 class="goal-unique-font-bold  m-0 mr-1 mt-05 mb-1">
+                                {{'USERSTORY.TAGS' | translate}}:
+                            </h6>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" class="m-0 ml-05">
+                        <div class="tags-unique-height">
+                            <div *ngFor="let tag of goalInputTags" class="tag-unque-displaygoaltag mt-08">
+                                <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag }}"
+                                    matTooltipClass="tooltip-overflow">
+                                    {{tag}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div fxFlex class="unique-details-bg p-05" fxLayout="column">
+                        <h5 class="unique-details-text pl-1">{{'USERSTORYUNIQUE.DESCRIPTION' | translate}}</h5>
+                        <div fxFlex class="ml-05" fxLayout="column">
+                            <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                                <span *ngIf="description && !isEditorVisible" (click)="enableEditor()"
+                                    [innerHTML]=description class="pl-2" style="cursor: pointer;">
+                                </span>
+                                <!-- <span *ngIf="description && !isEditorVisible" (click)="enableEditor()"
+                                    style="cursor: pointer;">
+                                    <b>&nbsp;{{'USERSTORYUNIQUE.CLICKHERETOADDDESCRIPTION' | translate}}</b>
+                                </span> -->
+                                <span *ngIf="(description == null || description == '') && (!isEditorVisible)"
+                                    (click)="enableEditor()" style="cursor: pointer;" class="pl-2">
+                                    <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                                </span>
+                            </div>
+
+                            <div fxFlex *ngIf="isEditorVisible">
+                                <div class="full-width custom-input">
+                                    <editor class="dfree-header custom-logtime-comment"
+                                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+                                        placeholder="Description" menubar="false" [init]="initSettings"
+                                        background="white" height="120" [(ngModel)]="description">
+                                    </editor>
+                                </div>
+                                <div class="mt-1 ml-05">
+                                    <button mat-raised-button color="primary" class="mr-05"
+                                        (click)="handleDescriptionEvent($event)"
+                                        [disabled]="(descriptionLoading$ | async)">
+                                        <i class="fa fa-spin fa-spinner" *ngIf="(descriptionLoading$ | async)"></i>
+                                        <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'SAVE' | translate }}
+                                    </button>
+                                    <button mat-raised-button (click)="cancelDescription()" class="mr-05"
+                                        [disabled]="(descriptionLoading$ | async)">
+                                        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+                                    </button>
+                                    <button mat-raised-button color="primary" (click)="descriptionReset()"
+                                        [disabled]="(descriptionLoading$ | async)">
+                                        <fa-icon icon="undo" class="mr-05"></fa-icon>
+                                        {{ 'ADVANCEDSEARCH.RESET' | translate }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <mat-card *ngIf="goalDetails && isPermissionForViewUserstories" class="p-05 ml-1">
+                        <div *ngIf="!showReportsBoard">
+                            <app-pm-goal-board-type-api [goal]="goal"
+                                *ngIf="!isTheBoardLayoutKanban && isBoardTypeForApi && !isTheBoardLayoutReports && !showDocuments && !showEmployeeTaskBoard"
+                                [isTheBoardLayoutKanban]="isTheBoardLayoutKanban">
+                            </app-pm-goal-board-type-api>
+                            <gc-userstory-list [userStorySearchCriteria]="userStorySearchCriteria"
+                                [goalUniqueDetailPage]="goalUniqueDetailPage"
+                                (selectUserStory)="selectUserStory($event)" [selectedTab]="selectedTab" [goal]="goal"
+                                *ngIf="!isTheBoardLayoutKanban && !isBoardTypeForApi && !showReportsBoard && !showCalendarView && !showDocuments && !showEmployeeTaskBoard"
+                                (eventClicked)="afterClicked($event)" (reportsClicked)="reportsAfterClicked($event)"
+                                [isTheBoardLayoutKanban]="isTheBoardLayoutKanban"
+                                (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                                (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+                                (getGoalReplanId)="selectGoalReplanId($event)"
+                                (getDocumentStore)="getDocumentStore($event)"
+                                (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                            </gc-userstory-list>
+                            <app-pm-kanbanboard [userStorySearchCriteria]="userStorySearchCriteria" [goal]="goal"
+                                [goalUniqueDetailPage]="goalUniqueDetailPage"
+                                *ngIf="isTheBoardLayoutKanban && !showReportsBoard && !showCalendarView && !showDocuments && !showEmployeeTaskBoard"
+                                (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                                (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+                                (getDocumentStore)="getDocumentStore($event)"    (getGoalReplanId)="selectGoalReplanId($event)"
+                                [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" (eventClicked)="afterClicked($event)"
+                                (selectedUserStory)="selectUserStory($event)"
+                                (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                            </app-pm-kanbanboard>
+                        </div>
+                        <app-pm-component-goal-burn-charts
+                            *ngIf="showReportsBoard && !showCalendarView && !showDocuments && !showEmployeeTaskBoard"
+                            [goal]="goal" (eventClicked)="afterClicked($event)"
+                            (getDocumentStore)="getDocumentStore($event)"
+                            (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                            (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+                            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                        </app-pm-component-goal-burn-charts>
+
+                        <app-goal-component-calender-view-detail
+                            *ngIf="!showReportsBoard && showCalendarView && !showDocuments && !showEmployeeTaskBoard"
+                            [goal]="goal" (eventClicked)="afterClicked($event)" class="dispaly-grid"
+                            (getGoalCalenderView)="getGoalRelatedCalenderView($event)" [workItemList]=null
+                            (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                        </app-goal-component-calender-view-detail>
+                        <ng-container
+                            *ngIf="showDocuments && !showCalendarView && !showReportsBoard && !showEmployeeTaskBoard">
+                            <app-pm-component-superagile-board [goal]="goal" [showHeader]="false"
+                                [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" [isReportsPage]="false"
+                                [isCalenderView]="false" [isEmployeeTaskBoardPage]="false"
+                                (eventClicked)="afterClicked($event)" [isDocument]=true
+                                (getChartDetails)="getGoalRelatedCharts($event)"
+                                (getCalanderView)="getGoalRelatedCalenderView($event)"
+                                (getDocumentDetails)="getDocumentStore($event)"
+                                (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                            </app-pm-component-superagile-board>
+                            <!-- <app-document-store [goal]="goal" [fileElement]="fileElement"
+                                [isComponentRefresh]="isComponentRefresh" (getDocumentStore)="getDocumentStore($event)"
+                                (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                                (eventClicked)="afterClicked($event)"
+                                (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+                                (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                            </app-document-store> -->
+                            <div *ngIf="documentManagementLoaded">
+                                <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+                                    [ndcDynamicComponent]="documentStoreComponent.component"
+                                    [ndcDynamicInjector]="injector" [ndcDynamicInputs]="documentStoreComponent.inputs"
+                                    [ndcDynamicOutputs]="documentStoreComponent.outputs">
+                                </ndc-dynamic>
+                            </div>
+                        </ng-container>
+
+                        <ng-container
+                            *ngIf="!showReportsBoard && !showCalendarView && !showDocuments && showEmployeeTaskBoard">
+                            <app-goal-employee-task-board-view *ngIf="showEmployeeTaskBoard" [goal]="goal"
+                                [uesrStoriesData]="(userStories$ | async)" (eventClicked)="afterClicked($event)"
+                                class="display-grid" (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+                                (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+                                (getDocumentStore)="getDocumentStore($event)"
+                                (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+                            </app-goal-employee-task-board-view>
+                        </ng-container>
+                    </mat-card>
+                    <div fxLayout="row wrap" class="mt-1 p-05 ml-05 "
+                        *ngIf="!goalDetails.inActiveDateTime && !goalDetails.parkedDateTime">
+                        <div fxFlex="85px" fxLayoutAlign="start center">
+                            <span>
+                                <h6 class="unique-details-text custom-activity-margin">
+                                    {{'USERSTORYUNIQUE.COMMENTS'|translate}} </h6>
+                            </span>
+                        </div>
+                        <!-- <div fxFlex="150px">
+                            <ng-select [searchable]="false" [clearable]="false" (change)="selectchange($event)"
+                                [(ngModel)]="selectedGoalTab">
+                                <ng-option [value]="dropdown.value" *ngFor="let dropdown of dropdowns">
+                                    {{ dropdown.name }}</ng-option>
+                            </ng-select>
+                        </div> -->
+                    </div>
+                    <div class="unqiue-activity-tab ml-05"
+                        *ngIf="!goalDetails.inActiveDateTime && !goalDetails.parkedDateTime">
+                        <div fxFlex>
+                            <snovasys-comments *ngIf="goalDetails.goalId" [receiverId]="goalDetails.goalId"
+                                [componentModel]="componentModel" [isPermissionExists]="true">
+                            </snovasys-comments>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </div>
+            <div fxFlex="33" *ngIf="selectedUserStory">
+                <mat-card class="p-0">
+
+                    <gc-userstory-detail [userStoryId]="selectedUserStory" [isUserStoriesPage]="true" 
+                        [isGoalUniquePage]= true [isAllGoalsPage]="true" [goalReplanId]="goalReplanId"
+                        [selectedTab]="selectedTab" (userStoryCloseClicked)="userStoryCloseClicked()">
+                    </gc-userstory-detail>
+
+                </mat-card>
+            </div>
+        </div>
+    </mat-card>
+</div>
+
+
+
+
+<app-common-message-box *ngIf="(isPermissionForViewGoals == false) || !accessViewProjects"
+    textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box>

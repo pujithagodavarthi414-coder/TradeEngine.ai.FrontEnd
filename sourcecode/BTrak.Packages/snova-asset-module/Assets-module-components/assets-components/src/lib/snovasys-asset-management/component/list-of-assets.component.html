@@ -1,0 +1,186 @@
+<div id="assets-1">
+  <mat-card class="p-0 assets-list-view"
+    [ngStyle]="{ 'height': isFilterApplied ? 'calc(100vh - 215px)' : 'calc(100vh - 158px)' }">
+    <mat-card-title class="data-table-header" style="border-bottom: 1px solid #00000033;" fxLayout="row">
+      <div class="card-title-text p-05 ml-05" fxFlex>
+        <b> {{'ASSETS.LISTOFASSETS' | translate}}&nbsp;<span *ngIf="totalAssetsCount && totalAssetsCount > -1">({{
+            totalAssetsCount }})</span></b>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="totalAssetsCount" id="assets-2">
+        <button mat-icon-button (click)="printAssets()" [disabled]="loading"
+          matTooltip="{{'ASSETS.DOWNLOADASSETS' | translate}}">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading">
+          </mat-progress-bar>
+          <fa-icon class="mat-color-accent" icon="download"></fa-icon>
+        </button>
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-0 m-0 listof_assets assets-list" id="style-1">
+      <mat-divider></mat-divider>
+      <mat-list class="compact-list" *ngIf="!(assetsListLoadingSpinner$ | async)" id="style-1"
+        [ngStyle]="{ 'height': isFilterApplied ? 'calc(100vh - 350px)' : 'calc(100vh - 282px)' }">
+        <mat-card fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="p-0 asset-card"
+          *ngFor="let asset of assetsList" (click)="selectedAsset(asset.assetId,$event)"
+          [ngClass]="{ active: assetSelected(asset.assetId) }">
+          <span [matMenuTriggerFor]="rootMenu" #rootMenuTrigger="matMenuTrigger"></span>
+          <div fxFlex="100" fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-around"
+            (contextmenu)="openMenu($event, rootMenuTrigger,asset)">
+            <div fxFlex="45px" class="mt-02">
+              <app-avatar [name]="asset.assetName | removeSpecialCharacters" fxLayoutAlign="start center"
+                matTooltip="{{ asset.assetName }}" [src]="asset.assetName | fetchSizedAndCachedImage: '20':''"
+                [isRound]="true" size="35">
+              </app-avatar>
+            </div>
+            <div fxFlex="calc(100% - 50px)" class="asset-content-hide">
+              <div fxLayout="column" fxLayoutGap="2px">
+                <div fxLayout="row" fxLayoutGap="5px">
+                  <div fxFlex="75" fxFlex.gt-xs="60" fxFlex.md="45" matTooltip="{{'ASSETS.ASSETCODE' | translate}}"
+                    matTooltipClass="tooltip-overflow">
+                    <p class="mat-small assets-name-control">
+                      <b>{{ asset.assetNumber }}({{ asset.assetName }})</b>
+                    </p>
+                  </div>
+                  <div fxFlex="25" fxFlex.gt-xs="40" fxFlex.md="54" matTooltip="{{'ASSETS.COST' | translate}}"
+                    matTooltipClass="tooltip-overflow">
+                    <p class="mat-small pull-right mr-05">
+                      {{asset.currencySymbol}}{{ asset.cost }}
+                    </p>
+                  </div>
+                </div>
+                <div fxLayout="row" fxLayoutGap="5px">
+                  <div fxFlex="65" fxFlex.gt-xs="75" fxFlex.md="45">
+                    <p class="mat-small assets-name-control" matTooltip="{{'ASSETS.ASSIGNEDTO' | translate}}">
+                      {{ asset.assignedToEmployeeName }}
+                    </p>
+                  </div>
+                  <div fxFlex="35" fxFlex.gt-xs="25" fxFlex.md="54">
+                    <p class="mat-small pull-right mr-05" matTooltip="{{'ASSETS.PURCHASEDDATE' | translate}}">
+                      {{ asset.purchasedDate | date: "dd-MMM-yyyy" }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      </mat-list>
+      <mat-list class="compact-list" *ngIf="(assetsListLoadingSpinner$ | async)">
+        <mat-card fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="p-0 mat-box-shadow asset-card"
+          *ngFor="let asset of [1, 2, 3]">
+          <div fxFlex="100" fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-around">
+            <div fxFlex="45px" class="img-bg loading-bg">
+              <div class="default-avatar"></div>
+            </div>
+            <div fxFlex="calc(100% - 50px)">
+              <div fxLayout="column" fxLayoutGap="2px">
+                <div fxLayout="row" fxLayoutGap="5px">
+                  <div fxFlex="80" fxFlex.gt-xs="80">
+                    <div fxFlex fxFlex="70">
+                      <p class="mat-body-1 empty-text loading-bg"></p>
+                    </div>
+                    <div fxFlex fxFlex="30" class="text-center"></div>
+                  </div>
+                  <div fxFlex="20" fxFlex.gt-xs="20">
+                    <p class="mat-body-1 empty-text loading-bg"></p>
+                  </div>
+                </div>
+                <div fxLayout="row" fxLayoutGap="5px">
+                  <div fxFlex="75" fxFlex.gt-xs="75">
+                    <div fxFlex fxFlex="70">
+                      <p class="mat-body-1 empty-text loading-bg"></p>
+                    </div>
+                    <div fxFlex fxFlex="30" class="text-center"></div>
+                  </div>
+                  <div fxFlex="25" fxFlex.gt-xs="25">
+                    <p class="mat-body-1 empty-text loading-bg"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      </mat-list>
+      <ng-container *ngIf="!(assetsListLoadingSpinner$ | async) && !(totalAssetsCount < 20)">
+        <mat-divider></mat-divider>
+        <mat-paginator [length]="totalAssetsCount" [pageSize]="pageSize" [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions" (page)="getFilteredAssets($event)">
+        </mat-paginator>
+      </ng-container>
+      <div fxLayoutAlign="center center" fxLayout="column" class="no-data"
+        *ngIf=" !(assetsListLoadingSpinner$ | async) && (!totalAssetsCount || totalAssetsCount == 0)">
+        {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-menu #rootMenu="matMenu" [overlapTrigger]="false" class="full-width" (click)="$event.stopPropagation();">
+    <ng-template matMenuContent>
+      <mat-card-title class="text-center" (click)="$event.stopPropagation();">
+        <div class="card-title-text  mat-bg-primary p-05">{{'ASSETS.UPDATEASSIGNEE' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content style="margin: 5px" (click)="$event.stopPropagation();">
+        <form [formGroup]="updateAssigneForm" #formDirective="ngForm" novalidate
+          (submit)="updateAssigneForm.valid && updateAssigneeAssets()">
+          <div (click)="$event.stopPropagation();">
+            <mat-form-field class="mt-05 full-width">
+              <mat-select placeholder="{{'ASSETS.SELECTASSIGNEDTO' | translate}}" formControlName="assignedToEmployeeId"
+                required (click)="$event.stopPropagation();">
+                <mat-option [value]="assignee.userId" *ngFor="let assignee of userList$ | async">
+                  <app-avatar class="employee_img" *ngIf="!assignee.profileImage"
+                    [name]="assignee.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" src="{{assignee.profileImage}}"
+                    *ngIf="assignee.profileImage">{{assignee.userName}}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="updateAssigneForm.get('assignedToEmployeeId').hasError('required') && updateAssigneForm.get('assignedToEmployeeId').touched">
+                {{'ASSETS.PLEASESELECTASSIGNEDTO' | translate}}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="mt-05 full-width">
+              <mat-label>{{'ASSETS.SELECTASSIGNEDDDATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker1" [max]="maxDate" [min]="minDate"
+                formControlName="assignedDateFrom" (click)="picker1.open()" autocomplete="off" [readonly]="true"
+                class="date-picker" (click)="$event.stopPropagation();">
+              <mat-datepicker-toggle matSuffix [for]="picker1">
+              </mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="mt-05 full-width">
+              <mat-select placeholder="{{'ASSETS.SELECTAPPROVEDBY' | translate}}" formControlName="approvedByUserId"
+                required (click)="$event.stopPropagation();">
+                <mat-option [value]="assignee.userId" *ngFor="let assignee of userList$ | async">
+                  <app-avatar class="employee_img" *ngIf="!assignee.profileImage"
+                    [name]="assignee.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" src="{{assignee.profileImage}}"
+                    *ngIf="assignee.profileImage">{{assignee.userName}}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="updateAssigneForm.get('approvedByUserId').hasError('required') && updateAssigneForm.get('approvedByUserId').touched">
+                {{'ASSETS.PLEASESELECTAPPROVEDBY' | translate}}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isError" class="word break">
+              {{'ASSETS.ASSETERROR' | translate}} {{ assetNumbers }}
+            </mat-error>
+            <div class="mt-1 text-center">
+              <button mat-raised-button color="primary" type="submit" class="mr-1" [disabled]="!updateAssigneForm.valid"
+                (click)="$event.stopPropagation();">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="((loading$ | async) || loading)">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertMultipleAssetPopup()"
+                [disabled]="((loading$ | async) || updatingMultiple)" type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </ng-template>
+  </mat-menu>
+</div>

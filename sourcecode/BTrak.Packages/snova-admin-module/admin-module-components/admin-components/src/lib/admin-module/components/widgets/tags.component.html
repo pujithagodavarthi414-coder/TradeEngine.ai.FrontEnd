@@ -1,0 +1,68 @@
+<mat-card-content class="card-content p-05">
+    <div fxFlex="80" fxFlex.gt-md="{{isFromCustomApp && !isFromHtmlApp ?1285:700}}px" fxFlex.md="500px">
+        <mat-form-field class="full-width tags-popup" *ngIf="!referenceId && !isFromCustomApp"
+            hintLabel="{{ 'USERSTORY.PLEASEPRESSCOMMAORENTERFORNEXTTAG' | translate }}">
+            <mat-chip-list #tagsList>
+                <mat-chip *ngFor="let tags of userStoryInputTags" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeProjectTags(tags)" class="userstory-tags">
+                    <span class="hide-content-overflow" matTooltip="{{ tags}}" matTooltipClass="tooltip-overflow">
+                        {{tags}}
+                    </span>
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input placeholder="{{'USERSTORY.TAGS' | translate}}" [matAutocomplete]="auto" #tagInput
+                    [matChipInputFor]="tagsList" [(ngModel)]="tag"
+                    (keyup)="disabledButton($event.code,$event.target.value)"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (matChipInputTokenEnd)="addUserStoryTags($event)">
+                <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress)"></fa-icon>
+            </mat-chip-list>
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedTagValue($event)">
+                <mat-option *ngFor="let tags of (customTagsModel)" [value]="tags.tagValue">
+                    {{tags.tagValue}} ({{ tags.formName }})
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+
+        <mat-form-field class="full-width tags-popup" *ngIf="referenceId || isFromCustomApp"
+            hintLabel="{{ 'USERSTORY.PLEASEPRESSCOMMAORENTERFORNEXTTAG' | translate }}">
+            <mat-chip-list #tagsList>
+                <mat-chip *ngFor="let tag of tags" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeWidgetTags(tag)" class="userstory-tags">
+                    <span class="hide-content-overflow" matTooltip="{{ tag.tag}}" matTooltipClass="tooltip-overflow">
+                        {{tag.tag}}
+                    </span>
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input placeholder="{{'USERSTORY.TAGS' | translate}}" [matAutocomplete]="tagsAuto" #matTagInput
+                    [matChipInputFor]="tagsList" [(ngModel)]="tag"
+                    (keyup)="disabledButton($event.code,$event.target.value)"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (matChipInputTokenEnd)="addWidgetTags($event)"
+                    (keyup)="disabledWidgetButton($event.code,$event.target.value)">
+                <fa-icon icon="spinner" *ngIf="(tagsLoadingInProgress)"></fa-icon>
+            </mat-chip-list>
+            <mat-autocomplete #tagsAuto="matAutocomplete" (optionSelected)="selectedWidgetTagValue($event)">
+                <mat-option *ngFor="let tag of (tags | tagsFilter: tagIds)" [value]="tag.tagId">
+                    {{tag.tag}}
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+
+
+        <div class="text-center p-05" *ngIf="!isFromCustomApp">
+            <button type="button" mat-raised-button color="primary" class="mr-1 text-center"
+                [disabled]="(anyOperationIsInProgress$ | async) || (count == 0)"
+                (click)="saveUserStoryTags();">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="(anyOperationIsInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+            </button>
+            <button mat-raised-button class="mr-1" (click)="closeDialog()"
+                [disabled]="(anyOperationIsInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+    </div>
+</mat-card-content>

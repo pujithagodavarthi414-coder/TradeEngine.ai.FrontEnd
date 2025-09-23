@@ -1,0 +1,109 @@
+<div class="p-0 m-0 Imminent deadlines" *ngIf="(canAccess_feature_ImminentDeadlines)">
+    <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0">
+            <div fxFlex="50" fxFlex.xs="100">
+                <div class="card-title-text pt-1">
+                    {{'IMMINENTDEADLINES.IMMINENTDEADLINES' | translate | softLabelsPipe : softLabels | titlecase}}
+                </div>
+            </div>
+            <div fxFlex="50" class="ml-05 mr-05 search_goalinput" fxFlex fxLayoutAlign="end center"
+                fxLayoutAlign.xs="center start" fxFlexOffset.xs="10px" fxLayout="row wrap">
+                <div fxFlex.gt-xs="150px" fxFlex.lt-lg="100px" class="ml-05 mr-05 search_goalinput"
+                    fxLayoutAlign="end center" fxLayoutAlign.xs="center center">
+                    <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02"
+                    *ngIf="entities?.length > 1">
+                    <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="entities?.length > 1">
+                    <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                        [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field (click)="$event.stopPropagation()">
+                <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                    (selectionChange)="entityValues($event.value)">
+                    <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                        {{entity.name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </mat-card>
+    </mat-menu>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+            <b>{{'SEARCH' | translate}}:&nbsp;</b>
+            {{ searchText }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+    <div class="activity-data app-height-search-2" id="style-1">
+        <ngx-datatable class="btrak" [rows]="imminentDeadlinesOutputRecords" [columnMode]="'force'" [headerHeight]="35"
+            [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="count" [offset]="pageNumber"
+            [limit]="pageSize" (page)='setPage($event)' [externalSorting]="true" (sort)="onSort($event)"
+            [loadingIndicator]="anyOperationInProgress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{'IMMINENTDEADLINES.USERNAME' | translate}}" [flexGrow]="1" prop="ownerName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="icon-button" fxLayout="row" (click)="goToProfile(row.ownerUserId)">
+                        <!-- <app-avatar [name]="row.ownerName | removeSpecialCharacters"
+                            [src]="row.ownerProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+                        </app-avatar> -->
+                        <div *ngIf="row.ownerProfileImage != null && row.ownerProfileImage != ''">
+                            <app-avatar [src]="row.ownerProfileImage | fetchSizedAndCachedImage: '30':''"
+                                [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div *ngIf="row.ownerProfileImage == null || row.ownerProfileImage == ''">
+                            <app-avatar [name]="row.ownerName | removeSpecialCharacters" [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.ownerName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ row?.ownerName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'IMMINENTDEADLINES.USERSTORY' | translate  | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" [width]="500" [cellClass]="'custom-cell-width'" prop="userStoryName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow"><span matTooltip="  {{ row?.userStoryName }}"
+                            matTooltipClass="tooltip-overflow"> {{ row?.userStoryName }}</span></div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'IMMINENTDEADLINES.MAXDEADLINE' | translate | softLabelsPipe : softLabels}}"
+                [flexGrow]="1" prop="DeadLineDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div *ngIf="row.deadLineDate !=null">
+                        {{row?.deadLineDate | date: "dd-MMM-yyyy"  }}</div>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ImminentDeadlines)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

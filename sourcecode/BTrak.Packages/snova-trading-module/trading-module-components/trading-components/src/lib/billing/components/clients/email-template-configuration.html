@@ -1,0 +1,181 @@
+<div class="full-height">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow"   matTooltipClass="tooltipClass-mat" matTooltip="Email Template Configuration">Email
+                    Template Configuration</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput mr-3" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 masterdata-search-close" style="right: 0px !important;" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <!-- <button mat-icon-button  matTooltipClass="tooltipClass-mat" matTooltip="{{ 'LEGALENTITY.CREATELEGALENTITY' |  translate }}"
+                        [satPopoverAnchorFor]="emailTemplatePopover" #emailTemplatePopup="satPopoverAnchor"
+                        (click)="createEmailTemplate(emailTemplatePopup);clearForm()" *ngIf="!isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button> -->
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data projects-list-grid email-template-height">
+        <kendo-grid [kendoGridBinding]="emailTemplateList" [filterable]="false" [pageSize]="templateState.take"
+            [skip]="templateState.skip" [sort]="templateState.sort" [sortable]="true" [pageable]="true">
+            <kendo-grid-column field="emailTemplateName" title="Email Template Name">
+            </kendo-grid-column>
+            <kendo-grid-column field="emailSubject" title="Email Subject">
+            </kendo-grid-column>
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}" [width]="180" [style]="{'display': 'flex'}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button mat-icon-button class="text-center" 
+                        [satPopoverAnchorFor]="emailTemplatePopover" #emailTemplatePopup="satPopoverAnchor"
+                        (click)="editEmailTemplate(dataItem,emailTemplatePopup)" *ngIf="!isArchived && canAccess_feature_EditEmailTemplates">
+                        <fa-icon icon="edit" matTooltipClass="tooltipClass-mat" matTooltip="Edit email template" style="cursor: pointer;" class="action-icon-color"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #emailTemplatePopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+        horizontalAlign="center">
+        <mat-card class="p-0 mr-0">
+            <div fxLayout="row wrap">
+                <div fxFlex="50" class="pr-05">
+                    <mat-card-title class="text-center">
+                        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{emailTemplate}}
+                        </div>
+                    </mat-card-title>
+                    <mat-card-content class="P-05">
+                        <form [formGroup]="emailTemplateForm" #formDirective="ngForm" novalidate
+                            (submit)="emailTemplateForm.valid">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="49">
+                                    <mat-form-field class="pr-4 full-width">
+                                        <input matInput formControlName="emailTemplateName"
+                                            placeholder="Email template name" required>
+                                        <mat-error
+                                            *ngIf="emailTemplateForm.get('emailTemplateName').hasError('maxlength')">
+                                            {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                                        <mat-error
+                                            *ngIf="emailTemplateForm.get('emailTemplateName').hasError('required') && emailTemplateForm.get('emailTemplateName').touched">
+                                            {{ 'DESIGNATION.REQUIREDERROR' | translate }}
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="49">
+                                    <mat-form-field class="full-width">
+                                        <input matInput formControlName="emailSubject" placeholder="Email subject"
+                                            required>
+                                        <mat-error *ngIf="emailTemplateForm.get('emailSubject').hasError('maxlength')">
+                                            {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                                        <mat-error
+                                            *ngIf="emailTemplateForm.get('emailSubject').hasError('required') && emailTemplateForm.get('emailSubject').touched">
+                                            {{ 'DESIGNATION.REQUIREDERROR' | translate }}
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                            <div>
+                                <mat-form-field class="full-width">
+                                    <textarea matInput class="text-area" formControlName="emailTemplate" rows="15"
+                                        placeholder="Email template" required></textarea>
+                                    <mat-error *ngIf="emailTemplateForm.get('emailTemplate').hasError('maxlength')">
+                                        {{ 'DESIGNATION.MAXLENGTHERROR' | translate }}</mat-error>
+                                    <mat-error
+                                        *ngIf="emailTemplateForm.get('emailTemplate').hasError('required') && emailTemplateForm.get('emailTemplate').touched">
+                                        {{ 'DESIGNATION.REQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                                <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                            </div>
+                        </form>
+                    </mat-card-content>
+                </div>
+                <div fxFlex="50">
+                    <mat-card-title class="text-center">
+                        <div class="card-title-text  mat-bg-primary p-05 mb-1">Html Tags
+                        </div>
+                    </mat-card-title>
+                    <div class="activity-data projects-list-grid html-height">
+                        <kendo-grid [kendoGridBinding]="kycTagsList" [filterable]="false" [pageSize]="state.take"
+                            [skip]="state.skip" [sort]="state.sort" [sortable]="true" [pageable]="true">
+                            <kendo-grid-column field="htmlTagName" title="Html Tag Name">
+                            </kendo-grid-column>
+                            <kendo-grid-column field="description"
+                                title="{{ 'CLIENTHISTORY.DESCRIPTION' |  translate }}">
+                            </kendo-grid-column>
+                        </kendo-grid>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-1 text-center">
+                <button mat-raised-button color="primary" class="mr-1 glossy-button-button" (click)="upsertEmailTemplate(formDirective)"
+                    [disabled]="!emailTemplateForm.valid||isAnyOperationIsInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertEmailTemplatePopup(formDirective)"
+                    type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteEmailTemplatePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isEmailTemplateArchived">
+                    {{ 'LEGALENTITY.ARCHIVELEGALENTITY' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isEmailTemplateArchived">
+                    {{ 'LEGALENTITY.UNARCHIVELEGALENTITY' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isEmailTemplateArchived">
+                    {{ 'LEGALENTITY.AREYOUSUREWANTTOUNARCHIVETHISLEGALENTITY?' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isEmailTemplateArchived">
+                    {{ 'LEGALENTITY.AREYOUSUREWANTTOARCHIVETHISLEGALENTITY?' | translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="isEmailTemplateArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteEmailTemplate();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button class="glossy-button-button" mat-button mat-raised-button color="primary" *ngIf="!isEmailTemplateArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" deleteEmailTemplate();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteEmailTemplatePopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>

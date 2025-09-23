@@ -1,0 +1,88 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05">
+        {{titleText}}
+    </div>
+</mat-card-title>
+<div class="p-1">
+    <form [formGroup]="reportingToForm" novalidate #formDirective="ngForm"
+        (submit)="reportingToForm.valid && saveReportingToDetails(formDirective)">
+        <div fxLayout="column">
+            <mat-form-field class="full-width">
+                <mat-select formControlName="reportToEmployeeId"
+                    placeholder="{{'REPORTTO.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                    (selectionChange)="getReportToUserName($event.value)" required>
+                    <mat-select-trigger>
+                        {{selectedReportToUserName}}
+                    </mat-select-trigger>
+                    <div *ngFor="let reportingTo of reportingToDetailsList$ | async">
+                        <div *ngIf="reportingTo.userId!=selectedUserId">
+                            <mat-option [value]="reportingTo.employeeId">
+                                <app-avatar class="employee_img" *ngIf="!reportingTo.profileImage"
+                                    [name]="reportingTo.userName | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img" src="{{reportingTo.profileImage}}"
+                                    *ngIf="reportingTo.profileImage">{{reportingTo.userName}}
+                            </mat-option>
+                        </div>
+                    </div>
+                </mat-select>
+                <mat-error>
+                    <span
+                        *ngIf="reportingToForm.get('reportToEmployeeId').hasError('required') && reportingToForm.get('reportToEmployeeId').touched">
+                        {{'REPORTTO.PLEASESELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}} </span>
+                </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <mat-select formControlName="reportingMethodId"
+                    placeholder="{{'REPORTTO.SELECTREPORTINGMETHOD' | translate}}" required>
+                    <mat-option value="option" *ngFor="let reportingMethod of reportingMethodDetailsList$ | async"
+                        [value]="reportingMethod.reportingMethodId">
+                        {{reportingMethod.reportingMethodName}}
+                    </mat-option>
+                </mat-select>
+                <mat-error>
+                    <span
+                        *ngIf="reportingToForm.get('reportingMethodId').hasError('required') && reportingToForm.get('reportingMethodId').touched">
+                        {{'REPORTTO.PLEASESELECTREPORTINGMETHOD' | translate}} </span>
+                </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+                <input matInput formControlName="reportingFrom" [matDatepicker]="picker1" (click)="picker1.open()"
+                    placeholder="{{'REPORTTO.REPORTINGFROM' | translate}}" autocomplete="off">
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+                <!-- <mat-error>
+                    <span
+                        *ngIf="reportingToForm.get('reportingFrom').hasError('required') && reportingToForm.get('reportingFrom').touched">
+                        {{'REPORTTO.REPORTINGFROMDATE' | translate}}</span>
+                </mat-error> -->
+            </mat-form-field>
+            <mat-form-field class="full-width pb-1">
+                <textarea matInput formControlName="comments"
+                    placeholder="{{'REPORTTO.COMMENTS' | translate}}"></textarea>
+                <mat-error>
+                    <span *ngIf="reportingToForm.get('comments').hasError('maxlength')">
+                        {{'HRMANAGAMENT.COMMENTSSHOULDNOTEXCEED500CHARACTERS' | translate}}</span>
+                </mat-error>
+            </mat-form-field>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" type="submit"
+                    [disabled]="!reportingToForm.valid || (upsertReportToDetailsInProgress$ | async)">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="upsertReportToDetailsInProgress$ | async">
+                    </mat-progress-bar>
+                    <span *ngIf="!this.employeeReportToId">
+                        <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+                    </span>
+                    <span *ngIf="this.employeeReportToId">
+                        <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                    </span>
+                </button>
+                <button mat-button mat-raised-button [disabled]="(upsertReportToDetailsInProgress$ | async)"
+                    (click)="closePopover(formDirective);(false)">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,166 @@
+<app-common-message-box *ngIf="!canAccess_feature_ViewQuestionTypes"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+<!-- *ngIf="(canAccess_entityType_feature_ViewAudit$ | async)" -->
+<div class="full-height invoice-manager" *ngIf="canAccess_feature_ViewQuestionTypes">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{ 'AUDIT.QUESTIONTYPES' | translate | softLabelsPipe :softLabels  | titlecase }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="mr-05"
+                    *ngIf="canAccess_feature_ArchiveOrUnarchiveQuestionType">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="changeArchiveQuestionTypes(isArchived)">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event,searchText)" trim>
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon close_icon_billing" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="canAccess_feature_AddOrUpdateQuestionType && isArchived == false">
+                    <button mat-icon-button (click)="addQuestionType()">
+                        <fa-icon matTooltip="{{'AUDIT.ADDQUESTIONTYPE' | translate | softLabelsPipe :softLabels }}" class="filter mat-color-accent"
+                            icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="projects-list-grid activity-data grid-wrapper">
+        <kendo-grid #grid [kendoGridBinding]="questionTypeList" id="style-1" [pageSize]="state.take" [skip]="state.skip"
+            [sortable]="true" [filter]="state.filter" [pageable]="true" [filterable]="false" [scrollable]="true"
+            [selectable]="true"  (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-messages 
+                pagerOf="{{ 'KENDOGRIDMESSAGES.OF' | translate }}"
+                pagerItems="{{ 'KENDOGRIDMESSAGES.ITEMS' | translate }}"
+                noRecords = "{{ 'KENDOGRIDMESSAGES.NORECORDS' | translate }}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="questionTypeName" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'AUDIT.QUESTIONTYPES' | translate | softLabelsPipe :softLabels  }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.questionTypeName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.questionTypeName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="questionTypeOptionName" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'AUDIT.OPTIONS' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span *ngIf="dataItem.questionTypeOptionName != null" class="hide-content-overflow"
+                            matTooltip="{{dataItem.questionTypeOptionName}}" matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.questionTypeOptionName }}
+                        </span>
+                        <span *ngIf="dataItem.questionTypeOptionName == null" class="hide-content-overflow" fxFlex>
+                            N/A
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="masterQuestionTypeName" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'AUDIT.TYPE' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.masterQuestionTypeName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.masterQuestionTypeName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column [filterable]="false" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'TESTMANAGEMENT.ACTIONS' | translate | softLabelsPipe :softLabels }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div>
+                        <button *ngIf="canAccess_feature_AddOrUpdateQuestionType && isArchived == false"
+                            class="text-center mr-05" title="{{ 'AUDIT.EDITQUESTIONTYPE' | translate | softLabelsPipe :softLabels  }}"
+                            (click)="$event.stopPropagation();editQuestionType(dataItem)" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button
+                            *ngIf="canAccess_feature_ArchiveOrUnarchiveQuestionType && isArchived == false"
+                            class="text-center" title="{{ 'AUDIT.ARCHIVEQUESTIONTYPE' | translate | softLabelsPipe :softLabels  }}"
+                            [satPopoverAnchorFor]="deleteQuestionType" #deleteQuestionTypePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteQuestionTypeItem(dataItem,deleteQuestionTypePopover)"
+                            mat-icon-button>
+                            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="canAccess_feature_ArchiveOrUnarchiveQuestionType && isArchived"
+                            class="text-center" title="{{ 'AUDIT.UNARCHIVEQUESTIONTYPE' | translate | softLabelsPipe :softLabels  }}"
+                            [satPopoverAnchorFor]="deleteQuestionType" #deleteQuestionTypePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteQuestionTypeItem(dataItem,deleteQuestionTypePopover)"
+                            mat-icon-button>
+                            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': anyOperationIsInprogress}"></div>
+    </div>
+</div>
+
+<!--Delete dialog-->
+<sat-popover #deleteQuestionType hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar>
+            <div class="card-content p-05" *ngIf="isArchived == false">
+                {{'AUDIT.REALLYARCHIVETHEQUESTIONTYPE' | translate | softLabelsPipe :softLabels }}
+            </div>
+            <div class="card-content p-05" *ngIf="isArchived">
+                {{'AUDIT.REALLYUNARCHIVETHEQUESTIONTYPE' | translate | softLabelsPipe :softLabels }}
+            </div>
+            <div class="text-center">
+                <button *ngIf="isArchived == false" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeQuestionTypeAtIndex(true)" [disabled]="deleteOperationIsInprogress">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTCASETYPE.ARCHIVE' | translate}}
+                </button>
+                <button *ngIf="isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeQuestionTypeAtIndex(false)" [disabled]="deleteOperationIsInprogress">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTCASETYPE.UNARCHIVE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteQuestionTypeDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- <ng-template #upsertQuestionDialog let-data>
+    <upsert-question-type-dialog [data]=[data]></upsert-question-type-dialog>
+</ng-template> -->
+<!--Delete dialog-->

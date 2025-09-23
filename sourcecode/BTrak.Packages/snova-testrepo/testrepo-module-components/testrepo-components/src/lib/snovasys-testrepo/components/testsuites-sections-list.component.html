@@ -1,0 +1,129 @@
+<div class="p-0" fxLayout="column">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div class="mr-05 mt-n2" fxFlex="100" fxFlex.gt-sm="100">
+        <mat-form-field class="ml-01 full-width custom-select-matform primary-text" fxFlex="78" fxFlex.gt-md="72"
+            fxFlex.md="78">
+            <mat-select [(ngModel)]="sectionFilter" (selectionChange)="onChangeSectionFilter($event.value)">
+                <mat-option value="1">{{'TESTMANAGEMENT.SELECTEDGROUPONLY' | translate}}</mat-option>
+                <mat-option value="2">{{'TESTMANAGEMENT.SELECTEDGROUPANDSUBGROUPS' | translate}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <a *ngIf="isSectionPresent && (canAccess_entityType_feature_AddOrUpdateScenarioSection)"
+            class="pull-right add-test-case ml-02 mt-20p" matTooltip="{{'TESTMANAGEMENT.ADDSECTION' | translate}}"
+            [satPopoverAnchorFor]="addSection" #addSectionPopover="satPopoverAnchor"
+            (click)="openSectionPopover(addSectionPopover)">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+        </a>
+        <a *ngIf="isSectionPresent && !expandAll" class="pull-right add-test-case mt-20p"
+            matTooltip="{{'TESTMANAGEMENT.EXPANDSECTIONS' | translate}}" (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-right"></fa-icon>
+        </a>
+        <a *ngIf="isSectionPresent && expandAll" class="pull-right add-test-case mt-20p"
+            matTooltip="{{'TESTMANAGEMENT.COLLAPSESECTIONS' | translate}}" (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-down"></fa-icon>
+        </a>
+        <!-- <b>{{'TESTMANAGEMENT.SELECTEDGROUPONLY' | translate}}</b> -->
+    </div>
+    <div class="ml-01 search_goalinput" style="margin-top: -15px;" *ngIf="isSectionsListPresent">
+        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center" class="full-width">
+            <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'TESTMANAGEMENT.SEARCHBYENTER' | translate}}"
+                    [(ngModel)]="searchText" (keydown)="checkSearchText($event,searchText)">
+            </mat-form-field>
+        </div>
+        <span class="close_icon testrail-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+            style="top:24px !important;">
+            <span *ngIf="!searchText"></span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+        </span>
+    </div>
+    <div class="p-0 m-0 test-suites-sections-list" id="style-1"
+        [ngStyle]="{ 'height': isSectionsListPresent ? 'calc(100vh - 196px)' : 'calc(100vh - 152px)' }">
+        <div class="p-0">
+            <div *ngIf="sectionsLoadedOnDelete || !(anyOperationInProgress$ | async)">
+                <mat-card *ngIf="isSectionsPresent" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-xs="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-xs="95" class="p-05 ml-1">
+                            <p *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection)" class="m-0">
+                                {{'TESTMANAGEMENT.ADDSECTIONSTOTHISTESTSUITE' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                            <p *ngIf="!(canAccess_entityType_feature_AddOrUpdateScenarioSection)" class="m-0">
+                                {{'TESTMANAGEMENT.NOSECTIONSTOTHISTESTSUITE' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                            <a class="add-test-case" matTooltip="{{'TESTMANAGEMENT.ADDSECTION' | translate}}"
+                                [satPopoverAnchorFor]="addSection"
+                                *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection)"
+                                #addSectionPopover="satPopoverAnchor"
+                                (click)="openSectionPopover(addSectionPopover)"><b>
+                                    {{'TESTMANAGEMENT.ADDFIRSTSECTION' | translate}}
+                                </b>
+                            </a>
+                        </div>
+                    </div>
+                </mat-card>
+                <div *ngIf="isSectionsListPresent">
+                    <div *ngIf="!isSearching">
+                        <div *ngFor="let section of testSuiteSectionList.sections">
+                            <testsuite-sections-view (isSectionDeleted)="getSectionDeleted($event)"
+                                (selectedSectionData)="getSelectedSectionData($event)"
+                                (selectedEditSectionData)="getSelectedEditSectionData($event)"
+                                (sectionCheckedDeleted)="getSectionCheckedDeleted($event)" [testSuiteId]="testSuiteId"
+                                [section]="section" [sectionSelected]="sectionSelected" [sectionCollapse]="expandAll"
+                                [filterCases]="filterCases">
+                            </testsuite-sections-view>
+                        </div>
+                    </div>
+                    <div *ngIf="isSearching">
+                        <div *ngFor="let section of sectionsList.sections">
+                            <testsuite-sections-view (isSectionDeleted)="getSectionDeleted($event)"
+                                (selectedSectionData)="getSelectedSectionData($event)"
+                                (selectedEditSectionData)="getSelectedEditSectionData($event)"
+                                (sectionCheckedDeleted)="getSectionCheckedDeleted($event)" [testSuiteId]="testSuiteId"
+                                [section]="section" [sectionSelected]="sectionSelected" [sectionCollapse]="expandAll"
+                                [filterCases]="filterCases">
+                            </testsuite-sections-view>
+                        </div>
+                        <mat-card *ngIf="sectionsList.sections == null || sectionsList.sections.length == 0"
+                            class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                            <div fxLayout="row" fxFlex="100">
+                                <div fxFlex="100" fxFlex.gt-xs="5" class="p-05">
+                                    <fa-icon icon="info-circle"></fa-icon>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="95" class="p-05 ml-1">
+                                    <p class="m-0">
+                                        {{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-card>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--------add Section dialog------>
+<sat-popover #addSection hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div *ngIf="!editingSection" class="card-title-text p-05"> {{'TESTMANAGEMENT.ADDSECTION' | translate}}
+            </div>
+            <div *ngIf="editingSection" class="card-title-text p-05"> {{'TESTMANAGEMENT.EDITSECTION' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <testsuite-section-edit *ngIf="loadSection" (isSectionEdit)="getUpdatedSection($event)"
+                [testSuiteId]="testSuiteId" [editingSection]="sectionEdit" (closeSection)="closeSectionPopover()">
+            </testsuite-section-edit>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--------add Section dialog------>

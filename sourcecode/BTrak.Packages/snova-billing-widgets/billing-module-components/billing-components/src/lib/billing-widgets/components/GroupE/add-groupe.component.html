@@ -1,0 +1,436 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="cancelDialog()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<form class="mt-1 invoice-upsert-form" id="style-1" [formGroup]="form" novalidate>
+    <div class="p-4 m-4">
+        <div fxLayout="column">
+            <div fxLayout="row" fxLayoutAlign="space-around center">
+                <div fxFlex="23">
+                    <mat-form-field class="full-width">
+                        <mat-label>{{'ENTITYFORM.SITE' | translate}}</mat-label>
+                        <mat-select placeholder="{{'ENTITYFORM.SELECTSITE' | translate}}" formControlName="siteId"
+                            (selectionChange)="getSiteSelected($event.value);getGridInvoice();" required>
+                            <mat-option *ngFor="let site of sites" [value]="site.id">
+                                {{site.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="form.get('siteId').hasError('required') && form.get('siteId').touched">
+                            {{'ENTITYFORM.PLEASESELECTSITE' | translate}}</mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="23">
+                    <mat-form-field class="full-width ml-05">
+                        <mat-label>{{'ENTITYFORM.GRD' | translate}}</mat-label>
+                        <mat-select placeholder="{{'ENTITYFORM.SELECTGRD' | translate}}" formControlName="GRDId"
+                            (selectionChange)="grdSelected($event.value)" required>
+                            <mat-option *ngFor="let grd of grds" [value]="grd.id">
+                                {{grd.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="form.get('GRDId').hasError('required') && form.get('GRDId').touched">
+                            {{'ENTITYFORM.PLEASESELECTGRD' | translate}}</mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="23">
+                    <mat-form-field class="full-width ml-05">
+                        <mat-label> {{'ENTITYFORM.TERM' | translate}}</mat-label>
+                        <mat-select placeholder=" {{'ENTITYFORM.SELECTTERM' | translate}}" formControlName="term"
+                            (selectionChange)="getGridInvoice()" required>
+                            <mat-option *ngFor="let termo of terms" [value]="termo.name">
+                                {{termo.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="form.get('term').hasError('required') && form.get('term').touched">
+                            {{'ENTITYFORM.PLEASESELECTTERM' | translate}}</mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="23">
+                    <mat-form-field class="full-width ml-05">
+                        <mat-label> {{'BANKACCOUNT.BANKACCOUNT' | translate}}</mat-label>
+                        <mat-select placeholder=" {{'BANKACCOUNT.SELECTBANKACCOUNT' | translate}}"
+                            formControlName="bankId" required>
+                            <mat-option *ngFor="let bank of banks" [value]="bank.id">
+                                {{bank.bankAccountName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="form.get('bankId').hasError('required') && form.get('bankId').touched">
+                            {{'ENTITYFORM.PLEASESELECTBANKACCOUNT' | translate}}</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayoutAlign="space-around center">
+                <div fxFlex="23">
+                    <mat-form-field class="full-width">
+                        <mat-label>{{'SITE.STARTDATE' | translate}}</mat-label>
+                        <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="startDate"
+                            placeholder="" required>
+                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                        <mat-datepicker #picker1></mat-datepicker>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="23">
+                    <mat-form-field class="full-width ml-05">
+                        <mat-label>{{'SITE.ENDDATE' | translate}}</mat-label>
+                        <input matInput formControlName="endDate" (click)="picker2.open()" [matDatepicker]="picker2"
+                            placeholder="" required>
+                        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                        <mat-datepicker #picker2></mat-datepicker>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="23">
+                    <app-month-picker (monthEmit)="monthEmitHandled($event)" [month]="month" [disabled]="false">
+                    </app-month-picker>
+                </div>
+                <div fxFlex="23">
+                    <app-year-picker (yearEmit)="yearEmitHandled($event)" [year]="year" [disabled]="false">
+                    </app-year-picker>
+                </div>
+            </div>
+            <div fxLayout="row" class="p-1">
+                <div fxLayout="column" fxFlex="45">
+                    <div fxLayout="row">
+                        <div fxLayout="column" fxFlex="80">
+                            <div fxFlex="100">
+                                <h6 class="mb-0"><b>{{'ENTITYFORM.PRA' | translate}}</b></h6>
+                            </div>
+                            <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.PRODUCTION' | translate}}"
+                                        formControlName="production" matInput required trim mask="separator.3"
+                                        thousandSeparator="," (input)="getAutoConsumption()" [(ngModel)]="production"
+                                        (keypress)="numberOnly($event, form.value.production)">
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.REPRICE' | translate}}" formControlName="reprise"
+                                        matInput required trim (input)="getAutoConsumption()" mask="separator.3"
+                                        thousandSeparator="," (keypress)="numberOnly($event, form.value.reprise)"
+                                        [(ngModel)]="reprise">
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.AUTOCONSUMPTION' | translate}}"
+                                        formControlName="autoConsumption" matInput trim readonly>
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+
+
+                            <!-- <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.FACTURATION' | translate}}"
+                                        formControlName="facturation" matInput required trim [(ngModel)]="facturation"
+                                        mask="separator.3" thousandSeparator="," (input)="getAutoConsumption()"
+                                        (keypress)="numberOnlyWithVal($event, form.value.facturation)">
+                                    <span matSuffix>(CHF)</span>
+                                </mat-form-field>
+                            </div> -->
+                            <div *ngFor="let formField of pRAArray().controls; let i=index"
+                                formArrayName="pRAFormArray">
+                                <div fxFlex="100" [formGroupName]="i">
+
+                                    <mat-form-field class="ml-05" fxFlex="100">
+                                        <input placeholder="{{getplaceHolderName(i)}}"
+                                            [formControlName]="getformcontrolName(i)" matInput  trim
+                                            (ngModel)="getformcontrolName(i)" mask="separator.3" thousandSeparator=","
+                                            (input)="getChangeEvent(i,$event.target.value);"
+                                            (keypress)="checkNumber($event, $event.target.value,i)">
+                                        <span matSuffix>({{getunitName(i)}})</span>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div fxLayout="column" fxFlex="50">
+                    <!-- <div fxFlex="100"> -->
+                    <h6 class="mb-0" *ngIf="isGre"><b>{{'ENTITYFORM.GRE' | translate}}</b></h6>
+                    <h6 class="mb-0" *ngIf="!isGre"><b>{{'ENTITYFORM.ROMANDEE' | translate}}</b></h6>
+                    <!-- </div> -->
+                    <div fxLayout="row" fxLayoutAlign="space-around start">
+                        <div fxLayout="column" fxFlex="45">
+                            <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.GRIDINVOICE#' | translate}}"
+                                        formControlName="gridInvoice" matInput required trim>
+                                    <span matPrefix *ngIf="gridInvoiceNo != null && gridInvoiceNo.length > 0">{{gridInvoiceNo}}</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100" *ngIf="isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.HAUTETARIFF' | translate}}"
+                                        formControlName="hauteTariff" [(ngModel)]="hauteTariff" matInput required trim
+                                        mask="separator.3" thousandSeparator="," (input)="getAutoConsumption()"
+                                        (keypress)="numberOnly($event, form.value.hauteTariff)">
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100" *ngIf="isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.BASTARIFF' | translate}}"
+                                        formControlName="basTariff" [(ngModel)]="basTariff" matInput required trim
+                                        mask="separator.3" thousandSeparator="," (input)="getAutoConsumption()"
+                                        (keypress)="numberOnly($event, form.value.basTariff)">
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100" *ngIf="isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'TOTAL' | translate}}" formControlName="hbTotal" matInput trim
+                                        readonly>
+                                    <span matSuffix>(kWh)</span>
+                                </mat-form-field>
+                            </div>
+
+                            <div *ngFor="let formField of DFArray().controls; let i=index"
+                                formArrayName="dFFormArray">
+                                <div fxFlex="100" [formGroupName]="i">
+
+                                    <mat-form-field class="ml-05" fxFlex="100">
+                                        <input placeholder="{{getDFplaceHolderName(i)}}"
+                                            [formControlName]="getDFformcontrolName(i)" matInput  trim
+                                            (ngModel)="getDFformcontrolName(i)" mask="separator.3" thousandSeparator=","
+                                            (input)="getDFCHangeEvent(i,$event.target.value);"
+                                            (keypress)="checkDecimal($event, $event.target.value,i)">
+                                        <span matSuffix>({{getDFunitName(i)}})</span>
+                                    </mat-form-field>
+
+                                </div>
+                            </div>
+                            <!-- <div fxFlex="100" *ngIf="!isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.ADMINISTRATIONROMADEE' | translate}}"
+                                        (input)="getAutoConsumption()" formControlName="administrationRomandeE"
+                                        [(ngModel)]="administrationRomandeE" mask="separator.3" thousandSeparator=","
+                                        (keypress)="numberOnlyWithVal($event, form.value.administrationRomandeE)"
+                                        matInput required trim>
+                                    <span matSuffix>(CHF)</span>
+                                </mat-form-field>
+                            </div> -->
+                        </div>
+                        <div fxLayout="column" fxFlex="45">
+                            <div fxFlex="100" style="width: 100%">
+                                <mat-form-field class="full-width">
+                                    <mat-label>{{'ENTITYFORM.GRIDINVOICEDATE' | translate}}</mat-label>
+                                    <input matInput [matDatepicker]="picker5" (click)="picker5.open()"
+                                        formControlName="gridInvoiceDate" placeholder="" required>
+                                    <mat-datepicker-toggle matSuffix [for]="picker5"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker5></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            <!-- <div fxFlex="100" *ngIf="isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.DISTRIBUTION' | translate}}"
+                                        formControlName="distribution" matInput required trim [(ngModel)]="distribution"
+                                        appTwoDigitDecimaNumber (input)="getAutoConsumption()"
+                                        (keypress)="numberOnlyWithVal($event, form.value.distribution)">
+                                    <span matSuffix>(CHF)</span>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="100" *ngIf="isGre">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.FACTURATION' | translate}}"
+                                        formControlName="greFacturation" matInput required trim appTwoDigitDecimaNumber
+                                        [(ngModel)]="greFacturation" (input)="getAutoConsumption()"
+                                        (keypress)="numberOnlyWithVal($event, form.value.greFacturation)">
+                                    <span matSuffix>(CHF)</span>
+                                </mat-form-field>
+                            </div> -->
+                            <div fxFlex="100">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{getGRDPlaceholder()}}" formControlName="totalValue" matInput trim  (input)="getAutoConsumption()"
+                                    mask="separator.3" thousandSeparator="," [(ngModel)]="totalValue"
+                                        (keypress)="numberOnlyWithVal($event, form.value.totalValue)"
+                                        matInput required trim >
+                                    <span matSuffix>(CHF)</span>
+                                </mat-form-field>
+                            </div>
+                            <div>
+                                <mat-checkbox formControlName="confirmDetailsfromGrid" mat-primary required>
+                                    {{'ENTITYFORM.CONFIRMDETAILSGRID' | translate}}
+                                </mat-checkbox>
+                            </div>
+                            <div fxFlex="100" *ngIf="isRemainder" class="mb-1">
+                                <mat-form-field class="ml-05" fxFlex="100">
+                                    <input placeholder="{{'ENTITYFORM.OUTSTANDINGAMOUNT' | translate}}" formControlName="outStandingAmount" matInput trim  
+                                        mask="separator.3" thousandSeparator="," (keypress)="numberOnlyWithVal($event, form.value.outStandingAmount)"
+                                        matInput trim >
+                                    <span matSuffix>(CHF)</span>
+                                    <mat-hint align="start">Reminder will be sent only if previous outstanding amount greater than 0</mat-hint>
+                                </mat-form-field>
+                            </div>
+                            <div *ngFor="let formField of messageTypes; let i=index">
+                                <div fxFlex="100" *ngIf="formField.isDisplay == true && form.value.GRDId != null && form.value.GRDId != undefined 
+                                    && getDisplayCondition(formField) && isNotRemainder(formField)">
+                                    <mat-checkbox mat-primary (change)="onMessageTypeChange(i, $event)" [checked]="formField.isSendInMail != undefined && formField.isSendInMail == true">
+                                       Include {{ formField.messageType }} Message in Email
+                                    </mat-checkbox>
+                                </div>
+                            </div>
+                            <!-- <div>
+                                <mat-checkbox formControlName="isRemainder" mat-primary>
+                                    {{'ENTITYFORM.CONFIRMDETAILSGRID' | translate}}
+                                </mat-checkbox>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div fxLayout="column" class="p-1">
+                <h6 class="mb-0"><b>{{'ENTITYFORM.FACTUREPHOTONONESUMMARY' | translate}}</b></h6>
+                <div fxLayout="column" fxFlex="100" class="mt-2">
+                    <div fxFlex="100">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.AUTOCONSUMPTION' | translate}} </b>(kWh)</span>
+                        <span fxFlex="20">{{autoConsumption | number: '1.0'}}</span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.AUTOCTARIF' | translate}} </b>(Cts)</span>
+                        <span fxFlex="20">{{autoCTariff | number: '1.0'}}</span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25">(CHF)</span>
+                        <span fxFlex="20">{{autoConsuptionFactor | number: '1.1-2'}}</span>
+                    </div>
+                    <!-- <div fxFlex="100">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.FACTURATION' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20"> {{facturation | number: '1.1-2'}} </span>
+                    </div> -->
+                    <div fxFlex="100">
+                        <span fxFlex="25"></span>
+                        <span fxFlex="20"> {{autoConsumptionTotal | number: '1.1-2'}} </span>
+                    </div>
+                    <div fxFlex="100" *ngFor="let praField of praFields">
+                        <span fxFlex="25">{{praField.displayName}}({{praField.unit}})</span>
+                        <span fxFlex="20" *ngIf="praField.unit == 'CHF'">{{praField.enteredResult | number: '1.1-2'}}</span>
+                        <span fxFlex="20" *ngIf="praField.unit == 'kWh'">{{praField.enteredResult | number: '1.0'}}</span>
+                    </div>
+                    <div fxFlex="100" *ngIf="isGre">
+                        <span fxFlex="25"></span>
+                        <span fxFlex="20"> {{pRATotal | number: '1.1-2'}} </span>
+                    </div>
+                    <div fxFlex="100" class="mt-1">
+                        <span></span>
+                    </div>
+                    <!-- <div fxFlex="100" *ngIf="isGre">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.DISTRIBUTION' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20">{{distribution | number: '1.1-2'}}</span>
+                    </div>
+                    <div fxFlex="100" *ngIf="isGre">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.FACTURATION' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20">{{greFacturation | number: '1.1-2'}}</span>
+                    </div> -->
+                    <!-- <div fxFlex="100" *ngIf="!isGre">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.ADMINISTRATIONROMADEE' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20">{{form.value.administrationRomandeE | number: '1.1-2'}}</span>
+                    </div> -->
+                    <div fxFlex="100">
+                        <span fxFlex="25"><b>{{'Total' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20">{{greTotal | number: '1.1-2'}}</span>
+                    </div>
+                    <div fxFlex="100" class="mt-1">
+                        <span></span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25"><b>{{'ENTITYFORM.SUBTOTAL' | translate}} </b>(CHF)</span>
+                        <span fxFlex="20">{{subTotal | number: '1.1-2'}}</span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="20"></span>
+                        <span fxFlex="5">{{'ENTITYFORM.TVA' | translate}} </span>
+                        <span fxFlex="10">{{tVAForSubTotal | number: '1.1-2'}} </span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25">(CHF)</span>
+                        <span fxFlex="20"><b>{{total | number: '1.1-2'}}</b></span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25">Arrondi</span>
+                        <span fxFlex="20"><b>{{aroundi | number: '1.1-2'}}</b></span>
+                    </div>
+                    <div fxFlex="100">
+                        <span fxFlex="25">Total</span>
+                        <span fxFlex="20"><b>{{wholeTotalValue | number: '1.1-2'}}</b></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div fxLayout="row" class="mt-1 invoice-padding ">
+    <div fxFlex fxLayoutAlign="end center">
+        <button class="mr-1" mat-raised-button color="primary" type="button"
+            [satPopoverAnchorFor]="convertInvoicePopover" #convertInvoicePopup="satPopoverAnchor"
+            (click)="openConvertPopup(convertInvoicePopup)" [disabled]="!form.valid">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon mat-icon-button class="mr-05" icon="save"></fa-icon>
+            {{ 'BILLINGMANAGEMENT.SAVE' | translate }}
+        </button>
+        <button mat-raised-button type="button" (click)="cancelDialog()">
+            <fa-icon mat-icon-button class="mr-05" icon="times"></fa-icon>
+            {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+        </button>
+    </div>
+</div>
+<sat-popover backdropClass="backdrop-color" #convertInvoicePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'ENTITYFORM.GENERATEINVOICE' | translate }}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'ENTITYFORM.CONFIRMINVOICEGENERATION' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="convertToInvoice();">
+                    <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ENTITYFORM.GENERATEINVOICE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeConvertInvoicePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #addFieldsPopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'ENTITYFORM.ADDFIELD' | translate }}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                <form [formGroup]="entryForm">
+                    <mat-form-field class="full-width">
+                        <mat-select (selectionChange)="selectField($event.value)" formControlName="selectedField"
+                            placeholder="select field">
+                            <mat-option *ngFor="let formfield of praEntryFields" [value]="formfield.entryFormId">
+                                {{formfield.displayName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </form>
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" (click)="addToFormField();">
+                    <fa-icon icon="plus">Add</fa-icon>
+                </button>
+                <button mat-button mat-raised-button (click)="closePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                </button>
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

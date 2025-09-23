@@ -1,0 +1,84 @@
+<div class="full-height" *ngIf="(canAccess_feature_LateEmployee)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0" fxLayoutAlign="end center">
+        <div fxFlex class="card-title-text data-table-header p-05">
+          {{'HRDASHBOARD.MORNING&AFTERNOONLATEEMPLOYEE' | translate | softLabelsPipe : softLabels | titlecase}}
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="filter" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+          <button mat-menu-item [ngClass]="{ 'active': selectBranchFilterIsActive }" [matMenuTriggerFor]="branchSearch"
+            *ngIf="entities?.length > 1">
+            {{'LOGTIMEREPORT.ENTITY' | translate}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': monthFilterActive }" [matMenuTriggerFor]="dateSearch">
+            {{'LOGTIMEREPORT.DATE' | translate}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': fromDateIsActive }"
+            [matMenuTriggerFor]="fromDateSearch">{{'MYPROFILE.FROMDATE' | translate}}</button>
+        </mat-menu>
+        <mat-menu #branchSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field>
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #dateSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <fa-icon (click)="getMorningLateEmployeeBasedOnDate('left')" style="cursor:pointer" icon="chevron-left">
+            </fa-icon>
+            <b>&nbsp;{{selectedDate | date: "MMM-yyyy"}}&nbsp;</b><span
+              *ngIf="weekNumber"><b>W{{weekNumber}}&nbsp;</b></span>
+            <fa-icon (click)="getMorningLateEmployeeBasedOnDate('right')" style="cursor:pointer" icon="chevron-right">
+            </fa-icon>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #fromDateSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-label>{{'HRDASHBOARD.SELECTMONTH/WEEK' | translate}}</mat-label>
+              <mat-select [(ngModel)]="selectedValue" (ngModelChange)="changeLateEmployeeFilterType()">
+                <mat-option *ngFor="let filter of filters" [value]="filter.value">
+                  {{filter.key | translate}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <div class="activity-data ">
+    <mat-card-content class="p-0 m-0">
+      <div class="activity-data">
+        <kendo-grid [data]="gridData" [scrollable]="'none'" [pageSize]="state.take" [skip]="state.skip"
+          [sort]="state.sort" [filter]="state.filter" [sortable]="true" [pageable]="true"
+          (dataStateChange)="dataStateChange($event)">
+          <kendo-grid-column field="fullName"
+            title="{{'EMPLOYEEWORKINGDAYS.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}">
+          </kendo-grid-column>
+          <kendo-grid-column field="daysLate" title="{{'HRDASHBOARD.DAYSLATE' | translate}}"></kendo-grid-column>
+        </kendo-grid>
+        <div *ngIf="anyOperationInProgress" class="k-i-loading"></div>
+      </div>
+    </mat-card-content>
+  </div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_LateEmployee)  && !(roleFeaturesIsInProgress$|async)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

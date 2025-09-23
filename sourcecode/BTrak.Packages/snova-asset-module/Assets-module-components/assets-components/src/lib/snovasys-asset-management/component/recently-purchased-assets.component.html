@@ -1,0 +1,84 @@
+<ng-container *ngIf="(canAccess_feature_RecentlyPurchasedAssets)">
+    <div class="full-height">
+        <mat-card class="p-0 m-0">
+            <mat-card-title class="data-table-header drag-handler">
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                    <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                        {{'ASSETS.RECENTLYPURCHASEDASSETS' | translate}}
+                    </div>
+                    <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+                        fxLayoutAlign="end center">
+                        <mat-form-field ngClass.xs="full-width">
+                            <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCH' | translate}}"
+                                [(ngModel)]="searchText" (input)="search()">
+                        </mat-form-field>
+                        <span class="close_icon">
+                            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                                style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                    <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02"
+                        *ngIf="entities?.length > 1">
+                        <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                        </button>
+                    </div>
+                    <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="entities?.length > 1">
+                        <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+                            [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                            <fa-icon icon="user-cog" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                    </div>
+                </div>
+                <mat-divider></mat-divider>
+            </mat-card-title>
+        </mat-card>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                <mat-form-field (click)="$event.stopPropagation()">
+                    <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                        (selectionChange)="entityValues($event.value)">
+                        <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                            {{entity.name}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </mat-card>
+        </mat-menu>
+
+        <div class="activity-data filter-margin m-0 no-drag">
+            <ngx-datatable class="btrak" [rows]="recentlyPurchasedAssetsList$ | async" [columnMode]="'force'"
+                [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true"
+                [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+                [sorts]="[{prop: 'purchasedDate', dir: 'desc'}]"
+                [loadingIndicator]="recentlyPurchasedAssetsDataLoading$ | async" (sort)="onSort($event)"
+                (page)='setPage($event)' [selectionType]="'single'" (select)='onSelect($event)'
+                [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate, selectedMessage: false}">
+                <ngx-datatable-column name="{{'ASSETS.ASSETCODE' | translate}}" sortable="true" prop="assetNumber">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                        {{value}}
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{'ASSETS.ASSETNAME' | translate}}" sortable="true" prop="assetName">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                        {{value}}<span *ngIf="checkForMACAddress(value)">&nbsp;({{row.assetUniqueNumber}})</span>
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{'ASSETS.PURCHASEDDATE' | translate}}" sortable="true"
+                    prop="purchasedDate">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                        <div *ngIf="row.purchasedDate != null">{{ row.purchasedDate | date: "dd-MMM-yyyy"  }}</div>
+                    </ng-template>
+                </ngx-datatable-column>
+            </ngx-datatable>
+        </div>
+    </div>
+</ng-container>
+
+<ng-container *ngIf="!(canAccess_feature_RecentlyPurchasedAssets) && !(roleFeaturesIsInProgress$|async)">
+    <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+    </app-common-message-box>
+</ng-container>

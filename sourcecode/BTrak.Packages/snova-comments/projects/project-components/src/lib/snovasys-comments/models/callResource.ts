@@ -1,0 +1,30 @@
+export class CallResource {
+    dateUpdated: Date;
+    sid: string
+    accountSid: string
+    to: string
+    toFormatted: string
+    from: string
+    fromFormatted: string
+    phoneNumberSid: string
+    status: string
+    startTime: Date
+    endTime: Date
+    duration: string
+    dateCreated: Date
+    price: string
+    direction: string
+    dnsweredBy: string
+    dnnotation: string
+    dpiVersion: string
+    forwardedFrom: string
+    groupSid: string
+    callerName: string
+    queueTime: string
+    trunkSid: string
+    uri: string
+    subresourceUris: any;
+    priceUnit: string
+    parentCallSid: string
+    recordingURLs: any;
+}

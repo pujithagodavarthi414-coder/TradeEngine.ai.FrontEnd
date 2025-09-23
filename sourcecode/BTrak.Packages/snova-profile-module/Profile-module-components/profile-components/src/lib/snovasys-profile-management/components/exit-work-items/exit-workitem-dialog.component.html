@@ -1,0 +1,136 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div mat-dialog-content class="project-dialogContent" style="height: calc(100vh - 220px);" id="style-1">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">
+                        {{ 'PERFORMANCE.EXITWORK'  | translate | softLabelsPipe : softLabels | titlecase }}
+                    </div>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+    <div class="m-1">
+        {{ 'PERFORMANCE.ADDEXITTASK'  | translate | softLabelsPipe : softLabels }}
+    </div>
+    <div class="p-0 m-0" style="height: calc(100vh - 500px);" id="style-1">
+        <div *ngFor="let userStory of userStoriesList">
+            <mat-card class="p-0">
+                <div fxLayout="row" class="userstory-summary superagile-summary">
+                    <div fxLayout="row" fxFlex="100" class="userstory-list">
+                        <mat-checkbox class="ml-05 mr-05 userstory-chcekbox" (click)="$event.stopPropagation()"
+                            [(ngModel)]="userStory.isShow" (change)="includeInWorkItems($event,userStory)">
+                        </mat-checkbox>
+                        <div fxFlex fxLayout="row" class="mr-05 userStory-name-pm">
+                            <span fxFlex class="allgoals_txt userStory-name-control "
+                                matTooltip="{{ userStory.userStoryName }}" matTooltipShowDelay="1000"
+                                matTooltipClass="tooltip-overflow"> {{employeeName}}&nbsp;-&nbsp;{{ userStory.userStoryName }}</span>
+                        </div>
+
+                        <app-avatar matTooltip="{{ 'USERSTORY.ASSIGNEDTO' | translate }} {{ userStory.ownerName }}"
+                            [name]="userStory.ownerName | removeSpecialCharacters" *ngIf="userStory.ownerUserId"
+                            [src]="userStory.ownerProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                            size="20" [satPopoverAnchorFor]="inLineEditUserStoryPopover" class="mt-2p mr-05"
+                            (click)="$event.stopPropagation();saveAssignee(inLineEditUserStoryPopup,userStory)"
+                            #inLineEditUserStoryPopup="satPopoverAnchor">
+                        </app-avatar>
+
+                        <app-avatar matTooltip="Owner" [name]="profileImage| removeSpecialCharacters"
+                            *ngIf="!userStory.ownerUserId" [src]='defaultProfileImage' [isRound]="true" size="20"
+                            [satPopoverAnchorFor]="inLineEditUserStoryPopover"
+                            (click)="$event.stopPropagation();saveAssignee(inLineEditUserStoryPopup,userStory)"
+                            #inLineEditUserStoryPopup="satPopoverAnchor" class="mr-05">
+                        </app-avatar>
+                    </div>
+                </div>
+            </mat-card>
+        </div>
+    </div>
+    <div class="p-05 pt-0" *ngIf="!isUserStoryInputVisible">
+        <a (click)="showUserstoryInput();" class="new-userstory">
+            <fa-icon icon="plus" class="mr-05"></fa-icon>
+            <span>
+                {{'PERFORMANCE.CREATEEXITWORK'|translate}}
+            </span>
+        </a>
+
+    </div>
+    <div class="mb-05 p-05 pt-0" *ngIf="isUserStoryInputVisible">
+        <form [formGroup]="adHocWorkForm" novalidate (keyup)="keyDownFunction($event)" #formDirective="ngForm">
+            <div fxLayout="row wrap">
+                <div fxFlex fxLayout="column wrap" class="full-width mr-05">
+                    <mat-form-field class="full-width">
+                        <input formControlName="userStoryName"
+                            (input)="checkName(adHocWorkForm.get('userStoryName').value)" matInput trim required>
+                    </mat-form-field>
+                    <mat-error>
+                        <span
+                            *ngIf="isUserStoryName">{{ 'USERSTORY.PLEASEENTERUSERSTORYNAME' | translate | softLabelsPipe : softLabels}}</span>
+                        <span
+                            *ngIf="isLengthValidation">{{ 'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}</span>
+                    </mat-error>
+                    <span
+                        style="color: gray;">{{ 'USERSTORY.ENTERKEYAFTEREACHWORKITEM' | translate | softLabelsPipe : softLabels}}</span>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+    <button mat-button mat-raised-button class="m-1 pull-right" type="button" (click)="onNoClick()">
+        {{ 'CANCEL' | translate }}
+    </button>
+    <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button" [disabled]=""
+        (click)="saveUserStory()">
+        <fa-icon class="mr-05" icon="save"></fa-icon>{{ 'SAVE' | translate }}
+    </button>
+</div>
+<sat-popover #inLineEditUserStoryPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+    hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="closeUserStoryDialogWindow()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-05 mat-bg-primary">
+                    {{titleText| softLabelsPipe : softLabels}}
+                </div>
+            </mat-card-title>
+            <div class="card-content p-05">
+                <div fxLayout="row wrap">
+                    <div fxFlex="100" fxFlex.md="100">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}"
+                                (selectionChange)="changeAssignee($event.value)" [(ngModel)]="selectedOwner">
+                                <mat-select-trigger>
+                                    {{assigneName}}
+                                </mat-select-trigger>
+                                <mat-option value="option" *ngFor="let person of allUsers" [value]="person.id">
+                                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                                        <div fxFlex="15">
+                                            <app-avatar matTooltip="{{ person.fullName }}"
+                                                [name]="person.fullName | removeSpecialCharacters"
+                                                [src]="person.profileImage" [isRound]="true" size="30">
+                                            </app-avatar>
+                                        </div>
+                                        <div fxFlex="80">
+                                            <p class="mat-body-2">
+                                                {{ person.fullName }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>

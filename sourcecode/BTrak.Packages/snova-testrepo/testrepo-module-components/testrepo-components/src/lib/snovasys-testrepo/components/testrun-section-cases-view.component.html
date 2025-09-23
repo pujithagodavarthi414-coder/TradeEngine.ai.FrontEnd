@@ -1,0 +1,277 @@
+<div class="p-0 test-runs-sections-cases-list" id="style-1">
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+  </mat-progress-bar>
+  <!-- [ngStyle]="{ 'max-height': filterOpen ? 'calc(100vh - 202px)' : 'calc(100vh - 112px)' }" id="style-1" -->
+  <div class="p-0 m-0 test-run-section-cases">
+    <div class="p-0 test-run-section-cases" style="position: sticky; top: 0;z-index: 1;background: white;">
+      <div *ngIf="sectionsLoaded">
+        <div *ngIf="!(anyOperationInProgress$ | async)">
+          <div class="p-05 testrun-description">
+            <div class="ml-05 pull-right" fxLayout="row">
+              <div class="mr-05" fxFlex>
+                <span class="pull-right">
+                  <fa-icon *ngIf="sectionData" matTooltip="{{'TESTMANAGEMENT.CLICKHERETOADVANCESEARCH' | translate}}"
+                    icon="filter" class="mat-color-accent filter-operation" (click)="filterOpen = !filterOpen">
+                  </fa-icon>
+                </span>
+              </div>
+            </div>
+            <div>
+              <span *ngIf="visibleDescription">
+                <b><span class="word-break user-select-text"
+                    matTooltip="{{'TESTMANAGEMENT.TESTRUNNAME' | translate | softLabelsPipe : softLabels}}">{{runName}}
+                  </span></b>
+                <span class="ml-02 section-description word-break user-select-text"
+                  *ngIf="runDescription && runDescription.length > 0"
+                  matTooltip="{{'TESTMANAGEMENT.TESTRUNSDESCRIPTION' | translate | softLabelsPipe : softLabels}}">({{runDescription}})
+                </span>
+              </span>
+              <span class="ml-05"
+                *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_AddOrUpdateStatus) && !testRunCompleted">
+                <fa-icon class="update-status" icon="user"
+                  matTooltip="{{ 'TESTMANAGEMENT.UPDATEASSIGNTO' | translate }}" (click)="openAssigneePopover()"
+                  [satPopoverAnchorFor]="updateAssigneePopover">
+                </fa-icon>
+                <fa-icon class="ml-05 update-status" icon="edit"
+                  matTooltip="{{ 'TESTMANAGEMENT.UPDATESTATUS' | translate }}" (click)="openStatusPopover()"
+                  [satPopoverAnchorFor]="updateStatusPopover">
+                </fa-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="openFilter">
+        <testcases-filter [hidden]="!(filterOpen && !(anyOperationInProgress$ | async))" [testSuitesId]="testSuiteId"
+          [testRunsId]="testRunId" [selectedSectionData]="sectionData?.sectionId" [isTestsuites]="isTestSuiteOrNot"
+          [isHierarchical]="isHierarchical" [isTestCasesFilter]="casesFilter">
+        </testcases-filter>
+      </div>
+    </div>
+    <!-- <div *ngIf="openFilter">
+      <testcases-filter [hidden]="!(filterOpen && !(anyOperationInProgress$ | async))" [testSuitesId]="testSuiteId"
+        [testRunsId]="testRunId" [selectedSectionData]="sectionData?.sectionId" [isTestsuites]="isTestSuiteOrNot"
+        [isHierarchical]="isHierarchical" [isTestCasesFilter]="casesFilter">
+      </testcases-filter>
+    </div> -->
+    <div *ngIf="sectionsLoaded">
+      <!-- <div *ngIf="!(anyOperationInProgress$ | async)">
+        <span class="ml-05"
+          *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_AddOrUpdateStatus) && !testRunCompleted">
+          <fa-icon class="update-status" icon="user" matTooltip="{{ 'TESTMANAGEMENT.UPDATEASSIGNTO' | translate }}"
+            (click)="openAssigneePopover()" [satPopoverAnchorFor]="updateAssigneePopover">
+          </fa-icon>
+          <fa-icon class="ml-05 update-status" icon="battery-three-quarters"
+            matTooltip="{{ 'TESTMANAGEMENT.UPDATESTATUS' | translate }}" (click)="openStatusPopover()"
+            [satPopoverAnchorFor]="updateStatusPopover">
+          </fa-icon>
+        </span>
+      </div> -->
+      
+      <!-- [ngStyle]="{ 'max-height': filterOpen ? 'calc(100vh - 252px)' : 'calc(100vh - 150px)' }" id="style-1" -->
+      <div class="p-0 m-0" *ngIf="!(anyOperationInProgress$ | async)">
+        <mat-card *ngIf="testRunCompleted" class="p-05 test-display" fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="1" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex class="p-05 ml-05">
+              <p class="m-0">{{'TESTMANAGEMENT.TESTRUNCOMPLETEDMESSAGE' | translate | softLabelsPipe : softLabels}}</p>
+            </div>
+          </div>
+        </mat-card>
+        <mat-card *ngIf="isSectionsPresent" class="p-05 test-display" fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="1" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex class="p-05 ml-05">
+              <p class="m-0">
+                {{'TESTMANAGEMENT.THEREARENOCASESAVAILABLEINTHETESTRUN' | translate | softLabelsPipe : softLabels}}
+              </p>
+            </div>
+          </div>
+        </mat-card>
+        <div *ngIf="!isHierarchical">
+          <div class="ml-08 mt-05 testrun-text" fxLayout="row" *ngIf="isSectionDataPresent">
+            <mat-checkbox
+              *ngIf="(canAccess_entityType_feature_AddOrUpdateStatus) && (casesCount > 0) && !testRunCompleted"
+              class="mr-05" [(ngModel)]="isMultiCasesSelected" (change)="changeStatus($event.checked)"
+              style="position: relative; top: 3px;">
+            </mat-checkbox>
+            <span *ngIf="!sectionName" class="word-break user-select-text"
+              matTooltip="{{'TESTMANAGEMENT.SECTIONNAME' | translate}}">{{sectionData.sectionName}}</span>
+            <span *ngIf="sectionName" class="word-break user-select-text"
+              matTooltip="{{'TESTMANAGEMENT.SECTIONNAME' | translate}}">{{sectionName}}</span>
+            <span matTooltip="{{'TESTMANAGEMENT.CASESCOUNT' | translate}}"
+              class="ml-05 badge-item test-run-case-count-number">{{casesCount}}</span>
+            <!-- <span class="ml-05"
+              *ngIf="isAnyOfCasesSelected && (canAccess_entityType_feature_AddOrUpdateStatus) && !testRunCompleted">
+              <fa-icon class="update-status" icon="user"
+                  matTooltip="{{ 'TESTMANAGEMENT.UPDATEASSIGNTO' | translate }}"
+                  (click)="openAssigneePopover()" [satPopoverAnchorFor]="updateAssigneePopover">
+              </fa-icon>
+              <fa-icon class="ml-05 update-status" icon="edit"
+                  matTooltip="{{ 'TESTMANAGEMENT.UPDATESTATUS' | translate }}"
+                  (click)="openStatusPopover()" [satPopoverAnchorFor]="updateStatusPopover">
+              </fa-icon>
+          </span> -->
+            <span *ngIf="totalEstimate > 0">
+              <b>
+                <mat-icon icon="clock" class="ml-05 mat-color-accent clock-icon"
+                  matTooltip="{{totalEstimate | estimationTime}}">access_time</mat-icon>
+              </b>
+            </span>
+            <span *ngIf="totalEstimate == 0">
+              <b>
+                <mat-icon icon="clock" class="ml-05 mat-color-accent clock-icon" matTooltip="0h">access_time</mat-icon>
+              </b>
+            </span>
+          </div>
+          <div *ngIf="isSectionDataPresent">
+            <div class="ml-2" *ngIf="sectionData.description != null && sectionData.description.length > 0">
+              <span *ngIf="!sectionDescription" class="section-description word-break user-select-text"
+                matTooltip="{{'TESTMANAGEMENT.SECTIONDESCRIPTION' | translate}}">{{sectionData.description}}</span>
+              <span *ngIf="sectionDescription" class="section-description word-break user-select-text"
+                matTooltip="{{'TESTMANAGEMENT.SECTIONDESCRIPTION' | translate}}">{{sectionDescription}}</span>
+            </div>
+          </div>
+          <mat-card-content class="p-0 mb-0 testrun-section-height  test-run-section-cases" *ngIf="!isSectionsPresent"
+            id="style-1" [ngClass]="{ 'testrun-section-filteropen-height': filterOpen}">
+            <mat-list class="compact-list testrun-matlist mb-05">
+              <mat-divider class="mat-divider-position" *ngIf="visibleDescription || isSectionDataPresent">
+              </mat-divider>
+              <mat-list-item class="primary-text" *ngFor="let case of (testCases$ | async)">
+                <testrun-case class="full-width" (click)="handleClick(case)" (caseSelection)="getCaseSelection($event)"
+                  (casesSelected)="getCasesSelected($event)"
+                  (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)" [allCasesSelect]="selection"
+                  [caseSelected]="case.testCaseId === selectedCaseId" [testRunId]="testRunId" [projectId]="projectId"
+                  [caseDetails]="case" [testRunIsCompleted]="testRunCompleted" [isBugBoardEnable]="isBugBoardEnable">
+                </testrun-case>
+              </mat-list-item>
+            </mat-list>
+          </mat-card-content>
+        </div>
+        <div *ngIf="isHierarchical && loadHierarchicalCases && !isSectionsPresent">
+          <hierarchical-run-cases (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+            (caseSelection)="getCaseSelection($event)" (casesSelected)="getCasesSelected($event)"
+            [hierarchicalData]="hierarchicalSectionsData" [casesData]="(testCases$ | async)" [testSuiteId]="testSuiteId"
+            [testRunId]="testRunId" [hierarchicalSectionId]="hierarchicalSectionsData.sectionId"
+            [testRunCompleted]="testRunCompleted" [projectId]="projectId" [allCasesSelect]="selection"
+            [selectedCase]="testCaseFromPreview" [isBugBoardEnable]="isBugBoardEnable">
+          </hierarchical-run-cases>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #updateAssigneePopover verticalAlign="below" hasBackdrop
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.UPDATEASSIGNTO' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content *ngIf="loadAssignForm">
+      <form [formGroup]="assignToForm" novalidate (submit)="assignToForm.valid && updateMultipleAssignTo()">
+        <mat-form-field class="full-width">
+          <mat-select placeholder="{{'TESTMANAGEMENT.ASSIGNTO' | translate}}" formControlName="assignToId" required>
+            <mat-option class="testrun-cases-assignee" *ngFor="let user of (usersList$ | async)" [value]="user.id">
+              <div>
+                <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                  [name]="user.value | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-avatar>
+                <img class="employee_img" src="{{user.profileImage}}" style="float: none; max-width: none !important;"
+                  *ngIf="user.profileImage" />
+              </div>
+              <div>{{user.value}}</div>
+            </mat-option>
+          </mat-select>
+          <mat-hint>{{'TESTMANAGEMENT.ASSIGNTOHINT' | translate}}</mat-hint>
+          <mat-error *ngIf="assignToForm.get('assignToId').hasError('required')">
+            {{'TESTMANAGEMENT.PLEASESELECTUSER' | translate}}
+          </mat-error>
+        </mat-form-field>
+        <div class="text-center mt-05">
+          <button class="mr-1" type="submit" mat-button mat-raised-button color="primary" [disabled]="disableUpdate">
+            <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.UPDATE' | translate}}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="closeAssigneePopover()">
+            <fa-icon icon="times" class="mr-05"></fa-icon>
+            {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #updateStatusPopover verticalAlign="below" hasBackdrop
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.UPDATESTATUS' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="testrun-external-editor" *ngIf="loadStatusForm">
+      <form [formGroup]="statusForm" novalidate (submit)="statusForm.valid && updateMultipleStatus()">
+        <div fxLayout="row wrap">
+          <mat-form-field class="full-width mt-05" fxFlex="90">
+            <mat-select placeholder="{{'TESTMANAGEMENT.STATUS' | translate}}" formControlName="statusId" required
+              (selectionChange)="checkIsFailed($event.value)">
+              <mat-option *ngFor="let status of (statusList$ | async)" [value]="status.id">
+                {{status.value}}
+              </mat-option>
+            </mat-select>
+            <mat-hint>{{'TESTMANAGEMENT.STATUSHINT' | translate}}</mat-hint>
+            <mat-error *ngIf="statusForm.get('statusId').hasError('required')">
+              {{'TESTMANAGEMENT.PLEASESELECTSTATUS' | translate}}
+            </mat-error>
+          </mat-form-field>
+          <div *ngIf="(canAccess_entityType_feature_AddOrUpdateStatus) 
+                    && isCaseFailed && isBugBoardEnable" fxFlex="20px" fxLayoutAlign="end start" class="mt-08"
+            fxFlex="10">
+            <a class="add-test-case mt-08 " matTooltip="{{'USERSTORY.ADDBUG' | translate}}"
+              [satPopoverAnchorFor]="addBug" #addBugPopover="satPopoverAnchor" (click)="openBugPopover(addBugPopover)">
+              <fa-icon class="add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+            </a>
+          </div>
+        </div>
+        <editor class="mt-1 dfree-header testcase-outline" apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+          [init]="initSettings" placeholder="Add comment" menubar="false" height="100" formControlName="statusComment">
+        </editor>
+
+        <mat-hint>{{'TESTMANAGEMENT.STATUSCOMMENTHINT' | translate}}</mat-hint>
+
+        <div class="text-center mt-05">
+          <button class="mr-1" type="submit" mat-button mat-raised-button color="primary" [disabled]="disableUpdate">
+            <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.UPDATE' | translate}}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="closeStatusPopover()">
+            <fa-icon icon="times" class="mr-05"></fa-icon>
+            {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #addBug hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'USERSTORY.ADDBUG' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <testcase-scenario-bug *ngIf="loadBug" [isBugFromTestRail]="isBugFromTestRail" [projectId]="projectsId"
+        [caseData]="selectedTestCase" [isBugFromUserStory]="isBugFromUserStory" [isSprintUserStories]=false
+        (closeBug)="closeBugPopover()">
+      </testcase-scenario-bug>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

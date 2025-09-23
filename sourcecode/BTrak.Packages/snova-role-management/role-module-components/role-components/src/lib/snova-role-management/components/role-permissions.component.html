@@ -1,0 +1,217 @@
+<ng-container *ngIf="!canAccess_feature_ViewRoles">
+  <mat-card class="roles p-0">
+    <mat-card-content class="p-1" kendoTooltip>
+      <div>
+        {{'ROLES.SORRYYOUDONOTHAVEPERMISSIONSTOACCESSROLEMANAGEMENTSCREEN'|translate}}
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+<!-- <ng-container *ngIf="canAccess_feature_ViewRoles">
+  <div fxLayout="row" fxLayout.xs="column">
+    <mat-card class="col-sm-12 mat-card" style="padding: 0px !important;">
+      <mat-card-title class="full-width mat-card-title">
+        <div style="display: flex;">
+          <div class="col-sm-6" style="padding-top: 10px !important;">
+            <h5>{{ 'PROJECTS.ROLEPERMISSION' | translate  | softLabelsPipe : softLabels | titlecase}}</h5>
+          </div>
+          <div class="col-sm-6" style="text-align: right;" *ngIf="canAccess_feature_ManageProjectRolePermissions">
+            <button class="topbar-button-right mat-icon-button"
+              matTooltip="{{ 'PROJECTS.PROJECTROLEPERMISSION' | translate  | softLabelsPipe : softLabels}}"
+              (click)="goToAllRoles()" style="line-height: 10px !important;">
+              <span class="material-icons icon-button mat-color-accent">brightness_high</span>
+            </button>
+          </div>
+        </div>
+      </mat-card-title>
+    </mat-card>
+  </div>
+</ng-container> -->
+<div fxLayout="row" fxLayout.sm="column" fxLayout.xs="column" *ngIf="canAccess_feature_ViewRoles">
+  <div fxFlex="20" fxFlex.sm="100">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="data-table-header">
+        <div style="padding: 1rem 1rem">
+          <div fxLayout="row" class="drag-handler">
+            <span fxFlex>{{'ROLES.ROLESLIST'|translate}} </span>
+            <span fxFlex="20px" fxLayoutAlign="end center" (click)="addRole()"
+              title="{{'ROLES.ADDROLEPERMISSIONS'|translate}}" *ngIf="canAccess_feature_AddOrUpdateRole">
+              <fa-icon class="icon-button mat-color-accent" icon="plus"> </fa-icon>
+            </span>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+      <mat-card-content class="p-0 listof_roles roles-list" id="style-1">
+        <mat-list class="compact-list" *ngIf="rolesList">
+          <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+            *ngFor="let role of rolesList" (click)="selectedRoleMasonryDestroy(role,'edit');$event.stopPropagation()"
+            [ngClass]="{ active: selectedRoleId == role.roleId }">
+            <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center" class="entity-role">
+              <span fxFlex class="hide-content-overflow" matTooltipClass="tooltip-overflow"
+                matTooltip="{{ role.roleName | translate }}">{{ role.roleName | translate }}</span>
+              <span fxFlex="20px" fxLayoutAlign="center" *ngIf="canAccess_feature_AddOrUpdateRole"
+                (click)="selectedRoleMasonryDestroy(role,'copy');$event.stopPropagation()"
+                matTooltip="{{'ROLES.COPYROLEPERMISSIONS'|translate}}">
+                <fa-icon class="icon-button mat-color-accent" icon="copy"> </fa-icon>
+              </span>
+              <span fxFlex="20px" fxLayoutAlign="center" [satPopoverAnchorFor]="deleteRolePopover"
+                #deleteRoleSatPopover="satPopoverAnchor" *ngIf="canAccess_feature_ArchiveRole"
+                (click)="deleteRoleOpen(role,deleteRoleSatPopover);$event.stopPropagation()"
+                matTooltip="{{'ROLES.DELETEPROJECTROLENAME' | translate | softLabelsPipe : softLabels}}">
+                <fa-icon class="icon-button mat-color-accent" icon="trash"></fa-icon>
+              </span>
+            </div>
+          </div>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div fxFlex="80" fxFlex.sm="100">
+    <form name="form" #roleForm="ngForm" novalidate>
+      <mat-card class="p-0 m-0 ml-05" *ngIf="canAccess_feature_AddOrUpdateRole">
+        <mat-card-title class="data-table-header">
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="5px" style="padding: 0 1rem">
+            <div fxFlex fxFlex.xs="100">
+              <mat-form-field class="pb-0">
+                <input matInput [formControl]="roleName" name="roleInput" type="text" [(ngModel)]="selectedRoleName"
+                  placeholder="{{'LISTOFROLES.ROLENAME'|translate}}" required />
+                <mat-error *ngIf="roleName.hasError('required')">
+                  {{'LISTOFROLES.PLEASEENTERROLENAME'|translate}}
+                </mat-error>
+                <mat-error *ngIf="roleName.hasError('maxlength')">
+                  {{'LISTOFROLES.ROLENAMESHOUDNOTEXCEEDCHARACTERS'|translate}}
+                </mat-error>
+              </mat-form-field>
+              <!-- <input matInput [formControl]="isDeveloperRole" type="text" [(ngModel)]="selectedRoleName"
+                  placeholder="{{'LISTOFROLES.ROLENAME'|translate}}" required />
+                <mat-error *ngIf="roleName.hasError('required')">
+                  {{'LISTOFROLES.PLEASEENTERROLENAME'|translate}}
+                </mat-error>
+                <mat-error *ngIf="roleName.hasError('maxlength')">
+                  {{'LISTOFROLES.ROLENAMESHOUDNOTEXCEEDCHARACTERS'|translate}}
+                </mat-error> -->
+              <mat-checkbox [formControl]="isDeveloperRole" [(ngModel)]="isDeveloper" class="ml-1">
+                {{'LISTOFROLES.ISDEVELOPER'|translate}}
+              </mat-checkbox>
+            </div>
+            <div fxFlex="200px" fxFlex.xs="100" fxLayoutAlign.gt-xs="end center">
+              <mat-checkbox mat-primary name="agreed" [(ngModel)]="selectAll" (change)="checkAllCheckBoxes()">
+                <span>{{'LISTOFROLES.SELECTALLPERMISSIONS'|translate}}</span></mat-checkbox>
+            </div>
+          </div>
+        </mat-card-title>
+        <mat-divider></mat-divider>
+        <div class="listof_roles roleslist-text-overflow roles-list pt-05" id="style-1"
+          *ngIf="!showMasonryGridLoading">
+          <div class="masonry">
+            <div *ngFor="let roleFeature of selectedRoleFeatureList; let i = index;" class="masonry-item">
+              <div fxLayout="column" fxLayoutAlign="space-between none" fxLayoutGap="5px" class="masonry-card">
+                <div class="text-center role-heading">
+                  <mat-checkbox name="{{ roleFeature.featureName | softLabelsPipe : softLabels}}" [(ngModel)]="roleFeature.isActive"
+                    (change)="parentFeatureChecked(roleFeature, roleFeature.isActive)"
+                    id="checkbox-{{ roleFeature.featureId }}" value="{{ roleFeature.featureId }}">
+                    <span matTooltip="{{ roleFeature.featureName | capitalizeFirst | softLabelsPipe : softLabels}}"
+                      class="role-feature-name">{{ roleFeature.featureName | capitalizeFirst | softLabelsPipe : softLabels}}</span>
+                  </mat-checkbox>
+                </div>
+                <div fxFlex fxLayout="row wrap" *ngFor="let option of roleFeature.children; let i = index" style="position: relative;" class="roles-icon">
+                  <div fxFlex="94">
+                    <mat-checkbox name="{{ option.featureName | softLabelsPipe : softLabels}}" [(ngModel)]="option.isActive"
+                      (change)="getFeaturesId(option, option.isActive)" id="checkbox-{{ option.featureId }}"
+                      value="{{ option.featureId }}">
+                      <div fxLayout="row wrap" fxLayoutGap="5px">
+                        <div fxFlex="100" fxLayoutAlign="start center" class="role-permission-hover">
+                          <span class="role-permission"
+                            matTooltip="{{ option.featureName | capitalizeFirst | softLabelsPipe : softLabels}}">{{option.featureName | capitalizeFirst | softLabelsPipe : softLabels}}</span>
+                          <span class="role-feature-menu-item-name hide-content-overflow" *ngIf="option.menuItemName"
+                            matTooltip="{{ option.menuItemName | capitalizeFirst | softLabelsPipe : softLabels}}">({{option.menuItemName | capitalizeFirst | softLabelsPipe : softLabels}})</span>
+                        </div>
+                      </div>
+                    </mat-checkbox>
+                  </div>
+                  <div fxFlex="10" fxLayoutAlign="start center" style="position: absolute; right: 0;">
+                    <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent role-icon"
+                      style="padding-left: 5px;" matTooltip="{{'ROLESVIEW.VIEWROLESWITHTHISPERMISSION'|translate}}"
+                      (click)="openRolesDialog(option.featureId);$event.stopPropagation()"></fa-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="column" class="listof_roles roles-list pt-05" id="style-1" *ngIf="showMasonryGridLoading">
+          <div class="masonry">
+            <div *ngFor="let Feature of Array(num).fill(1); let i = index;" class="masonry-item">
+              <div fxLayout="column" fxLayoutAlign="space-between none" fxLayoutGap="15px" class="masonry-card">
+                <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center none" class="mt-05">
+                  <div fxFlex="5" fxFlexOffset="20">
+                    <mat-checkbox [disabled]="true"></mat-checkbox>
+                  </div>
+                  <div fxFlex="50">
+                    <p class="mat-body-1 role-permission-empty-text loading-bg m-0"></p>
+                  </div>
+                </div>
+                <div fxLayout="column" *ngFor="let option of [1,2,3,4,5,6]; let i = index" fxLayoutGap="15px">
+                  <div fxLayout="row" fxLayoutGap="10px">
+                    <div fxFlex="4" fxFlexOffset="20">
+                      <mat-checkbox [disabled]="true"></mat-checkbox>
+                    </div>
+                    <div fxFlex>
+                      <p class="mat-body-1 role-permission-empty-text loading-bg m-0"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card>
+      <div fxLayoutAlign="end center" class="pb-lg-1">
+        <div class="handle mt-05 mr-8">
+          <button class="text-center mr-1" [disabled]="checkRoleFormDisabled() || upsertRoleInProgress" type="submit"
+            color="primary" matTooltip="{{'LISTOFROLES.CLICKHERETOSAVEROLEPERMISSIONS'|translate}}" mat-button
+            mat-raised-button (click)="saveRole()">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertRoleInProgress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="save" style="cursor: pointer;"></fa-icon>
+            {{'LISTOFROLES.SAVE'|translate}}
+          </button>
+          <button class="text-center mr-1" [disabled]="upsertRoleInProgress" type="cancel" mat-button mat-raised-button
+            matTooltip="{{'LISTOFROLES.CLICKHERETOCANCELROLEPERMISSIONS'|translate}}" (click)="resetFeatures()">
+            <fa-icon class="mr-05" icon="undo" style="cursor: pointer;"></fa-icon>
+            {{'RESET'|translate}}
+          </button>
+        </div>
+      </div>
+      <mat-card class="p-0 mt-05" *ngIf="!canAccess_feature_AddOrUpdateRole">
+        <mat-card-content class="p-1" kendoTooltip>
+          <div>
+            {{'ROLES.SORRYYOUDONOTHAVEPERMISSIONSTOEDITROLEMANAGEMENTPERMISSIONS'|translate}}
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </form>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #deleteRolePopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'ROLES.DELETEROLE' | translate}}
+      </div>
+    </mat-card-title>
+    <div class="card-content p-1">
+      <div class="text-center mb-1">{{'ROLES.AREYOUSUREWANTTODELETETHISROLE?' | translate}}
+      </div>
+      <div fxLayoutAlign="space-around center">
+        <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+          [disabled]="deletingRoleInProgress" (click)="deleteRole();"><i
+            class="fa fa-check"></i>{{'YES' | translate}}</button>
+        <button type="button" mat-button mat-raised-button (click)="closedDeleteRoleDialog()"><i
+            class="fa fa-times"></i>{{ 'CANCEL' | translate }}</button>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>

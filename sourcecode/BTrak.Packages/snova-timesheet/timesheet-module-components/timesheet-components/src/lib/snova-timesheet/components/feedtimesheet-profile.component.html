@@ -1,0 +1,157 @@
+<div *ngIf="canAccess_feature_PunchCard" class="full-height">
+  <div class="p-0 feedtime_sheet mat-card custom-box" *ngIf="!timesheetDisableorEnable.TimeSheetRestricted">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <mat-card-title class="text-center data-table-header drag-handler">
+      <div class="card-title-text p-05"> {{'TIMEPUNCHCARD.TITLE' | translate}}
+        <span *ngIf="spentTime"
+          matTooltip="{{'TIMEPUNCHCARD.TOTALSPENTTIME' | translate}}"><b>({{timesheetDisableorEnable.SpentTime | hoursAndMinutes}})</b></span>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+    <div class="card-content p-05 app-height-1 no-drag" id="style-1">
+      <div fxLayout="column" fxLayoutGap="10px">
+        <div fxLayout="row" fxLayoutGap="10px">
+          <button mat-button mat-raised-button fxFlex.gt-sm="50" color="primary" (click)="timeSheetStart()"
+            [disabled]="!timesheetDisableorEnable.Start || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="startInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.StartTime }} <span class="timezone-name" *ngIf="displayStartAbbr"
+              matTooltip="{{timesheetDisableorEnable.StartTimeZoneName}}">{{ timesheetDisableorEnable.StartTimeAbbr }}
+              )</span>
+          </button>
+          <button mat-button mat-raised-button fxFlex.gt-sm="50" color="primary"
+            [satPopoverAnchorFor]="openStatusReport" (click)="timeSheetEndValid(openStatusReportPopUp)"
+            #openStatusReportPopUp="satPopoverAnchor"
+            [disabled]="!timesheetDisableorEnable.Finish || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="finishInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.FinishTime }} <span class="timezone-name" *ngIf="displayFinishAbbr"
+              matTooltip="{{timesheetDisableorEnable.FinishTimeZoneName}}">{{ timesheetDisableorEnable.FinishTimeAbbr }}
+              )</span>
+          </button>
+          <!-- <button [matMenuTriggerFor]="accountMenu">Finish</button> -->
+        </div>
+        <div fxLayout="row" fxLayoutGap="10px">
+          <button mat-button mat-raised-button fxFlex.gt-sm="50" color="primary" (click)="timeSheetLunchStart()"
+            [disabled]="!timesheetDisableorEnable.LunchStart || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="lunchStartInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.LunchStartTime }} <span class="timezone-name" *ngIf="displayLunchStartAbbr"
+              matTooltip="{{timesheetDisableorEnable.LunchStartTimeZoneName}}">{{ timesheetDisableorEnable.LunchStartTimeAbbr }}
+              )</span>
+          </button>
+          <button mat-button mat-raised-button color="primary" fxFlex.gt-sm="50" (click)="timeSheetLunchFinish()"
+            [disabled]="!timesheetDisableorEnable.LunchEnd || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="lunchFinishInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.LunchEndTime }} <span class="timezone-name" *ngIf="displayLunchEndAbbr"
+              matTooltip="{{timesheetDisableorEnable.LunchEndTimeZoneName}}">{{ timesheetDisableorEnable.LunchEndTimeAbbr }}
+              )</span>
+          </button>
+        </div>
+        <div fxLayout="row" fxLayoutGap="10px">
+          <button mat-button mat-raised-button fxFlex.gt-sm="50" color="primary" (click)="timeSheetBreakStart()"
+            [disabled]="!timesheetDisableorEnable.BreakIn || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="breakStartInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.BreakInTime }} <span class="timezone-name" *ngIf="displayBreakInAbbr"
+              matTooltip="{{timesheetDisableorEnable.BreakInTimeZoneName}}">{{ timesheetDisableorEnable.BreakInTimeAbbr }}
+              )</span>
+          </button>
+          <button mat-button mat-raised-button color="primary" fxFlex.gt-sm="50" (click)="timeSheetBreakFinish()"
+            [disabled]="!timesheetDisableorEnable.BreakOut || anyOperationInProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="breakFinishInProgress">
+            </mat-progress-bar>
+            {{ timesheetDisableorEnable.BreakOutTime }} <span class="timezone-name" *ngIf="displayBreakOutAbbr"
+              matTooltip="{{timesheetDisableorEnable.BreakOutTimeZoneName}}">{{ timesheetDisableorEnable.BreakOutTimeAbbr }}
+              )</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <sat-popover #openStatusReport [autoFocus]="false" hasBackdrop [restoreFocus]="false" [interactiveClose]="false"
+      scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary" style="padding:10px 0;">
+            {{'TIMEPUNCHCARD.CONFIRMFINISH' | translate}}
+          </div>
+          <mat-divider></mat-divider>
+        </mat-card-title>
+        <ul class="finish-dialog">
+          <li *ngIf="isLoggingComplainceTrue">
+            <i class="fa fa-exclamation-triangle" [ngStyle]="{'color': isLoggingMandatory ? '#e0000b' : '#fcce3c'}"></i>
+            {{'TIMEPUNCHCARD.WORKEDFOR' | translate}} <b>{{isFinishValid.spentTime | hoursAndMinutes}}</b>
+            {{'TIMEPUNCHCARD.HOURSONLY' | translate}}
+            <b>{{isFinishValid.logTime | hoursAndMinutes}}</b> {{'TIMEPUNCHCARD.HOURSLOGGED' | translate}}
+            <span matTooltip="{{'TIMEPUNCHCARD.CLICKHERETOLOG' | translate}}">
+              <button mat-icon-button (click)="navigateToMyWork()"> <i class="fa fa-external-link"
+                  [ngStyle]="{'color': '#e0000b'}"></i></button>
+            </span>
+          </li>
+          <li *ngIf="formsNotSubmitted == true">
+            <i class="fa fa-exclamation-triangle" [ngStyle]="{'color':'#e0000b' }" *ngIf="isLoggingMandatory"></i>
+            {{'TIMEPUNCHCARD.NOTSUBMITTED' | translate}}
+            <a (click)="navigateToStatusReport()" class="pl-05">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+          </li>
+          <li *ngIf="isLoggingMandatory">
+            <i class="fa fa-exclamation-triangle" [ngStyle]="{'color':'#fcce3c' }" *ngIf="isLoggingMandatory"></i>
+            <span>{{'TIMEPUNCHCARD.LOGCONFIRMATIONMESSAGE' | translate}}</span>
+          </li>
+        </ul>
+        <div class="text-center mb-1">
+          <button mat-button mat-raised-button class="mr-1" [satPopoverAnchorFor]="openResponseReport"
+            #openResponseReportPopUp="satPopoverAnchor" color="primary" *ngIf="isLoggingMandatory"
+            [satPopoverAnchorFor]="openResponseReport" matTooltip="{{'TIMEPUNCHCARD.SUBMITASANEXCEPTION' | translate}}"
+            (click)="responseReport(openResponseReportPopUp)">
+            {{'TIMEPUNCHCARD.OK' | translate}}
+          </button>
+          <button mat-button mat-raised-button
+            (click)="closeStatusReport()">{{'TIMEPUNCHCARD.CANCEL' | translate}}</button>
+        </div>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #openResponseReport [autoFocus]="false" hasBackdrop [restoreFocus]="false" [interactiveClose]="false"
+      scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary" style="padding:10px 0;">
+            {{'TIMESHEETSUBMISSION.REASON'  | translate}}
+          </div>
+        </mat-card-title>
+        <div class="custom-input ml-1 mr-lg-3 mt-1-05">
+          <textarea rows="4" class="textarea-drag" cols="54" placeholder="Please enter your reason here"
+            [(ngModel)]="userResponce"></textarea>
+        </div>
+        <div class="text-center mt-02" *ngIf="userResponce.length > 800">
+          <mat-error>
+            <span>
+              {{'TIMESHEETSUBMISSION.REASONHASEXCEEDEDTHEMAXIMUMLENTH' | translate}}</span>
+          </mat-error>
+        </div>
+
+        <div class="text-center mb-1 mt-08">
+          <button mat-button mat-raised-button class="mr-1" color="primary" *ngIf="isLoggingMandatory"
+            [disabled]="!disableSubmission()" matTooltip="{{'TIMEPUNCHCARD.SUBMITASANEXCEPTION' | translate}}"
+            (click)="submitStatusReport()">
+            Submit
+          </button>
+          <button mat-button mat-raised-button (click)="closeResponseReport()">Cancel</button>
+        </div>
+      </mat-card>
+    </sat-popover>
+  </div>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_PunchCard" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<ng-template #statusReportDialogComponet let-data>
+  <status-report-dailogue [data]=[data]></status-report-dailogue>
+</ng-template>
+
+<ng-template #myWorkDialogComponet let-data>
+  <work-items-dailogue [data]=[data]></work-items-dailogue>
+</ng-template>

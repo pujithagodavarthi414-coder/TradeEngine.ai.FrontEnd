@@ -1,0 +1,101 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { map } from 'rxjs/operators';
+import { ApiUrls } from '../../globaldependencies/constants/api-urls';
+import { LocalStorageProperties } from '../../globaldependencies/constants/localstorage-properties';
+import { GenericStatusModel } from '../components/genericform/models/generic-status-model';
+import { Observable } from "rxjs";
+import { WorkflowTrigger } from '../models/workflow-trigger.model';
+
+
+const environment = JSON.parse(localStorage.getItem(LocalStorageProperties.Environment));
+const APIEndpoint = environment.apiURL;
+
+
+@Injectable({
+    providedIn: "root"
+})
+export class GenericStatusService {
+
+    constructor(private http: HttpClient) { }
+    
+    loadGenericStatus(statusModel: GenericStatusModel) {
+        const httpOptions = {
+            headers: new HttpHeaders({ "Content-Type": "application/json" })
+        };
+
+        const body = JSON.stringify(statusModel);
+
+        return this.http.post(APIEndpoint + ApiUrls.GetGenericStatus, body, httpOptions)
+            .pipe(map((result) => {
+                return result;
+            }));
+    }
+
+    getTriggers(triggerModel: WorkflowTrigger) {
+        const httpOptions = {
+            headers: new HttpHeaders({ "Content-Type": "application/json" })
+        };
+
+        const body = JSON.stringify(triggerModel);
+
+        return this.http.post(APIEndpoint + ApiUrls.GetTriggers, body, httpOptions)
+            .pipe(map((result) => {
+                return result;
+            }));
+    }
+
+    getWorkflowsForTriggers(workflowModel: WorkflowTrigger) {
+        const httpOptions = {
+            headers: new HttpHeaders({ "Content-Type": "application/json" })
+        };
+
+        const body = JSON.stringify(workflowModel);
+
+        return this.http.post(APIEndpoint + ApiUrls.GetWorkFlowsForTriggers, body, httpOptions)
+            .pipe(map((result) => {
+                return result;
+            }));
+    }
+    
+    getWorkflowsByReferenceId(triggerModel: WorkflowTrigger) {
+        const httpOptions = {
+            headers: new HttpHeaders({ "Content-Type": "application/json" })
+        };
+
+        const body = JSON.stringify(triggerModel);
+
+        return this.http.post(APIEndpoint + ApiUrls.GetWorkFlowTriggers, body, httpOptions)
+            .pipe(map((result) => {
+                return result;
+            }));
+    }
+
+    upsertWorkflowTrigger(triggerModel: WorkflowTrigger) {
+        const httpOptions = {
+            headers: new HttpHeaders({ "Content-Type": "application/json" })
+        };
+
+        const body = JSON.stringify(triggerModel);
+
+        return this.http.post(APIEndpoint + ApiUrls.UpsertWorkFlowTrigger, body, httpOptions)
+            .pipe(map((result) => {
+                return result;
+            }));
+    }
+
+    UploadFile(formData) {
+
+        const httpOptions = {
+            headers: new HttpHeaders({ enctype: "multipart/form-data" })
+        };
+
+        return this.http
+            .post(APIEndpoint + ApiUrls.UploadFileAsync, formData, httpOptions)
+            .pipe(
+                map((result) => {
+                    return result;
+                })
+            );
+    }
+}

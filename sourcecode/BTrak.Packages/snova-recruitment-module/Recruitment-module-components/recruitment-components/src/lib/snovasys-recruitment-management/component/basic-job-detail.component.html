@@ -1,0 +1,276 @@
+<div fxLayout="start center">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+    </mat-progress-bar>
+    <div fxFlex="100">
+        <form [formGroup]="createJobForm" novalidate #basicJobDetailFormDirective="ngForm"
+            (submit)="createJobForm.valid && addJobDetail(basicJobDetailFormDirective)">
+            <div class="card-content p-05 mt-05">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                    <input matInput formControlName="jobOpeningTitle" placeholder="{{ 'JOBOPENING.TITLE' | translate }}"
+                        required />
+                    <mat-error *ngIf="createJobForm.get('jobOpeningTitle').hasError('maxlength')">
+                        {{ 'JOBOPENING.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+                    <mat-error
+                        *ngIf="createJobForm.get('jobOpeningTitle').hasError('required') && createJobForm.get('jobOpeningTitle').touched">
+                        {{ 'JOBOPENING.TITLEREQUIRED' | translate }}
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <textarea autocomplete="off" formControlName="jobDescription" matInput rows="2"
+                        placeholder="{{ 'JOBOPENING.DESCRIPTION' | translate }}">
+                    </textarea>
+                </mat-form-field>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input formControlName="dateFrom" matInput [matDatepicker]="picker1"
+                                (click)="picker1.open()" placeholder="{{'CANDIDATEEDUCATION.DATEFROM' | translate }}" />
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input formControlName="dateTo" matInput [matDatepicker]="picker" (click)="picker.open()"
+                                [min]="createJobForm.value.dateFrom"
+                                placeholder="{{'CANDIDATEEDUCATION.DATETO' | translate }}" />
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                            <mat-error *ngIf="createJobForm.value.dateFrom > createJobForm.value.dateTo">
+                                {{ 'JOBOPENING.DATETOERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field style="width: 100% !important;">
+                            <input matInput formControlName="minExperience"
+                                placeholder="{{ 'JOBOPENING.MINEXP' | translate }}" (keypress)="floatOnly($event);"
+                                (keyup)="validateInput()" />
+                        </mat-form-field>
+                        <mat-error *ngIf="maxExperienceError">
+                            {{ 'CANDIDATES.MAXEXPERIENCEERROR' | translate }}
+                        </mat-error>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field style="width: 100% !important;">
+                            <input matInput formControlName="maxExperience"
+                                placeholder="{{ 'JOBOPENING.MAXEXP' | translate }}" (keypress)="floatOnly($event);"
+                                (keyup)="validateInput()" />
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field style="width: 100% !important;">
+                            <input matInput formControlName="minSalary"
+                                placeholder="{{ 'JOBOPENING.MINSALARY' | translate }}" (keypress)="floatOnly($event);"
+                                (keyup)="validateInput()" />
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field style="width: 100% !important;">
+                            <input matInput formControlName="maxSalary"
+                                placeholder="{{ 'JOBOPENING.MAXSALARY' | translate }}" (keypress)="floatOnly($event);"
+                                (keyup)="validateInput()" />
+                        </mat-form-field>
+                        <mat-error *ngIf="maxSalaryError">
+                            {{ 'CANDIDATES.MAXSALARYERROR' | translate }}
+                        </mat-error>
+                    </div>
+                </div>
+
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <textarea autocomplete="off" formControlName="certification" matInput rows="1"
+                                placeholder="{{ 'JOBOPENING.CERTIFICATIONS' | translate }}">
+                            </textarea>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="hiringManagerId"
+                                placeholder="{{ 'JOBOPENING.ASSIGNJOBTO' | translate }}"
+                                (selectionChange)="getHiringManagerValue($event.value)" required>
+                                <mat-select-trigger>
+                                    {{selectedHiringManager}}
+                                </mat-select-trigger>
+                                <mat-option *ngFor="let assignee of jobAssignTo" [value]="assignee.id">
+                                    <app-avatar class="employee_img" *ngIf="!assignee.profileImage"
+                                        [name]="assignee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="assignee.profileImage"
+                                        [src]="assignee.profileImage | fetchSizedAndCachedImage: '40':''">
+                                    {{assignee.fullName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="createJobForm.get('hiringManagerId').hasError('required') && createJobForm.get('hiringManagerId').touched">
+                                {{ 'JOBOPENING.ASSIGNJOBTOREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+
+                    </div>
+                </div>
+
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field style="width: 100% !important;">
+                            <input matInput formControlName="noOfOpenings" type="number" min="0"
+                                placeholder="{{ 'JOBOPENING.NOOFPOSITIONS' | translate }}" required
+                                (keypress)="numberOnly($event)" />
+                            <mat-error
+                                *ngIf="createJobForm.get('noOfOpenings').hasError('required') && createJobForm.get('noOfOpenings').touched">
+                                {{ 'JOBOPENING.NOOFPOSITIONSREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="qualification"
+                                placeholder="{{ 'JOBOPENING.QUALIFICATIONS' | translate }}" />
+                        </mat-form-field>
+
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <form [formGroup]="selectLocations">
+                            <mat-form-field style="width: 100% !important;">
+                                <mat-select formControlName="locations" (selectionChange)="GetLocationslist()"
+                                    [compareWith]="compareSelectedLocationFn"
+                                    placeholder="{{ 'JOBOPENING.LOCATIONS' | translate }}" multiple>
+                                    <mat-select-trigger>
+                                        {{selectedLocations}}
+                                    </mat-select-trigger>
+                                    <mat-option #allLocationSelected (click)="toggleAllLocationSelected()" [value]="0">
+                                        Select All</mat-option>
+                                    <mat-option [value]="location.branchId" *ngFor="let location of locationList"
+                                        (click)="toggleLocationPerOne()">
+                                        {{location.branchName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </form>
+                    </div>
+                    <div fxFlex="46" fxFlex.xs="100">
+                        <form [formGroup]="selectSkills">
+                            <mat-form-field style="width: 100% !important;">
+                                <mat-select formControlName="skills" (selectionChange)="GetSkillslist()"
+                                    [compareWith]="compareSelectedSkillsFn"
+                                    placeholder="{{ 'JOBOPENING.SKILLS' | translate }}" multiple>
+                                    <mat-select-trigger>
+                                        {{selectedSkills}}
+                                    </mat-select-trigger>
+                                    <mat-option #allSkillsSelected (click)="toggleAllSkillsSelected()" [value]="0">
+                                        Select All</mat-option>
+                                    <mat-option [value]="skill.skillId" *ngFor="let skill of skills"
+                                        (click)="toggleSkillsPerOne(allSkillsSelected.viewValue)">
+                                        {{skill.skillName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </form>
+                    </div>
+
+                    <div class="mt-05" fxFlex="15px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ManageSkills">
+                        <fa-icon icon="plus" aria-hidden="false" aria-label="add"
+                            class="filter mat-color-accent goal-cursor"
+                            matTooltip="{{ 'SKILLS.CLICKHERETOCREATEASKILLSTYPE' | translate }}"
+                            [satPopoverAnchorFor]="addSkillsPopover" #addSkillsPopup="satPopoverAnchor"
+                            (click)="createSkills(addSkillsPopup); clearAddSkillFormPopup()">
+                        </fa-icon>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="jobTypeId"
+                                placeholder="{{ 'JOBOPENING.JOBTYPE' | translate }}">
+                                <mat-option [value]="job.employmentStatusId" *ngFor="let job of jobTypes">
+                                    {{job.employmentStatusName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50" fxFlex.xs="100">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="designationId"
+                                placeholder="{{'PAYROLLREPORTS.DESIGNATION'|translate}}">
+                                <mat-option [value]="designation.designationId"
+                                    *ngFor="let designation of designationList">
+                                    {{designation.designationName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="mt-1 text-center">
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!createJobForm.valid || savingInProgress || maxExperienceError|| maxSalaryError"
+                        type="button" (click)="GetjobstatuslistSubmit('1')"
+                        *ngIf="!isAnyOperationIsInprogress && showDraft">
+
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="savingInProgress && (selectedJobStatusOrder == 1)">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="envelope"></fa-icon>{{ 'JOBOPENING.SAVE' | translate }}
+                    </button>
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!createJobForm.valid || savingInProgress || maxExperienceError|| maxSalaryError"
+                        type="button" (click)="GetjobstatuslistSubmit('2')">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="savingInProgress && (selectedJobStatusOrder == 2)">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'JOBOPENING.SUBMIT' | translate }}
+                    </button>
+                    <button mat-raised-button class="mr-1" (click)="closedialog()" [disabled]="savingInProgress"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>{{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<sat-popover #addSkillsPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+    <mat-card class="filter-data p-0" fxFlex="320px">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                {{'SKILLS.ADDSKILLS' | translate }}
+            </div>
+        </mat-card-title>
+        <form [formGroup]="addSkillsForm" novalidate #skillsFormDirective="ngForm"
+            (submit)="addSkillsForm.valid && UpsertSkills(skillsFormDirective)">
+            <div class="card-content p-05 mt-05">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                    <input matInput formControlName="skillName" placeholder="{{'SKILLS.SKILLSNAME' | translate }}"
+                        required />
+                </mat-form-field>
+                <mat-error *ngIf="addSkillsForm.get('skillName').hasError('maxlength')">
+                    {{ 'SKILLS.MAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                    *ngIf="addSkillsForm.get('skillName').hasError('required') && addSkillsForm.get('skillName').touched">
+                    {{ 'SKILLS.REQUIREDERROR' | translate }}
+                </mat-error>
+            </div>
+            <div class="text-center mb-1 mt-05">
+                <button mat-raised-button color="primary" class="mr-05" type="submit"
+                    [disabled]="!addSkillsForm.valid||isAnyOperationIsInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeAddSkillFormPopup(skillsFormDirective)"
+                    type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>

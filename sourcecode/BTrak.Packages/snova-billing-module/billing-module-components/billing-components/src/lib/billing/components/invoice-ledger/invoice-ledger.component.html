@@ -1,0 +1,134 @@
+<!-- <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div> -->
+<div class="full-height" >
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow" matTooltip="{{ 'LEADINVOICES.INVOICES' |  translate }}">{{ 'LEADINVOICES.INVOICES' |  translate }}</span>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="no-drag">
+        <kendo-grid [data]="ledgerList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="invoiceNumber" title="{{ 'LEADINVOICES.INVOICENUMBERPLACEHOLDER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="paidAmount" title="{{ 'LEADINVOICES.PAIDINVOICEAMOUNT' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.paidAmount | number: '1.1-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="pendingAmount" title="{{ 'LEADINVOICES.PENDINGINVOICEAMOUNT' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.pendingAmount | number: '1.1-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="totalAmount" title="{{ 'LEADINVOICES.TOTALINVOICEAMOUNT' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.totalAmount | number: '1.1-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="download"
+                        matTooltip="{{ 'LEADINVOICES.DOWNLOADINVOICE' |  translate }}" (click)="getUploadedFilesDetails(dataItem.paymentId)">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #ledgerPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">Add Invoice
+                </div>
+            </mat-card-title>
+            <!-- <mat-card-content class="P-05"> -->
+                <form [formGroup]="paymentForm" #formDirective="ngForm" novalidate class="hr-apps-scroll"
+                id="style-1" (submit)="paymentForm.valid && UpsertLeadInvoice(formDirective)">
+                <div class="p-1" style="max-height: 200px;" id="style-1">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="invoiceNumber" placeholder="Invoice number" required>
+                            <mat-error *ngIf="paymentForm.get('invoiceNumber').hasError('maxlength')">
+                                Invoice number should be in 50 charcters</mat-error>
+                            <mat-error
+                                *ngIf="paymentForm.get('invoiceNumber').hasError('required') && paymentForm.get('invoiceNumber').touched">
+                                Please fill invoice number
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div>
+                        Paid invoice amount: {{rowData.paidInvoiceAmount}}
+                    </div>
+                    <div>
+                        Paid invoice amount: {{rowData.totalInvoiceAmount-rowData.paidInvoiceAmount}}
+                    </div>
+                    <div>
+                        Total invoice amount: {{rowData.totalInvoiceAmount}}
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="PaidAmount" placeholder="Invoice amount" required type="number" min=1 max={{rowData.totalInvoiceAmount-rowData.paidInvoiceAmount}}>
+                            <mat-error *ngIf="paymentForm.get('PaidAmount').hasError('maxlength')">
+                                Invoice amount are limited to {{rowData.totalInvoiceAmount-rowData.paidInvoiceAmount}}</mat-error>
+                            <mat-error
+                                *ngIf="paymentForm.get('PaidAmount').hasError('required') && paymentForm.get('PaidAmount').touched">
+                                Please fill invoice amount
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                    </div>
+                    <div class="custom-hrm-dropzone">
+                    <app-dropzone [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="getFilesByReferenceId"
+                        class="full-width" [moduleTypeId]="moduleTypeId" [isToUploadFiles]="isToUploadFiles"
+                        [referenceId]="ledgerId" [selectedParentFolderId]="selectedParentFolderId"
+                        [selectedStoreId]="selectedStoreId" [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                        [placeHolder]="'Upload invoice documents'" *ngIf="isUpload">
+                    </app-dropzone>
+                    <app-dropzone [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="getFilesByReferenceId"
+                        class="full-width" [moduleTypeId]="moduleTypeId" [isToUploadFiles]="isToUploadFiles"
+                        [referenceId]="ledgerId" [selectedParentFolderId]="selectedParentFolderId"
+                        [selectedStoreId]="selectedStoreId" [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                        [placeHolder]="'Upload invoice documents'" *ngIf="!isUpload">
+                    </app-dropzone>
+                </div>
+                </div>
+                    <div class="mb-1 prl-1" fxLayoutAlign="center center">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!paymentForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertLedgerPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            <!-- </mat-card-content> -->
+        </mat-card>
+    </sat-popover>
+
+</div>
+<!-- 
+<app-common-message-box *ngIf="!canAccess_feature_ManageGrades"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->

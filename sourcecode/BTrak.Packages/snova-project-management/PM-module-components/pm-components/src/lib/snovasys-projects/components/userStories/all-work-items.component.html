@@ -1,0 +1,501 @@
+<div class="full-height" id="style-1" *ngIf="isFromDashboard">
+    <div *ngFor="let userStory of workItemList | slice:0:5">
+        <!-- | resultfilter: searchText: 'userStoryName' 
+                | userStoryTagsFilter: searchTags: 'tag' 
+                | searchfilter: 'userStoryStatusId': selectedUserStoryStatusId 
+                | workItemTypesFilter: 'userStoryTypeId': selectedUserStoryTypeIds
+                | bugPriorityfilter: 'bugPriorityId': selectedBugPriorityId" -->
+        <div *ngIf="!userStory.isAdhocUserStory">
+            <gc-userstory-summary class="full-width" [loggedUser]="loggedUser" [userStory]="userStory"
+                [userStoryChecked]=false [isDeadlinedispaly]=true [isArchivedGoal]=false [allUserStorieSelected]=false
+                [userStorySelected]="highLightSelectedUserStory(userStory.userStoryId)" [isSubTasksPage]=false
+                [isAllGoalsPage]=true [isUserStoriesPage]=true [treeStructure]=false [goalReplanId]="goalReplanId"
+                [isEditFromProjects]="isEditFromProjects" (selectUserStory)="selectedUserStory($event)"
+                (completeUserStory)="getWorkItemById($event)" (removeUserStory)="getRemoveUserStory($event)"
+                [isLoading]="(anyOperationInProgressForAutoLogging$|async)" (openUniquePage)="getOpenUniquePage($event)"
+                [isShow]="true" (updateAutoLog)="LogAction($event)" [fromApp]="Ids != null || Ids != undefined">
+            </gc-userstory-summary>
+        </div>
+        <div *ngIf="userStory.isAdhocUserStory" class="adhoc-userstories ">
+            <adhoc-userstory-summary class="full-width" [userStory]="userStory" [isIncludeCompletedUserStories]=false
+                [isEditFromProjects]="isEditFromProjects" (selectUserStory)="selectedAdhocUserStory($event)"
+                [isLoading]="(anyOperationInProgressForAutoLogging$|async)"
+                (completeUserStory)="getWorkItemById($event)" (removeUserStory)="getRemoveUserStory($event)"
+                (updateAutoLog)="LogAction($event)">
+            </adhoc-userstory-summary>
+        </div>
+    </div>
+</div>
+
+<!-- *ngIf="!isFromDashboard && ((canAccess_feature_MyProjectWork) || (canAccess_feature_MyAdhocWork))" -->
+<div class="full-height" *ngIf="!isFromDashboard">
+    <div *ngIf="showWorkItem && isShowText">
+        <div *ngIf="isPopupShow">
+            {{ 'GOALS.MYWORKTEXT' | translate | softLabelsPipe : softLabels}}</div>
+    </div>
+    <div *ngIf="!showWorkItem && isShowText && isPopupShow" class="started-goal mb-1">
+        <div *ngFor="let userStory of startedWorkItemList">
+            <!-- | resultfilter: searchText: 'userStoryName' 
+                | userStoryTagsFilter: searchTags: 'tag' 
+                | searchfilter: 'userStoryStatusId': selectedUserStoryStatusId 
+                | workItemTypesFilter: 'userStoryTypeId': selectedUserStoryTypeIds
+                | bugPriorityfilter: 'bugPriorityId': selectedBugPriorityId" -->
+            <div *ngIf="!userStory.isAdhocUserStory">
+                <gc-userstory-summary class="full-width" [loggedUser]="loggedUser" [userStory]="userStory"
+                    [userStoryChecked]=false [isDeadlinedispaly]=true [isArchivedGoal]=false
+                    [allUserStorieSelected]=false
+                    [userStorySelected]="highLightSelectedUserStory(userStory.userStoryId)" [isSubTasksPage]=false
+                    [isAllGoalsPage]=true [isUserStoriesPage]=true [treeStructure]=false [goalReplanId]="goalReplanId"
+                    [isEditFromProjects]="isEditFromProjects" (selectUserStory)="selectedUserStory($event)"
+                    (completeUserStory)="getWorkItemById($event)" (removeUserStory)="getRemoveUserStory($event)"
+                    [isLoading]="(anyOperationInProgressForAutoLogging$|async)"
+                    (openUniquePage)="getOpenUniquePage($event)" [isShow]="true" (updateAutoLog)="LogAction($event)">
+                </gc-userstory-summary>
+            </div>
+            <div *ngIf="userStory.isAdhocUserStory" class="adhoc-userstories ">
+                <adhoc-userstory-summary class="full-width" [userStory]="userStory"
+                    [isLoading]="(anyOperationInProgressForAutoLogging$|async)" [isIncludeCompletedUserStories]=false
+                    [isEditFromProjects]="isEditFromProjects" (selectUserStory)="selectedAdhocUserStory($event)"
+                    (completeUserStory)="getWorkItemById($event)" (removeUserStory)="getRemoveUserStory($event)"
+                    (updateAutoLog)="LogAction($event)">
+                </adhoc-userstory-summary>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div>{{showWorkItem}}</div> -->
+    <!-- *ngIf="(canAccess_feature_MyProjectWork) || (canAccess_feature_MyAdhocWork)" -->
+    <div class="full-height">
+        <div class="full-height">
+            <div class="p-0 canteen-manage m-0">
+                <mat-card-title class="full-width data-table-header" [ngClass]="notFromAudits ? 'drag-handler': ''">
+                    <div fxLayout="row wrap" fxLayoutAlign="start center"
+                        [ngStyle]="{ 'pointer-events': updatePersistanceInprogress ? 'none' : '' }">
+                        <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                            *ngIf="!isEditAppName && notFromAudits">
+                            <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                                *ngIf="(canAccess_feature_DragApps)">
+                                {{ dashboardName | softLabelsPipe : softLabels | titlecase }}
+                            </span>
+                            <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                                {{ dashboardName | softLabelsPipe : softLabels | titlecase }}
+                            </span>
+                        </div>
+                        <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center"
+                            *ngIf="isEditAppName && notFromAudits">
+                            <mat-form-field>
+                                <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate | softLabelsPipe :softLabels}}"
+                                     [(ngModel)]="changedAppName"  (blur)="updateAppName()"
+                                    (keyup)="keyUpFunction($event)" matInputAutofocus />
+                            </mat-form-field>
+                        </div>
+                        <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                            *ngIf="!notFromAudits">
+                            <span class="hide-content-overflow custom-name-bg p-05" *ngIf="notFromAuditActions">
+                                {{'AUDIT.ACTIONS' | translate | softLabelsPipe :softLabels}}
+                            </span>
+                            <span class="hide-content-overflow custom-name-bg p-05" *ngIf="!notFromAuditActions">
+                                {{'AUDIT.ACTIONSASSIGNEDTOME' | translate | softLabelsPipe :softLabels}}
+                            </span>
+                        </div>
+                        <!-- <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap"
+                        (click)="$event.stopPropagation()">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                            <mat-select [(ngModel)]="goalId" (click)="$event.stopPropagation()"
+                                (selectionChange)="onGoalChange($event.value)"
+                                placeholder="{{ 'USERSTORIESWAITINGFORQAAPPROVAL.GOAL' | translate | softLabelsPipe : softLabels}}">
+                                <mat-option value="option" [value]="goal.goalId"
+                                    *ngFor="let goal of (goals$ | async) | resultfilter: activeBoardId: 'activeBoard'">
+                                    {{goal.goalShortName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                        <div fxFlex="20px">
+                            <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                                <span *ngIf="!searchText"></span>
+                                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                    (click)="closeSearch()" style="cursor:pointer">
+                                    close</mat-icon>
+                            </span>
+                        </div>
+                    </div> -->
+                        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput"
+                            fxLayoutAlign="end center" fxLayoutAlign.xs="center center" *ngIf="!kanbanView">
+                            <mat-form-field ngClass.xs="full-width custom-searchbar">
+                                <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (keydown)="searchWorkItems($event,searchText)">
+                            </mat-form-field>
+                            <span class="close_icon mr-lg-n4 mt-lg-n1"
+                                style="top: 16px !important; right: 30px !important;">
+                                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+                                    (click)="closeSearch()" style="cursor:pointer">
+                                    close</mat-icon>
+                            </span>
+                        </div>
+                        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                            <button mat-icon-button (click)="resetAllFilters()">
+                                <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent"
+                                    icon="undo">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05"
+                            *ngIf="notFromAuditActions">
+                            <button mat-icon-button (click)="openCalanderView()">
+                                <fa-icon *ngIf="!calanderView" icon="calendar"
+                                    matTooltip="{{ 'GOALACTIVITY.CALANDER' | translate }}"
+                                    class="filter mat-color-accent">
+                                </fa-icon>
+                                <fa-icon *ngIf="calanderView" icon="bars"
+                                    matTooltip="{{'GOALACTIVITY.LISTVIEW' | translate }}"
+                                    class="filter mat-color-accent">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05 kanban-view"
+                            *ngIf="!notFromAudits && goal && notFromAuditActions && canAccess_feature_ViewProjects">
+                            <button mat-icon-button (click)="openKanbanView()">
+                                <fa-icon *ngIf="!kanbanView" icon="bars" class="filter mat-color-accent kanban-icon"
+                                    matTooltip="{{ 'GOALACTIVITY.KANBANVIEW' | translate }}">
+                                </fa-icon>
+                                <fa-icon *ngIf="kanbanView" icon="bars"
+                                    matTooltip="{{'GOALACTIVITY.LISTVIEW' | translate }}"
+                                    class="filter mat-color-accent">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05"
+                            *ngIf="notFromAudits">
+                            <button mat-icon-button (click)="openUserTaskBoardView()">
+                                <fa-icon *ngIf="!userBoardView" icon="table"
+                                    matTooltip="{{ 'GOALACTIVITY.USERTASKBOARD' | translate | softLabelsPipe : softLabels }}"
+                                    class="filter mat-color-accent">
+                                </fa-icon>
+                                <fa-icon *ngIf="userBoardView" icon="bars"
+                                    matTooltip="{{'GOALACTIVITY.LISTVIEW' | translate }}"
+                                    class="filter mat-color-accent">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05"
+                            *ngIf="!kanbanView" >
+                            <button type="button" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu" >
+                                <fa-icon icon="user-cog" class="filter mat-color-accent"
+                                    matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}">
+                                </fa-icon>
+                            </button>
+                        </div>
+                        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                                <div class="goal-replan search-userstory">
+                                    <mat-form-field class="full-width custom-searchbar">
+                                        <input (click)="$event.stopPropagation();" matInput trim
+                                            placeholder="{{ 'GOALS.SEARCHBYUSERSTORYTAGS' | translate | softLabelsPipe :softLabels }}"
+                                            [(ngModel)]="searchTags"
+                                            (keydown)="searchWorkItemsByTags($event,searchTags)">
+                                    </mat-form-field>
+                                    <span class="close_icon">
+                                        <span
+                                            *ngIf="!searchTags">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                        <mat-icon (click)="$event.stopPropagation();" *ngIf="searchTags"
+                                            class="icon-button" aria-hidden="false" (click)="closeUserStoryTags()"
+                                            style="cursor:pointer">close
+                                        </mat-icon>
+                                    </span>
+                                </div>
+                                <div class="full-width mt-1">
+                                    <form [formGroup]="selectUserStoryStatus">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select placeholder="{{'GOALS.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe :softLabels }}"
+                                                formControlName="userStoryStatus" multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedWorkflowStatus}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allUserStoryStatusSelected
+                                                    (click)="toggleAllUserStoryStatusSelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}
+                                                </mat-option>
+                                                <mat-option [value]="status.userStoryStatusId"
+                                                    (click)="getUserStorieslistByUserStoryStatus();toggleUserStoryStatusPerOne()"
+                                                    *ngFor="let status of (workflowStatus$ | async)">
+                                                    {{ status.userStoryStatusName }}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <div class="full-width mt-1" *ngIf="notFromAudits">
+                                    <form [formGroup]="selectUserStoryTypeForm">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select
+                                                placeholder="{{ 'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                                                formControlName="userStoryTypeId" panelClass="dropdown-custom-class"
+                                                (selectionChange)="getUserStorieslistByUserStoryTypes()" multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedUserStoryType}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allUserStoryTypesSelected
+                                                    (click)="toggleAllUserStoryTypesSelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                                <mat-option [value]="userStoryType.userStoryTypeId"
+                                                    (click)="getUserStorieslistByUserStoryTypes();toggleUsrStoryTypesSelectionPerOne()"
+                                                    *ngFor="let userStoryType of (userStoryTypes$ | async)">
+                                                    {{ userStoryType.userStoryTypeName | softLabelsPipe : softLabels}}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <div class="full-width mt-1">
+                                    <form [formGroup]="selectBugPriority">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select placeholder="{{ 'GOALS.SELECTPRIORITY' | translate }}"
+                                                formControlName="bugPriority" panelClass="dropdown-custom-class"
+                                                multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedBugPriority}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allSelected
+                                                    (click)="toggleAllBugPrioritySelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                                <mat-option [value]="bug.bugPriorityId"
+                                                    (click)="getUserStorieslistByBugPriorities();toggleBugPrioritySelectionPerOne()"
+                                                    *ngFor="let bug of (bugPriorities$ | async)">
+                                                    <fa-icon icon="{{bug.icon}}"
+                                                        [ngStyle]="setColorForBugPriorityTypes(bug.color)"></fa-icon>
+                                                    {{ bug.priorityName }}&nbsp;-&nbsp;{{"USERSTORY."+bug.description | translate}}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <div class="full-width mt-1" *ngIf="!notFromAudits && notFromAuditActions">
+                                    <form [formGroup]="selectUser">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select placeholder="{{ 'ACTIVITYTRACKER.USER' | translate }}"
+                                                formControlName="userId" panelClass="dropdown-custom-class" multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedUser}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allUserSelected
+                                                    (click)="toggleAllUserSelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                                <mat-option [value]="user.id"
+                                                    (click)="getUserStorieslistByUser();toggleUserSelectionPerOne()"
+                                                    *ngFor="let user of userList">
+                                                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                                                        <div fxFlex="35px">
+                                                            <app-avatar [name]="user.fullName | removeSpecialCharacters"
+                                                                [src]="user.profileImage" [isRound]="true" size="30">
+                                                            </app-avatar>
+                                                        </div>
+                                                        <div fxFlex="75">
+                                                            <p class="mat-body-2">
+                                                                {{ user.fullName }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <div class="full-width mt-1 mb-1" *ngIf="!notFromAudits && notFromAuditActions">
+                                    <form [formGroup]="selectBranch">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select placeholder="{{ 'ACTIVITYTRACKER.BRANCH' | translate }}"
+                                                formControlName="branchId" panelClass="dropdown-custom-class" multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedBranch}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allBranchSelected
+                                                    (click)="toggleAllBranchSelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                                <mat-option [value]="branch.branchId"
+                                                    (click)="getUserStorieslistByBranch();toggleBranchSelectionPerOne()"
+                                                    *ngFor="let branch of branchList">
+                                                    {{branch.branchName}}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <div class="full-width mt-1 mb-1" *ngIf="!notFromAudits && notFromAuditActions">
+                                    <form [formGroup]="selectActionCategory">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select placeholder="{{'AUDIT.ACTIONCATEGORY' | translate | softLabelsPipe :softLabels }}"
+                                                formControlName="actionCategoryId" panelClass="dropdown-custom-class"
+                                                multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedActionCategory}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #allActionCategorySelected
+                                                    (click)="toggleAllActionCategorySelection()">
+                                                    {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                                <mat-option [value]="category.actionCategoryId"
+                                                    (click)="getUserStorieslistByActionCategory();toggleActionCategorySelectionPerOne()"
+                                                    *ngFor="let category of actionCategories">
+                                                    {{category.actionCategoryName}}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div>
+                                <!-- <div class="full-width mt-1 mb-1" *ngIf="!notFromAudits && notFromAuditActions">
+                                    <form [formGroup]="selectBusinessUnitForm">
+                                        <mat-form-field class="goal-replan full-width custom-select-matform">
+                                            <mat-select formControlName ="businessUnitIds"
+                                                placeholder="{{'BUSINESSUNIT.SELECTBUSINESSUNIT' | translate}}" multiple>
+                                                <mat-select-trigger>
+                                                    {{selectedBusinessUnits}}
+                                                </mat-select-trigger>
+                                                <mat-option [value]="0" #businessUnitsSelected
+                                                    (click)="toggleAllBusinessUnitsSelected();">
+                                                    Select all
+                                                </mat-option>
+                                                <mat-option *ngFor="let businessUnit of businessUnitsList"
+                                                    [value]="businessUnit.businessUnitId"
+                                                    (click)="getSelectedBusinessUnits();toggleBusinessUnitsPerOne();">
+                                                    {{businessUnit.businessUnitName}}
+                                                </mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </form>
+                                </div> -->
+                                <div fxLayoutAlign="center start" class="mt-1 mb-1" *ngIf="notFromAudits">
+                                    <mat-checkbox [(ngModel)]="isIncludeUnAssigned"
+                                        (change)="changeAssignee(isIncludeUnAssigned)">
+                                        {{'WIDGETS.ISINCLUDEUNASSIGNED' | translate}}
+                                    </mat-checkbox>
+                                </div>
+                                <div fxLayoutAlign="center start" class="mt-1 mb-1" *ngIf="notFromAudits">
+                                    <mat-checkbox [(ngModel)]="isExcludeOtherUs" (change)="excludeOtherUS()">
+                                        {{'WIDGETS.INCLUDEOTHERWORKITEMS' | translate}}
+                                    </mat-checkbox>
+                                </div>
+                            </mat-card>
+                        </mat-menu>
+                    </div>
+                    <mat-divider></mat-divider>
+                </mat-card-title>
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="adhocProgress"></mat-progress-bar>
+            </div>
+            <div id="widget-scroll-id" class="activity-data" [ngClass]="isFromMyWork ? 'my-work-height' : 'no-drag'">
+                <div fxLayout="row wrap" class="full-width mt-05"
+                    *ngIf="anyOperationInProgress && !calanderView && !userBoardView && !kanbanView">
+                    <div fxFlex="100" *ngFor="let item of [1,2,3]">
+                        <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+                            <div fxFlex="92" fxFlexOffset="10px">
+                                <div fxLayout="row p-05">
+                                    <div fxFlex="39">
+                                        <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                    </div>
+                                    <div fxFlex="1" fxFlexOffset="28">
+                                        <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                                    </div>
+                                    <div fxFlex="3" fxFlexOffset="3">
+                                        <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                                    </div>
+                                    <div fxFlex="3" fxFlexOffset="3">
+                                        <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                    </div>
+
+                                    <div fxFlexOffset="6" fxFlex="13">
+                                        <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div *ngIf="!anyOperationInProgress && !calanderView && !userBoardView && !kanbanView"
+                    class="all-work-items" style="min-width:900px;">
+
+                    <div *ngFor="let userStory of workItemList">
+                        <!-- | resultfilter: searchText: 'userStoryName' 
+                            | userStoryTagsFilter: searchTags: 'tag' 
+                            | searchfilter: 'userStoryStatusId': selectedUserStoryStatusId 
+                            | workItemTypesFilter: 'userStoryTypeId': selectedUserStoryTypeIds
+                            | bugPriorityfilter: 'bugPriorityId': selectedBugPriorityId" -->
+                        <div *ngIf="!userStory.isAdhocUserStory">
+                            <gc-userstory-summary class="full-width" [loggedUser]="loggedUser" [userStory]="userStory"
+                                [userStoryChecked]=false [isDeadlinedispaly]=true [isArchivedGoal]=false
+                                [allUserStorieSelected]=false
+                                [userStorySelected]="highLightSelectedUserStory(userStory.userStoryId)"
+                                [isSubTasksPage]=false [isAllGoalsPage]=true [isUserStoriesPage]=true
+                                [treeStructure]=false [goalReplanId]="goalReplanId"
+                                [isEditFromProjects]="isEditFromProjects" (selectUserStory)="selectedUserStory($event)"
+                                (completeUserStory)="getWorkItemById($event)"
+                                (removeUserStory)="getRemoveUserStory($event)"
+                                (openUniquePage)="getOpenUniquePage($event)"
+                                [isLoading]="(anyOperationInProgressForAutoLogging$|async)" [isShow]="true"
+                                (updateAutoLog)="LogAction($event)" [notFromAudits]="notFromAudits"
+                                [fromApp]="Ids != null || Ids != undefined">
+                            </gc-userstory-summary>
+                        </div>
+                        <div *ngIf="userStory.isAdhocUserStory" class="adhoc-userstories">
+                            <adhoc-userstory-summary class="full-width " [userStory]="userStory"
+                                [isIncludeCompletedUserStories]=false [isEditFromProjects]="isEditFromProjects"
+                                (selectUserStory)="selectedAdhocUserStory($event)"
+                                (completeUserStory)="getWorkItemById($event)"
+                                (removeUserStory)="getRemoveUserStory($event)" (updateAutoLog)="LogAction($event)">
+                            </adhoc-userstory-summary>
+                        </div>
+                    </div>
+                    <app-common-message-box *ngIf="!workItemList || workItemList && workItemList.length == 0 && notFromAuditActions"
+                        textToDisplay="{{ 'USERSTORYUNIQUE.NOWORKTEXT' | translate | softLabelsPipe :softLabels }}">
+                    </app-common-message-box>
+                    <app-common-message-box *ngIf="!workItemList || workItemList && workItemList.length == 0 && !notFromAuditActions"
+                        textToDisplay="{{ 'USERSTORYUNIQUE.NOACTIONSASSIGNED' | translate | softLabelsPipe :softLabels }}">
+                    </app-common-message-box>
+                    <mat-paginator *ngIf="(workItemListCount > 25) && !(anyOperationInProgress)"
+                        [length]="workItemListCount" [pageSize]="pageSize" [pageIndex]="pageIndex"
+                        [pageSizeOptions]="pageSizeOptions" (page)="getMyWorkItems($event)">
+                    </mat-paginator>
+                    <div class="add-userstory mt-1 mb-1"
+                        *ngIf="(canAccess_feature_AddOrUpdateAdhocWork) && notFromAudits">
+                        <create-adhoc-work [workspaceDashboardId]="dashboardId"
+                            [isEditFromProjects]="isEditFromProjects" (adhocCreation)="adhocCreation($event)"
+                            (adhocProgress)="getAdhocProgress($event)">
+                        </create-adhoc-work>
+                    </div>
+                </div>
+                <div *ngIf="calanderView">
+                    <app-goal-component-calender-view-detail [goal]=null [workItemList]="filteredWorkItemList"
+                        [isFromAllWorkItems]=true (completeUserStory)="getWorkItemById($event)"
+                        (removeUserStory)="getRemoveUserStory($event)" class="dispaly-grid"
+                        [selectedViewType]="selectedViewTypeIndex" [notFromAudits]="notFromAudits"
+                        (selectedViewIndex)="schedulerViewChanged($event)">
+                    </app-goal-component-calender-view-detail>
+                </div>
+                <div *ngIf="userBoardView">
+                    <app-goal-employee-task-board-view [uesrStoriesData]="filteredWorkItemList"
+                        [notFromAudits]="notFromAudits" (completeUserStory)="getWorkItemById($event)"
+                        (removeUserStory)="getRemoveUserStory($event)" class="display-grid">
+                    </app-goal-employee-task-board-view>
+                </div>
+                <div *ngIf="kanbanView && goal && !notFromAudits && notFromAuditActions">
+                    <app-pm-kanbanboard [userStorySearchCriteria]="userStorySearchCriteria" [goal]="goal"
+                        [isTheBoardLayoutKanban]=true [notFromAudits]="notFromAudits"
+                        (openUniquePage)="getOpenUniquePage($event)">
+                    </app-pm-kanbanboard>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <app-common-message-box *ngIf="!(canAccess_feature_MyProjectWork) && !(canAccess_feature_MyAdhocWork) && notFromAudits"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->
+
+
+<ng-template #uniqueUserstoryDialog let-data>
+    <unique-userstory-dialog display="initial" [data]=[data]></unique-userstory-dialog>
+</ng-template>
+
+
+<ng-template #adhocUserstoryDetailDialog let-data>
+    <adhoc-userstory-detail-dialog [data]=[data]></adhoc-userstory-detail-dialog>
+</ng-template>

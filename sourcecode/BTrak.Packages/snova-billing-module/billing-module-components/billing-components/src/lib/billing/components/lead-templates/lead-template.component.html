@@ -1,0 +1,99 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageLeadTemplates">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'LEAD.LEADSAPP' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px" *ngIf="canAccess_feature_AddLeadTemplates">
+                    <button mat-icon-button matTooltip="{{ 'LEAD.ADDNEWLEADTEMPLATE' | translate }}"
+                        (click)="openAddNewTemplate(null,false)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="templatesList.length > 0">
+        <kendo-grid [data]="leadTemplatesList" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+            [sortable]="true" [sort]="state.sort" [filterable]="false" [loading]="isLoading"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="formName" title="{{'LEAD.TEMPLATENAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.formName }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdBy" title="{{'KYCCONFIG.CREATEDBY' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.createdBy }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdDateTime" title="{{'KYCCONFIG.CREATEDON' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.createdDateTime | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <!-- <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="eye"
+                        matTooltip="{{ 'LEAD.PREVIEWTEMPLATE' | translate}}"
+                        (click)="openAddNewTemplate(dataItem,true)"></fa-icon> -->
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit" 
+                        matTooltip="{{ 'LEAD.EDITTEMPLATE' | translate}}" (click)="openAddNewTemplate(dataItem,false)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" [satPopoverAnchorFor]="deleteTemplatePopOver"
+                        #deleteTemplatePopup="satPopoverAnchor" matTooltip="{{ 'LEAD.DELETETEMPLATE' | translate}}"
+                        (click)="openDeletePopup(dataItem,deleteTemplatePopup)" icon="trash">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag"
+        *ngIf="!isLoading && templatesList.length === 0 && (canAccess_feature_ManageLeadTemplates)"
+        textToDisplay="{{'LEAD.YOUDONTHAVEANYTEMPLATES' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                (click)="openAddNewTemplate(null,false)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'LEAD.ADDNEWLEADTEMPLATE' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+
+
+    <sat-popover #deleteTemplatePopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="p-1">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mb-1">{{ 'LEAD.AREYOUSUREWANTTODELETETHETEMPLATE' | translate }}
+                </div>
+            </mat-card-title>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteTemplate();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <ng-template #AddLeadTemplateDialog let-data>
+        <add-lead-template-dialog [data]=[data]></add-lead-template-dialog>
+    </ng-template>
+</div>
+
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageLeadTemplates)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,108 @@
+<mat-card-title class="full-width data-table-header drag-handler custom-widget-grid-title">
+    <div class="card-title-text p-05 ml-05" fxLayout="row" fxLayoutAlign="start center">
+        <!-- <div fxFlex class="hide-content-overflow" matTooltip="{{customWidgetName}}">{{customWidgetName}}</div> -->
+        <div fxFlex fxLayoutAlign="start center" class="drag-handler" *ngIf="!isEditAppName">
+            <b>
+                <span (click)="editAppName()" class="custom-name-bg p-05"
+                    *ngIf="canAccess_feature_ManageCustomApps">{{customWidgetName | titlecase}}</span>
+                <span *ngIf="!(canAccess_feature_ManageCustomApps)">{{customWidgetName | titlecase}}</span>
+            </b>
+        </div>
+        <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+            <mat-form-field>
+                <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                     [(ngModel)]="changedAppName"  (blur)="upsertCustomHtmlApp()" (keyup)="keyUpFunction($event)"
+                    matInputAutofocus />
+            </mat-form-field>
+        </div>
+        <div fxFlex="25px" fxLayoutAlign="end center" class="mr-05 icons-visible">
+            <fa-icon icon="share-alt" matTooltip="Share Report" (click)="openFilterPopover()"
+                class="mat-color-accent cursor-pointer"></fa-icon>
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center" class="mr-05 icons-visible"
+            *ngIf="(canAccess_feature_ManageCustomApps)">
+            <fa-icon icon="edit" class="mat-color-accent filter-operation cursor-pointer" (click)="navigateToEdit()">
+            </fa-icon>
+        </div>
+    </div>
+</mat-card-title>
+<div class="html-app-height no-drag" id="widget-scroll-id" scrollStrategy="reposition">
+     <div #htmlContentLoader></div>
+   
+</div>
+
+<!-- <sat-popover #shareReportPopup hasBackdrop verticalAlign="below" horizontalAlign="end" backdropClass="backdrop-color"> -->
+  <ng-template #shareDialogDocument let-data>
+    
+    <div class="custom-dialog">
+      <div class="custom-close" mat-dialog-close (click)="closeDialog()">
+          <fa-icon icon="times" class="project-dialog"></fa-icon>
+      </div>
+  </div>
+    <div>
+        <mat-card class="filter-data p-0" fxFlex fxLayout="column">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05 mb-1">
+                    Share Report
+                </div>
+            </mat-card-title>
+            <form [formGroup]="sendReportForm" novalidate #formDirective="ngForm" class="p-05">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="User" multiple (selectionChange)="getUserlistByUserId()"
+                        formControlName="userIds">
+                        <mat-select-trigger>
+                            {{selectedUserNames}}
+                        </mat-select-trigger>
+                        <mat-option [value]="0" #allSelected (click)="toggleAllUsersSelected()">
+                            {{'Select All'}}
+                        </mat-option>
+                        <mat-option [value]="user.id" (click)="toggleUserPerOne(allSelected.value)"
+                            *ngFor="let user of usersList">
+                            {{ user.fullName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field class="full-width tags-popup mb-1" hintLabel="Please press comma to enter new email">
+                    <mat-chip-list #tagsList1>
+                        <mat-chip *ngFor="let tags of toMailsList" [selectable]="selectable" [removable]="removable"
+                            (removed)="removeToMailId(tags)" class="userstory-tags">
+                            <span class="hide-content-overflow" matTooltip="{{ tags }}"
+                                matTooltipClass="tooltipClass-mat tooltip-overflow">
+                                {{tags}}
+                            </span>
+                            <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                        </mat-chip>
+                        <input placeholder="Enter Email" [matChipInputFor]="tagsList1" formControlName="toEmails"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            (matChipInputTokenEnd)="addToMailIds($event)">
+                    </mat-chip-list>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <textarea matInput class="text-area" formControlName="subject" rows="3"
+                        placeholder="Email subject" required></textarea>
+                </mat-form-field>
+                <editor formControlName="body" class="dfree-header custom-logtime-comment"
+                  apiKey="ln50de3rdhw6h9ld2lutg00tj5g9xk14pp5m8dfy1b1s4nen" placeholder="Email Body" menubar="false"
+                  [init]="initSettings" background="white" (onKeyUp)="buttonDisabledInProgress($event)" required>
+                </editor>
+            </form>
+            <div class="text-center p-05">
+                <button type="button" mat-raised-button color="primary" class="mr-1 text-center"
+                (click)="getFileToSendReport()" [disabled]="!(sendReportForm.valid && ((selectedUserEmails !='' && selectedUserEmails != null) || (toMailsList.toString()!='' && toMailsList!=null)))">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="sharingisinProgress">
+                    </mat-progress-bar>
+                    <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+                </button>
+                <button mat-raised-button class="mr-1" (click)="closeDialog()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card>
+    </div>
+</ng-template>
+<!-- </sat-popover> -->
+
+
+<ng-template #createAppDialogComponet let-data>
+    <create-app-dialog [data]=[data]></create-app-dialog>
+</ng-template>

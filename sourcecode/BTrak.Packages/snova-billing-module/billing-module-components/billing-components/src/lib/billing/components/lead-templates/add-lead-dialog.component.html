@@ -1,0 +1,622 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="!contractEdit">
+            {{ 'CONTRACT.ADDLEAD' | translate }}</div>
+        <div class="card-title-text mat-bg-primary p-05" *ngIf="contractEdit">
+            Edit lead</div>
+    </mat-card-title>
+    <form [formGroup]="leadContractForm" novalidate #formDirective="ngForm" (submit)="upsertLeadContract()">
+        <div id="style-1" class="contract-lead-form-height p-1">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="salesPersonId"
+                            placeholder="{{ 'CONTRACT.SALESPERSONNAME' |  translate }}" required>
+                            <mat-option value="option" *ngFor="let employee of employeesList" [value]="employee.userId">
+                                {{employee.userName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('salesPersonId').hasError('required') && leadContractForm.get('salesPersonId').touched">{{
+                                'CONTRACT.PLEASESELECTSALESPERSON' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="leadDate" formControlName="leadDate" (click)="leadDate.open();"
+                            required placeholder="{{ 'CONTRACT.LEADDATE' |  translate }}"
+                            [min]="leadContractForm.get('contractDateFrom').value"
+                            [max]="leadContractForm.get('contractDateTo').value">
+                        <mat-datepicker-toggle matSuffix [for]="leadDate"></mat-datepicker-toggle>
+                        <mat-datepicker #leadDate></mat-datepicker>
+                        <mat-error class="P-06"
+                            *ngIf="leadContractForm.get('leadDate').hasError('required') && leadContractForm.get('leadDate').touched">
+                            {{ 'CONTRACT.PLEASESELECTLEADDATE' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="contractTypeId" placeholder="Type of sales" required
+                            (selectionChange)="contractTypeChange($event.value)" [(ngModel)]="contractTypeValue">
+                            <mat-option value="option" *ngFor="let contractType of contractTypes"
+                                [value]="contractType.value">
+                                {{contractType.contractName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('contractTypeId').hasError('required') && leadContractForm.get('contractTypeId').touched">
+                                Please select type of sales
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width" *ngIf="contractTypeValue == 'contract'">
+                        <mat-select formControlName="contractId" placeholder="Contracts" required
+                            (selectionChange)="contractSelection($event.value)">
+                            <mat-option value="option" *ngFor="let contract of contractList"
+                                [value]="contract.contractId">
+                                {{contract.contractNumber}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('contractId').hasError('required') && leadContractForm.get('contractId').touched">
+                                Please select contract
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <div class="disable-text-drop-down">
+                        <mat-form-field class="full-width" *ngIf="contractTypeValue == 'nonContract'">
+                            <mat-select formControlName="buyerId" placeholder="Company name"
+                                required>
+                                <mat-option value="option" *ngFor="let client of clientData" [value]="client.clientId">
+                                    {{client.companyName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="leadContractForm.get('buyerId').hasError('required') && leadContractForm.get('buyerId').touched">{{
+                                    'CONTRACT.PLEASESELECTBUYER' | translate }}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"
+                *ngIf="contractTypeValue == 'contract'" class="disable-text">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="contractNumber" matInput
+                            placeholder="{{ 'CONTRACT.CONTRACTNUMBER' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('contractNumber').hasError('required') && leadContractForm.get('contractNumber').touched">{{
+                                'CONTRACT.PLEASEENTERCONTRACTNUMBER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text-drop-down">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="buyerId" placeholder="Company name"
+                            required>
+                            <mat-option value="option" *ngFor="let client of clientData" [value]="client.clientId">
+                                {{client.companyName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('buyerId').hasError('required') && leadContractForm.get('buyerId').touched">{{
+                                'CONTRACT.PLEASESELECTBUYER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"
+                *ngIf="contractTypeValue == 'contract'">
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="contractDateFrom" formControlName="contractDateFrom"
+                            (click)="contractDateFrom.open();" required
+                            placeholder="{{ 'CONTRACT.CONTRACTFROM' |  translate }}">
+                        <mat-datepicker-toggle matSuffix [for]="contractDateFrom"></mat-datepicker-toggle>
+                        <mat-datepicker #contractDateFrom></mat-datepicker>
+                        <mat-error class="P-06"
+                            *ngIf="leadContractForm.get('contractDateFrom').hasError('required') && leadContractForm.get('contractDateFrom').touched">
+                            {{ 'PAYROLL.STARTDATEREQUIREDERROR' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="contractDateTo" (click)="contractDateTo.open();"
+                            [min]="leadContractForm.get('contractDateFrom').value" required
+                            formControlName="contractDateTo" placeholder="{{ 'CONTRACT.CONTRACTTO' |  translate }}">
+                        <mat-datepicker-toggle matSuffix [for]="contractDateTo"></mat-datepicker-toggle>
+                        <mat-datepicker #contractDateTo></mat-datepicker>
+                        <mat-error class="P-06"
+                            *ngIf="leadContractForm.get('contractDateTo').hasError('required') && leadContractForm.get('contractDateTo').touched">
+                            {{ 'PAYROLL.ENDDATEREQUIREDERROR' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"
+                *ngIf="contractTypeValue == 'contract'">
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="contractQuantity" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.contractQuantity)"
+                            placeholder="{{ 'CONTRACT.CONTRACTQUANTITY(MT)' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('contractQuantity').hasError('required') && leadContractForm.get('contractQuantity').touched">{{
+                                'CONTRACT.PLEASEENTERCONTRACTQUANTITY(MT)' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="remaningQuantity" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.remaningQuantity)"
+                            placeholder="{{ 'CONTRACT.REMAININGQUANTITY(MT)' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('remaningQuantity').hasError('required') && leadContractForm.get('remaningQuantity').touched">{{
+                                'CONTRACT.PLEASEENTERREMANINGQUANTITY(MT)' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100" *ngIf="contractTypeValue == 'contract'" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="rateOrTon" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.rateOrTon)" placeholder="{{ 'CONTRACT.RATE/TON' |  translate }}"
+                            required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('rateOrTon').hasError('required') && leadContractForm.get('rateOrTon').touched">{{
+                                'CONTRACT.PLEASEENTERRATE/TON' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div [fxFlex]="contractTypeValue == 'contract' ? '50' : '100'" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="shipToAddress" matInput
+                            placeholder="{{ 'CONTRACT.SHIPTOADDRESS' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('shipToAddress').hasError('required') && leadContractForm.get('shipToAddress').touched">{{
+                                'CONTRACT.PLEASEENTERSHIPTOADDRESS' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="productId" placeholder="{{ 'CONTRACT.PRODUCT' |  translate }}"
+                            required (selectionChange)="getRelatedGrades($event.value)">
+                            <mat-option value="option" *ngFor="let product of productList" [value]="product.productId">
+                                {{product.productName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('productId').hasError('required') && leadContractForm.get('productId').touched">{{
+                                'CONTRACT.PLEASESELECTPRODUCT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="gradeId" placeholder="{{ 'CONTRACT.GRADE' |  translate }}"
+                            required>
+                            <mat-option value="option" *ngFor="let grade of filteredGradeList" [value]="grade.gradeId">
+                                {{grade.gradeName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('gradeId').hasError('required') && leadContractForm.get('gradeId').touched">{{
+                                'CONTRACT.PLEASESELECTGRADE' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="quantityInMT" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.quantityInMT)"
+                            placeholder="{{ 'CONTRACT.QUANTITY(MT)' |  translate }}" required (keyup)="onKey($event)">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('quantityInMT').hasError('required') && leadContractForm.get('quantityInMT').touched">{{
+                                'CONTRACT.PLEASEENTERQUANTITY(MT)' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width" [disabled]="contractTypeValue == 'contract' ? true : false">
+                        <input formControlName="rateGst" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.rateGst)"
+                            placeholder="{{ 'CONTRACT.RATE+GST(PRICE/TON)' |  translate }}" required
+                            (keyup)="onKey($event)">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('rateGst').hasError('required') && leadContractForm.get('rateGst').touched">{{
+                                'CONTRACT.PLEASEENTERRATE+GST' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="totalAmount" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.totalAmount)"
+                            placeholder="Total Amount(INR)" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('totalAmount').hasError('required') && leadContractForm.get('totalAmount').touched">{{
+                                'CONTRACT.PLEASEENTERTOTALAMOUNT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="paymentTypeId" placeholder="{{ 'CONTRACT.PAYMENT' |  translate }}"
+                            >
+                            <mat-option value="option" *ngFor="let payment of paymentList" [value]="payment.id">
+                                {{payment.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('paymentTypeId').hasError('required') && leadContractForm.get('paymentTypeId').touched">{{
+                                'CONTRACT.PLEASESELECTPAYMENT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="gstNumber" matInput
+                            placeholder="{{ 'CONTRACT.GSTNUMBER' |  translate }}">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('gstNumber').hasError('required') && leadContractForm.get('gstNumber').touched">{{
+                                'CONTRACT.PLEASEENTERGSTNUMBER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="vehicleNumberOfTransporter" matInput
+                            placeholder="{{ 'CONTRACT.VEHICLENUMBEROFTRANSPORTER' |  translate }}">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('vehicleNumberOfTransporter').hasError('required') && leadContractForm.get('vehicleNumberOfTransporter').touched">{{
+                                'CONTRACT.PLEASEENTERVEHICLENUMBEROFTRANSPORTER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="mobileNumberOfTruckDriver" matInput
+                            placeholder="{{ 'CONTRACT.MOBILENUMBEROFTRUCKDRIVER' |  translate }}">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('mobileNumberOfTruckDriver').hasError('required') && leadContractForm.get('mobileNumberOfTruckDriver').touched">{{
+                                'CONTRACT.PLEASEENTERMOBILENUMBEROFTRUCKDRIVER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="drums" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.drums)" placeholder="{{ 'CONTRACT.DRUMS' |  translate }}"
+                            required (keyup)="calculateNet($event)">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('drums').hasError('required') && leadContractForm.get('drums').touched">{{
+                                'CONTRACT.PLEASEENTERDRUMS' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="netWeightApprox" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.netWeightApprox)"
+                            placeholder="{{ 'CONTRACT.NETWEIGHTAPPROX' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('netWeightApprox').hasError('required') && leadContractForm.get('netWeightApprox').touched">{{
+                                'CONTRACT.PLEASEENTERNETWEIGHTAPPROX' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="portId" placeholder="{{ 'CONTRACT.LOADINGFROM' |  translate }}"
+                            >
+                            <mat-option value="option" *ngFor="let port of portDetailList" [value]="port.id">
+                                {{port.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('portId').hasError('required') && leadContractForm.get('portId').touched">{{
+                                'CONTRACT.PLEASESELECTLOADINGFROM' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="blNumber" matInput placeholder="{{ 'CONTRACT.BLNUMBER' |  translate }}"
+                            >
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('blNumber').hasError('required') && leadContractForm.get('blNumber').touched">{{
+                                'CONTRACT.PLEASEENTERBLNUMBER' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100" class="disable-text">
+                    <mat-form-field class="full-width">
+                        <input formControlName="availableCreditLimit" matInput trim
+                        mask="separator.3" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, leadContractForm.value.availableCreditLimit)"
+                            placeholder="{{ 'CONTRACT.AVAILABLECREDITLIMIT' |  translate }}" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('availableCreditLimit').hasError('required') && leadContractForm.get('availableCreditLimit').touched">{{
+                                'CONTRACT.PLEASEENTERAVAILABLECREDITLIMIT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100" class="pt-2">
+                    <mat-checkbox formControlName="kycCompleted">{{ 'CONTRACT.KYCCOMPLETED' | translate }}
+                    </mat-checkbox>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                        <div class="pt-1">
+                            <label>{{ 'CONTRACT.EXCEPTIONAPPROVALREQUIRED' | translate }}</label>
+                        </div>
+                        <div fxFlex>
+                            <mat-radio-group formControlName="exceptionApprovalRequired">
+                                <div>
+                                    <mat-radio-button value="true">
+                                        Yes</mat-radio-button>
+                                    <mat-radio-button value="false">
+                                        No</mat-radio-button>
+                                </div>
+                            </mat-radio-group>
+                            <mat-error>
+                                <span
+                                    *ngIf="!leadContractForm.get('exceptionApprovalRequired').valid && leadContractForm.get('exceptionApprovalRequired').touched">
+                                    {{ 'CONTRACT.PLEASESELECTEXCEPTIONAPPROVALREQUIRED' | translate }}</span>
+                            </mat-error>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="shipmentMonth" formControlName="shipmentMonth"
+                            (click)="shipmentMonth.open();"
+                            placeholder="{{ 'CONTRACT.SHIPMENTMONTH' |  translate }}">
+                        <mat-datepicker-toggle matSuffix [for]="shipmentMonth"></mat-datepicker-toggle>
+                        <mat-datepicker #shipmentMonth></mat-datepicker>
+                        <mat-error class="P-06"
+                            *ngIf="leadContractForm.get('shipmentMonth').hasError('required') && leadContractForm.get('shipmentMonth').touched">
+                            {{ 'CONTRACT.PLEASESELECTSHIPMENTMONTH' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="countryOriginId"
+                            placeholder="{{ 'CONTRACT.COUNTRY' |  translate }}">
+                            <mat-option value="option" *ngFor="let country of countryList" [value]="country.countryId">
+                                {{country.countryName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('countryOriginId').hasError('required') && leadContractForm.get('countryOriginId').touched">{{
+                                'CONTRACT.PLEASESELECTCOUNTRY' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="termsOfDelivery" matInput
+                            placeholder="{{ 'CONTRACT.TERMSOFDELIVERY' |  translate }}">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('termsOfDelivery').hasError('required') && leadContractForm.get('termsOfDelivery').touched">{{
+                                'CONTRACT.PLEASEENTERTERMSOFDELIVERY' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="customPoint" matInput
+                            placeholder="{{ 'CONTRACT.CUSTOMPOINT' |  translate }}">
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('customPoint').hasError('required') && leadContractForm.get('customPoint').touched">{{
+                                'CONTRACT.PLEASEENTERCUSTOMPOINT' | translate }}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="invoiceNumber" matInput placeholder="Proforma Invoice number" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('invoiceNumber').hasError('required') && leadContractForm.get('invoiceNumber').touched">
+                                Please enter invoice number
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="deliveryNote" matInput placeholder="Delivery note" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('deliveryNote').hasError('required') && leadContractForm.get('deliveryNote').touched">Please
+                                enter delivery note
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input formControlName="suppliersRef" matInput placeholder="Supplier's Ref" required>
+                        <mat-error>
+                            <span
+                                *ngIf="leadContractForm.get('suppliersRef').hasError('required') && leadContractForm.get('suppliersRef').touched">Please
+                                enter supplier's ref
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                </div>
+            </div>
+            <div *ngIf="data.isForPreview">
+                <div>
+                    <b>Final vehicle number of transporter: </b>{{data.rowData.finalVehicleNumberOfTransporter}}
+                </div>
+                <div>
+                    <b>Final vehicle number of truck driver: </b>{{data.rowData.finalMobileNumberOfTruckDriver}}
+                </div>
+                <div>
+                    <b>Final quantity: </b>{{data.rowData.finalQuantityInMT}}
+                </div>
+                <div>
+                    <b>Final drums: </b>{{data.rowData.finalDrums}}
+                </div>
+                <div *ngIf="data.rowData.finalQuantityInMT && data.rowData.finalDrums">
+                    <b>Net weight approx: </b>{{data.rowData.finalQuantityInMT/data.rowData.finalDrums}}
+                </div>
+                <div>
+                    <b>Final loading from: </b>{{data.rowData.finalPortName}}
+                </div>
+                <div>
+                    <b>Final BL number: </b>{{data.rowData.finalBLNumber}}
+                </div>
+                <div>
+                    <b>Weighing slip number: </b>{{data.rowData.weighingSlipNumber}}
+                </div>
+                <div>
+                    <b>Weighing slip date: </b>{{data.rowData.weighingSlipDate | date: 'dd-MMM-yyyy'}}
+                </div>
+                <div *ngIf="data.rowData.weighingSlipPhoto">
+                    <b>Weighing slip photo: </b><a target="_blank" [href]="data.rowData.weighingSlipPhoto">
+                        Weighing slip photo
+                    </a>
+                </div>
+                <div *ngIf="data.rowData.uploadedOther">
+                    <b>Other upload: </b>
+                    <a target="_blank" [href]="data.rowData.uploadedOther">
+                        Other upload
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mb-1 prl-1">
+            <button mat-raised-button color="primary" type="submit"
+                [disabled]="!leadContractForm.valid || isInProgress || (!leadContractForm.get('kycCompleted').value && leadContractForm.get('exceptionApprovalRequired').value!='true')"
+                class="mr-05" (click)="$event.stopPropagation()" *ngIf="!contractEdit">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon> {{'ADD' | translate}}
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="!leadContractForm.valid || isInProgress"
+                class="mr-05" (click)="$event.stopPropagation()" *ngIf="contractEdit">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                </mat-progress-bar>
+                <fa-icon icon="pen" class="mr-05"></fa-icon>{{'HRMANAGAMENT.UPDATE' | translate}}
+            </button>
+            <!-- <button mat-button mat-raised-button color="primary" type="button" class="mr-05"
+                [disabled]="!leadFormId || isInProgress" (click)="upsertSco()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="file"></fa-icon>{{ 'SAVESCO' | translate }}
+            </button> -->
+            <button mat-raised-button type="reset" (click)="onNoClick()" [disabled]="isInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+        <p *ngIf="rowData?.isSCOActive"><b>Alert: </b> You have to regenerate SCO, If you need to change lead details
+        </p>
+    </form>
+</mat-card>

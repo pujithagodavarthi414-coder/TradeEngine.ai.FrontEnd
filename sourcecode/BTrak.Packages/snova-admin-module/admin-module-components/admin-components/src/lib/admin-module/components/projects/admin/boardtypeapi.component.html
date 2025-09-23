@@ -1,0 +1,115 @@
+<div *ngIf="canAccess_feature_BoardTypeApi">
+<div class="full-height">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'BOARDTYPE.TITLE' | translate | titlecase }}">{{ 'BOARDTYPE.TITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="230px" fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="apiName">
+              </mat-form-field>
+            </div>
+            <span class="shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!apiName"></span>
+              <mat-icon *ngIf="apiName" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'BOARDTYPE.ADD' | translate }}" fxLayoutAlign="end center"
+              [satPopoverAnchorFor]="upsertBoardTypeApi" #upsertBoardTypeApiPopover="satPopoverAnchor"
+              (click)="CreateboardTypeapi(upsertBoardTypeApiPopover);clearForm()">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak full-width" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [externalSorting]="false" [loadingIndicator]="boardTypeApiDataInProgress"
+      [rows]="(boardtypeapi | resultfilter: apiName:'apiName')"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'BOARDTYPE.BOARDTYPENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="apiName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.apiName }}">{{ row?.apiName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'BOARDTYPE.APINAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="createdDateTime">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span
+            matTooltip="{{ row?.createdDateTime | date: 'dd-MMM-yyyy' }}">{{ row?.createdDateTime | date: 'dd-MMM-yyyy' }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'BOARDTYPE.EDITBOARD' | translate }}" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <fa-icon icon="edit" matTooltip="{{ 'BOARDTYPE.EDITBOARD' | translate }}" class="icon-button mat-color-accent"
+            [satPopoverAnchorFor]="upsertBoardTypeApi" #upsertBoardTypeApiPopover="satPopoverAnchor"
+            (click)="EditBoardTypeApi(row, upsertBoardTypeApiPopover)">
+          </fa-icon>
+        </ng-template>
+      </ngx-datatable-column>
+
+    </ngx-datatable>
+  </div>
+
+  <sat-popover #upsertBoardTypeApi verticalAlign="below" backdropClass="backdrop-color" hasBackdrop [autoFocus]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+      </mat-progress-bar>
+      <div>
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">{{ titleHeader }}</div>
+        </mat-card-title>
+        <form [formGroup]="boardtypeForm" #formDirective="ngForm" novalidate
+          (submit)="boardtypeForm.valid && SaveBoardTypeApi(formDirective)">
+          <div class="card-content p-05">
+            <mat-form-field class="full-width">
+              <input matInput formControlName="apiName" placeholder="{{ 'BOARDTYPE.TITLE' | translate }}"
+                (keyup)="onKey()" required />
+              <mat-error>
+                <span *ngIf="!boardtypeForm.get('apiName').valid && boardtypeForm.get('apiName').touched">
+                  {{ 'BOARDTYPE.ENTERBOARDTYPENAME' | translate }}</span>
+                <span
+                  *ngIf="boardtypeForm.get('apiName').hasError('maxlength')">{{ 'BOARDTYPE.MAXLENGTHERROR' | translate }}</span>
+              </mat-error>
+            </mat-form-field>
+            <mat-error>
+              <span *ngIf="isThereAnError" class="alert-alert-danger">{{validationMessage}}</span>
+            </mat-error>
+            <div class="text-center mt-05 mb-1">
+              <button mat-button mat-raised-button class="mr-05" color="primary" type="submit"
+                [disabled]="!boardtypeForm.valid || showSpinner">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner">
+                </mat-progress-bar>
+                <fa-icon icon="{{buttonIcon}}" class="mr-05"></fa-icon> {{ buttonText }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeDialog(formDirective); false">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </mat-card>
+  </sat-popover>
+</div>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_BoardTypeApi"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

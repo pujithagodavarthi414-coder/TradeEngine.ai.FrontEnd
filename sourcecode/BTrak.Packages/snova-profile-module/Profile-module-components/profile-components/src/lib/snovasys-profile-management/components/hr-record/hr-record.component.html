@@ -1,0 +1,112 @@
+<div fxLayout="row wrap" id="hr-1">
+    <div fxFlex="100" fxFlex.gt-md="calc(100% - 300px)">
+        <mat-card class="ml-0 p-0" style="height: calc(100vh - 60px);">
+            <mat-card-title class="m-2" style="display: block !important;">
+                
+                <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                    <mat-card class="filter-data" style="width: 280px;">
+                        <mat-form-field class="full-width">
+                            <mat-label>User</mat-label>
+                            <mat-select (selectionChange)="goToUserProfile($event.value)">
+                                <mat-option *ngFor="let row of teamMembersList" [value]="row.teamMemberId">
+                                    <app-avatar class="employee_img" *ngIf="!row.profileImage"
+                                        [name]="row.teamMemberName | removeSpecialCharacters" [isRound]="true"
+                                        size="30"></app-avatar>
+                                    <img class="employee_img" *ngIf="row.profileImage"
+                                        src="{{row.profileImage}}">{{row.teamMemberName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </mat-card>
+                </mat-menu>
+                <div fxFlex fxLayoutAlign="start center"
+                    class="dashboard-options" *ngIf="listView" id="hr-2">
+                    <fa-icon icon="bars" (click)="listView = !listView; selectedAppForListView = null;"
+                        matTooltip="{{ 'HORIZONTAL' | translate }}" class="mat-color-accent cursor-pointer"
+                        [ngClass]="{'active': listView}"></fa-icon>
+                </div>
+
+                <div fxFlex fxLayoutAlign="start center"
+                    class="dashboard-options" *ngIf="!listView">
+                    <fa-icon icon="bars" (click)="listView = !listView; selectedAppForListView = null;"
+                        matTooltip="{{ 'VERTICAL' | translate }}"
+                        class="mat-color-accent cursor-pointer kanban-icon-dashboard" [ngClass]="{'active': !listView}">
+                    </fa-icon>
+                </div>
+
+                <button fxFlex="30px" fxLayoutAlign="end center" mat-icon-button [matMenuTriggerFor]="filterMenu"
+                    *ngIf="(teamMembersList && teamMembersList.length > 1)" class="project-select pull-right mt-n1"
+                    (click)="openMenu()">
+                    <mat-icon mat-icon-button class="project-select pull-right goal-unique-menu" style="cursor:pointer"
+                        matTooltip="{{ 'MYPROFILE.CHANGEUSER' | translate}}">supervisor_account</mat-icon>
+                </button>
+
+                <button fxFlex="30px" fxLayoutAlign="end center" mat-icon-button class="project-select pull-right mt-n1" *ngIf="(canAccess_feature_DragApps)"
+                    id="hr-3" >
+                    <fa-icon icon="store" matTooltip="{{ 'APP.APPSTORE' | translate | titlecase}}"
+                        (click)="openAppsSettings(false)" class="goal-unique-menu"></fa-icon>
+                </button>
+                <button fxFlex="30px" fxLayoutAlign="end center" mat-icon-button [satPopoverAnchorFor]="filterThreeDotsPopover"
+                    class="project-select pull-right mt-n1"
+                    (click)="$event.stopPropagation();filterThreeDotsPopover.open()">
+                    <fa-icon icon="sliders-h" class="goal-unique-menu"></fa-icon>
+                </button>
+            </mat-card-title>
+            <mat-card-content class="m-0 p-0" style="height: calc(100vh - 95px);clear:both;">
+                <app-profile-gridster *ngIf="selectedWorkspaceId && !listView" [selectedApps]="selectedApps"
+                    [reloadDashboard]="reloadDashboard" [selectedWorkspaceId]="selectedWorkspaceId"
+                    [isListView]="listView" [dashboardFilters]="dashboardFilter" [isWidget]="widget">
+                </app-profile-gridster>
+                <app-profile-app-list [selectedWorkspaceId]="selectedWorkspaceId"
+                    [selectedApps]="selectedAppForListView" *ngIf="selectedWorkspaceId && listView">
+                </app-profile-app-list>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>
+
+<!----- popover for dashboard settings ------>
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #filterThreeDotsPopover
+    hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0" fxLayout="column">
+        <div fxFlex fxLayoutAlign="start center">
+            <button mat-menu-item (click)="resetToDefaultDashboardPersistance()">
+                <div fxLayoutAlign="row">
+                    <div fxFlex="25px">
+                        <fa-icon icon="history"></fa-icon>
+                    </div>
+                    <div fxFlex class="ml-05">
+                        {{'APP.RESETTODEFAULT'|translate}}
+                    </div>
+                </div>
+            </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center" *ngIf="(canAccess_feature_PublishAsDefault)">
+            <button mat-menu-item (click)="saveAsDefaultPersistance()">
+                <div fxLayoutAlign="row">
+                    <div fxFlex="25px">
+                        <fa-icon icon="save"></fa-icon>
+                    </div>
+                    <div fxFlex class="ml-05">
+                        {{'APP.SAVEASDEFAULT'|translate}}
+                    </div>
+                </div>
+            </button> 
+        </div>
+        <div fxFlex fxLayoutAlign="start center">
+            <button mat-menu-item (click)="refreshDashboard()">
+                <div fxLayoutAlign="row">
+                    <div fxFlex="25px">
+                        <fa-icon icon="sync-alt"></fa-icon>
+                    </div>
+                    <div fxFlex class="ml-05">
+                        {{'BILLINGDASHBOARD.REFRESH'|translate}}
+                    </div>
+                </div>
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<!----- popover for dashboard settings ------>

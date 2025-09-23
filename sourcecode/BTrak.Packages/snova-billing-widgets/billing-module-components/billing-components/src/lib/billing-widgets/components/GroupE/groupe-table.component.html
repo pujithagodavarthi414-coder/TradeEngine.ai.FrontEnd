@@ -1,0 +1,129 @@
+<div class="full-height invoice-manager">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{'ENTITYFORM.TABLETITLE' | translate}}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button mat-icon-button (click)="openAddpopup()">
+                        <fa-icon matTooltip="{{'ENTITYFORM.ADDTITLE' | translate}}" class="filter mat-color-accent"
+                            icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="projects-list-grid grid-wrapper no-drag">
+        <kendo-grid #grid class="invoice-area-apps" [data]="grEsList" [pageSize]="state.take" [skip]="state.skip"
+            [pageable]="true" [sortable]="true" (cellClick)="openViewpopup($event)" [sort]="state.sort"
+            [filterable]="false" [loading]="loadingIndicator" (dataStateChange)="dataStateChange($event)" id="style-1">
+            <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}" pagerItems="{{'ITEMS' | translate}}"
+                pagerOf="{{'OF' | translate}}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="gridInvoice" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{'ENTITYFORM.GRIDINVOICE' | translate}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.gridInvoice}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.gridInvoiceName }} {{ dataItem?.gridInvoice }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="gridInvoiceDate" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{'ENTITYFORM.GRIDINVOICEDATE' | translate}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow"
+                            matTooltip="{{dataItem.gridInvoiceDate | date: 'mediumDate'}}" matTooltipShowDelay="400"
+                            fxFlex>
+                            {{ dataItem?.gridInvoiceDate | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column [filterable]="false" width="250">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{'ACTIONS' | translate}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                        <button class="text-center mr-05" title="{{'ENTITYFORM.EDITTITLE' | translate}}"
+                            (click)="$event.stopPropagation();edit(dataItem)" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="{{'ENTITYFORM.GENERATEINVOICE' | translate}}"
+                            *ngIf="!dataItem.generateInvoice" [satPopoverAnchorFor]="convertInvoicePopover"
+                            #convertInvoicePopup="satPopoverAnchor"
+                            (click)="openConvertPopup(dataItem,convertInvoicePopup)" mat-icon-button>
+                            <fa-icon icon="file-invoice" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="Send email" mat-icon-button
+                            (click)="$event.stopPropagation();openMailpopup(dataItem)" *ngIf="dataItem.invoiceUrl && dataItem.generateInvoice">
+                            <fa-icon icon="envelope" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="Download" mat-icon-button
+                            (click)="$event.stopPropagation();downloadInvoice(dataItem)" *ngIf="dataItem.invoiceUrl && dataItem.generateInvoice">
+                            <fa-icon icon="download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center mr-05" title="History" mat-icon-button
+                        (click)="$event.stopPropagation();viewHistoryDialog(dataItem)">
+                        <fa-icon icon="clock" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': isAnyOperationIsInprogress}"></div>
+    </div>
+</div>
+
+
+<ng-template #addGrEDialogComponent let-data>
+    <app-add-groupe [data]=[data]></app-add-groupe>
+</ng-template>
+
+<ng-template #viewGrEDialogComponent let-data>
+    <view-groupe [data]=[data]></view-groupe>
+</ng-template>
+
+<ng-template #maileDialogComponent let-data>
+    <mail-entry-groupe [data]=[data]></mail-entry-groupe>
+</ng-template>
+
+<ng-template #viewHistoryDialogComponent let-data>
+    <view-history-dialog [data]=[data]></view-history-dialog>
+</ng-template>
+
+
+<sat-popover backdropClass="backdrop-color" #convertInvoicePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'ENTITYFORM.GENERATEINVOICE' | translate }}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'ENTITYFORM.CONFIRMINVOICEGENERATION' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="convertToInvoice();">
+                    <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ENTITYFORM.GENERATEINVOICE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeConvertInvoicePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,216 @@
+<app-common-message-box *ngIf="!(canAccess_feature_ViewEstimate)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height invoice-manager" *ngIf="(canAccess_feature_ViewEstimate)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100"
+                        class="hide-content-overflow">{{ 'CLIENTS.ESTIMATES' | translate | softLabelsPipe : softLabels }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="mr-05">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="changeArchiveEstimates(isArchived)">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event,searchText)" trim>
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon close_icon_billing" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center"
+                    *ngIf="(canAccess_feature_AddOrUpdateEstimate) && !isArchived">
+                    <button mat-icon-button (click)="addEstimate()">
+                        <fa-icon
+                            matTooltip="{{'BILLINGMANAGEMENT.ADDESTIMATE' | translate | softLabelsPipe : softLabels}}"
+                            class="filter mat-color-accent" icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="projects-list-grid grid-wrapper no-drag">
+        <kendo-grid #grid [data]="estimateList" id="style-1" [pageSize]="state.take" [skip]="state.skip"
+            [sort]="state.sort" [sortable]="true" [filter]="state.filter" [pageable]="true" [filterable]="false"
+            [scrollable]="true" [selectable]="true" [style]="{'width': 'max-content'}"
+            (cellClick)="cellClickHandler($event)" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column width="200" field="estimateNumber">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.ESTIMATENUMBER' | translate | softLabelsPipe : softLabels }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.estimateNumber}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.estimateNumber }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="clientName">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.CLIENTNAME' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.clientName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.clientName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="totalEstimateAmount">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.ESTIMATEAMOUNT' | translate | softLabelsPipe : softLabels }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.symbol }}{{ dataItem?.totalEstimateAmount.toFixed(2) | number }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="estimateStatusName">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'CLIENTS.ESTIMATESTATUS' | translate | softLabelsPipe : softLabels }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="dataItem?.estimateStatusColor"
+                        (click)="$event.stopPropagation(); cellMiniClickHandler(dataItem)">
+                        {{ dataItem.estimateStatusName }}
+                    </mat-chip>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="issueDate" [filterable]="false">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.ISSUEDATE' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.issueDate | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="dueDate" [filterable]="false">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'BILLINGMANAGEMENT.DUEDATE' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" fxFlex>
+                            {{ dataItem?.dueDate | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="200" [filterable]="false">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{ 'TESTMANAGEMENT.ACTIONS' | translate }}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                        <button *ngIf="(canAccess_feature_AddOrUpdateEstimate) && !isArchived" class="text-center mr-05"
+                            title="{{ 'BILLINGMANAGEMENT.EDITESTIMATE' | translate | softLabelsPipe : softLabels }}"
+                            (click)="$event.stopPropagation();editEstimate(dataItem)" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_AddOrUpdateEstimate) && !isArchived" class="text-center mr-05"
+                            title="{{ 'BILLINGMANAGEMENT.CONVERTTOINVOICE' | translate }}"
+                            (click)="$event.stopPropagation();convertToInvoiceDialog(dataItem, rowIndex)"
+                            mat-icon-button
+                            [ngStyle]="{ 'pointer-events': convertOperationIsInprogress ? 'none' : '' }">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="rowIndex == kendoRowIndex && convertOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon icon="angle-double-right" style="cursor: pointer;" class="mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveEstimate) && !isArchived"
+                            class="text-center"
+                            title="{{ 'BILLINGMANAGEMENT.ARCHIVEESTIMATE' | translate | softLabelsPipe : softLabels }}"
+                            [satPopoverAnchorFor]="deleteEstimate" #deleteEstimatePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteEstimateItem(dataItem,deleteEstimatePopover)"
+                            mat-icon-button>
+                            <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                        </button>
+                        <button *ngIf="(canAccess_feature_ArchiveOrUnarchiveEstimate) && isArchived" class="text-center"
+                            title="{{ 'BILLINGMANAGEMENT.UNARCHIVEESTIMATE' | translate | softLabelsPipe : softLabels }}"
+                            [satPopoverAnchorFor]="deleteEstimate" #deleteEstimatePopover="satPopoverAnchor"
+                            (click)="$event.stopPropagation();deleteEstimateItem(dataItem,deleteEstimatePopover)"
+                            mat-icon-button>
+                            <!-- <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon> -->
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': anyOperationIsInprogress}"></div>
+    </div>
+</div>
+
+<ng-template #addEstimateDialogComponent let-data>
+    <add-estimate-dialog [data]=[data]></add-estimate-dialog>
+</ng-template>
+
+<ng-template #detailsEstimateDialogComponent let-data>
+    <estimate-details-dialog [data]=[data]></estimate-details-dialog>
+</ng-template>
+
+<!--Delete dialog-->
+<sat-popover #deleteEstimate hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar>
+            <div class="card-content p-05" *ngIf="!isArchived">
+                {{'BILLINGMANAGEMENT.REALLYARCHIVETHEESTIMATE' | translate | softLabelsPipe : softLabels}}
+            </div>
+            <div class="card-content p-05" *ngIf="isArchived">
+                {{'BILLINGMANAGEMENT.REALLYUNARCHIVETHEESTIMATE' | translate | softLabelsPipe : softLabels}}
+            </div>
+            <div class="text-center">
+                <button *ngIf="!isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeEstimateAtIndex(true)" [disabled]="deleteOperationIsInprogress">
+                    <!-- <fa-icon class="mr-05" icon="archive"></fa-icon>  -->
+                    <mat-icon style="cursor: pointer;" class="mr-05">archive</mat-icon>
+                    {{'TESTCASETYPE.ARCHIVE' | translate}}
+                </button>
+                <button *ngIf="isArchived" class="mr-05" mat-button mat-raised-button color="primary"
+                    (click)="removeEstimateAtIndex(false)" [disabled]="deleteOperationIsInprogress">
+                    <!-- <fa-icon class="mr-05" icon="archive"></fa-icon>  -->
+                    <mat-icon style="cursor: pointer;" class="mr-05">unarchive</mat-icon>
+                    {{'TESTCASETYPE.UNARCHIVE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteEstimateDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete dialog-->

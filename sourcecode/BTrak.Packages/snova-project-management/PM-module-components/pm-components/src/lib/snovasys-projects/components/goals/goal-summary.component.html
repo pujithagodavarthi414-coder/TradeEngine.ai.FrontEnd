@@ -1,0 +1,348 @@
+<mat-accordion class="goal-summary goal-expansion-panel">
+  <mat-expansion-panel hideToggle="true" [disabled]="true" [expanded]="panelOpenState">
+    <mat-expansion-panel-header class="p-05" [collapsedHeight]="'45px'" [expandedHeight]="'45px'"
+      class="project-card goal-card goal-summary-card " (contextmenu)="openContextMenu($event)"
+      [ngStyle]="{ 'background-color': goalSelected == true ? '#e1f0ff' : '' }"
+      [ngClass]="{'selected-goal': goalSelected == true}">
+      <div fxFlex="2px" class="userstory-left" [style.backgroundColor]="setBorderColorForGoal()">
+        &nbsp;
+      </div>
+      <div [fxFlex]="isAllGoalsPage ? '60' : '67'" fxFlex.md="66" fxFlex.xs="72" fxFlex.sm="85">
+        <p *ngIf="!isAllGoalsPage || (isAllGoalsPage && !isBacklogGoal)" class="mat-body-2 selected-goal-text"
+          matTooltip="{{backloagtranslate(goal.goalShortName)}}" matTooltipClass="tooltip-overflow">
+          {{ goal.goalShortName? backloagtranslate(goal.goalShortName) : goal.goalName}}</p>
+        <span class="allgoals_txt userStory-name-control" matTooltip="{{ goal.goalName }}"
+          *ngIf="isAllGoalsPage && isBacklogGoal" [ngClass]="goal.projectName ? 'userStory-tag-control': ''"
+          matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow">
+          {{ goal.goalShortName }} </span>
+        <span class="userstory-tags-display full-width hide-content-overflow" style="color:#736e6ef0"
+          *ngIf="isAllGoalsPage && isBacklogGoal">
+          {{goal.projectName}}
+        </span>
+      </div>
+
+      <span fxLayoutAlign="end center" fxFlex="20px"
+        *ngIf="isAllGoalsPage && goal.goalId !='00000000-0000-0000-0000-000000000000'"
+        style="color:#192219b3;font-size: 12px;">
+        ({{goal.workItemsCount}})
+      </span>
+      <span fxLayoutAlign="end center" fxFlex="20px" *ngIf="goal.goalId =='00000000-0000-0000-0000-000000000000'"
+        style="color:#192219b3;font-size: 12px;">
+        ({{userStoriesCount}})
+      </span>
+      <span (mouseover)="boardTypeTooltip(goal.boardTypeId)" fxLayoutAlign="end center" fxFlex="40px"
+        class="goal-card-project">
+        <span *ngIf="!isBacklogGoal && goal.boardTypeId">
+
+          <fa-icon class="pull-left board-type-icons" *ngIf="!goal.isBugBoard"
+            [ngClass]="(goal.boardTypeUiId.toUpperCase() == boardView.toUpperCase()) ? 'kanbanRotate': 'superagileRotate'"
+            [matTooltip]="checkTooltip(goal)" icon="bars" matTooltipClass="tooltip-overflow">
+          </fa-icon>
+          <fa-icon class="pull-left ml-02 board-type-icons" *ngIf="(goal | boardTypeToIcon) != null"
+            [matTooltip]="checkTooltip(goal)" icon="{{ goal | boardTypeToIcon}}" matTooltipClass="tooltip-overflow">
+          </fa-icon>
+        </span>
+        <span fxLayoutAlign="end center" *ngIf="isActiveGoalStatusId">
+          <fa-icon *ngIf="!isBacklogGoal && goal.isWarning" class="goal-card-type ml-02" icon="exclamation-triangle"
+            matTooltip="{{'GOALS.WARNINGTOOLTIP' | translate}}">
+          </fa-icon>
+        </span>
+      </span>
+      <div fxFlex="8" fxFlex.sm="4" class="goals_summary_member ml-02">
+        <app-chip [matTooltip]="goal.goalResponsibleUserName" class="pull-right avatar-image goal-summary-image"
+          [isNameRequired]="false" [name]="goal.goalResponsibleUserName | removeSpecialCharacters "
+          [src]="goal.goalResponsibleProfileImage | fetchSizedAndCachedImage: '20':''" size="20">
+        </app-chip>
+      </div>
+      <span>
+        <mat-icon class="more_vert card-control" matTooltip="{{ 'MENU' | translate }}" [matMenuTriggerFor]="EditGoal"
+          *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000' && (!isAllGoalsPage && ((canAccess_entityType_feature_ArchiveGoal)
+                                                                                                       || (canAccess_entityType_feature_ParkGoal)
+                                                                                                       || (canAccess_entityType_feature_AddOrUpdateGoal
+                                                                                                       || (canAccess_entityType_feature_ViewGoals)))) || checkPermissionsForMatMenu()"
+          (click)="$event.stopPropagation();" [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+      </span>
+      <fa-icon *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'"
+        class="rotate-icon ml-02 m-0 p-03" icon="chevron-right" fxLayoutAlign="start center"
+        [ngClass]="{'rotate-icon-down': expansionIcon}" (click)="togglePanel();$event.stopPropagation()"></fa-icon>
+    </mat-expansion-panel-header>
+    <div (click)="$event.stopPropagation();"
+      *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'" fxLayout="column">
+      <div fxFlex="100" class="p-03" fxLayout="row wrap" *ngIf="isAllGoalsPage">
+        <span fxFlex>{{ 'GOALS.PROJECTNAME' | translate | softLabelsPipe : softLabels }}</span>
+        <div fxFlex="40" fxLayoutAlign="start center">
+          <span class="hide-content-overflow" matTooltip="{{goal.projectName}}"><b>{{goal.projectName}}</b></span>
+        </div>
+
+      </div>
+      <div class="p-02" fxLayout="row wrap">
+        <span fxFlex>{{ 'GOALS.USERSTORIESCOUNT' | translate | softLabelsPipe : softLabels }}</span>
+        <div fxFlex="40" fxLayoutAlign="start center">
+          <span class="goals-count" *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+            {{ goal.activeUserStoryCount > 0 ? goal.activeUserStoryCount : 0 }}
+          </span>
+        </div>
+      </div>
+      <div class="p-02" fxLayout="row wrap" *ngIf=" !isBacklogGoal && !goal.isBugBoard
+                      && goal.bugsCount > 0 && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+        <span fxFlex>{{ 'GOALS.BUGSCOUNT' | translate }}</span>
+        <div fxFlex="40" fxLayoutAlign="start center">
+          <span class="goals-count goal-bugs-count date-filter"
+            (click)="$event.stopPropagation();openBugsPopover(goalBugsPopover,goal.bugsCount)"
+            [satPopoverAnchorFor]="goalBugs" #goalBugsPopover="satPopoverAnchor">
+            {{ goal.bugsCount }}
+          </span>
+        </div>
+      </div>
+      <div *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+        <div class="p-02" fxLayout="row wrap" *ngIf="goal.goalEstimatedTime">
+          <span fxFlex>{{ 'GOALS.WORKITEMSTOTALESTIMATETIME' | translate | softLabelsPipe : softLabels}}</span>
+          <div fxFlex="40" fxLayoutAlign="start center">
+            <span>
+              {{goal.goalEstimatedTime | estimatedTimeFilter}}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+        <div class="p-02" fxLayout="row wrap" *ngIf="goal.goalEstimateTime">
+          <span fxFlex>{{ 'GOALS.GOALESTIMATETIME' | translate | softLabelsPipe : softLabels}}</span>
+          <div fxFlex="41" fxLayoutAlign="start center">
+            <span>
+              {{goal.goalEstimateTime | estimatedTimeFilter}}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div fxLayout="row wrap" class="text-left p-02" *ngIf="!isBacklogGoal && goal.goalUniqueName">
+        <span fxFlex>{{ 'GOALS.UNIQUENAME' | translate }}</span>
+        <div fxFlex="40" fxLayoutAlign="start center">
+          <a routerLink="/projects/goal/{{goal.goalId}}" class="userstory-unique unique-numbers-hover"
+            *ngIf="!uniqueGoalPage">
+            {{goal.goalUniqueName}}
+          </a>
+          <a *ngIf="uniqueGoalPage" (click)="$event.stopPropagation();">
+            {{goal.goalUniqueName}}
+          </a>
+        </div>
+      </div>
+      <div class="p-02" fxLayout="row wrap"
+        *ngIf="!isBacklogGoal && (goal.goalId !='00000000-0000-0000-0000-000000000000')">
+        <span fxFlex *ngIf="(deadLineDate.value == 'arrow-right')||(deadLineDate.value == 'arrow-left')">{{
+          'GOALS.STARTDATE' | translate }}</span>
+        <div fxFlex="40">
+          <input matInput [value]="goal.onboardProcessDate|deadLineDateToIconFilter:false" #deadLineDate hidden />
+          <span *ngIf="deadLineDate.value == 'arrow-right'"
+            matTooltip=" {{ goal.onboardProcessDate| date: 'dd MMM yyyy'}}">
+            <fa-icon icon="arrow-right"></fa-icon> <span class="ml-02">
+              {{goal.onboardProcessDate|deadLineDateFilter:false}}</span>
+          </span>
+          <span *ngIf="deadLineDate.value == 'arrow-left'" class="absDaysCount"
+            matTooltip=" {{ goal.onboardProcessDate| date: 'dd MMM yyyy'}}">
+            <fa-icon icon="arrow-left" class="absDaysCount"></fa-icon> <span class="ml-02">
+              -{{goal.onboardProcessDate|deadLineDateFilter:false}}</span>
+          </span>
+        </div>
+      </div>
+      <div class="p-02" fxLayout="row wrap"
+        *ngIf="!isBacklogGoal && (goal.goalId !='00000000-0000-0000-0000-000000000000')">
+        <span fxFlex *ngIf="(deadLineDate.value == 'arrow-right')||(deadLineDate.value == 'arrow-left')">{{
+          'GOALS.ENDDATE' | translate | softLabelsPipe : softLabels}}</span>
+        <div fxFlex="40">
+          <input matInput [value]="goal.endDate|deadLineDateToIconFilter:false" #deadLineDate hidden />
+          <span *ngIf="deadLineDate.value == 'arrow-right'" matTooltip=" {{ goal.endDate| date: 'dd MMM yyyy'}}">
+            <fa-icon icon="arrow-right"></fa-icon> <span class="ml-02">
+              {{goal.endDate|deadLineDateFilter:false}}</span>
+          </span>
+          <span *ngIf="deadLineDate.value == 'arrow-left'" class="absDaysCount"
+            matTooltip=" {{ goal.endDate| date: 'dd MMM yyyy'}}">
+            <fa-icon icon="arrow-left" class="absDaysCount"></fa-icon> <span class="ml-02">
+              -{{goal.endDate|deadLineDateFilter:false}}</span>
+          </span>
+        </div>
+      </div>
+      <div *ngIf="!isBacklogGoal && goal.goalId !='00000000-0000-0000-0000-000000000000'">
+        <div class="p-02" fxLayout="row wrap">
+          <span fxFlex *ngIf="(goalDeadlineDate.value == 'arrow-right')||(goalDeadlineDate.value == 'arrow-left')">{{
+            'GOALS.WORKITEMSDEADLINE' | translate | softLabelsPipe : softLabels}}</span>
+          <div fxFlex="40">
+            <input matInput [value]="goal.goalDeadLine|deadLineDateToIconFilter:goal.isDateTimeConfiguration"
+              #goalDeadlineDate hidden />
+            <span *ngIf="goalDeadlineDate.value == 'arrow-right'"
+              [matTooltip]="configureDeadlineDateDisplay(goal.goalDeadLine,goal.isDateTimeConfiguration)">
+              <fa-icon icon="arrow-right"></fa-icon> <span class="ml-02">
+                {{goal.goalDeadLine|deadLineDateFilter:goal.isDateTimeConfiguration}}</span>
+            </span>
+            <span *ngIf="goalDeadlineDate.value == 'arrow-left'" class="absDaysCount"
+              [matTooltip]="configureDeadlineDateDisplay(goal.goalDeadLine,goal.isDateTimeConfiguration)">
+              <fa-icon icon="arrow-left" class="absDaysCount"></fa-icon> <span class="ml-02"> -
+                {{goal.goalDeadLine|deadLineDateFilter:goal.isDateTimeConfiguration}}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-expansion-panel>
+</mat-accordion>
+<mat-menu class="goal-options" #EditGoal="matMenu" (click)="$event.stopPropagation()">
+  <div *ngIf="isArchived && togglePermissions()">
+    <app-pm-component-goal-archive
+      *ngIf="(!isAllGoalsPage && (canAccess_entityType_feature_ArchiveGoal)) || checkPermissionForArchiveGoal()"
+      [goalId]="goal.goalId" [projectId]="goal.projectId" [isArchived]="isArchivedGoal" [timeStamp]="goal.timeStamp"
+      [goalName]="goal.goalName" (closePopup)="closeMatMenu()"></app-pm-component-goal-archive>
+  </div>
+  <div *ngIf="isParked && togglePermissions()">
+    <app-pm-component-goal-park
+      *ngIf="(!isAllGoalsPage &&(canAccess_entityType_feature_ParkGoal)) || checkPermissionForParkGoal()"
+      [goalId]="goal.goalId" [projectId]="goal.projectId" [isParked]="isParkedGoal" [timeStamp]="goal.timeStamp"
+      [goalName]="goal.goalName" (closePopup)="closeMatMenu()">
+    </app-pm-component-goal-park>
+  </div>
+
+  <button mat-menu-item [satPopoverAnchorFor]="editgoalPopover" *ngIf="isEdit && checkPermissionsForEditGoal()"
+    (click)="editgoalPopover.open();editGoal(); $event.stopPropagation()">
+    <mat-icon>edit</mat-icon> <span>{{ 'GOALS.EDITGOAL' | translate | softLabelsPipe : softLabels }}</span>
+  </button>
+
+  <div
+    *ngIf="canAccess_entityType_feature_ViewGoals && (selectedTab!='archived-goals' && selectedTab !='parked-goals')">
+    <button mat-menu-item class="allgoals_icons" (click)="copyLink(); $event.stopPropagation()">
+      <mat-icon>file_copy</mat-icon>{{'USERSTORY.CLICKHERETOCOPYLINK' | translate}}
+    </button>
+  </div>
+  <div
+    *ngIf="canAccess_entityType_feature_ViewGoals && (selectedTab!='archived-goals' && selectedTab !='parked-goals')">
+    <button mat-menu-item class="allgoals_icons" (click)="openInNewTab(); $event.stopPropagation()">
+      <mat-icon>web_asset</mat-icon>{{'USERSTORY.CLICKHERETOOPENINNEWTAB' | translate}}
+    </button>
+  </div>
+
+  <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="tagsPopover"
+    *ngIf="!isArchivedGoal && !isParkedGoal" (click)="tagsPopover.open(); $event.stopPropagation();openTagsPopUp()">
+    <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+  </button>
+
+  <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="templatePopover"
+    *ngIf="!isArchivedGoal && !isParkedGoal && canAccess_entityType_feature_ViewTemplates"
+    (click)="openTemplatePopover(goal); $event.stopPropagation();">
+    <fa-icon style="font-size: 20px;" icon="file-alt" class="pr-4 pl-lg-1"></fa-icon><span>{{ 'GOALS.EXTRACTTEMPLATE' |
+      translate }} </span>
+  </button>
+
+  <sat-popover backdropClass="backdrop-color" #editgoalPopover verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+          {{ 'GOALS.EDITGOAL' | translate | softLabelsPipe : softLabels }}
+        </div>
+      </mat-card-title>
+      <app-pm-component-goal-create *ngIf="editGoalForm" [projectId]="goal.projectId" [goal]="goal"
+        [isTestrailEnable]="goal.isEnableTestRepo" (closePopup)="closeGoalPopup()"></app-pm-component-goal-create>
+    </mat-card>
+  </sat-popover>
+
+  <!--Add tags popover-->
+  <sat-popover #tagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+    horizontalAlign="start" backdropClass="backdrop-color">
+
+    <mat-card class="filter-data p-0">
+      <mat-progress-bar color="primary" mode="indeterminate"
+        *ngIf="(goalOperationInProgress$ | async)|| ( goalTagsOperationIsInProgress$|async)">
+      </mat-progress-bar>
+      <div>
+        <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog();tagsPopover.close()">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+          <div class="card-title-text p-1 mat-bg-primary">
+            {{'USERSTORY.ADDTAGS' | translate}}
+          </div>
+        </mat-card-title>
+        <app-pm-component-tags *ngIf="isTagsPopUp" [userStoryId]=null [goalId]="goal.goalId"
+          (closeTagsPopUp)="closeTagsDialog();tagsPopover.close()"></app-pm-component-tags>
+      </div>
+    </mat-card>
+  </sat-popover>
+</mat-menu>
+<sat-popover backdropClass="backdrop-color" #goalBugs hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition">
+  <mat-card class="filter-data card-filter-runs p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'USERDETAIL.BUGS' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="goal-bugs" id="style-1" *ngIf="goal.bugsCount > 0 && showBugs">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+      </mat-progress-bar>
+      <mat-card *ngIf="goal.bugsCount == 0" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+        <div fxLayout="row" fxFlex="100" class="p-05">
+          <fa-icon icon="info-circle"></fa-icon>
+          <p class="ml-1">{{'USERSTORY.THREEARENOBUGSSAVILABLEINUSERSTORY' | translate | softLabelsPipe : softLabels}}
+          </p>
+        </div>
+      </mat-card>
+      <div class="full-width" fxLayout="row wrap" *ngIf="!(anyOperationInProgress$ | async)">
+        <div class="full-width mb-05" fxLayout="row wrap" *ngFor="let bug of (goalBugs$ | async);let i = index">
+          <div fxFlex="5">
+            <!-- <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span> -->
+            <fa-icon matTooltip="{{ bug.bugPriorityName }} ({{bug.bugPriorityDescription}})"
+              icon="{{bug.bugPriorityIcon}}" [ngStyle]="setColorForBugPriorityTypes(bug.bugPriorityColor)">
+            </fa-icon>
+          </div>
+          <div fxFlex="74" class="word-break display-pre-line" fxLayout="column wrap">
+            <span>
+              <span>{{bug.userStoryName}}</span>
+            </span>
+          </div>
+          <mat-chip matTooltip="{{'USERDETAIL.BUGSTATUS' | translate}}" fxFlex="18"
+            class="ml-05 allgoals_process text-center" mat-sm-chip [style.backgroundColor]="bug.statusHexValue">
+            {{ bug.status }}
+          </mat-chip>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #templatePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        <span> {{ 'GOALS.AREYOUSUREWANTTOMAKETEMPLATEFORTHISGOAL' | translate | softLabelsPipe : softLabels }} </span>
+      </div>
+    </mat-card-title>
+    <form [formGroup]="templateForm" novalidate (submit)="templateForm.valid && makeTemplateGoal(goal)">
+      <mat-form-field class="full-width p-05">
+        <input formControlName="templateName" matInput placeholder="{{ 'PROJECTS.TEMPLATENAME' | translate }}" trim
+          required />
+        <mat-error>
+          <span *ngIf="templateForm.get('templateName').hasError('required') &&
+                                        templateForm.get('templateName').touched">{{ 'PROJECTS.PLEASEENTERTEMPLATENAME'
+            | translate }}
+          </span>
+          <span *ngIf="templateForm.get('templateName').hasError('maxlength')">{{
+            'PROJECTS.TEMPLATENAMECANNOTEXCEED250CHARACTERS' | translate }}
+          </span>
+        </mat-error>
+      </mat-form-field>
+      <div class="text-center mb-05">
+        <button mat-raised-button type="submit" color="primary" class="mr-05"
+          [disabled]="!templateForm.valid || (templateOperationInProgress$ | async)">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(templateOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'ASSETS.YES' | translate }}
+        </button>
+        <button mat-raised-button type="button" (click)="closeTemplatePopup()"
+          [disabled]="(templateOperationInProgress$ | async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'ASSETS.NO' | translate }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</sat-popover>

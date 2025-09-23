@@ -1,0 +1,261 @@
+<div class="p-0 m-0 full-height" *ngIf="(canAccess_feature_ManageEmployeeRateTag)">
+  <mat-card class="p-0 m-0 canteen-manage">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+        <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+          {{'RATETAG.EMPLOYEERATETAG' | translate | titlecase | softLabelsPipe : softLabels}}
+        </div>
+        <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+          fxLayoutAlign="end center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="filterByName($event)">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+          <button *ngIf="(canAccess_feature_ManageEmployeeRateTag) || (canAccess_feature_CanEditOtherEmployeeDetails)"
+            mat-icon-button matTooltip="{{'RATETAG.CREATETOOLTIP' | translate}}" (click)="openDialog(null)">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <div class="activity-data no-drag">
+    <div fxLayout="row wrap" fxFlex="100">
+      <div fxFlex="18" fxFlex.lg="27" fxFlex.md="30" fxFlex.lt-sm="100" fxLayoutAlign="start start">
+        <mat-card class="goalList-popup p-0 custom-box mat-card full-width employee-ratetag-card" id="style-1"
+          *ngIf="rateTagConfigurationList.length > 0 && !rateTagConfigurationsLoading">
+          <mat-list class="compact-list ratetagconfigurations-list">
+            <div fxLayout="row wrap" fxFlex="100" fxLayoutGap="2px"
+              *ngFor="let rateTagConfiguration of rateTagConfigurationList" class="configuration-list"
+              [ngStyle]="{ 'background-color': (rateTagConfiguration.rateTagRoleBranchConfigurationId === employeeRateTagConfigurationHighLightId
+                                                && rateTagConfiguration.startDate === roleBranchOrEmployeeInputModel.startDate
+                                                && rateTagConfiguration.endDate === roleBranchOrEmployeeInputModel.endDate
+                                                && rateTagConfiguration.priority === roleBranchOrEmployeeInputModel.priority) ? '#e6f5ff': '' }">
+              <div class="hide-content-overflow" fxFlex="100"
+                (click)="selectedEmployeeRateTagConfiguration(rateTagConfiguration)">
+                <p class="mat-body-2 pl-05">
+                  <b>{{'PAYROLL.PAYROLLSTARTDATE' | translate}}: </b>
+                  <span matTooltip="{{rateTagConfiguration.startDate | date: 'dd-MMM-yyyy'}}">
+                    {{ rateTagConfiguration.startDate | date: "dd-MMM-yyyy" }}
+                  </span>
+                </p>
+                <p class="mat-body-2 pl-05">
+                  <b>{{'PAYROLL.PAYROLLENDDATE' | translate}}: </b>
+                  <span matTooltip="{{rateTagConfiguration.endDate | date: 'dd-MMM-yyyy'}}">
+                    {{ rateTagConfiguration.endDate | date: "dd-MMM-yyyy" }}
+                  </span>
+                </p>
+                <p class="mat-body-2 pl-05">
+                  <b>{{'PAYROLLCALCULATIONCONFIGURATIONS.BRANCH' | translate}}: </b>
+                  <span matTooltip="{{rateTagConfiguration.branchName}}">{{ rateTagConfiguration.branchName }}</span>
+                </p>
+                <p class="mat-body-2 pl-05">
+                  <b>{{'PAYROLLROLECONFIGURATION.ROLENAME' | translate}}: </b>
+                  <span matTooltip="{{rateTagConfiguration.roleName}}">{{ rateTagConfiguration.roleName }}</span>
+                </p>
+                <p class="mat-body-2 pl-05">
+                  <b>{{'PAYROLL.EMPLOYEENAME' | translate}}: </b>
+                  <span
+                    matTooltip="{{rateTagConfiguration.employeeName}}">{{ rateTagConfiguration.employeeName }}</span>
+                </p>
+                <p class="mat-body-2 pl-05">
+                  <b>{{'TESTMANAGEMENT.PRIORITY' | translate}}: </b>
+                  <span matTooltip="{{rateTagConfiguration.priority}}">{{ rateTagConfiguration.priority }}</span>
+                </p>
+              </div>
+            </div>
+          </mat-list>
+        </mat-card>
+        <app-common-message-box *ngIf="rateTagConfigurationList.length == 0 && !rateTagConfigurationsLoading"
+          textToDisplay="{{'NODATATODISPLAY'|translate}}">
+        </app-common-message-box>
+        <app-common-message-box *ngIf="rateTagConfigurationsLoading" textToDisplay="{{'LOADING'|translate}}...">
+        </app-common-message-box>
+      </div>
+      <div fxFlex="82" fxFlex.lg="73" fxFlex.lt-md="60" fxFlex.lt-sm="100" class="activity-data no-drag">
+        <mat-card class="p-0 m-0 canteen-manage">
+          <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+              <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                {{'RATETAG.RATETAGS' | translate | titlecase}}
+              </div>
+              <span class="mt-1" style="color:Orange;"
+                *ngIf="roleBranchOrEmployeeInputModel.isInHerited == true">{{'RATETAG.INHERITEDFROMRATETAGROLEBRANCHCONFIGURATIONS' | translate }}</span>
+              <div>
+                <button
+                  *ngIf="((canAccess_feature_ManageEmployeeRateTag) || (canAccess_feature_CanEditOtherEmployeeDetails)) && (roleBranchOrEmployeeInputModel.isInHerited == false)
+                  && employeeRateTagDetailsListCount > 0"
+                  mat-icon-button matTooltip="{{'RATETAG.EDITRATETAGS' | translate}}"
+                  (click)="openDialog(employeeRateTagDetailsList)">
+                  <fa-icon icon="edit" class="filter mat-color-accent">
+                  </fa-icon>
+                </button>
+                <button *ngIf="((canAccess_feature_ManageEmployeeRateTag) || (canAccess_feature_CanEditOtherEmployeeDetails))
+                   && (roleBranchOrEmployeeInputModel.isInHerited == true) && employeeRateTagDetailsListCount > 0"
+                  mat-icon-button matTooltip="{{'RATETAG.OVERRIDERATETAGS' | translate}}"
+                  (click)="openDialog(employeeRateTagDetailsList)">
+                  <fa-icon icon="pen" class="filter mat-color-accent">
+                  </fa-icon>
+                </button>
+                <button
+                  *ngIf="((canAccess_feature_ManageEmployeeRateTag) || (canAccess_feature_CanEditOtherEmployeeDetails)) && (overRiddedRateTagsCount > 0)"
+                  class="text-center" matTooltip="{{'RATETAG.CLEARCUSTOMIZEDRATETAGS' | translate}}"
+                  (click)="openCustomizeRateTagPopover(clearCustomizeRateTagPopUp)"
+                  [satPopoverAnchorFor]="clearCustomizeRateTagPopover" #clearCustomizeRateTagPopUp="satPopoverAnchor"
+                  mat-icon-button>
+                  <fa-icon icon="times-circle" class="mat-color-accent"></fa-icon>
+                </button>
+              </div>
+            </div>
+            <mat-divider></mat-divider>
+          </mat-card-title>
+        </mat-card>
+        <ngx-datatable class="btrak" [rows]="employeeRateTagDetailsList" [columnMode]="'force'" [headerHeight]="35"
+          [footerHeight]="35" [rowHeight]="35" [scrollbarH]="true" [loadingIndicator]="employeeRateTagDetailsLoading"
+          [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}" [limit]="10">
+          <ngx-datatable-column name="{{'RATETAG.RATETAGTITLENAME' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="rateTagName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.rateTagName }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATETAGTYPE' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="rateTagForNames">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.rateTagForNames }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHour">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHour| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURMONSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourMon">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourMon| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURTUESHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourTue">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourTue| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURWEDSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourWed">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourWed| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURTHUSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourThu">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourThu| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURFRISHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourFri">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourFri | currency: row.rateTagCurrencyCode}}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURSATSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourSat">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourSat| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.RATEPERHOURSUNSHORT' | translate}}" [flexGrow]="1" [sortable]="true"
+            prop="ratePerHourSun">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.ratePerHourSun| currency: row.rateTagCurrencyCode }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'RATETAG.PRIORITY' | translate}}" [flexGrow]="1" [sortable]="true" [width]="100"
+            prop="priority">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row?.priority }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false" [width]="150">
+            <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+              <button *ngIf="!this.selectedEmployeeRateTagConfigurationId" class="text-center"
+                matTooltip="{{'RATETAG.DELETERATETAG' | translate}}"
+                (click)="getRateTagDetailsId(row,deleteRateTagPopUp)" [satPopoverAnchorFor]="deleteRateTagPopover"
+                #deleteRateTagPopUp="satPopoverAnchor" mat-icon-button>
+                <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+  </div>
+</div>
+<mat-card class="p-0 m-0 edit_employee full-height" *ngIf="!(canAccess_feature_ManageEmployeeRateTag)">
+  <mat-card-title class="data-table-header drag-handler">
+    <div class="p-1" fxLayout="row wrap">
+      <div fxFlex>
+        {{'RATETAG.RATETAG' | translate }}
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+  <mat-card-content>
+    <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+    </app-common-message-box>
+  </mat-card-content>
+</mat-card>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageRateTag)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<sat-popover #deleteRateTagPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'RATETAG.DELETERATETAGDETAILS' | translate}}</div>
+    </mat-card-title>
+    <div class="card-content p-1">
+      <div class="text-center mb-1">{{'RATETAG.AREYOUSUREWANTTODELETE' | translate}}
+      </div>
+      <div fxLayoutAlign="space-around center">
+        <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+          (click)="deleteRateTagDetail();"><i class="fa fa-check"></i>{{'YES' | translate}}</button>
+        <button type="button" mat-button mat-raised-button (click)="cancelRateTagDetails()"><i
+            class="fa fa-times"></i>{{'NO' | translate}}</button>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #clearCustomizeRateTagPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{'RATETAG.CLEARCUSTOMIZEDRATETAGS' | translate}}</div>
+    </mat-card-title>
+    <div class="card-content p-1">
+      <div class="text-center mb-1">{{'RATETAG.AREYOUSUREWANTTOCLEAR' | translate}}
+      </div>
+      <div fxLayoutAlign="space-around center">
+        <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+          (click)="clearCustomizeRateTagDetails();"><i class="fa fa-check"></i>{{'YES' | translate}}</button>
+        <button type="button" mat-button mat-raised-button (click)="closeCustomizeRateTagPopover()"><i
+            class="fa fa-times"></i>{{'NO' | translate}}</button>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>

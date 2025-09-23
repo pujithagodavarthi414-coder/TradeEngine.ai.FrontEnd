@@ -1,0 +1,167 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageMemberships">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'MEMBERSHIPS.MEMBERSHIPTITLE' | translate | titlecase}}">{{'MEMBERSHIPS.MEMBERSHIPTITLE' |
+            translate | titlecase}}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              (change)="getAllMemberships()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'MEMBERSHIPS.CREATETOOLTIP' | translate}}"
+              [satPopoverAnchorFor]="upsertMembershipPopover" #upsertMembershipPopUp="satPopoverAnchor"
+              (click)="createMembershipPopupOpen(upsertMembershipPopUp);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="memberships" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'MEMBERSHIPS.MEMBERSHIPTITLENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="memberShipName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.memberShipName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'MEMBERSHIPS.EDITMEMBERSHIPTITLE' | translate}}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="upsertMembershipPopover" #upsertMembershipPopUp="satPopoverAnchor"
+            (click)="editMembershipPopupOpen(row, upsertMembershipPopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'MEMBERSHIPS.ARCHIVEMEMBERSHIPTITLE' | translate}}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deleteMembershipPopover" #deleteMembershipPopUp="satPopoverAnchor"
+            (click)="deleteMembershipPopUpOpen(row, deleteMembershipPopUp)">
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{'MEMBERSHIPS.UNARCHIVEMEMBERSHIPTITLE' | translate}}" *ngIf="isArchived"
+            [satPopoverAnchorFor]="deleteMembershipPopover" #deleteMembershipPopUp="satPopoverAnchor"
+            (click)="deleteMembershipPopUpOpen(row, deleteMembershipPopUp)" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- <div class="floating-right-fab-button" *ngIf="!isArchived">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{'MEMBERSHIPS.CREATETOOLTIP' | translate}}"
+        [satPopoverAnchorFor]="upsertMembershipPopover" #upsertMembershipPopUp="satPopoverAnchor"
+        (click)="createMembershipPopupOpen(upsertMembershipPopUp);clearForm()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div> -->
+
+  <sat-popover backdropClass="backdrop-color" #upsertMembershipPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ membership }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="membershipForm" #formDirective="ngForm" novalidate
+          (submit)="membershipForm.valid && upsertMembership(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="memberShipName"
+                placeholder="{{'MEMBERSHIPS.MEMBERSHIPNAME' | translate}}" required>
+              <mat-error *ngIf="membershipForm.get('memberShipName').hasError('maxlength')">
+                {{'MEMBERSHIPS.MAXLENGTHERROR' | translate}}</mat-error>
+              <mat-error
+                *ngIf="membershipForm.get('memberShipName').hasError('required') && membershipForm.get('memberShipName').touched">
+                {{'MEMBERSHIPS.REQUIREDERROR' | translate}}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button type="submit" color="primary" class="mr-1"
+              [disabled]="!membershipForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertMembershipPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #deleteMembershipPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived"> {{'MEMBERSHIPS.ARCHIVEMEMBERSHIPTITLE' | translate}}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">{{'MEMBERSHIPS.UNARCHIVEMEMBERSHIPTITLE' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{'MEMBERSHIPS.ARCHIVEMEMBERSHIPTEXT' | translate}}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{'MEMBERSHIPS.UNARCHIVEMEMBERSHIPTEXT' | translate}}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteMembership();" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteMembership();" *ngIf="isArchived">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteMembershipDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageMemberships"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

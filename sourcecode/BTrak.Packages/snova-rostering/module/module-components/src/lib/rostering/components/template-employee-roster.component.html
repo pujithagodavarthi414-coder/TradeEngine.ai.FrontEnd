@@ -1,0 +1,198 @@
+<mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05">
+  <mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05">
+      {{'ROSTER.VIEWROSTERPLAN'| translate}}</div>
+  </mat-card-title>
+  <mat-card-content>
+    <div class="mat-dialog-padding">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+      </mat-progress-bar>
+      <form>
+        <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="8px" fxLayoutGap.gt-md="15px">
+          <div fxFlex fxFlex.gt-sm="32" fxFlex.sm="49" fxFlex.lt-sm="98">
+            <mat-form-field class="full-width">
+              <input matInput [(ngModel)]="startDate" [matDatepicker]="picker1" (click)="picker1.open()" readonly
+                [ngModelOptions]="{standalone: true}" [min]="this.preRequisites.startDate"
+                [max]="this.preRequisites.endDate" (dateChange)="error=false"
+                placeholder="{{'ROSTER.ROSTSTARTDATE' | translate}}" autocomplete="off" required>
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-error *ngIf="error">
+              <span>{{'HRMANAGAMENT.PLEASESELECTSTARTDATE' | translate}} </span> </mat-error>
+          </div>
+        </div>
+      </form>
+      <kendo-grid #grid [data]="gridView" [pageSize]="kendoState.take" [skip]="kendoState.skip" [sort]="kendoState.sort"
+        [sortable]="true" [pageable]="pageable" [selectable]="true" [filterable]="false" [filter]="kendoState.filter"
+        (cellClick)="onSelect($event)" (dataStateChange)="dataStateChange($event)">
+        <!-- <kendo-grid-column>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <input type="radio" name="foo" kendoRadioButton />
+          </ng-template>
+        </kendo-grid-column> -->
+        <kendo-grid-column title="{{'ROSTER.ROSTERNAME' | translate}}" field="requestName">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left">&nbsp;</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+                <!-- <kendo-label class="k-radio-label" [for]="dataItem?.requestId" ></kendo-label>
+                <input type="radio" #dataItem?.requestId kendoRadioButton /> -->
+                <!-- <input type="radio" id="#dataItem?.requestId"> -->
+                <mat-radio-button value="{{dataItem?.requestId}}" checked="false" *ngIf="selectedRequest != dataItem?.requestId"></mat-radio-button>
+                <mat-radio-button value="{{dataItem?.requestId}}" checked *ngIf="selectedRequest == dataItem?.requestId"></mat-radio-button>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.ROSTERNAME' | translate}}" field="requestName">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.ROSTERNAME' | translate}}">{{'ROSTER.ROSTERNAME' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-string-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-string-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.requestName }}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.ROSTSTARTDATE' | translate}}" field="requiredFromDate" filter="date">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.ROSTSTARTDATE' | translate}}">{{'ROSTER.ROSTSTARTDATE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-date-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-date-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.requiredFromDate | date: dateFormat.pattern }}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.ROSTENDDATE' | translate}}" field="requiredToDate" filter="date">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.ROSTENDDATE' | translate}}">{{'ROSTER.ROSTENDDATE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-date-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-date-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.requiredToDate | date: dateFormat.pattern}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.ROSTEMPLOYEEREQUIRED' | translate}}" field="requiredEmployee"
+          filter="numeric">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.ROSTEMPLOYEEREQUIRED' | translate}}">{{'ROSTER.ROSTEMPLOYEEREQUIRED' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-numeric-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-numeric-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.requiredEmployee}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.BUDGET' | translate}}" field="requiredBudget" filter="numeric">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left" matTooltip="{{'ROSTER.BUDGET' | translate}}">{{'ROSTER.BUDGET' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-numeric-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-numeric-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.requiredBudget | currency : selectedCurrency.currencyCode}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.INCLUDEHOLIDAYS' | translate}}" field="includeHolidays" filter="boolean">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.INCLUDEHOLIDAYS' | translate}}">{{'ROSTER.INCLUDEHOLIDAYS' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.includeHolidays ? ('ROSTER.YES' | translate) : ('ROSTER.NO' | translate)}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.INCLUDEWEEKENDS' | translate}}" field="includeWeekends" filter="boolean">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.INCLUDEWEEKENDS' | translate}}">{{'ROSTER.INCLUDEWEEKENDS' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.includeWeekends ? ('ROSTER.YES' | translate) : ('ROSTER.NO' | translate)}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.MAXWORKDAYSTITLE' | translate}}" field="totalWorkingDays" filter="numeric">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.MAXWORKDAYSTITLE' | translate}}">{{'ROSTER.MAXWORKDAYSTITLE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-numeric-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-numeric-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.totalWorkingDays}} {{'ROSTER.DAYS' | translate}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.MAXWORKHOURSTITLE' | translate}}" field="totalWorkingHours"
+          filter="numeric">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.MAXWORKHOURSTITLE' | translate}}">{{'ROSTER.MAXWORKHOURSTITLE' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-numeric-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-numeric-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.totalWorkingHours}} {{'ROSTER.HOURS' | translate}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="{{'ROSTER.CREATEDBYNAME' | translate}}" field="createdByUserName">
+          <ng-template kendoGridHeaderTemplate>
+            <span class="pull-left"
+              matTooltip="{{'ROSTER.CREATEDBYNAME' | translate}}">{{'ROSTER.CREATEDBYNAME' | translate}}</span>
+          </ng-template>
+          <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+            <kendo-grid-string-filter-cell [showOperators]="false" [column]="column" [filter]="filter">
+            </kendo-grid-string-filter-cell>
+          </ng-template>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="start center" (click)="goToUserProfile($event,dataItem.userId)">
+              <img class="roster-createdby_img" src="../assets/images/faces/18.png" *ngIf="!dataItem.profileImage" />
+              <img class="roster-createdby_img" *ngIf="dataItem.profileImage" src="{{ dataItem.profileImage }}" />
+              <div class="vertical-max-lines"> {{ dataItem?.createdByUserName }}</div>
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column>
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button mat-icon-button matTooltip="{{'ROSTER.VIEWROSTERPLAN' | translate}}" type="button"
+              (click)="loadRequestedData(dataItem)">
+              <fa-icon class="filter mat-color-accent" icon="binoculars"></fa-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-column>
+        <ng-template kendoGridNoRecordsTemplate>
+          {{'ROSTER.NORECORDSTODISPLAY' | translate}}
+        </ng-template>
+      </kendo-grid>
+      <div class="mt-1  text-center">
+        <button mat-button mat-raised-button class="mr-1" (click)="closePopover(false);" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          {{ 'ROSTER.CANCEL' | translate }}
+        </button>
+        <button type="button" mat-button mat-raised-button color="primary" class="mr-1" [disabled]="!selectedObject"
+          (click)="modifyTemplate()">
+          <fa-icon class="mr-05" icon="edit"></fa-icon>
+          {{'ROSTER.UPDATE' | translate}}
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

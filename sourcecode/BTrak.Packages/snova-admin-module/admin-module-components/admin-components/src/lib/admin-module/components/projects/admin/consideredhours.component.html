@@ -1,0 +1,126 @@
+<!-- <div class="floating-right-fab-button">
+  <div class="handle">
+    <button mat-fab color="accent" matTooltip="Click here to add considered hours"
+      #upsertConsideredHoursPopover="satPopoverAnchor" [satPopoverAnchorFor]="upsertConsideredHours"
+      (click)="createTransition(upsertConsideredHoursPopover);clearForm()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div> -->
+
+<mat-card class="p-0">
+  <mat-card-title class="">
+    <div fxLayout="row" fxLayoutGap="5px">
+      <div fxFlex class="card-title-text">{{'Considered hours' | titlecase}}
+      </div>
+      <div fxFlex="200px" class="search_goalinput ml-1" fxLayoutAlign="end center">
+        <!-- <input type="text" name="search" class="search_goal" placeholder="Search" [(ngModel)]='considerHourName'>
+        <div class="search-icon">
+          <mat-icon *ngIf="!considerHourName" class="mat-color-accent" aria-hidden="false">search</mat-icon>
+          <mat-icon *ngIf="considerHourName" class="mat-color-accent icon-button" aria-hidden="false"
+            (click)="closeSearch()">close
+          </mat-icon>
+        </div> -->
+         <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="considerHourName" >
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="considerHourName"></span>
+              <mat-icon *ngIf="considerHourName" class="icon-button mr-05 mt-08" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+                <mat-icon *ngIf="!considerHourName" class="mat-color-accent mr-05 mt-08" aria-hidden="false">search</mat-icon>
+            </span>
+        <div>
+
+          <button mat-icon-button matTooltip="Click here to add considered hours" class="mt-05"
+            #upsertConsideredHoursPopover="satPopoverAnchor" [satPopoverAnchorFor]="upsertConsideredHours"
+            (click)="createTransition(upsertConsideredHoursPopover);clearForm()">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+</mat-card>
+
+
+
+
+<mat-card-content class="p-05">
+  <div class="activity-data">
+    <ngx-datatable class="btrak full-width" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [externalSorting]="false" [loadingIndicator]="consideredHoursDataInProgress" [rows]="(consideredHours
+        | resultfilter: considerHourName:'considerHourName')"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+
+      <ngx-datatable-column name="Considered hours" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{  row?.considerHourName }}"> {{  row?.considerHourName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="Created on" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{  row?.createdOn }}">{{  row?.createdOn }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="Edit" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <fa-icon icon="edit" class="icon-button mat-color-accent" matTooltip="Edit"
+            (click)="EditConsideredHours(row, upsertConsideredHoursPopover)"
+            #upsertConsideredHoursPopover="satPopoverAnchor" [satPopoverAnchorFor]="upsertConsideredHours"></fa-icon>
+        </ng-template>
+      </ngx-datatable-column>
+
+    </ngx-datatable>
+  </div>
+</mat-card-content>
+
+<sat-popover #upsertConsideredHours verticalAlign="below" hasBackdrop [autoFocus]="false" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{ titletext }}</div>
+      </mat-card-title>
+      <form [formGroup]="consideredHoursForm" novalidate (submit)="consideredHoursForm.valid && SaveConsideredHours()">
+        <div class="card-content p-05">
+          <mat-form-field class="full-width">
+            <input matInput formControlName="considerHourName" placeholder="Hours" required />
+            <mat-error>
+              <span *ngIf="!consideredHoursForm.get('considerHourName').valid &&
+                consideredHoursForm.get('considerHourName').touched">Please enter considered hours</span>
+              <span *ngIf="consideredHoursForm.get('considerHourName').hasError('maxlength')">Considered hours cannot
+                exceed 250 characters</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-error>
+            <span *ngIf="isThereAnError" class="alert-alert-danger">{{validationmessage}}</span>
+          </mat-error>
+          <div class="text-center mb-1 mt-1">
+            <button mat-button mat-raised-button color="primary" class="mr-1" type="submit"
+              [disabled]="!consideredHoursForm.valid || anyOperationInProgress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+              </mat-progress-bar>
+              <fa-icon *ngIf="showPlusIcon" class="mr-05" icon="plus"></fa-icon>
+              <fa-icon *ngIf="showRefreshIcon" class="mr-05" icon="sync"></fa-icon>
+              {{ buttontext }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDialog();false">
+              <fa-icon icon="times" class="mr-05"></fa-icon> Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-card>
+</sat-popover>

@@ -1,0 +1,189 @@
+<mat-card *ngIf="userStory" class="details_userstory" [attr.id]="isAdhocFromProjects == false ? 'style-1' : ''">
+  <mat-progress-bar color="primary" mode="indeterminate"
+    *ngIf="(anyOperationInProgress$ | async)|| (fileUploadIsInProgress$|async)">
+  </mat-progress-bar>
+  <mat-card-header>
+    <mat-card-title>
+      <div fxLayout="row wrap" *ngIf="selectedIndex === 'GENERAL'" class="mt-05 assignee-field">
+        <div fxFlex>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select #showAssignee [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+              placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}" (selectionChange)="changeAssignee($event.value)"
+              [(ngModel)]="assignee" required>
+              <mat-option [value]="teamLead.id" *ngFor="let teamLead of (teamLeads$ | async)">
+                <app-avatar class="employee_img" *ngIf="!teamLead.profileImage"
+                  [name]="teamLead.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                <img class="employee_img" *ngIf="teamLead.profileImage"
+                  src="{{teamLead.profileImage}}">{{teamLead.fullName}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+      <b>
+        <div fxlayout="row wrap" class="assignee-display full-width">
+          <span fxFlex="25px" *ngIf="selectedIndex === 'GENERAL'" class="icon-button mr-05">
+            <app-avatar class="mr-05" [name]="userStory.ownerName | removeSpecialCharacters" class="icon-button"
+              *ngIf="userStory.ownerUserId" [src]="userStory.ownerProfileImage | fetchSizedAndCachedImage: '25':''"
+              [isRound]="true" size="25" (click)="openAssignee()">
+            </app-avatar>
+            <app-avatar [name]="profileImage| removeSpecialCharacters" *ngIf="!userStory.ownerUserId"
+              class="icon-button" class="mr-05" [src]='defaultProfileImage' [isRound]="true" size="25"
+              (click)="openAssignee()">
+            </app-avatar>
+          </span>
+          <mat-checkbox class="mr-05 userstory-chcekbox" *ngIf="selectedIndex === 'GENERAL'" matTooltip="{{userStory.userStoryStatusName}}"
+            [(ngModel)]="userStoryStatusChecked" (change)="changeWorkItemStatus($event)">
+          </mat-checkbox>
+          <div fxFlex class="edit-userstory adhoc-userstory"> <span (dblclick)="showMatFormField()"
+              *ngIf="isEditUserStory && (canAccess_feature_AddOrUpdateAdhocWork)"> {{ userStoryName}} </span>
+            <span (dblclick)="showMatFormField()"
+              *ngIf="isEditUserStory && !(canAccess_feature_AddOrUpdateAdhocWork)"> {{ userStoryName}} </span>
+            <mat-form-field class="full-width search_goalinput" *ngIf="!isEditUserStory">
+              <input matInput placeholder="{{'USERDETAIL.USERSTORY'|translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="userStoryName" (blur)="updateUserStoryName()" />
+            </mat-form-field>
+          </div>
+        </div>
+      </b>
+    </mat-card-title>
+
+
+    <a class="detail_close mt-05" color="warn" (click)="closeUserStoryDetailWindow()" *ngIf="isAdhocFromProjects">
+      <fa-icon icon="times"></fa-icon>
+    </a>
+  </mat-card-header>
+  <mat-card-content>
+    <kendo-tabstrip [tabPosition]="position" (tabSelect)="onTabSelect($event)" id="tab" #tabstrip>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.GENERAL'|translate}}" [selected]="true">
+        <ng-template kendoTabContent>
+          <div class="userstory-detail-container">
+            <app-common-estimatedTime [estimatedTime]="estimatedTime" [isDetailsPage]=true
+              [isDisabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+              (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+            <span class="chip-box-margin hide-mat-form-label ml-02">
+              <mat-form-field appearance="none" fxFlex="150px">
+                <label class="hide-content-overflow"
+                  fxFlex="150px">{{'USERDETAIL.DEADLINEDATE'|translate | softLabelsPipe : softLabels}}</label>
+                <input matInput [(ngModel)]="deadlineDate" [min]="minDate" class="custom-chip-box mb-n2 custom-chip-bg"
+                  fxFlex="150px" [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                  [matDatetimepicker]="deadlineDatePicker" autocomplete="false"
+                  placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+                  (dateChange)="changeDeadline()" (click)="deadlineDatePicker.open()">
+                <mat-datetimepicker #deadlineDatePicker type="datetime" openOnFocus="true" timeInterval="5">
+                </mat-datetimepicker>
+              </mat-form-field>
+            </span>
+            <span fxLayout="column" class="d-grid">
+              <span fxFlex></span>
+              <span fxFlex>
+                <button mat-icon-button [satPopoverAnchorFor]="FileUploadPopover" #FileUploadPopup="satPopoverAnchor"
+                  (click)="openFileUploadPopover(FileUploadPopup)">
+                  <fa-icon icon="image" class="filter mat-color-accent">
+                  </fa-icon>
+                </button>
+              </span>
+            </span>
+            <mat-label *ngIf="userStory.tag">
+              <div class="mb-05">{{'USERSTORY.TAGS' | translate}}:</div>
+              <div class="tags-details-popup ">
+                <div *ngFor="let tag of userStoryInputTags" class="tag-unque-display mt-08">
+                  <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{tag}}
+                  </span>
+                </div>
+              </div>
+            </mat-label>
+            <mat-form-field class="full-width">
+              <mat-select [(ngModel)]="userStoryTypeId"
+                placeholder="{{'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                (selectionChange)="changeUserStoryType($event.value)">
+                <mat-option value="option" [value]="type.userStoryTypeId" *ngFor="let type of (userStoryTypes)">
+                  {{ type.userStoryTypeName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div fxFlex class="unique-details-bg p-05" [ngStyle]="{  'background':isEditorVisible ? 'none' : ''}">
+              <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                <span *ngIf="description && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                  [innerHTML]=description>
+                </span>
+                <span *ngIf="description == null && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                  class="description-text">
+                  <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                </span>
+              </div>
+              <div *ngIf="isEditorVisible">
+                <div class="full-width custom-input">
+                  <editor class="dfree-header custom-logtime-comment"
+                  apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Description" menubar="false"
+                  [init]="initSettings" background="white" height="120" (onBlur)="handleDescriptionEvent($event)"
+                  [(ngModel)]="description">
+                </editor>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="!gettingCustomApplicationFormInProgress && customApplicationByIdData">
+              <formio #formio [form]="formSrc" [submission]="formData">
+              </formio>
+              <button mat-button mat-raised-button color="primary" (click)="onSubmit()" class="pull-right"
+                [disabled]="customFormInProgress">
+                <fa-icon icon="save" class="mr-05"></fa-icon> Save
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </kendo-tabstrip-tab>
+      <kendo-tabstrip-tab title="{{'USERDETAIL.COMMENTS'|translate}}&nbsp;({{componentModel.commentsCount ? componentModel.commentsCount : commentsCount$|async}})">
+        <ng-template kendoTabContent>
+          <snovasys-comments 
+            [receiverId]="userStory.userStoryId"
+            [componentModel]="componentModel"
+            [isPermissionExists]="true">
+          </snovasys-comments>
+        </ng-template>
+      </kendo-tabstrip-tab>
+
+      <kendo-tabstrip-tab title="{{'USERDETAIL.LOGTIME'|translate}}" *ngIf="isLogTimeRequired">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-logtime [userStoryId]="userStory.userStoryId" [isFromAudits]=false>
+          </app-pm-component-userstory-logtime>
+        </ng-template>
+      </kendo-tabstrip-tab>
+
+      <kendo-tabstrip-tab title="{{'USERDETAIL.HISTORY'|translate}}">
+        <ng-template kendoTabContent>
+          <app-pm-component-userstory-history [userStoryId]="userStory.userStoryId">
+          </app-pm-component-userstory-history>
+        </ng-template>
+      </kendo-tabstrip-tab>
+    </kendo-tabstrip>
+  </mat-card-content>
+</mat-card>
+
+<!--------dropzone dialog------>
+<sat-popover #FileUploadPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition">
+  <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+    <mat-card-title>
+      <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex class="text-center">
+          {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center">
+          <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <div class="mobile-view-popover p-1">
+       <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="true"
+        [referenceId]="userStory.userStoryId" [selectedParentFolderId]="userStory.userStoryId"
+        [selectedStoreId]="selectedStoreId" [isButtonVisible]="isButtonVisible">
+      </app-dropzone> 
+    </div>
+  </mat-card>
+</sat-popover>
+<!--------dropzone dialog------>

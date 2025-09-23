@@ -1,0 +1,110 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="center">
+            <span *ngIf="!employeeLicenceDetailsId">{{'HRMANAGAMENT.ADDLICENCEDETAILS' | translate}}</span>
+            <span *ngIf="employeeLicenceDetailsId">{{'HRMANAGAMENT.EDITLICENCEDETAILS' | translate}}</span>
+        </div>
+    </div>
+</mat-card-title>
+
+<form [formGroup]="employeeLicenceDetailsForm" novalidate #formDirective="ngForm" 
+    (submit)="employeeLicenceDetailsForm.valid && saveEmployeeLicenceDetails(formDirective)">
+    <div class="p-1" id="style-1" style="max-height: 265px !important;overflow-y: auto">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="licenceNumber"
+                        placeholder="{{'HRMANAGAMENT.LICENCENUMBER' | translate}}" required>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceNumber').hasError('required') && employeeLicenceDetailsForm.get('licenceNumber').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERLICENCENUMBER' | translate}}</span>
+                        <span *ngIf="employeeLicenceDetailsForm.get('licenceNumber').hasError('maxlength')">
+                            {{'HRMANAGAMENT.LICENCENUMBERSHOULDNOTEXCEED20CHARACTERS' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="licenceTypeId" placeholder="{{'HRMANAGAMENT.LICENCETYPE' | translate}}"
+                        required>
+                        <mat-option value="option" *ngFor="let licenceType of licenceTypesList$ | async"
+                            [value]="licenceType.licenceTypeId">
+                            {{licenceType.licenceTypeName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceTypeId').hasError('required') && employeeLicenceDetailsForm.get('licenceTypeId').touched">
+                            {{'HRMANAGAMENT.PLEASESELECTLICENCETYPE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="licenceIssuedDate" [matDatepicker]="picker1"
+                        (click)="picker1.open()" placeholder="{{'HRMANAGAMENT.LICENCEISSUEDDATE' | translate}}"
+                        (input)="startDate()" (dateChange)="startDate()" [max]="maxDate" [min]="minDate"
+                        [readonly]="true" autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                    <mat-error>
+                        <!-- <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceIssuedDate').hasError('required') && employeeLicenceDetailsForm.get('licenceIssuedDate').touched">
+                            {{'HRMANAGAMENT.PLEASESELECTTHEDATE' | translate}}</span> -->
+                        <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceIssuedDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                        <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceIssuedDate').hasError('matDatepickerMax')">{{'HRMANAGAMENT.SELECTEDDATESHOULDBELESSTHANTODAYSDATE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="licenceExpiryDate" [matDatepicker]="picker2"
+                        (click)="picker2.open()" placeholder="{{'HRMANAGAMENT.LICENCEEXPIRYDATE' | translate}}"
+                        [min]="minDateForEndDate" disabled={{endDateBool}} [readonly]="true" 
+                        autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker2" disabled={{endDateBool}}></mat-datepicker-toggle>
+                    <mat-datepicker #picker2></mat-datepicker>
+                    <mat-error>
+                        <!-- <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceExpiryDate').hasError('required') && employeeLicenceDetailsForm.get('licenceExpiryDate').touched">
+                            {{'HRMANAGAMENT.PLEASESELECTTHEDATE' | translate}}</span> -->
+                        <span
+                            *ngIf="employeeLicenceDetailsForm.get('licenceExpiryDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.SELECTVALIDEXPIRYDATE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class="custom-hrm-dropzone">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [getFilesByReferenceId]="true" [referenceId]="employeeLicenceDetailsId"
+                [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+                [isToUploadFiles]="isToUploadFiles">
+            </app-dropzone>
+            <!-- <mat-label>{{'USERSTORY.FILEEXTENSIONS' | translate}} :&nbsp;jpg, jpeg, png, pdf</mat-label> -->
+        </div>
+    </div>
+    <div class="mb-1 prl-1" fxLayoutAlign="center center">
+        <button mat-button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!employeeLicenceDetailsForm.valid || (upsertEmployeeLicenceDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="upsertEmployeeLicenceDetailsInProgress$ | async">
+            </mat-progress-bar>
+            <span *ngIf="!this.employeeLicenceDetailsId">
+                <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+            </span>
+            <span *ngIf="this.employeeLicenceDetailsId">
+                <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+            </span>
+        </button>
+        <button mat-button mat-raised-button (click)="closePopover(formDirective);(false)"
+            [disabled]="(upsertEmployeeLicenceDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+        </button>
+    </div>
+</form>

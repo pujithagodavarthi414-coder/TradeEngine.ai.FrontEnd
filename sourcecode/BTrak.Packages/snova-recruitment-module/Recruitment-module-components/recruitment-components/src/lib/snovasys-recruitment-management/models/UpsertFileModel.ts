@@ -1,0 +1,17 @@
+import { FileModel } from "./fileModel";
+
+export class UpsertFileModel {
+    filesList: FileModel[];
+    folderId: string;
+    storeId: string;
+    referenceId: string;
+    referenceTypeId: string;
+    referenceTypeName: string;
+    fileType: number;
+    createdDateTime: Date;
+    createdByUserId: string;
+    isDefault: boolean;
+    isFromFeedback: boolean;
+    isToBeReviewed: boolean;
+    fileTypeReferenceId: string;
+}

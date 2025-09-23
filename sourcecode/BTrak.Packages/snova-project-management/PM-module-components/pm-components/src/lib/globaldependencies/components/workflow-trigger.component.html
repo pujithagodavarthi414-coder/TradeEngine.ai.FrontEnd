@@ -1,0 +1,189 @@
+<div class="full-height">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                <span fxFlex="100"
+                    class="hide-content-overflow">{{'GOALS.PROJECTSETTINGS'|translate | softLabelsPipe :softLabels}}</span>
+            </div>
+        </div>
+    </mat-card-title>
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50" [rowHeight]="50"
+        [limit]="50" [rows]="projectsList" [loadingIndicator]="isLoading"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'PROJECTS.PROJECTSETTINGSNAME' | translate | softLabelsPipe :softLabels }}"
+            [flexGrow]="1" [sortable]="false" prop="key">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.name }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'COMPANYSETTINGS.VALUE' | translate }}" [flexGrow]="1" [sortable]="false"
+            prop="value">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <mat-checkbox [(ngModel)]="row.value" [disabled]="true" [checked]=row.value></mat-checkbox>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                <button class="text-center" title="{{ 'PERMISSIONMANAGEMENT.EDIT' | translate }}" *ngIf="canAccess_feature_AddProject"
+                    [satPopoverAnchorFor]="projectSettingsPopOver" #projectSettingsPopUp="satPopoverAnchor"
+                    (click)="editProjectSettingsPopUp(row,projectSettingsPopUp)" mat-icon-button>
+                    <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                </button>
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
+
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{ 'GOALS.WORKFLOWTRIGGERS' | translate }}</span>
+                </div>
+                <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                    <div fxFlex="20px">
+                        <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+                            style="right:1px !important">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                    <button mat-icon-button (click)="addWorkflowTrigger()">
+                        <fa-icon matTooltip="{{'GOALS.ADDWORKFLOWTRIGGER' | translate}}" class="filter mat-color-accent"
+                            icon="plus">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <!-- <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{'SEARCH' | translate}}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+        </div> -->
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50" [rowHeight]="50"
+            [limit]="100" [rows]="workFlowItems" [loadingIndicator]="isAnyOperationIsInprogress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{ 'GOALS.TRIGGERNAME' | translate }}" [flexGrow]="1" prop="triggerName"
+                [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow"><span>{{ row?.triggerName }}</span></div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column name="{{ 'GOALS.WORKFLOWNAME' | translate }}" [flexGrow]="1" prop="workflowName"
+                [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span matTooltip="{{ row?.workflowName }}" matTooltipClass="tooltip-overflow"
+                            matTooltipShowDelay="400">{{ row?.workflowName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+
+            <!-- <ngx-datatable-column name="{{ 'GOALS.WORKFLOWXML' | translate }}" [flexGrow]="1" prop="workflowXml">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="hide-content-overflow">
+                        <span>{{ row?.workflowXml }}</span>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column> -->
+
+            <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'GOALS.EDITWORKFLOWTRIGGER' | translate }}"
+                        (click)="editWorkflowTrigger(row)" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'GOALS.DELETEWORKFLOWTRIGGER' | translate }}"
+                        [satPopoverAnchorFor]="deleteWorkflowTrigger" #deleteWorkflowTriggerPopover="satPopoverAnchor"
+                        (click)="deleteWorkFlowTrigger(row,deleteWorkflowTriggerPopover)" mat-icon-button>
+                        <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+
+
+
+</div>
+
+<!--Delete workflow trigger-->
+<sat-popover #deleteWorkflowTrigger hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'GOALS.AREYOUSUREDELETETHEWORKFLOWTRIGGER' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="disableDeleteWorkflowTrigger" (click)="removeWorkflowTrigger()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteWorkflowTriggerPopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete workflow trigger-->
+
+<!--Edit COMPANYSETTINGS dialog-->
+<sat-popover backdropClass="backdrop-color" #projectSettingsPopOver [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                {{ 'PROJECTS.PROJECTSETTINGS' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <div class="card-content p-05">
+
+                <div class="p-05 text-center">
+                    <mat-checkbox class=" mb-1 checkbox-text checkbox_allgoals" [(ngModel)]="currentLabelResult"
+                        (change)="sprintsConfiguration($event)" value="currentLabelResult"
+                        [checked]="currentLabelResult">
+                        {{ isLabelKey | translate }}
+                    </mat-checkbox>
+                </div>
+                <div class="mt-1 text-center">
+                    <button mat-button mat-raised-button color="primary" class="mr-1" (click)="saveProjectDetails()"
+                        [disabled]="isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertCompanySettingPopup()" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Edit COMAPN dialog-->

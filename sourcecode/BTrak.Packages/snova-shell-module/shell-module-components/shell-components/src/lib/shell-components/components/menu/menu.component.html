@@ -1,0 +1,381 @@
+<button type="submit" class="visibles" mat-icon-button [matMenuTriggerFor]="menus" fxHide.gt-xs fxShow>
+  <mat-icon class="newMenu">menu</mat-icon>
+</button>
+<div fxFlex class="newLogo default-bg top-logo-bg newminilogo zoom-image-hover" fxHide.gt-xs fxShow>
+  <img src="{{companyMiniLogo}}" alt="" id="mini-logo-topbar" style="width:30px; height:30px;"
+    (click)="getAllMenuItems()" />
+</div>
+<div fxFlex class="newLogo  top-logo-bg apps-button zoom-image-hover" style="left: 0px;" fxHide fxShow.gt-xs>
+  <img src="{{companyMainLogo}}" style="cursor: pointer;left: 20px;left: 20px;position: relative;" id="main-logo-topbar"
+    class="img-height-main-logo-topbar" (click)="getAllMenuItems()" />
+</div>
+
+<!-- 
+<mat-menu #menus="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+  <div *ngFor="let item of(menuItems$ | async)">
+    <div *ngIf="item.type === 'dropDown'">
+      <button mat-menu-item [matMenuTriggerFor]="levelTwoMenu" (mouseover)="openLevel2Menu(item.state,item.sub)">
+        <mat-icon>{{ item.icon }}</mat-icon>{{ item.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+    <div *ngIf="item.type == 'link'">
+      <button mat-menu-item routerLink="/{{ item.state }}">
+        <mat-icon>{{ item.icon }}</mat-icon>{{ item.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+  </div>
+</mat-menu>
+
+<mat-menu #levelTwoMenu="matMenu">
+  <div *ngFor="let itemLvl2 of subLevels">
+    <div *ngIf="itemLvl2.type === 'dropDown'">
+      <button mat-menu-item [matMenuTriggerFor]="levelThreeMenu"
+        (mouseover)="openLevel3Menu(stateLvl1,itemLvl2.state,item.sub)">
+        {{ itemLvl2.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+    <div *ngIf="itemLvl2.type == 'applicationlink'">
+      <button mat-menu-item routerLink="/{{ itemLvl2.state }}">
+        {{ itemLvl2.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+    <div *ngIf="itemLvl2.type == 'link'">
+      <button mat-menu-item routerLink="/{{stateLvl1}}/{{ itemLvl2.state }}">
+        {{ itemLvl2.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+  </div>
+</mat-menu>
+
+<mat-menu #levelThreeMenu="matMenu">
+  <div *ngFor="let itemLvl3 of subLevelsForLevel2">
+    <button mat-menu-item routerLink="/{{ level3Link1 }}/{{ level3Link2 }}/{{itemLvl3.state}}">
+      {{ itemLvl3.menu | softLabelsPipe : softLabels}}
+    </button>
+  </div>
+</mat-menu> -->
+
+<mat-menu #menus="matMenu" yPosition="below" class="filter-panel" (click)="$event.stopPropagation()"
+  style="height:auto">
+  <div *ngFor="let item of items">
+    <div *ngIf="item.type == 'link' || item.type == 'applicationlink'">
+      <button mat-menu-item routerLink="/{{ item.state }}" (click)="selectMenu(item,$event)"
+        routerLinkActive="item-active">
+        <mat-icon>{{ item.icon }}</mat-icon>{{ item.menu | softLabelsPipe : softLabels}}
+      </button>
+    </div>
+  </div>
+</mat-menu>
+
+
+<div style="position: relative;
+left: 90%" class="store-icom mat-icon-button" *ngIf="canAccess_feature_DragApps"
+  [ngClass]="this.routes.url.includes('/app-store/widgets') ? 'icon_active_class' : ''">
+  <fa-icon icon="store" style="font-size: 20px !important;" matTooltipClass="tooltipClass-mat"
+    matTooltip="{{ 'APP.APPSTORE' | translate}}" (click)="openApps()"
+    class="mat-color-accent cursor-pointer theme-navbar-icon-color"></fa-icon>
+</div>
+
+<div class="SearchBox dropdown" style="position: absolute !important;">
+  <span class="mat-color-accent input-group-addon" *ngIf="searchByText">@ &nbsp;</span>
+  <span class="mat-color-accent input-group-addon" *ngIf="searchById"># &nbsp;</span>
+  <input type="text" class="SearchBox-input dropbtn" placeholder="{{ 'APP.STARTHEREORCLICKCONTROL+Q' | translate}}"
+    [class.hide-placeholder]="searchByText || searchById" autocomplete="off" #element [(ngModel)]="searchText"
+    (input)="SearchItem($event)" (click)="SearchItem($event)" (focus)="onFocus()" (blur)="Set();"
+    (keydown.enter)="navigate($event, itemClicked)" (keydown.arrowdown)="arrowDownEvent()"
+    (keydown.arrowup)="arrowUpEvent()" (keydown.arrowleft)="arrowLeftEvent()" (keydown.arrowright)="arrowRightEvent()">
+
+  <button class="SearchBox-button">
+    <span class="close_icon_search">
+      <span *ngIf="!searchText"></span>
+      <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch($event)"
+        style="cursor:pointer">
+        close</mat-icon>
+    </span>
+    <mat-icon class="SearchBox-icon icon-color mt-lg-n2 mr-05 info-class" [satPopoverAnchorFor]="p"
+      #infoPopOver="satPopoverAnchor" color="primary" (click)="openInfo(infoPopOver)">info</mat-icon>
+    <mat-icon class="SearchBox-icon icon-color mt-lg-n2" color="primary">search</mat-icon>
+  </button>
+  <div class="dropdown-content" [ngClass]="{'d-block' : display,  'd-none' : !display}">
+    <mat-progress-bar color="primary" mode="indeterminate"
+      *ngIf="loadingSearchMenuData || recentSearchesfetchInProgress || widgetsfetchInProgress">
+    </mat-progress-bar>
+    <div class="row rowselect">
+      <div class="column columnselect-next pl-05" *ngIf="items && (items.length>0) && !(searchById || searchByText)">
+        <div class="in-header">{{ 'SHELL.APPLICATIONS' | translate}}</div>
+        <div id="style-1" style="background-color: white !important; height: 445px !important; overflow: auto;">
+          <ng-container *ngIf="items && items.length>0">
+            <div *ngFor="let item of items; let i = index;"
+              [style.background-color]="selectedRowIndex == i ? themeBaseColor : 'white'">
+              <div *ngIf="item.type == 'link' || item.type == 'applicationlink'">
+                <button mat-menu-item routerLink="/{{ item.state }}"
+                  [ngClass]="selectedRowIndex == i ? 'color-text' : 'color-text1'"
+                  (mousedown)="selectAdimnTool(item.state, $event, item)" routerLinkActive="item-active"
+                  [routerLinkActiveOptions]="{exact:
+                    true}" matTooltipClass="tooltipClass-mat"
+                  matTooltip="{{ translateapplicationname(item.menu | softLabelsPipe : softLabels)}}">
+                  <mat-icon class="icon-color" [ngClass]="selectedRowIndex == i ? 'color-text' : 'color-text1'">
+                    {{ item.icon }}</mat-icon><span
+                    [innerHTML]="translateapplicationname(item.menu) |  softLabelsPipe : softLabels | highLightText : searchText"></span>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="column pl-05" *ngIf="!(searchById || searchByText)">
+
+        <div class="columnselect-next ml-0" *ngIf="workspaces && (workspaces.length>0)">
+          <div class="in-header">{{ 'SHELL.DASHBOARDS' | translate}}
+            <fa-icon icon="plus-square"
+              *ngIf="canAccess_feature_AddDashboard" matTooltip="{{ 'APP.ADDDASHBOARD' | translate}}"
+              (click)="initializeWorkspaceForm();openWorkspaceForm();" class="mat-color-accent cursor-pointer"
+              [satPopoverAnchorFor]="addWorkspace">
+            </fa-icon> 
+          </div>
+          <div id="style-2" style="background-color: white !important; height: 445px !important; overflow: auto;">
+            <ng-container *ngIf="workspaces && workspaces.length>0">
+              <div *ngFor="let wc of workspaces; let i = index"
+                [style.background-color]="ws == i ? themeBaseColor : 'white'" class="scroll" #workspaceElement>
+                <button mat-menu-item (mousedown)="selectMenu(wc,$event)"
+                  [ngClass]="ws == i ? 'color-text' : 'color-text1'" (click)="navigateToUrl(wc.workspaceId)"
+                  routerLink="/dashboard-management/dashboard/{{ wc.workspaceId }}" routerLinkActive="item-active"
+                  matTooltipClass="tooltipClass-mat" matTooltip="{{wc.workspaceName}}">
+                  <span [innerHTML]="wc.workspaceName | highLightText : searchText "></span>
+                </button>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="column columnselect-apps ml-0" *ngIf="widgets && widgets.length>0  && !(searchById || searchByText)">
+        <div class="in-header">{{ 'SHELL.FAVOURITEAPPS' | translate}}</div>
+        <div style="background-color: white !important; height: 445px !important; overflow: auto;" id="style-3">
+          <div *ngFor="let widget of widgets; let i = index"
+            [style.background-color]="wd == i ? themeBaseColor : 'white'">
+            <button mat-menu-item routerLinkActive="item-active" [routerLinkActiveOptions]="{exact:
+          true}" routerLink="/dashboard-management/widgets/{{ widget.widgetId }}"
+              [ngClass]="wd == i ? 'color-text' : 'color-text1'" (mousedown)="OnSelect(widget,$event)"
+              matTooltipClass="tooltipClass-mat" matTooltip="{{widget.widgetName | softLabelsPipe : softLabels}}">
+              <span [innerHTML]="widget.widgetName | softLabelsPipe : softLabels | highLightText : searchText"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="columnselect-next ml-0" *ngIf="projectList && projectList.length>0 && searchText && searchByText">
+        <div class="in-header">Projects</div>
+        <div class="scroll" id="style-7"
+          style="background-color: white !important; height: 445px !important; overflow: auto;">
+          <div *ngFor="let project of projectList; let i = index"
+            [style.background-color]="projectIndex == i ? themeBaseColor : 'white'">
+            <button mat-menu-item routerLinkActive="item-active" [routerLinkActiveOptions]="{exact:
+       true}" [ngClass]="projectIndex == i ? 'color-text' : 'color-text1'"
+              (mousedown)="onProjectSelect(project,$event)" matTooltipClass="tooltipClass-mat"
+              matTooltip="{{project.itemName | softLabelsPipe : softLabels}}">
+              <span [innerHTML]="project.itemName | softLabelsPipe : softLabels | highLightText : searchText"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="columnselect-next ml-0"
+        *ngIf="userStorySearchList && userStorySearchList.length>0 && searchText && searchByText">
+        <div class="in-header" *ngIf="isEnableBugBoard">{{ 'SHELL.WIBUG' | translate}}</div>
+        <div class="in-header" *ngIf="!isEnableBugBoard">{{ 'SHELL.WI'| translate}}</div>
+        <div class="scroll" id="style-5"
+          style="background-color: white !important; height: 445px !important; overflow: auto;">
+          <div *ngFor="let userStory of userStorySearchList; let i = index"
+            [style.background-color]="users == i ? themeBaseColor : 'white'">
+            <button mat-menu-item routerLinkActive="item-active" [routerLinkActiveOptions]="{exact:
+         true}" [ngClass]="users == i ? 'color-text' : 'color-text1'" (mousedown)="OnUserStorySelect(userStory,$event)"
+              matTooltipClass="tooltipClass-mat" matTooltip="{{userStory.itemName | softLabelsPipe : softLabels}}">
+              <span [innerHTML]="userStory.itemName | softLabelsPipe : softLabels | highLightText : searchText"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="columnselect-next ml-0"
+        *ngIf="goalSearchList && goalSearchList.length>0 && searchText && searchByText">
+        <div class="in-header">{{ 'SHELL.GOALSPRINT' | translate }}</div>
+        <div class="scroll" id="style-6"
+          style="background-color: white !important; height: 445px !important; overflow: auto;">
+          <div *ngFor="let goal of goalSearchList; let i = index"
+            [style.background-color]="goalIndex == i ? themeBaseColor : 'white'">
+            <button mat-menu-item routerLinkActive="item-active" [routerLinkActiveOptions]="{exact:
+         true}" [ngClass]="goalIndex == i ? 'color-text' : 'color-text1'" (mousedown)="OnGoalSelect(goal,$event)"
+              matTooltipClass="tooltipClass-mat" matTooltip="{{goal.itemName | softLabelsPipe : softLabels}}">
+              <span [innerHTML]="goal.itemName | softLabelsPipe : softLabels | highLightText : searchText"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="column columnselect-apps ml-0"
+        *ngIf="(employeeList && employeeList.length > 0) && searchText && searchByText">
+        <div class="in-header">Employees</div>
+        <div id="style-4" style="background-color: white !important; height: 445px !important; overflow: auto;">
+          <div *ngFor="let employee of employeeList; let i = index" style="background-color: white;"
+            [style.background-color]="selectedEmployeeIndex == i ? themeBaseColor : 'white'" #workspaceElement>
+            <button mat-menu-item (mousedown)="selectEmployee(employee,$event)"
+              [ngClass]="selectedEmployeeIndex == i ? 'color-text' : 'color-text1'"
+              routerLink="/dashboard/profile/{{ employee.itemId }}/overview" routerLinkActive="item-active"
+              matTooltipClass="tooltipClass-mat" matTooltip="{{employee.itemName}}">
+              <div fxLayout="row">
+                <app-avatar [name]="employee.itemName | removeSpecialCharacters" fxLayoutAlign="start center"
+                  matTooltip="{{ employee.itemName }}" [src]="employee.profileImage | fetchSizedAndCachedImage: '20':''"
+                  [isRound]="true" size="20" (click)="profilePage(employee.userId);$event.stopPropagation();">
+                </app-avatar> 
+                <div class="ml-05">
+                  <span [innerHTML]="employee.itemName | highLightText : searchText"></span>
+                
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="column columnselect-apps ml-0"
+        *ngIf="recentSearches && (recentSearches.length>0)  && !(searchById || searchByText)">
+        <div class="in-header">{{ 'SHELL.RECENTSEARCHS' | translate}}</div>
+        <div style="background-color: white !important; height: 445px !important">
+          <div *ngFor="let search of recentSearches | slice:0:9 let i = index"
+            [style.background-color]="rs == i ? themeBaseColor : 'white'">
+            <button mat-menu-item [ngClass]="rs == i ? 'color-text' : 'color-text1'"
+              (mousedown)="searchText=search.recentSearch;SearchRecentItem(search,$event)"
+              matTooltipClass="tooltipClass-mat" matTooltip="{{search.recentSearch | softLabelsPipe : softLabels}} 
+          ({{ convertToLocalTime(search.createdDateTime) | timeago }})">
+              <span [innerHTML]="search.recentSearch | softLabelsPipe : softLabels | highLightText : searchText"></span>
+              ({{ convertToLocalTime(search.createdDateTime) | timeago }})
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- <div class="text-center in-header " *ngIf="!searchText && searchById">
+      Please enter unique id and click enter for navigating to corresping page
+  </div>
+  
+  <div class="text-center in-header " *ngIf="!searchText && searchByText" >
+    Please enter text to retreive data by filtering
+  </div> -->
+  
+
+  <sat-popover backdropClass="backdrop-color" hasBackdrop #addWorkspace verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          {{ 'APP.ADDDASHBOARDTITLE' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <form [formGroup]="workspaceForm" novalidate (submit)="workspaceForm.valid && upsertWorkspace()">
+          <div class="card-content">
+            <mat-form-field class="full-width">
+              <input matInput placeholder="{{ 'HRMANAGAMENT.NAME' | translate}}*" formControlName="workspaceName" />
+              <mat-error
+                *ngIf="workspaceForm.get('workspaceName').hasError('required') && workspaceForm.get('workspaceName').touched ">
+                {{ 'APP.DASHBOARDNAMEREQUIRED' | translate }}
+              </mat-error>
+              <mat-error *ngIf="workspaceForm.get('workspaceName').hasError('maxlength')">
+                {{ 'APP.DASHBOARDNAMELENGTHEXCEED' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <textarea matInput formControlName="description" rows="2"
+                placeholder="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}"></textarea>
+              <mat-error
+                *ngIf="workspaceForm.get('description').hasError('maxlength') && workspaceForm.get('description').touched">
+                {{ 'APP.CUSTOMAPPDESCRIPTIONMAXLENGTHERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="selectedRoles" [compareWith]="compareSelectedRolesFn"
+                placeholder="{{ 'WIDGETS.VIEWROLES' | translate }}" multiple required>
+                <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown" #allSelected
+                  (click)="toggleRolesPerOne(allSelected.value)">
+                  {{ roles.roleName }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="workspaceForm.get('selectedRoles').hasError('required') && workspaceForm.get('selectedRoles').touched">
+                {{ 'APP.SELECTANYROLE' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select formControlName="editRoleIds" [compareWith]="compareEditSelectedRolesFn"
+                placeholder="{{ 'WIDGETS.EDITROLES' | translate }}" multiple>
+                <mat-option #allEditSelected (click)="toggleEditAllRolesSelected()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allEditSelected
+                  (click)="toggleEditRolesPerOne()">
+                  {{ role.roleName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select formControlName="deleteRoleIds" [compareWith]="compareDeleteSelectedRolesFn"
+                placeholder="{{ 'WIDGETS.DELETEROLES' | translate }}" multiple>
+                <mat-option #allDeleteSelected (click)="toggleDeleteAllRolesSelected()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allDeleteSelected
+                  (click)="toggleDeleteRolesPerOne()">
+                  {{ role.roleName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="text-center">
+            <button class="mr-1" mat-button mat-raised-button color="primary" type="button" (click)="upsertWorkspace()"
+              [disabled]="!workspaceForm.valid">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="dashboardUpdateInProgress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button type="button" (click)="closeAddWorkspaceDialog()">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+
+  <sat-popover #p hasBackdrop [interactiveClose]="true" verticalAlign="above">
+    <div class="tooltip-wrapper">
+      <table>
+        <tr>
+          <td>Ctrl + Q: </td>
+          <td>&nbsp;</td>
+          <td> {{ 'SHELL.TOOPENSEARCHMENU' | translate}}</td>
+        </tr>
+        <tr>
+          <td>Ctrl + B: </td>
+          <td>&nbsp;</td>
+          <td> {{ 'SHELL.TOOPENGOALSANDUSERS' | translate}}</td>
+        </tr>
+        <tr>
+          <td>Ctrl + Y: </td>
+          <td>&nbsp;</td>
+          <td> {{ 'SHELL.TOSEARCHBYID' | translate}}</td>
+        </tr>
+        <tr>
+          <td>Ctrl + M: </td>
+          <td>&nbsp;</td>
+          <td> {{ 'SHELL.TOCLOSEMENU' | translate}}</td>
+        </tr>
+      </table>
+    </div>
+  </sat-popover>
+
+  <mat-spinner *ngIf="searchByTextLoading && display" class="spinner-class" [diameter]="100"></mat-spinner>

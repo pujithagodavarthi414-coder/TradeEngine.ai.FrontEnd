@@ -1,0 +1,355 @@
+<div class="p-0" style="padding-top: 10px !important;">
+  <div fxLayout="row" style="height: 40px;margin-bottom: 5px;">
+
+    <!-- HORIZONTAL VIEW-->
+    <fa-icon icon="bars" fxLayoutAlign="start center" style="padding-left: 10px;" fxFlex="20px"
+      (click)="changeViewType()" matTooltip="{{ 'HORIZONTAL' | translate }}" *ngIf="listView"
+      class="mat-color-accent cursor-pointer" [ngClass]="{'active': listView}"></fa-icon>
+
+    <!-- VERTICAL VIEW-->
+    <fa-icon icon="bars" fxLayoutAlign="start center" style="padding-left: 10px;" fxFlex="20px"
+      (click)="changeViewType()" matTooltip="{{ 'VERTICAL' | translate }}" *ngIf="!listView"
+      class="mat-color-accent cursor-pointer kanban-icon-dashboard" [ngClass]="{'active': !listView}"></fa-icon>
+
+    <div fxFlexFill fxFlex="40%" fxLayoutAlign="start center">
+      <div fxLayout="row" *ngIf="childTags.length > 0">
+        <div fxFlex [style.max-width]="getChildTagsWidth(childTags)"
+          style="height:55px !important; overflow: hidden !important;padding-left: 10px!important">
+          <mat-chip disableRipple *ngFor="let tag of childTags"
+            style="margin-top: 20px !important;  padding: 0px 4px !important;cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;"
+            [ngClass]="tag == tagsSearchText ? 'widget-primary-color': 'widget-tag-color'"
+            (click)="selectWidgetTagBasedOnTagName(tag)" class="ml-05 m03">
+            <span class="hide-content-overflow" matTooltip="{{ tag}}" matTooltipClass="tooltip-overflow"
+              style="color:  #1e5461;">
+              {{tag}}
+            </span>
+          </mat-chip>
+        </div>
+        <mat-chip disableRipple *ngIf="moreChildTags"
+          (click)="openTagsOrWorkspaces(childTags,'Child tags');$event.stopPropagation();$event.preventDefault();"
+          fxLayoutAlign="end start" style="cursor: pointer;
+          font: 400 12px / 20px Lato, Helvetica Neue, sans-serif;
+          margin-top: 20px !important;
+          padding: 0px 4px !important;
+          background-color: rgb(224, 224, 224);
+          height: 20px;">
+          <span style="max-width: 120px;
+      text-overflow: ellipsis;
+      white-space: nowrap;" class="hide-content-overflow" matTooltip="More Tags" matTooltipClass="tooltip-overflow">
+            <b>...</b>
+          </span>
+        </mat-chip>
+      </div>
+    </div>
+    <div fxFlex="34%" fxLayout="row" class="app-container" fxLayoutAlign="start center">
+      <div class="mt-08">
+        <div class="apps-pagination">
+          <pagination-controls (pageChange)="pageChanged($event)" autoHide="true" previousLabel="" nextLabel=""
+            maxSize="5"></pagination-controls>
+        </div>
+      </div>
+    </div>
+    <div fxFlex fxLayoutAlign="end center" class="ml-1 mr-05 search_goalinput">
+      <fa-icon class="mr-1 cursor-pointer mat-color-accent fa-lg" matTooltip="{{ 'APP.CREATEAPP' | translate }}"
+        icon="plus-circle"
+        *ngIf="(canAccess_feature_ManageCustomApps || canAccess_feature_AddOrUpdateApplications) && isCustomAppAddOrEditRequire"
+        [matMenuTriggerFor]="menu2">
+      </fa-icon>
+      <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+        <mat-form-field fxLayoutAlign="start center">
+          <input name="search" class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+            [(ngModel)]="searchText" (keyup)="searchAppStore($event)">
+        </mat-form-field>
+      </div>
+
+      <span class="shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+        style="right:0px !important">
+        <span *ngIf="!searchText"></span>
+        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+          style="cursor:pointer">
+          close</mat-icon>
+      </span>
+    </div>
+  </div>
+  <hr class="p-02 m-0">
+  <div class="widgets-list" id="{{returnScrollValue()? '' : 'custom-style-1'}}"
+    [style.height]="fromSearch ? 'calc(100vh - 324px)' : 'calc(100vh - 120px)'">
+    <!-- (!fromSearch && listView) -->
+    <div fxLayout="row wrap" *ngIf="!(loadingApps) && !listView">
+      <ng-container
+        *ngFor="let widget of (widgets | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage, totalItems: totalItems } )">
+        <div fxFlex="25" fxFlex.lt-sm="100" fxFlex.sm="50" fxFlex.md="33"
+          *ngIf="widget.isProcess == false ||  (!fromSearch ? (widget.isPublished == true && widget.isEntryApp == true) : true) || (!fromSearch ? widget.isPublished == true : widget.isEntryApp == false) ">
+
+          <mat-card class="p-05 app-store-title app-on-hover" style="cursor: pointer;" (click)="OpenAppInPopUp(widget)">
+            <div fxLayout="row" fxLayOutAlign="center">
+              <div fxFlex class="mb-05 hide-content-overflow">
+                <b class="app-dialog-title">{{widget.widgetName | softLabelsPipe : softLabels | titlecase}}</b> <span
+                  *ngIf="widget.isEntryApp">({{ 'APP.ENTRYAPP' | translate }})</span>
+              </div>
+              <i fxFlex="20px" fxLayoutAlign="end center" class="fa fa-star-o mat-color-accent" style="font-size: 20px;"
+                *ngIf="!widget.isFavouriteWidget" (click)="saveFavourites(widget, $event);$event.stopPropagation()"
+                matTooltip="{{ 'APP.FAVOURITESAPPTEXT' | translate }}" matTooltipClass="tooltip-overflow"></i>
+              <i fxFlex="20px" fxLayoutAlign="end center" class="fa fa-star mat-color-accent"
+                *ngIf="widget.isFavouriteWidget" style="font-size: 20px;"
+                (click)="saveFavourites(widget, $event);$event.stopPropagation()"
+                matTooltip="{{ 'APP.REMOVEFAVOURITESTEXT' | translate }}" matTooltipClass="tooltip-overflow"></i>
+              <div fxFlex="20px" fxLayoutAlign="end center" class="mr-05 icons-vi_sible"
+                *ngIf="(canAccess_feature_ManageCustomApps) && (widget.isCustomWidget == true || widget.isHtml == true || widget.isProcess == true) && isCustomAppAddOrEditRequire">
+                <fa-icon icon="edit" class="mat-color-accent filter-operation cursor-pointer"
+                  matTooltip="{{ 'APP.EDITTEXT' | translate }}" matTooltipClass="tooltip-overflow"
+                  (click)="navigateToEdit(widget);$event.stopPropagation()">
+                </fa-icon>
+              </div>
+              <div fxFlex="20px" fxLayoutAlign="end center">
+                <fa-icon icon="expand" class="mat-color-accent filter-operation cursor-pointer"
+                  matTooltip="{{ 'APP.OPENAPPTEXT' | translate }}" matTooltipClass="tooltip-overflow"
+                  (click)="navigateToApp(widget);$event.stopPropagation()">
+                </fa-icon>
+              </div>
+            </div>
+
+            <div fxLayout="row">
+              <div fxFlex class="" (mouseover)="checkTitleTooltipStatus(widget.description)">
+                <p class="mat-small mb-05 app-description-overflow" #description
+                  [matTooltip]="showTitleTooltip ? widget.description : ''" matTooltipClass="tooltip-overflow"
+                  matTooltipShowDelay="200">{{widget.description}}</p>
+              </div>
+            </div>
+            <!-- Workspaces -->
+            <!-- <div style="height:29px; overflow: hidden !important;" #workspaces *ngIf="!(widget.widgetWorkSpaces == null || widget.widgetWorkSpaces == 'undefined')">
+              <div #workspaceChips>
+                <mat-chip *ngFor="let dashboard of widget.widgetWorkSpaces"
+                  style=" margin-bottom: 5px !important;margin-right: 3px !important; background-color: #00000033 !important; padding: 0px 4px !important;cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;">
+                  <span style="max-width: 120px;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;"class="hide-content-overflow" matTooltip="{{ dashboard }}" matTooltipClass="tooltip-overflow">
+                    {{dashboard}}
+                  </span>
+                </mat-chip>
+              </div>
+            </div> -->
+            <div fxLayout="row" fxLayoutAlign="start center"
+              *ngIf="!(widget.widgetWorkSpaces == null || widget.widgetWorkSpaces == 'undefined')">
+              <div fxFlex fxLayout="row wrap" style="height: 25px; overflow: hidden !important;"
+                class="custom-tags-details" #workspaces
+                [style.max-width]="getWorkspaceWidth(widget.widgetWorkSpaces, false)">
+                <div #workspaceChips>
+                  <div *ngFor="let dashboard of widget.widgetWorkSpaces | orderBy : 'Workspaces'"
+                    (click)="navigateToDashboard(dashboard);$event.stopPropagation();$event.preventDefault()"
+                    style="margin-right: 3px !important; background-color: #00000033 !important;cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;">
+                    <span style="text-overflow: ellipsis;
+                  white-space: nowrap;" class="hide-content-overflow custom-widget-workspace"
+                      matTooltip="{{ dashboard }}" matTooltipClass="tooltip-overflow">
+                      {{dashboard}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- <div *ngIf="getWorkspaceWidth(widget.widgetWorkSpaces, true)" class="custom-tags-details"
+            style="margin-right: 3px !important; background-color: #00000033 !important; padding: 0px 4px !important;cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;">
+            <span style="text-overflow: ellipsis;
+            white-space: nowrap;" class="hide-content-overflow custom-widget-workspace"
+              matTooltip="More dashboards" matTooltipClass="tooltip-overflow">
+              ...
+            </span>
+          </div> -->
+              <mat-chip disableRipple *ngIf="getWorkspaceWidth(widget.widgetWorkSpaces, true)"
+                (click)="openTagsOrWorkspaces(widget.widgetWorkSpaces,'Workspaces');$event.stopPropagation();$event.preventDefault();"
+                fxLayoutAlign="end start" style="margin-right: 3px !important;
+          background-color: #00000033 !important;
+          padding: 0px 4px !important;
+          cursor: pointer;
+          font: 400 12px/20px Lato, Helvetica Neue, sans-serif;
+          cursor: pointer;
+          font-size: 16px;
+          margin-bottom: 7px;">
+                <span style="max-width: 120px;
+          text-overflow: ellipsis;
+          white-space: nowrap;" class="hide-content-overflow" matTooltip="More dashboards"
+                  matTooltipClass="tooltip-overflow">
+                  <b>...</b>
+                </span>
+              </mat-chip>
+            </div>
+            <div fxLayout="row wrap" style="height: 25px; overflow: hidden !important;" class="custom-tags-details"
+              *ngIf="widget.widgetWorkSpaces == null || widget.widgetWorkSpaces == 'undefined'">
+              <div
+                style="margin-right: 3px !important; background-color: #00000033 !important;cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;">
+                <span class="hide-content-overflow custom-widget-workspace" matTooltip="No dashboard configuration"
+                  matTooltipClass="tooltip-overflow">
+                  No dashboard configuration </span>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div fxLayout="row" fxLayoutAlign="start center"
+              *ngIf="!(widget.widgetTags == null || widget.widgetTags == 'undefined')">
+              <div fxFlex fxLayout="row wrap" [style.max-width]="getTagsWidth(widget.widgetTags, false)"
+                style="height: 25px; overflow: hidden !important;" class="custom-tags-details">
+                <div *ngFor="let tag of widget.widgetTags | orderBy : 'Tags'"
+                  (click)="selectWidgetTag(tag);$event.stopPropagation()">
+                  <span style="
+                text-overflow: ellipsis;
+                white-space: nowrap;" class="hide-content-overflow custom-widget-tag" matTooltip="{{ tag.TagName }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{tag.TagName}}
+                  </span>
+                </div>
+              </div>
+              <mat-chip *ngIf="getTagsWidth(widget.widgetTags, true)"
+                (click)="openTagsOrWorkspaces(widget.widgetTags,'Tags');$event.stopPropagation();$event.preventDefault();"
+                fxLayoutAlign="end start" style="margin-right: 3px !important;
+            background-color: #b9bfca9e !important;
+            padding: 0px 4px !important;
+            cursor: pointer;
+            font: 400 12px/20px Lato, Helvetica Neue, sans-serif;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 7px;">
+                <span style="max-width: 120px;
+            text-overflow: ellipsis;
+            white-space: nowrap;" class="hide-content-overflow" matTooltip="More Tags"
+                  matTooltipClass="tooltip-overflow">
+                  <b>...</b>
+                </span>
+              </mat-chip>
+            </div>
+            <div fxLayout="row wrap" style="height: 25px; overflow: hidden !important;"
+              *ngIf="widget.widgetTags == null || widget.widgetTags == 'undefined'">
+              <div
+                style="margin-right: 3px !important; cursor: pointer;  font: 400 12px/20px Lato, Helvetica Neue, sans-serif;">
+                <span class="hide-content-overflow custom-widget-tag" matTooltip="No categories available"
+                  matTooltipClass="tooltip-overflow">
+                  No categories available
+                </span>
+              </div>
+            </div>
+            <div fxLayout="row wrap" *ngIf="fromSearch">
+              <div fxFlex>
+                <fa-icon class="mr-05 pull-right cursor-pointer mat-color-accent"
+                  matTooltip="{{ 'APP.INSTALL' | translate }}" icon="download" (click)="OnSelect(widget)">
+                </fa-icon>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="listView && !(loadingApps)">
+      <!-- <ndc-dynamic style="width: 100% !important;" [ndcDynamicFactory]="dashboard.component" [ndcDynamicComponent]="dashboard.component" *ngIf="loaded"
+      [ndcDynamicInjector]="injector" [ndcDynamicInputs]="dashboard.inputs">
+     </ndc-dynamic> -->
+      <custom-apps-listview [selectedAppsFromAppStore]="widgets" [pag]="pag" [fromSearch]="fromSearch"></custom-apps-listview>
+    </ng-container>
+    <div *ngIf="(loadingApps)" class="text-center">
+      <div fxLayout="row wrap">
+        <div fxFlex="25" *ngFor="let form of Array(num).fill(1)">
+          <div style="flex: 1 1 25%; box-sizing: border-box; max-width: 100%;">
+            <mat-card class="p-05">
+              <div style="flex-direction: row; box-sizing: border-box; display: flex;max-width: 80%;">
+                <div style="flex: 1 1 0%; box-sizing: border-box;">
+                  <p class="mat-small empty-text p-05 app-description-overflow loading-bg"></p>
+                </div>
+              </div>
+              <div style="flex-direction: row; box-sizing: border-box; display: flex;">
+                <div style="flex: 1 1 0%; box-sizing: border-box;">
+                  <p class="mat-small empty-text p-05 app-description-overflow loading-bg " style="height: 30px;"></p>
+                </div>
+              </div>
+              <div
+                style="flex-direction: row; box-sizing: border-box; display: flex; max-height: 100%; place-content: center flex-start; align-items: center;">
+                <div>
+                  <span class="hide-content-overflow custom-widget-tag">
+                    <p class="mat-small empty-text goal-loader-img loading-bg"></p>
+                  </span>
+                </div>
+              </div>
+              <div
+                style="flex-direction: row; box-sizing: border-box; display: flex; max-height: 100%; place-content: center flex-start; align-items: center;">
+                <div class="custom-tags-details"
+                  style="height: 25px; overflow: hidden !important; flex: 1 1 0%; box-sizing: border-box; flex-flow: row wrap; display: flex;">
+                  <div>
+                    <span class="hide-content-overflow custom-widget-tag">
+                      <p class="mat-small empty-text goal-loader-img loading-bg"></p>
+                    </span>
+                  </div>
+                  <div>
+                    <span class="hide-content-overflow custom-widget-tag">
+                      <p class="mat-small empty-text goal-loader-img loading-bg"></p>
+                    </span>
+                  </div>
+                  <div>
+                    <span class="hide-content-overflow custom-widget-tag">
+                      <p class="mat-small empty-text goal-loader-img loading-bg"></p>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <mat-card *ngIf="(widgetsList$ | async)?.length === 0 && !(loadingApps)" class="p-0 test-display" fxFlex="100"
+      fxFlex.gt-sm="100">
+      <div fxLayout="row" fxFlex="100">
+        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+          <fa-icon icon="info-circle"></fa-icon>
+        </div>
+        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+          <p class="m-0">{{'APP.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}</p>
+        </div>
+      </div>
+    </mat-card>
+    <div *ngIf="widgets.length == 0 && !(loadingApps)" class="text-center">{{'APP.NOAPPTEXT' | translate}}</div>
+
+  </div>
+
+  <mat-menu #menu2="matMenu" class="dialog_window" (click)="$event.stopPropagation()">
+    <mat-card-content class="p-0 m-0 listof_assets store-list-dropdown" id="style-1">
+      <mat-list class="compact-list" *ngIf="canAccess_feature_ManageCustomApps">
+        <mat-card class="p-0 asset-card">
+          <span class="hide-content-overflow userStory-name-control store-dropdown-padding"
+            style="max-width: 100% !important;" (click)="navigateToCreate(false,null)">{{ 'APP.CUSTOMSQLAPP' | translate
+            }}</span>
+        </mat-card>
+      </mat-list>
+      <mat-list class="compact-list" *ngIf="canAccess_feature_ManageCustomApps">
+        <mat-card class="p-0 asset-card">
+          <span class="hide-content-overflow userStory-name-control store-dropdown-padding"
+            style="max-width: 100% !important;" (click)="navigateToCreate(true,null)">{{ 'APP.CUSTOMHTMLAPP' | translate
+            }}</span>
+        </mat-card>
+      </mat-list>
+      <mat-list class="compact-list" *ngIf="canAccess_feature_AddOrUpdateApplications">
+        <mat-card class="p-0 asset-card">
+          <span class="hide-content-overflow userStory-name-control store-dropdown-padding"
+            style="max-width: 100% !important;" (click)="navigateToCreate(null,3)">{{ 'APP.CUSTOMPROCESSAPP' | translate
+            }}</span>
+        </mat-card>
+      </mat-list>
+    </mat-card-content>
+  </mat-menu>
+
+  <!-- <sat-popover #p hasBackdrop  [interactiveClose]="true" verticalAlign="above">
+  <div class="tooltip-wrapper">
+    {{ hiddenDashboard }} is hidden. Please unhide this dashboard to access.
+  </div>
+</sat-popover> -->
+
+  <ng-template #openAppaDialogComponent let-data>
+    <app-tags-worskpaces-display [data]=[data] (selectedTag)="selectedTag($event)"
+      (selectedDashboard)="selectedDashboard($event)"></app-tags-worskpaces-display>
+  </ng-template>
+
+
+  <ng-template #createAppaDialogComponent let-data>
+    <create-app-dialog [data]=[data] (isReloadRequired)="isReloadRequired($event)"></create-app-dialog>
+  </ng-template>
+
+
+  <ng-template #customAppPopUpComponent let-data>
+    <custom-app-popup [data]=[data] (isReloadRequired)="isReloadRequired($event)" (refreshSoftLabes)="refreshSoftLabes($event)"></custom-app-popup>
+  </ng-template>

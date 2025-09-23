@@ -1,0 +1,107 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="cancelDialog()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+
+<div class="mt-1 invoice-upsert-form " id="style-1">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow">{{'ENTITYFORM.HISTORYTABLETITLE' |
+                        translate}}</span>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="projects-list-grid grid-wrapper no-drag" *ngIf="greRomandeHistoryDetails.length > 0">
+        <kendo-grid #grid class="invoice-area-apps" [data]="greHistoryModel" [pageSize]="state.take" [skip]="state.skip"
+            [pageable]="true" [sortable]="true" (cellClick)="openViewpopup($event)" [sort]="state.sort"
+            [filterable]="false" [loading]="isLoading" (dataStateChange)="dataStateChange($event)" id="style-1">
+            <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}" pagerItems="{{'ITEMS' | translate}}"
+                pagerOf="{{'OF' | translate}}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="gridInvoice" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{'ENTITYFORM.GRIDINVOICE' | translate}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow" matTooltip="{{dataItem.gridInvoice}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.gridInvoice }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="createdDateTime" width="150">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    Updated date
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div class="icon-button" fxLayout="row">
+                        <span class="hide-content-overflow"
+                            matTooltip="{{dataItem.createdDateTime | date: 'mediumDate'}}" matTooltipShowDelay="400"
+                            fxFlex>
+                            {{ dataItem?.createdDateTime | date: 'mediumDate' }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column [filterable]="false" width="250">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    {{'ACTIONS' | translate}}
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;"
+                        *ngIf="checkInvoiceExists(dataItem)">
+                        <button class="text-center mr-05" title="Download" mat-icon-button
+                            (click)="$event.stopPropagation();downloadInvoice(dataItem)">
+                            <fa-icon icon="download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                    <div (click)="$event.stopPropagation()" style="display: inline-flex; text-align: center;">
+                        <button class="text-center mr-05" title="Archive" mat-icon-button
+                            [satPopoverAnchorFor]="archiveHistoryPopOver" #archiveHistoryPopUp="satPopoverAnchor"
+                            (click)="$event.stopPropagation();archiveHistory(dataItem,archiveHistoryPopUp)">
+                            <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': isLoading}"></div>
+    </div>
+</div>
+
+<ng-template #viewGrEDialogComponent let-data>
+    <view-groupe [data]=[data]></view-groupe>
+</ng-template>
+
+<app-common-message-box class="no-drag" *ngIf="!isLoading && greRomandeHistoryDetails.length === 0"
+    textToDisplay="{{'ACTIVITYTRACKER.NODATATODISPLAY' | translate}}">
+</app-common-message-box>
+
+
+<sat-popover #archiveHistoryPopOver hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1">Are you sure want to archive history?
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archivehistoryPopUp();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closePopUp();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+<!-- 
+<ng-template #viewGrEDialogComponent let-data>
+    <view-groupe [data]=[data]></view-groupe>
+</ng-template> -->

@@ -1,0 +1,112 @@
+<div fxLayout="row wrap">
+    <div class="full-width project-statuslist projectStatus-page">
+        <div *ngIf="(templatesCount$|async) == 0 && !(anyOperationInProgress$ | async)">
+            <app-common-message-box *ngIf="!(anyOperationInProgress$|async) &&  (templatesCount$|async) == 0"
+                textToDisplay="{{'PROJECTS.DONTHAVETEMPLATESTOBACKLOG'|translate}}">
+            </app-common-message-box>
+            <button mat-raised-button class="template-button mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addTemplatePopOver" #addTemplatePopup="satPopoverAnchor"
+                (click)="clearTemplateForm(addTemplatePopup)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon> {{'PROJECTS.ADDTEMPLATE'|translate}}
+            </button>
+        </div>
+    </div>
+</div>
+<gc-goal-summary-loading *ngIf="(anyOperationInProgress$ | async)">
+</gc-goal-summary-loading>
+
+<div *ngIf="(templatesCount$|async)  > 0 ">
+    <div fxLayout="row wrap" fxLayout.lt-md="column" class="allGoals-page" fxLayoutGap="8px">
+        <div fxFlex="27px" class="ml-05 mt-03" fxHide.lt-md>
+            <div class='custom-label veritcal-label'>
+                <div class='custom-label-content' (click)="isTemplate = !isTemplate">
+                    {{'PROJECTS.TEMPLATE' | translate | softLabelsPipe : softLabels}} <span>
+                        <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+                            [ngClass]="{'rotate-icon-down': isTemplate}"> </fa-icon>
+                    </span></div>
+            </div>
+        </div>
+        <div fxFlex="100" fxFlex.gt-sm="300px" fxFlex.md="280px" [hidden]="isTemplate" class="allgoals-listData">
+            <div fxLayout="column">
+                <div fxFlexFill>
+                    <mat-card class="goalList-popup p-0 custom-box">
+                        <div class="ml-05 mr-05 search_goalinput" fxLayout="row wrap">
+                            <div fxLayout="row wrap" fxFlex="180px" fxFlex.md="180px" fxFlex.sm="24" fxFlex.xs="50"
+                                class="custom-position-relative">
+                                <mat-form-field>
+                                    <input class="search_goal full-width" matInput
+                                        placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText">
+                                </mat-form-field>
+                                <span class="close_icon">
+                                    <span *ngIf="!searchText"></span>
+                                    <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+                                        (click)="closeSearch()" style="cursor:pointer">
+                                        close</mat-icon>
+                                </span>
+                            </div>
+                            <fa-icon icon="plus-circle" mat-icon-button
+                                style="font-size: 20px;float:right;margin-top:15px;"
+                                class="mat-color-accent icon-button goal-add"
+                                matTooltip="{{'PROJECTS.ADDTEMPLATE'|translate}}"
+                                [satPopoverAnchorFor]="addTemplatePopOver" #addTemplatePopup="satPopoverAnchor"
+                                (click)="clearTemplateForm(addTemplatePopup)">
+                            </fa-icon>
+                        </div>
+                        <div class="p-0" style="height: calc(100vh - 158px);">
+                            <div class="p-0 m-0 all-template-list" id="style-1">
+                                <div class="p-0">
+                                    <span *ngIf="!(anyOperationInProgress$ | async)">
+                                        <mat-list-item
+                                            *ngFor="let template of (templatesModel$ | async | resultfilter: searchText:'templateName')">
+                                            <app-templates-summary [templateModel]="template"
+                                                [templateSelected]="template.templateId === selectedTemplateId"
+                                                (click)="handleClickOnGoalSummaryComponent(template)">
+                                            </app-templates-summary>
+                                        </mat-list-item>
+                                    </span>
+                                    <app-common-message-box
+                                    *ngIf=" !(anyOperationInProgress$ | async) && (templatesModel$ | async | resultfilter: searchText:'templateName')?.length == 0"
+                                    textToDisplay="{{'PROJECTS.TEMPLATESNOTFOUND'|translate | softLabelsPipe : softLabels}}">
+                                </app-common-message-box>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-card>
+                </div>
+            </div>
+        </div>
+        <div fxFlex *ngIf="template">
+            <as-split direction="horizontal" unit="percent" gutterSize="5">
+                <as-split-area size="62" minSize="40" class="pr-05">
+                    <app-pm-component-template-browse-board [userStorySearchCriteria]="templateWorkItemModel"
+                        [template]="template" (selectUserStory)="selectedEvent($event)">
+                    </app-pm-component-template-browse-board>
+                </as-split-area>
+                <as-split-area size="38" minSize="37" maxSize="51" *ngIf="workItem && showDiv">
+                    <template-userstory-detail [userStory]="workItem" (userStoryCloseClicked)="userStoryCloseClicked()">
+                    </template-userstory-detail>
+                </as-split-area>
+            </as-split>
+        </div>
+        <div fxFlex="100" fxShow fxHide.gt-sm *ngIf="workItem && !showDiv">
+            <template-userstory-detail [userStory]="workItem" (userStoryCloseClicked)="userStoryCloseClicked()">
+            </template-userstory-detail>
+        </div>
+    </div>
+</div>
+
+<sat-popover #addTemplatePopOver verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+    horizontalAlign="end" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <div>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-05 mat-bg-primary">
+                    {{'PROJECTS.ADDTEMPLATE'|translate}}
+                </div>
+            </mat-card-title>
+            <app-pm-component-project-template [projectId]="projectId" [clearCreateForm]="clearCreateForm"
+                [template]=null (closePopup)="closeTemplateDialog($event)">
+            </app-pm-component-project-template>
+        </div>
+    </mat-card>
+</sat-popover>

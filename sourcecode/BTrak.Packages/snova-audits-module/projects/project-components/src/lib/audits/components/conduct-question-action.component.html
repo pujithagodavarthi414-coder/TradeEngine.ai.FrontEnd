@@ -1,0 +1,188 @@
+<form id="style-1" style="max-height: 450px; width: 420px;" [formGroup]="userStoryScenarioBugForm"
+    #formDirective="ngForm" novalidate (submit)="userStoryScenarioBugForm.valid && addBugToUserStory()">
+    <div class="card-content p-05" fxLayout="column">
+        <div fxLayout="row wrap" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-xs="100" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <input formControlName="userStoryName" matInput placeholder="{{ 'AUDIT.ACTION' | translate | softLabelsPipe :softLabels  }}"
+                        required />
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('userStoryName').hasError('required')">
+                            {{ 'AUDIT.PLEASEENTERACTIONAME' | translate | softLabelsPipe :softLabels }}
+                        </span>
+                        <span *ngIf="userStoryScenarioBugForm.get('userStoryName').hasError('maxlength')">
+                            {{ 'AUDIT.ACTIONNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05">
+            <div fxFlex="100">
+                <ng-container *ngIf="(userStoryScenarioBugForm.get('viewDescription').value == false)">
+                    <a class="add-test-case"
+                        (click)="userStoryScenarioBugForm.get('viewDescription').setValue(!userStoryScenarioBugForm.get('viewDescription').value)">
+                        <b>{{'AUDIT.ENTERACTIONDESCRIPTION' | translate | softLabelsPipe :softLabels }}</b>
+                    </a>
+                </ng-container>
+                <ng-container *ngIf="!(userStoryScenarioBugForm.get('viewDescription').value == false)">
+                    <a class="add-test-case"
+                        (click)="userStoryScenarioBugForm.get('viewDescription').setValue(!userStoryScenarioBugForm.get('viewDescription').value)">
+                        <b>{{'AUDIT.HIDEACTIONDESCRIPTION' | translate | softLabelsPipe :softLabels }}</b>
+                    </a>
+                </ng-container>
+            </div>
+            <div fxLayout="row wrap" fxFlex="100"
+                [hidden]="userStoryScenarioBugForm.get('viewDescription').value == false">
+                <div fxFlex="100">
+                    <editor class="dfree-header custom-logtime-comment"
+                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Add comment"
+                        menubar="false" [init]="initSettings" background="white" height="190"
+                        formControlName="description" (onKeyUp)="checkDisabled()">
+                    </editor>
+                    <mat-error *ngIf="userStoryScenarioBugForm.get('description').hasError('maxlength')">
+                        {{ 'AUDIT.ACTIONDESCRIPTIONEXCEED800CHARACTERS' | translate | softLabelsPipe :softLabels  }}
+                    </mat-error>
+                </div>
+            </div>
+        </div>
+        <div fxLayout="row wrap">
+            <!-- <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="branchId" placeholder="{{ 'ACTIVITYTRACKER.BRANCH' | translate}}"
+                        (selectionChange)="getUserList($event.value)">
+                        <mat-option value="branch" [value]="branch.branchId" *ngFor="let branch of branchList">
+                            {{branch.branchName}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div> -->
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'AUDIT.ACTIONASSIGNEE' | translate | softLabelsPipe :softLabels  }}" formControlName="ownerUserId"
+                        required (selectionChange)="getAssigneeValue($event.value)">
+                        <mat-select-trigger>
+                            {{selectedMember}}
+                        </mat-select-trigger>
+                        <mat-option [value]="user.projectMember.id" *ngFor="let user of userList">
+                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                <div fxFlex="35px">
+                                    <app-avatar [name]="user.projectMember.name | removeSpecialCharacters"
+                                        [src]="user.projectMember.profileImage" [isRound]="true" size="30">
+                                    </app-avatar>
+                                </div>
+                                <div fxFlex="75">
+                                    <p class="mat-body-2">
+                                        {{ user.projectMember.name }}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('ownerUserId').hasError('required')">
+                            {{ 'AUDIT.PLEASESELECTUSER' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="bugPriorityId" placeholder="{{ 'GOALS.ACTIONPRIORITY' | translate | softLabelsPipe :softLabels  }}"
+                        required>
+                        <mat-option value="option" [value]="priority.bugPriorityId"
+                            *ngFor="let priority of (bugPriorities$ | async)">
+                            <fa-icon icon="{{priority.icon}}" [ngStyle]="setColorForBugPriorityTypes(priority.color)">
+                            </fa-icon> {{ priority.priorityName }}&nbsp;-&nbsp;{{ priority.description }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('bugPriorityId').hasError('required')">
+                            {{ 'GOALS.SELECTACTIONPRIORITY' | translate | softLabelsPipe :softLabels  }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <!-- <div fxLayout="row wrap">
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="goalId"
+                        placeholder="{{ 'USERSTORIESWAITINGFORQAAPPROVAL.GOAL' | translate | softLabelsPipe : softLabels}}"
+                        required>
+                        <mat-option value="option" [value]="goal.goalId"
+                            *ngFor="let goal of goalsList | resultfilter: bugBoardId: 'bugBoard'">
+                            {{goal.goalShortName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="(goalsList | resultfilter: bugBoardId: 'bugBoard').length != 0 && userStoryScenarioBugForm.get('goalId').hasError('required')">
+                            {{ 'USERSTORY.PLEASESELECTGOAL' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                        <span *ngIf="(goalsList | resultfilter: bugBoardId: 'bugBoard').length === 0">
+                            {{ 'USERSTORY.THEREARENOACTIONBOARDGOALS' | translate}}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div> -->
+        <div fxLayout="row wrap" fxLayoutGap="10px" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="actionCategoryId" placeholder="{{'AUDIT.ACTIONCATEGORY' | translate | softLabelsPipe :softLabels }}">
+                        <mat-option [value]="category.actionCategoryId" *ngFor="let category of actionCategories">
+                            {{ category.actionCategoryName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <input formControlName="deadLineDate" matInput [matDatepicker]="picker" [min]="minDate"
+                        (click)="picker.open()" placeholder="{{ 'USERSTORY.DEADLINE' | translate }}" required />
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-error *ngIf="userStoryScenarioBugForm.get('deadLineDate').hasError('required')">
+                        {{ 'USERSTORY.PLEASESELECTDEADLINEDATE' | translate }}
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+
+        <!-- <div fxLayout="row wrap" fxLayoutGap="10px" class="mb-05" *ngIf="!questionData">
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <input type="text" class="search_goal" placeholder="{{ 'AUDIT.SELECTCONDUCTQUESTION' | translate | softLabelsPipe : softLabels}}" matInput formControlName = "conductQuestionName"
+                    (input)="searchQuestions($event)" [matAutocomplete]="auto" 
+                    autocomplete="off" trim>
+                <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"
+                    *ngIf="isQuestioinLoading"></i>
+                <span class="linked-userstory-close" *ngIf="questionName && !isQuestioinLoading">
+                    <span *ngIf="!questionName">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <mat-icon *ngIf="questionName" class="icon-button custom-auto-close-timesheet"
+                        aria-hidden="false" (click)="closeSearchQuestions()" style="cursor:pointer">
+                        close</mat-icon>
+                </span>
+                <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                    (optionSelected)="onChangeQuestion($event.option.value)">
+                    <mat-option *ngFor="let question of  questions" [value]="question.conductQuestionId">
+                        {{question.questionName}}
+                    </mat-option>
+                </mat-autocomplete>                    
+                </mat-form-field>
+            </div>
+        </div> -->
+
+        <div class="text-center mt-05">
+            <button mat-raised-button color="primary" class="mr-05" type="submit" [disabled]="bugFormDisabled && isQuestioinLoading">
+                <mat-progress-bar *ngIf="bugFormDisabled" color="primary" mode="indeterminate">
+                </mat-progress-bar>
+                <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'TESTMANAGEMENT.ADD' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeActionDialog();">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'DISMISS' | translate }}
+            </button>
+        </div>
+    </div>
+</form>

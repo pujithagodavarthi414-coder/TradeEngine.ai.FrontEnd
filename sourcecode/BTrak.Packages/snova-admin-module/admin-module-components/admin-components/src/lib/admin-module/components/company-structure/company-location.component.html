@@ -1,0 +1,224 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageCompanyLocation">
+  <mat-card class="p-0 canteen-manage m-0 ">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'COMPANYLOCATION.COMPANYLOCATIONTITLE' | translate | titlecase }}">{{ 'COMPANYLOCATION.COMPANYLOCATIONTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchivedLocations == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchivedLocations" [checked]="isArchivedLocations"
+              (change)="getCompanyLocations()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="shift-timing-close mr-1" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'COMPANYLOCATION.CREATECOMPANYLOCATIONTOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertCompanyLocationPopover" #upsertCompanyLocationPopUp="satPopoverAnchor"
+              (click)="createCompanyLocationPopupOpen(upsertCompanyLocationPopUp);clearForm()"
+              *ngIf="!isArchivedLocations">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedLocations"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="companyLocationDetails" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'COMPANYLOCATION.COMPANYLOCATIONNAME' | translate }}" [sortable]="true"
+        prop="locationName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.locationName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'COMPANYLOCATION.COMPANYLOCATIONADDRESS' | translate }}" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <label class="assets-name-control hide-content-overflow activity-font-color mb-0 mt-05"
+            matTooltip="{{row?.address}}">{{ row?.address }}</label>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'COMPANYLOCATION.COMPANYLOCATIONLATITUDE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="latitude">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.latitude }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'COMPANYLOCATION.COMPANYLOCATIONLONGITUDE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="longitude">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.longitude }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'COMPANYLOCATION.COMPANYLOCATIONEDIT' | translate }}"
+            [satPopoverAnchorFor]="upsertCompanyLocationPopover" #upsertCompanyLocationPopUp="satPopoverAnchor"
+            (click)="editCompanyLocationPopupOpen(row,upsertCompanyLocationPopUp)" *ngIf="!isArchivedLocations"
+            mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'COMPANYLOCATION.COMPANYLOCATIONARCHIVE' | translate }}"
+            (click)="deleteCompanyLocationPopUpOpen(row,deleteCompanyLocationPopUp)"
+            [satPopoverAnchorFor]="deleteCompanyLocationPopover" #deleteCompanyLocationPopUp="satPopoverAnchor"
+            *ngIf="!isArchivedLocations" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'COMPANYLOCATION.COMPANYLOCATIONUNARCHIVE' | translate }}"
+            (click)="deleteCompanyLocationPopUpOpen(row,deleteCompanyLocationPopUp)"
+            [satPopoverAnchorFor]="deleteCompanyLocationPopover" #deleteCompanyLocationPopUp="satPopoverAnchor"
+            *ngIf="isArchivedLocations" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertCompanyLocationPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ companyLocationEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="companyLocationForm" novalidate #formDirective="ngForm"
+          (submit)="companyLocationForm.valid && upsertCompanyLocation(formDirective)">
+          <div>
+            <div fxLayout="row" fxLayoutGap="10px">
+              <div fxFlex="49">
+                <mat-form-field>
+                  <input matInput formControlName="locationName"
+                    placeholder="{{ 'COMPANYLOCATION.COMPANYLOCATIONNAME' | translate }}" required>
+                  <mat-error *ngIf="companyLocationForm.get('locationName').hasError('maxlength')">
+                    {{ 'COMPANYLOCATION.MAXLENGTHERROR250' | translate }}</mat-error>
+                  <mat-error
+                    *ngIf="companyLocationForm.get('locationName').hasError('required') && companyLocationForm.get('locationName').touched">
+                    {{ 'COMPANYLOCATION.REQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="49">
+                <mat-form-field>
+                  <input matInput formControlName="address"
+                    placeholder="{{ 'COMPANYLOCATION.COMPANYLOCATIONADDRESS' | translate }}" required>
+                  <mat-error *ngIf="companyLocationForm.get('address').hasError('maxlength')">
+                    {{ 'COMPANYLOCATION.ADDRESSMAXLENGTHERROR250' | translate }}</mat-error>
+                  <mat-error
+                    *ngIf="companyLocationForm.get('address').hasError('required') && companyLocationForm.get('address').touched">
+                    {{ 'COMPANYLOCATION.ADDRESSREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayoutGap="10px">
+              <div fxFlex="49">
+                <mat-form-field class="mt-05">
+                  <input matInput formControlName="latitude" (keypress)="numberOnly($event)"
+                    placeholder="{{ 'COMPANYLOCATION.COMPANYLOCATIONLATITUDE' | translate }}" required>
+                  <mat-error *ngIf="companyLocationForm.get('latitude').hasError('maxlength')">
+                    {{ 'COMPANYLOCATION.LATITUDEMAXLENGTHERROR50' | translate }}</mat-error>
+                    
+                  <mat-error
+                    *ngIf="companyLocationForm.get('latitude').hasError('required') && companyLocationForm.get('latitude').touched">
+                    {{ 'COMPANYLOCATION.LATITUDEREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="49">
+                <mat-form-field class="mt-05">
+                  <input matInput formControlName="longitude" (keypress)="numberOnly($event)"
+                    placeholder="{{ 'COMPANYLOCATION.COMPANYLOCATIONLONGITUDE' | translate }}" required>
+                  <mat-error *ngIf="companyLocationForm.get('longitude').hasError('maxlength')">
+                    {{ 'COMPANYLOCATION.LONGITUDEMAXLENGTHERROR50' | translate }}</mat-error>
+                  <mat-error
+                    *ngIf="companyLocationForm.get('longitude').hasError('required') && companyLocationForm.get('longitude').touched">
+                    {{ 'COMPANYLOCATION.LONGITUDEREQUIREDERROR' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            <div class="mt-1 text-center">
+              <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!companyLocationForm.valid||isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertCompanyLocationPopup(formDirective)"
+                type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #deleteCompanyLocationPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchivedLocations">
+          {{ 'COMPANYLOCATION.ARCHIVECOMPANYLOCATION' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchivedLocations">
+          {{ 'COMPANYLOCATION.UNARCHIVECOMPANYLOCATION' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchivedLocations">
+          {{ 'COMPANYLOCATION.ARCHIVECOMPANYLOCATIONTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchivedLocations">
+          {{ 'COMPANYLOCATION.UNARCHIVECOMPANYLOCATIONTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchivedLocations" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteCompanyLocation();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchivedLocations" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteCompanyLocation();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteCompanyLocationPopUp();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageCompanyLocation"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,457 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow" matTooltip="Leads list">Leads list</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 250px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="getLeadsList()">
+                        </mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput mr-3" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" style="right: 0px !important;"
+                            fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <!-- <button mat-icon-button matTooltip="{{ 'EMPLOYEEGRADE.CREATEEMPLOYEEGRADE' | translate  | softLabelsPipe : softLabels }}"
+                            [satPopoverAnchorFor]="upsertGradePopover" #upsertGradePopUp="satPopoverAnchor"
+                            (click)="creatGradePopupOpen(upsertGradePopUp);clearForm()" *ngIf="!isArchived">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button> -->
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <!-- <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+    </mat-progress-bar> -->
+    <div class="activity-data no-drag buyers-table-height">
+        <kendo-grid [data]="leadListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+            [sort]="state.sort" [sortable]="true" [pageable]="true" (cellClick)="selectedRow($event)"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column width="150" field="uniqueLeadId" title="Lead ID">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="leadDate" title="Lead Date">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.leadDate | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="contractDateFrom" title="Sales Type">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.contractDateFrom != '0001-01-01T00:00:00'">
+                        Contract
+                    </div>
+                    <div *ngIf="dataItem.contractDateFrom == '0001-01-01T00:00:00'">
+                        Non-Contract
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="contractNumber" title="{{ 'CONTRACT.CONTRACTNUMBER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="170" field="contractQuantity" title="Contract Quantity(MT)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.contractQuantity | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="buyerName" title="{{ 'CONTRACT.BUYERNAME' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="productName" title="Product">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="gradeName" title="Grade">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="quantityInMT" title="{{ 'CONTRACT.LEADQUANTITY' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.quantityInMT | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="rateOrTon" title="Total Amount(INR)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.quantityInMT * dataItem.rateOrTon | number: '1.2-2'}}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+
+            <kendo-grid-column width="150" field="statusName" title="{{ 'CONTRACT.STATUS' |  translate }}">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    Status
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="dataItem?.statusColor">
+                        {{ dataItem.statusName }}
+                    </mat-chip>
+                </ng-template>
+            </kendo-grid-column>
+            <!-- <kendo-grid-column width="150" field="salesPersonName"
+                title="{{ 'CONTRACT.SALESPERSONNAME' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="countryName" title="{{ 'CONTRACT.COUNTRYNAME' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="buyerName" title="{{ 'CONTRACT.BUYERNAME' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="remaningQuantity"
+                title="{{ 'CONTRACT.REMANINGQUANTITY' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="rateOrTon" title="{{ 'CONTRACT.RATEORTON' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.rateOrTon }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="shipmentMonth" title="{{ 'CONTRACT.SHIPMENTMONTH' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.shipmentMonth | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="contractDateFrom"
+                title="{{ 'CONTRACT.CONTRACTFROMDATE' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.contractDateFrom != '0001-01-01T00:00:00'">
+                        {{ dataItem.contractDateFrom | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="contractDateTo" title="{{ 'CONTRACT.CONTRACTTODATE' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.contractDateTo != '0001-01-01T00:00:00'">
+                        {{ dataItem.contractDateTo | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="shipToAddress" title="{{ 'CONTRACT.SHIPTOADDRESS' |  translate }}">
+            </kendo-grid-column>
+            
+            <kendo-grid-column width="150" field="vehicleNumberOfTransporter"
+                title="{{ 'CONTRACT.VEHICLENUMBEROFTRANSPORTER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="mobileNumberOfTruckDriver"
+                title="{{ 'CONTRACT.MOBILENUMBEROFTRUCKDRIVER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="drums" title="{{ 'CONTRACT.DRUMS' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="blNumber" title="{{ 'CONTRACT.BLNUMBER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="customPoint" title="{{ 'CONTRACT.CUSTOMPOINT' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="exceptionApprovalRequired"
+                title="{{ 'CONTRACT.EXCEPTIONAPPROVALREQUIRED' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="termsOfDelivery"
+                title="{{ 'CONTRACT.TERMSOFDELIVERY' |  translate }}">
+            </kendo-grid-column> -->
+            <kendo-grid-command-column width="340" field="action" title="{{'ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" title="{{ 'CONTRACT.EDITLEAD' |  translate }}" mat-icon-button
+                        (click)="editLeadPopupOpen(dataItem);$event.stopPropagation()"
+                        *ngIf="!isArchived && !dataItem.isScoAccepted && !dataItem.isClosed && canAccess_feature_CreateLeads">
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.GENERATESCO' |  translate }}" mat-icon-button
+                        (click)="upsertSco(dataItem);$event.stopPropagation()"
+                        *ngIf="!dataItem.isScoAccepted && !dataItem.isClosed && !isArchived && canAccess_feature_CreateLeads">
+                        <fa-icon icon="file-signature" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center mr-05" title="{{ 'CONTRACT.SHAREMAIL' |  translate }}"
+                        [satPopoverAnchorFor]="mailSCO" #mailSCOPopover="satPopoverAnchor"
+                        *ngIf="!isArchived && dataItem.isScoAccepted && !dataItem.isClosed && canAccess_feature_CreateLeads"
+                        (click)="$event.stopPropagation();opemMailPopup(dataItem,mailSCOPopover,rowIndex)"
+                        mat-icon-button>
+                        <fa-icon icon="share-square" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="Add Payment" mat-icon-button
+                        *ngIf="!dataItem.isClosed && !isArchived && canAccess_feature_CreateLeads"
+                        [satPopoverAnchorFor]="paymentPopover" #paymentPopup="satPopoverAnchor"
+                        (click)="AddPayment(dataItem,paymentPopup);$event.stopPropagation()">
+                        <fa-icon icon="credit-card" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="Download SCO pdf" mat-icon-button
+                        (click)="downloadFile(dataItem.scoPdf);$event.stopPropagation()" *ngIf="dataItem.scoPdf">
+                        <fa-icon icon="file-download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="Download Performa invoice pdf" mat-icon-button
+                        (click)="downloadFile(dataItem.performaPdf);$event.stopPropagation()"
+                        *ngIf="dataItem.performaPdf">
+                        <fa-icon icon="download" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.CLOSELEAD' |  translate }}" mat-icon-button
+                        [satPopoverAnchorFor]="closeLeadPopover" #cancelLeadPopup="satPopoverAnchor"
+                        (click)="closeLeadPopUpOpen(dataItem,cancelLeadPopup);$event.stopPropagation()"
+                        *ngIf="!dataItem.isClosed && !isArchived && canAccess_feature_CreateLeads">
+                        <fa-icon icon="times-circle" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <!-- <button class="text-center" title="{{ 'CONTRACT.VIEWPAYMENTS' |  translate }}" mat-icon-button
+                        (click)="viewPayments(dataItem);" *ngIf="!isArchived">
+                        <fa-icon icon="eye" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button> -->
+
+                    <button class="text-center" title="{{ 'CONTRACT.ARCHIVELEAD' |  translate }}"
+                        [satPopoverAnchorFor]="deleteLeadPopover" #deleteLeadPopup="satPopoverAnchor"
+                        (click)="deleteLeadPopUpOpen(dataItem,deleteLeadPopup);$event.stopPropagation()"
+                        *ngIf="!isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.UNARCHIVELEAD' |  translate }}"
+                        [satPopoverAnchorFor]="deleteLeadPopover" #deleteLeadPopup="satPopoverAnchor"
+                        (click)="deleteLeadPopUpOpen(dataItem,deleteLeadPopup);$event.stopPropagation()"
+                        *ngIf="isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+        <div *ngIf="isInProgress" class="k-i-loading"></div>
+    </div>
+</div>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deleteLeadPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="isLeadArchived">
+                {{ 'CONTRACT.ARCHIVELEAD' | translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="!isLeadArchived">
+                {{ 'CONTRACT.UNARCHIVELEAD' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="isLeadArchived">
+                {{ 'CONTRACT.AREYOUSUREYOUWANTTOARCHIVETHISLEAD?' | translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="!isLeadArchived">
+                {{ 'CONTRACT.AREYOUSUREYOUWANTTOUNARCHIVETHISLEAD?' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isLeadArchived"
+                    [disabled]="isInProgress" (click)=" deleteLead();">
+                    <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button color="primary" *ngIf="!isLeadArchived" [disabled]="isInProgress"
+                    (click)=" deleteLead();">
+                    <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closedeleteContractPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #closeLeadPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                {{ 'CONTRACT.CANCELLEADTITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'CONTRACT.CANCELLEADTEXT' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" (click)=" closeLead(0);">
+                    <fa-icon class="mr-05" icon="check-circle" style="cursor: pointer;"></fa-icon>{{ 'CONTRACT.CLOSE' |
+                    translate }}
+                </button>
+                <button class="mr-1" mat-button mat-raised-button color="primary" (click)=" closeLead(1);">
+                    <fa-icon class="mr-05" icon="times-circle" style="cursor: pointer;"></fa-icon>{{ 'CONTRACT.LOST' |
+                    translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeCloseLeadPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #paymentPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0" style="width: 600px;" *ngIf="openPayments">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'LEADINVOICES.ADDINVOICE' | translate }}
+            </div>
+        </mat-card-title>
+        <!-- <mat-card-content class="P-05"> -->
+        <form [formGroup]="paymentForm" #formDirective="ngForm" novalidate class="hr-apps-scroll" id="style-1"
+            (submit)="paymentForm.valid && AddInvoice(formDirective)">
+            <div class="p-1" style="max-height: 200px;" id="style-1">
+                <div>
+                    <mat-form-field class="full-width">
+                        <input matInput formControlName="invoiceNumber"
+                            placeholder="{{ 'LEADINVOICES.INVOICENUMBERPLACEHOLDER' |  translate }}" required>
+                        <mat-error *ngIf="paymentForm.get('invoiceNumber').hasError('maxlength')">
+                            {{ 'LEADINVOICES.INVOICENAMELENGTHERROR' | translate }}</mat-error>
+                        <mat-error
+                            *ngIf="paymentForm.get('invoiceNumber').hasError('required') && paymentForm.get('invoiceNumber').touched">
+                            {{ 'LEADINVOICES.INVOICENAMEREQUIRED' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div>
+                    {{ 'LEADINVOICES.TOTALINVOICEAMOUNT' | translate }}: {{selectedDataItem.totalInvoiceAmount | number:
+                    '1.2-2'}}
+                </div>
+                <div>
+                    {{ 'LEADINVOICES.PAIDINVOICEAMOUNT' | translate }}: {{selectedDataItem.paidInvoiceAmount | number:
+                    '1.2-2'}}
+                </div>
+                <div>
+                    {{ 'LEADINVOICES.PENDINGINVOICEAMOUNT' | translate }}:
+                    {{(selectedDataItem.totalInvoiceAmount-selectedDataItem.paidInvoiceAmount) | number: '1.2-2'}}
+                </div>
+                <div>
+                    <mat-form-field class="full-width">
+                        <input matInput trim mask="separator.2" thousandSeparator=","
+                            (keypress)="numberOnlyWithVal($event, paymentForm.value.PaidAmount)"
+                            formControlName="PaidAmount" placeholder="{{ 'LEADINVOICES.INVOICEAMOUNT' |  translate }}"
+                            required min=1
+                            max={{selectedDataItem.totalInvoiceAmount-selectedDataItem.paidInvoiceAmount}}>
+                        <mat-error *ngIf="paymentForm.get('PaidAmount').hasError('maxlength')">
+                            {{ 'LEADINVOICES.INVOICEAMOUNTMAXERROR' | translate }}
+                            {{(selectedDataItem.totalInvoiceAmount-selectedDataItem.paidInvoiceAmount) | number:
+                            '1.2-2'}}</mat-error>
+                        <mat-error
+                            *ngIf="paymentForm.get('PaidAmount').hasError('required') && paymentForm.get('PaidAmount').touched">
+                            {{ 'LEADINVOICES.INVOICENAMEREQUIRED' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div>
+                    <app-dropzone [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="getFilesByReferenceId"
+                        class="full-width" [moduleTypeId]="moduleTypeId" [isToUploadFiles]="isToUploadFiles"
+                        [referenceId]="paymentId" [selectedParentFolderId]="selectedParentFolderId"
+                        [selectedStoreId]="selectedStoreId" [isButtonVisible]="false"
+                        (isFilesExist)="filesExist($event)" [placeHolder]="'Upload invoice documents'" *ngIf="isUpload">
+                    </app-dropzone>
+                    <app-dropzone [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="getFilesByReferenceId"
+                        class="full-width" [moduleTypeId]="moduleTypeId" [isToUploadFiles]="isToUploadFiles"
+                        [referenceId]="paymentId" [selectedParentFolderId]="selectedParentFolderId"
+                        [selectedStoreId]="selectedStoreId" [isButtonVisible]="false"
+                        (isFilesExist)="filesExist($event)" [placeHolder]="'Upload invoice documents'"
+                        *ngIf="!isUpload">
+                    </app-dropzone>
+                </div>
+            </div>
+            <div class="mb-1 prl-1" fxLayoutAlign="center center">
+                <button mat-raised-button color="primary" class="mr-1"
+                    [disabled]="!paymentForm.valid||isAnyOperationIsInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertpaymentPopup(formDirective)" type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </form>
+        <app-invoice-ledger-component [dataItem]="dataItem"></app-invoice-ledger-component>
+        <!-- </mat-card-content> -->
+    </mat-card>
+</sat-popover>
+
+
+<sat-popover #mailSCO hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end" [interactiveClose]="false">
+    <form [formGroup]="emailForm" novalidate #formDirective="ngForm">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text p-05">{{ 'CONTRACT.SHAREMAIL' | translate }}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="p-05" style="width: 398px;">
+                <div style="min-height: calc(100vh - 773px);max-height: calc(100vh - 620px);" id="style-1">
+                    <div fxLayout="row wrap">
+                        <mat-form-field style="width: 98%;">
+                            <mat-select formControlName="to" [compareWith]="compareSelectedToFn"
+                                placeholder="{{'BILLINGMANAGEMENT.TO' | translate}}" multiple
+                                (selectionChange)="getSelectedTos()">
+                                <mat-select-trigger>
+                                    {{selectedTos}}
+                                </mat-select-trigger>
+                                <mat-option [value]="0" #allSelected (click)="toggleAllTosSelected()">
+                                    Select all
+                                </mat-option>
+                                <mat-option *ngFor="let user of users" [value]="user.id"
+                                    (click)="toggleToPerOne($event)">
+                                    {{user.fullName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field class="tags-popup" style="width: 98%;"
+                            hintLabel="Please press comma or enter key after each mobile number with country code">
+                            <mat-chip-list #tagsList1>
+                                <mat-chip *ngFor="let tags of mobileList" [selectable]="selectable"
+                                    [removable]="removable" (removed)="removeMobileNumber(tags)" class="userstory-tags">
+                                    <span class="hide-content-overflow" matTooltip="{{ tags }}"
+                                        matTooltipClass="tooltip-overflow">
+                                        {{tags}}
+                                    </span>
+                                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                                </mat-chip>
+                                <input placeholder="Mobile numbers"
+                                    [matChipInputFor]="tagsList1" [(ngModel)]="mobileNumber" [ngModelOptions]="{standalone: true}"
+                                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                    (matChipInputTokenEnd)="addMobileNumber($event)">
+                            </mat-chip-list>
+                        </mat-form-field>
+                    </div>
+                    <b *ngIf="selectedEmailist && selectedEmailist.length > 0">Emails:</b>
+                    <div *ngFor="let mail of selectedEmailist; let i = index" [attr.data-index]="i"
+                        class="hide-content-overflow" [matTooltip]='mail'>
+                        <b>{{i+1}}: </b> {{mail}}
+                    </div>
+                    <b *ngIf="selectedMobileList && selectedMobileList.length > 0">Mobile numbers:</b>
+                    <div *ngFor="let mobileNo of selectedMobileList; let i = index" [attr.data-index]="i">
+                        <b>{{i+1}}: </b> {{mobileNo}}
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" (click)="shareEmail()"
+                        [disabled]="((selectedToMails==''||selectedToMails==null) && mobileList.length == 0) || shareEmailProgress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="shareEmailProgress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{'BILLINGMANAGEMENT.SEND' | translate}}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeSendEmailPopover()"
+                        [disabled]="shareEmailProgress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </form>
+</sat-popover>

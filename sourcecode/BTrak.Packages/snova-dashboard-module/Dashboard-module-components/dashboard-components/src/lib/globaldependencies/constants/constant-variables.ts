@@ -1,0 +1,23 @@
+export const ConstantVariables = {
+    SuccessMessageForProjectArchive: "PROJECTS.PROJECTARCHIVEDSUCCESSFULLY",
+    SuccessMessageForProjectUnArchive: "PROJECTS.PROJECTUNARCHIVEDSUCCESSFULLY",
+    SuccessMessageForProjectCreate: "PROJECTS.PROJECTCREATEDSUCCESSFULLY",
+    SuccessMessageForProjectUpdate: "PROJECTS.PROJECTUPDATEDSUCCESSFULLY",
+    SuccessMessageForCreated: "CREATEDSUCCESSFULLY",
+    SuccessMessageForArchived: "ARCHIVEDSUCCESSFULLY",
+    SuccessMessageForUpdated: "UPDATEDSUCCESSFULLY",
+    SuccessMessageForPasswordCreated: "HRMANAGAMENT.PASSWORDCREATEDSUCCESSFULLY",
+    SuccessMessageForPasswordChanged: "HRMANAGAMENT.PASSWORDCHANGEDSUCCESSFULLY",
+    SuccessMessageForPurchaseCanteenItem: "CANTEEN.PURCHASEDITEMSINCANTEENSUCCESSFULLY",
+    PurchaseItem: "CANTEEN.PURCHASEITEM",
+    success: "SUCCESS",
+    Month: "Month",
+    REQUIREDPRODUCTIVITY: "Required productivity",
+    EXISTINGPRODUCTIVITY: "Existing productivity",
+    ProfileImageUpdatedSuccessfully: "MYPROFILE.PROFILEIMAGEUPDATEDSUCCESSFULLY",
+    ProfileImageRemovedSuccessfully: "MYPROFILE.PROFILEIMAGEREMOVEDSUCCESSFULLY",
+    ThisUserStoryIsArchived: "HISTORICALREPORT.ARCHIVEDUSERSTORY",
+    ThisUserStoryIsParked: "HISTORICALREPORT.PARKEDUSERSTORY",
+    WORKREPORTPROFILEID: 'bfb722ad-1b7f-42f9-85a2-267f5af9f0e7',
+    WORKREPORTDASHBOARDID: '9deda4f5-c2f3-4dad-9b4d-7f79a72ebe60'
+}

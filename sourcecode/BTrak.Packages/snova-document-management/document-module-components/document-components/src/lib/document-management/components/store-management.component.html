@@ -1,0 +1,179 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageStoreManagement)">
+    
+    <mat-card class="p-0 canteen-manage m-0 ">
+        <mat-card-title class="full-width data-table-header drag-handler">
+
+            <div fxLayout="row wrap" fxLayout.xs="column">
+
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span matTooltip="{{'STOREMANAGAMENT.DOCUMENTS' | translate | titlecase }}">{{'STOREMANAGAMENT.DOCUMENTS' | translate | titlecase }}</span>
+                </div>
+
+                <div fxFlex="135px"  class="search_goalinput mr-05" fxLayoutAlign="start center">
+                    <mat-form-field class="full-width">                        
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="filterByName($event)">
+                    </mat-form-field>
+                    
+                    <span class="close_icon" style="right: 5px !important;">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+
+                <div fxFlex="40px" fxLayoutAlign="end center" class="ml-02">
+                    <button mat-icon-button matTooltip="{{'STOREMANAGAMENT.CLICKHERETOADDSTORE' | translate}}"
+                        *ngIf="(canAccess_feature_EditStores) && !isArchived" [satPopoverAnchorFor]="storePopover"
+                        #storePopup="satPopoverAnchor" (click)=" createStore(storePopup)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>                
+
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag store-panel-height">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+            [limit]="100" [rows]="storeList" [loadingIndicator]="(isAnyOperationIsInprogress$ | async)"
+            [messages]="{emptyMessage: 'NODATATODISPLAY' | translate, totalMessage: 'TOTAL' | translate}">
+            
+            <ngx-datatable-column minWidth="300" name="{{'HRMANAGAMENT.NAME' | translate}}" [flexGrow]="1" [sortable]="true"
+                prop="storeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="icon-button" fxLayout="row" (click)="navigateToStore(row);$event.stopPropagation();">
+                        {{ row?.storeName }}
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'LICENSETYPE.COUNT' | translate}}" [flexGrow]="1" [sortable]="true"
+                prop="storeCount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="icon-button" fxLayout="row" (click)="navigateToStore(row);$event.stopPropagation();">
+                        {{ row?.storeCount? row.storeCount : 0 }}
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'DOCUMENTMANAGEMENT.SIZE' | translate}}" [flexGrow]="1" [sortable]="true"
+                prop="storeSize">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="icon-button" fxLayout="row" (click)="navigateToStore(row);$event.stopPropagation();">
+                        {{ row.storeSize | filesize }}
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div *ngIf="!row.isSystemLevel">
+                        <button class="text-center" matTooltip="{{'STOREMANAGAMENT.EDITSTORENAME' | translate}}"
+                            *ngIf="canAccess_feature_EditStores && !isArchived && !row.isDefault"
+                            [satPopoverAnchorFor]="storePopover" #storePopup="satPopoverAnchor"
+                            (click)="editStore(row,storePopup)" mat-icon-button>
+                            <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" matTooltip="{{'STOREMANAGAMENT.DELETESTORE' | translate}}"
+                            [satPopoverAnchorFor]="deleteStorePopover" #deleteStorePopup="satPopoverAnchor"
+                            (click)="deleteStorePopupOpen(row,deleteStorePopup)" *ngIf="!isArchived && !row.isDefault"
+                            mat-icon-button>
+                            <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" matTooltip="{{'STOREMANAGAMENT.UNARCHIVESTORE' | translate}}"
+                            [satPopoverAnchorFor]="deleteStorePopover" #deleteStorePopup="satPopoverAnchor"
+                            (click)="deleteStorePopupOpen(row,deleteStorePopup)" *ngIf="isArchived && !row.isDefault"
+                            mat-icon-button>
+                            <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!-- edit -->
+    <sat-popover backdropClass="backdrop-color" #storePopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="!storeData">
+                    {{'STOREMANAGAMENT.ADDSTORE' | translate}}
+                </div>
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="storeData">
+                    {{'STOREMANAGAMENT.EDITSTORE' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="p-1">
+                <form [formGroup]="storeForm" #formDirective="ngForm" novalidate
+                    (submit)="storeForm.valid && upsertStore()">
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="storeName"
+                                placeholder="{{'STOREMANAGAMENT.STORENAME' | translate}}" required trim>
+                            <mat-error *ngIf="storeForm.get('storeName').hasError('maxlength')">
+                                {{'STOREMANAGAMENT.STORENAMESHOULDNOTEXCEED50CHARACTERS' | translate}}</mat-error>
+                            <mat-error
+                                *ngIf="storeForm.get('storeName').hasError('required') && storeForm.get('storeName').touched">
+                                {{'STOREMANAGAMENT.PLEASEENTERSTORENAME' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="mt-1">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!storeForm.valid || (upsertInProgress$ | async)">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(upsertInProgress$ | async)">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertStorePopup(formDirective)"
+                            type="button" [disabled]="(upsertInProgress$ | async)">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!-- edit -->
+
+    <!-- delete -->
+    <sat-popover backdropClass="backdrop-color" #deleteStorePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="!isArchived">
+                    {{'STOREMANAGAMENT.DELETESTORE' | translate}}</div>
+                <div class="card-title-text mat-bg-primary p-05" *ngIf="isArchived">
+                    {{'STOREMANAGAMENT.UNARCHIVESTORE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content class="p-1">
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{'STOREMANAGAMENT.AREYOUSUREYOUWANTTODELETETHISSTORE?' | translate}}
+                </div>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{'STOREMANAGAMENT.AREYOUSUREYOUWANTTOUNARCHIVETHISSTORE?' | translate}}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+                        [disabled]="(upsertInProgress$ | async)" (click)="deleteStore();">
+                        <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'DELETE' | translate }}
+                    </button>
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+                        [disabled]="(upsertInProgress$ | async)" (click)="deleteStore();">
+                        <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteStorePopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageStoreManagement)"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

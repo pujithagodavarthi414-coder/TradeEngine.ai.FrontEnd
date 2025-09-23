@@ -1,0 +1,258 @@
+<ng-container *ngIf="(canAccess_feature_ViewHistoricalTimesheet)">
+  <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+    <div id="view-2">
+      <mat-form-field class="m-1">
+        <mat-label>{{ 'VIEWTIMESHEET.FROMDATE' | translate }}</mat-label>
+        <input matInput [matDatepicker]="picker1" [max]="maxDate" (click)="picker1.open()" autocomplete="off"
+          [max]="maxDate" (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom">
+        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+        <mat-datepicker #picker1></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field class="m-1">
+        <mat-label>{{ 'VIEWTIMESHEET.TODATE' | translate }}</mat-label>
+        <input matInput [matDatepicker]="picker2" (click)="picker2.open()" autocomplete="off" [min]="minDate"
+          [max]="maxDate" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo">
+        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+        <mat-datepicker #picker2></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
+  <div id="view-1">
+    <mat-card-content class="m-0" fxLayout="column">
+      <div class="activity-data full-height no-drag">
+
+        <kendo-grid class="view-timesheet" #grid [data]="gridSettings.gridData" [height]="200" [style.cursor]="cursor"
+          (cellHover)="cursor = 'pointer'" (cellLeave)="cursor = 'default'" [scrollable]="'none'"
+          (remove)="removeHandler()" [pageable]="true"
+          [pageSize]="gridSettings.state ? gridSettings.state.take : 0 " [reorderable]="true"
+          (columnReorder)="onReorder($event)" [skip]="gridSettings.state ? gridSettings.state.skip : 0"
+          (pageChange)="pageChange($event)" [filterable]="false"
+          [filter]="gridSettings.state ? gridSettings.state.filter : null" [sortable]="true"
+          [sort]="gridSettings.state ? gridSettings.state.sort : null" [resizable]="true" [columnMenu]="true"
+          (dataStateChange)="dataStateChange($event)" (columnVisibilityChange)="onVisibilityChange($event)"
+          (columnResize)="onResize($event)">
+          <kendo-grid-messages sortAscending="{{ 'KENDOGRIDMESSAGES.SORTASCENDING' | translate }}"
+            sortDescending="{{ 'KENDOGRIDMESSAGES.SORTDESCENDING' | translate }}"
+            columnsReset="{{ 'KENDOGRIDMESSAGES.COLUMNSRESET' | translate }}"
+            columnsApply="{{ 'KENDOGRIDMESSAGES.COLUMNSAPPLY' | translate }}"
+            columns="{{ 'KENDOGRIDMESSAGES.COLUMNS' | translate }}"
+            filterEqOperator="{{ 'KENDOGRIDMESSAGES.ISEQUALTO' | translate }}"
+            filterNotEqOperator="{{ 'KENDOGRIDMESSAGES.ISNOTEQUALTO' | translate }}"
+            filterContainsOperator="{{ 'KENDOGRIDMESSAGES.CONTAINS' | translate }}"
+            filterNotContainsOperator="{{ 'KENDOGRIDMESSAGES.DOESNOTCONTAIN' | translate }}"
+            filterStartsWithOperator="{{ 'KENDOGRIDMESSAGES.STARTSWITH' | translate }}"
+            filterEndsWithOperator="{{ 'KENDOGRIDMESSAGES.ENDSWITH' | translate }}"
+            filterIsNullOperator="{{ 'KENDOGRIDMESSAGES.ISNULL' | translate }}"
+            filterIsNotNullOperator="{{ 'KENDOGRIDMESSAGES.ISNOTNULL' | translate }}"
+            filterIsEmptyOperator="{{ 'KENDOGRIDMESSAGES.ISEMPTY' | translate }}"
+            filterIsNotEmptyOperator="{{ 'KENDOGRIDMESSAGES.ISNOTEMPTY' | translate }}"
+            filterAndLogic="{{ 'KENDOGRIDMESSAGES.AND' | translate }}"
+            filterOrLogic="{{ 'KENDOGRIDMESSAGES.OR' | translate }}"
+            filterClearButton="{{ 'KENDOGRIDMESSAGES.CLEAR' | translate }}"
+            filterFilterButton="{{ 'KENDOGRIDMESSAGES.FILTERBUTTON' | translate }}"
+            filter="{{ 'KENDOGRIDMESSAGES.FILTER' | translate }}" pagerItems="{{ 'LEAVESLIST.ITEMS' | translate }}"
+            noRecords="{{ 'LEAVESLIST.NODATATODISPLAY' | translate }}">
+          </kendo-grid-messages>
+          <ng-container *ngFor=" let col of gridSettings.columnsConfig">
+            <kendo-grid-column [field]="col.field" [title]="col.title | translate | softLabelsPipe : softLabels"
+              [hidden]="col.hidden" [filter]="col.type" [filterable]="true" [width]="col.width" [columnMenu]="true"
+              *ngIf="col.field != 'actions'">
+
+              <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltip="{{col.title | translate | softLabelsPipe : softLabels}}">{{col.title | translate |
+                  softLabelsPipe : softLabels}}</span>
+              </ng-template>
+              
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div *ngIf="col.field == 'date'">
+                  <span matTooltip="{{dataItem?.date }}">{{ dataItem?.date | date: "dd-MMM-yyyy" }}</span>
+                </div>
+                <div *ngIf="col.field == 'inTime' && dataItem.inTime != null"
+                  [ngClass]="{ 'bold-time-sheet': dataItem.isMorningLate }"
+                  matTooltip="{{dataItem?.inTime | timeZoneData: 'dd MMM yyyy HH:mm' }} {{ dataItem.outTimeAbbreviation }}">
+                  {{ dataItem.inTime | timeZoneData: "HH:mm" }} <span matTooltip="{{dataItem.inTimeTimeZone}}"
+                    matTooltipShowDelay="500">{{ dataItem.inTimeAbbreviation }}</span>
+                </div>
+                <div *ngIf="col.field == 'outTime' && dataItem.outTime != null"
+                  matTooltip="{{dataItem?.outTime | timeZoneData : 'dd/MM/yyyy HH:mm' }} {{ dataItem.outTimeAbbreviation }}">
+                  {{ dataItem.outTime | timeZoneData : "HH:mm" }} <span matTooltip="{{dataItem.outTimeTimeZone}}"
+                    matTooltipShowDelay="500">{{ dataItem.outTimeAbbreviation }}</span>
+                </div>
+                <div *ngIf="col.field == 'lunchBreakDiff'" (mouseover)="checkLunchBreakTooltip(dataItem)"
+                  [ngClass]="{ 'bold-time-sheet': dataItem.isAfterNoonLate }">
+                  <span [matTooltip]="showLunchBreakTooltip ? lunchToolTipValue : ''" matTooltipClass="tooltip-overflow"
+                    matTooltipShowDelay="200"
+                    *ngIf="dataItem.lunchBreakEndTime != null">{{dataItem?.lunchBreakDiff}}</span>
+                  <span [matTooltip]="showLunchBreakTooltip ? lunchToolTipValue : ''" matTooltipClass="tooltip-overflow"
+                    matTooltipShowDelay="200"
+                    *ngIf="dataItem.lunchBreakEndTime == null && dataItem.lunchBreakStartTime != null">
+                    {{dataItem?.lunchBreakStartTime | timeZoneData: "HH:mm"}} <span
+                      matTooltip="{{dataItem.lunchStartTimeZone }}" matTooltipShowDelay="500">{{
+                      dataItem.lunchStartAbbreviation }}</span>
+                  </span>
+                </div>
+                <div *ngIf="col.field == 'userBreaks' && dataItem.userBreaks != null" class="cursor-pointer"
+                  [ngClass]="{ 'bold-time-sheet': dataItem.isBreaksBold }"
+                  [matTooltip]="dataItem.userBreaksCount > 0 ? ('FEEDTIMESHEET.VIEWBREAKDETAILS' | translate) : ''"
+                  (click)="$event.stopPropagation();viewUserBreakDetails(dataItem);">
+                  <span>{{ dataItem.usersBreakTime }} ( {{ dataItem.userBreaksCount }} )</span>
+                </div>
+                <div *ngIf="col.field == 'loggedTime'" (click)="openWorkDrillDown(dataItem);$event.stopPropagation();">
+                  {{ dataItem?.loggedTime | hoursAndMinutes}}
+                </div>
+                <div *ngIf="col.field == 'spentTimeDiff'">
+                  {{ dataItem?.spentTimeDiff }}
+                </div>
+                <div *ngIf="col.field == 'leaveReason'"
+                  matTooltip="{{dataItem?.leaveTypeName}}&nbsp;({{dataItem?.leaveReason}})&nbsp;for&nbsp;{{dataItem?.leaveSessionName}}">
+                  <span
+                    *ngIf="(dataItem.leaveTypeName != null || dataItem.leaveReason != null || dataItem.leaveSessionName != null)">
+                    {{ 'YES' | translate }}
+                  </span>
+                </div>
+                <div *ngIf="col.field == 'activeTimeInMin'"
+                  (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, null)">
+                  {{ dataItem?.activeTimeInMin | hoursAndMinutes}}
+                </div>
+                <div *ngIf="col.field == 'productiveTimeInMin'"
+                  (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Productive')">
+                  {{ dataItem?.productiveTimeInMin | hoursAndMinutes}}
+                </div>
+                <div *ngIf="col.field == 'screenshots'"
+                  (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Screenshots')">
+                  {{ dataItem?.screenshots }}
+                </div>
+                <div *ngIf="col.field == 'totalIdleTime'"
+                  (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'SystemBreaks')">
+                  {{ dataItem?.totalIdleTime | hoursAndMinutes}}
+                </div>
+                <div *ngIf="col.field == 'statusName'" [ngStyle]="{ 'background' : dataItem?.statusColour }" style="width :fit-content"
+                  fxLayoutAlign="center center">
+                  <span style="width: 150px;" fxFlex fxLayoutAlign="center center" class="hide-content-overflow"><b>{{
+                      dataItem.statusName }}</b></span>
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+            <!-- <kendo-grid-column-group [title]="col.title | translate | softLabelsPipe : softLabels" [hidden]="col.hidden"
+            *ngIf="col.field == 'activitygroup'" [columnMenu]="true">
+            <ng-container *ngFor=" let groupcol of gridSettings.columnsConfig">
+              <kendo-grid-column [field]="groupcol.field" [width]="groupcol.width" [columnMenu]="false"
+                [title]="groupcol.title | translate | softLabelsPipe : softLabels" [hidden]="groupcol.hidden"
+                [filter]="groupcol.type" [filterable]="true" [reorderable]="false"
+                *ngIf="groupcol.field == 'activeTimeInMin' || groupcol.field == 'totalActiveTimeInMin' || groupcol.field == 'productiveTimeInMin' || groupcol.field == 'totalIdleTime' || groupcol.field == 'screenshots'">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                  <div *ngIf="groupcol.field == 'activeTimeInMin'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, null)">
+                    {{ dataItem?.activeTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'totalActiveTimeInMin'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, null)">
+                    {{ dataItem?.totalActiveTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'productiveTimeInMin'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Productive')">
+                    {{ dataItem?.productiveTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'screenshots'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Screenshots')">
+                    {{ dataItem?.screenshots }}
+                  </div>
+                  <div *ngIf="groupcol.field == 'totalIdleTime'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'SystemBreaks')">
+                    {{ dataItem?.totalIdleTime | hoursAndMinutes}}
+                  </div>
+                </ng-template>
+              </kendo-grid-column>
+            </ng-container>
+          </kendo-grid-column-group> -->
+          </ng-container>
+        </kendo-grid>
+        <div [ngClass]="{'k-i-loading': isAnyOperationIsInprogress}"></div>
+        <!--<ngx-datatable class="btrak assets-area area-apps" [rows]="timeSheetDetails" [columnMode]="'force'" [headerHeight]="35"
+        [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+        [loadingIndicator]="isAnyOperationIsInprogress" (sort)="viewPermissionsBySorting($event)"
+        (page)='setPage($event)'
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{'VIEWTIMESHEET.DATE' | translate}}" sortable="true" prop="date" [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span>{{ row?.date | date: "dd-MMM-yyyy"  }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'VIEWTIMESHEET.INTIME' | translate}}" sortable="true" prop="inTime"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div [ngClass]="{ 'bold-time-sheet': row.isMorningLate }" *ngIf="row.inTime != null"
+              matTooltip="{{row?.inTime | utcToLocalTime | date: 'dd/MM/yyyy HH:mm' }}">
+              {{ row.inTime  | utcToLocalTime | date: "HH:mm"}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'VIEWTIMESHEET.OUTTIME' | translate}}" sortable="true" prop="outTime"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.outTime != null" matTooltip="{{row?.outTime | utcToLocalTime | date: 'dd/MM/yyyy HH:mm' }}">
+              {{ row.outTime | utcToLocalTime | date: "HH:mm" }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'VIEWTIMESHEET.BREAK' | translate}}" sortable="true" prop="lunchBreakDiff"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div [ngClass]="{ 'bold-time-sheet': row.isAfterNoonLate }"><span
+                *ngIf="row.lunchBreakStartTime != null">{{row?.lunchBreakStartTime | utcToLocalTime | date: "HH:mm"}}</span>
+              <span *ngIf="(row.lunchBreakStartTime != null) && (row.lunchBreakEndTime != null)">-</span>
+              <span
+                *ngIf="row.lunchBreakEndTime != null">{{row?.lunchBreakEndTime | utcToLocalTime | date: "HH:mm"}}</span><span
+                *ngIf="row.lunchBreakDiff != null">({{row?.lunchBreakDiff}})</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIVITYTRACKER.ACTIVYTTRACKERUSAGETIME' | translate}}" [flexGrow]="1"
+          [sortable]="true" prop="activeTimeInMin">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.activeTimeInMin | hoursAndMinutes}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIVITYTRACKER.ACTIVITYTRACKERTOTALTIME' | translate}}" [flexGrow]="1"
+          [sortable]="true" prop="totalActiveTimeInMin">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.totalActiveTimeInMin | hoursAndMinutes}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'VIEWTIMESHEET.ABSENCEREASON' | translate}}" sortable="true" prop="leaveReason"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div
+              matTooltip="{{row?.leaveTypeName}}&nbsp;({{row?.leaveReason}})&nbsp;for&nbsp;{{row?.leaveSessionName}}">
+              <span *ngIf="row.leaveTypeName != null">{{row?.leaveTypeName}}</span><span
+                *ngIf="row.leaveReason != null">&nbsp;({{row?.leaveReason}})</span><span
+                *ngIf="row.leaveSessionName != null">&nbsp;for
+                {{row?.leaveSessionName}}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'TIMESHEET.BREAKTIMINGS' | translate}}" sortable="true" prop="userBreaks"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.userBreaks != null"> <span [innerHTML]="row.userBreaks | convertUserBreakToString"></span>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>-->
+      </div>
+    </mat-card-content>
+  </div>
+</ng-container>
+
+<ng-template #openBreakDialogComponent let-data>
+  <app-break-timing-display [data]=[data]></app-break-timing-display>
+</ng-template>
+
+<ng-template #activityTrackerDialog let-data>
+  <app-activity-tracker-dialog [data]=[data]></app-activity-tracker-dialog>
+</ng-template>
+
+<ng-template #workDrillDownDialog let-data>
+  <app-work-log-drill-down [data]=[data]></app-work-log-drill-down>
+</ng-template>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewHistoricalTimesheet)"
+  textToDisplay="{{ 'PERMISSIONSSREGISTER.ALERTMESSAGE' | translate }}">
+</app-common-message-box>

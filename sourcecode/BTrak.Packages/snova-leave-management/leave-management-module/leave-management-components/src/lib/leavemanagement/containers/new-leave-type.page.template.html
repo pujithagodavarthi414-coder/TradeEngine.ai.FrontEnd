@@ -1,0 +1,113 @@
+<div class="full-height" *ngIf="(canAccess_feature_AddOrEditLeaveType)">
+<div fxLayout="row">
+    <mat-card fxFlex class="p-2 leavetype-configheader">
+        <ul class="leaveType-progressbar">
+            <li [ngClass]="{'active': selectedTabIndex >= 0}"> {{"LEAVETYPES.LEAVETYPESTITLE" | translate}} </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 1}"> {{"LEAVETYPES.APPLICABILITY" | translate}} </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 2}"> {{"LEAVEFREQUENCY.LEAVEFREQUENCYTITLE" | translate}}
+            </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 3}"> {{"LEAVETYPES.ENCASHMENTRULES" | translate}} </li>
+        </ul>
+    </mat-card>
+</div>
+<div class="ml-1" *ngIf="selectedTabIndex == 0">
+    <mat-card-title class="mrl0604">
+        <div class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center">
+            <span>{{'LEAVETYPES.LEAVETYPESTITLE' | translate}}</span>
+        </div>
+    </mat-card-title>
+    <mat-card class="mr-06 leave-type-configmat" id="style-1">
+        <mat-progress-bar *ngIf="isLeaveTypesLoadingInProgress"></mat-progress-bar>
+        <form [formGroup]="leaveTypeForm" #formDirective="ngForm" novalidate
+            (submit)="leaveTypeForm.valid && upsertLeaveType()">
+            <div fxFlex fxLayout="column">
+                <div class="mrl0604 leave-type-configapplicabilityform" id="style-1">
+                    <div fxLayout="row">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="leaveTypeName" type="text"
+                                placeholder="{{'LEAVETYPES.LEAVETYPENAME' | translate}}" required>
+                            <mat-error *ngIf="leaveTypeForm.get('leaveTypeName').hasError('required')">
+                                {{'LEAVETYPES.LEAVETYPENAMEREQUIREDERROR' | translate}}
+                            </mat-error>
+                            <mat-error *ngIf="leaveTypeForm.get('leaveTypeName').hasError('maxlength')">
+                                {{'LEAVETYPES.LEAVETYPENAMEMAXLENGTHERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="leaveTypeShortName" type="text"
+                                placeholder="{{'LEAVETYPES.LEAVETYPESHORTNAME' | translate}}" required>
+                            <mat-error *ngIf="leaveTypeForm.get('leaveTypeShortName').hasError('required')">
+                                {{'LEAVETYPES.LEAVETYPESHORTNAMEREQUIREDERROR' | translate}}
+                            </mat-error>
+                            <mat-error *ngIf="leaveTypeForm.get('leaveTypeShortName').hasError('maxlength')">
+                                {{'LEAVETYPES.LEAVETYPESHORTNAMEMAXLENGTHERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row">
+                        <mat-form-field>
+                            <mat-select formControlName="masterLeaveTypeId" class="full-width"
+                                placeholder="{{'LEAVETYPES.SELECTLEAVECATEGORY' | translate}}" required>
+                                <mat-option value="option" *ngFor="let category of masterLeaveTypes"
+                                    [value]="category.masterLeaveTypeId">
+                                    {{ category.masterLeaveTypeName }}</mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="leaveTypeForm.get('masterLeaveTypeId').hasError('required')">
+                                {{'LEAVETYPES.SELECTLEAVECATEGORYERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field>
+                            <input formControlName="leaveTypeColor" matInput
+                                placeholder="{{'LEAVETYPE.LEAVETYPECOLOR' | translate | softLabelsPipe : softLabels}}"
+                                [(colorPicker)]="color" [cpPosition]="'below'" [style.background]="color"
+                                [value]="color"
+                                (colorPickerChange)="leaveTypeForm.get('leaveTypeColor').setValue($event)" />
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="row">
+                        <mat-checkbox formControlName="isToIncludeHolidays">{{'LEAVETYPES.INCLUDEHOLIDAYS' | translate}}
+                        </mat-checkbox>
+                    </div>
+                </div>
+                <div>
+                    <div fxLayout="row" class="pull-right">
+                        <button type="button" mat-button mat-raised-button class="mr-1" (click)='onEvent()' [disabled]="(upsertLeaveTypeInProgress$ | async)">
+                            {{'LEAVETYPES.CANCEL' | translate}}
+                        </button>
+                        <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!leaveTypeForm.valid || (upsertLeaveTypeInProgress$ | async)">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="upsertLeaveTypeInProgress$ | async">
+                            </mat-progress-bar>
+                            {{'LEAVETYPES.SAVEANDPROCEED' | translate}}
+                            <!-- <i class="fa fa-spin fa-spinner" *ngIf="upsertLeaveTypeInProgress$ | async"></i> -->
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </mat-card>
+</div>
+<div *ngIf="selectedTabIndex == 1" class="ml-1">
+    <app-fm-component-leave-applicability [leaveType]="leaveTypeId" (selectedTabIndex)="selectedTabIndexChange()"
+        (previousTabIndex)="previous()">
+    </app-fm-component-leave-applicability>
+</div>
+<div *ngIf="selectedTabIndex == 2" class="ml-1">
+    <app-fm-component-leave-frequency [isToLoadLeaveFrequencies]="isToLoadLeaveFrequencies" [leaveTypeId]="leaveTypeId"
+        (selectedTabIndex)="selectedTabIndexChange()" (previousTabIndex)="previous()" *ngIf="isToLoadLeaveFrequencies">
+    </app-fm-component-leave-frequency>
+</div>
+<div *ngIf="selectedTabIndex == 3" class="ml-1">
+    <app-fm-component-leave-encashment [leaveTypeById]="leaveTypeId" (selectedTabIndex)="selectedTabIndexChange()"
+        (previousTabIndex)="previous()">
+    </app-fm-component-leave-encashment>
+</div>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrEditLeaveType)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

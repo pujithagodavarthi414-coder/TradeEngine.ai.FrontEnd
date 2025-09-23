@@ -1,0 +1,194 @@
+<div fxFlex="row wrap" class="testruns-dialog-operations">
+    <div fxFlex>
+        <div class="p-0">
+            <mat-card class="testrun-status-preview fit-content-audit-status-preview"
+                style="height: calc(100vh - 108px);" id="style-1">
+                <mat-card-title>
+                    <div fxLayout="row">
+                        <div class="card-title-text test-case-title" fxFlex="95" fxFlex.xs="95" fxFlex.sm="85"
+                            fxFlex.md="95">
+                            <b>
+                                <span class="test-case-unique-number">{{questionData.questionIdentity}} - </span>
+                                <span> {{questionData.questionName}}</span>
+                            </b>
+                            <span *ngIf="canAccess_entityType_feature_CanAddAndViewQuestionLevelDocuments">
+                                <button mat-icon-button [satPopoverAnchorFor]="FileUploadPopover"
+                                    #FileUploadPopup="satPopoverAnchor" (click)="openFileUploadPopover(FileUploadPopup)"
+                                    *ngIf="!isAuditArchived">
+                                    <fa-icon icon="file-upload" class="filter mat-color-accent"
+                                        matTooltip="{{'TESTMANAGEMENT.UPLOADFILES' | translate}}"
+                                        style="font-size: 18px;">
+                                    </fa-icon>
+                                </button>
+                            </span>
+                            <span *ngIf="canAccess_entityType_feature_CanAddAndViewQuestionLevelDocuments">
+                                <button mat-icon-button [satPopoverAnchorFor]="FilesPopover"
+                                    #FilesPopup="satPopoverAnchor" (click)="openFilesPopover(FilesPopup)"
+                                    *ngIf="isAuditArchived && filesCount > 0">
+                                    <fa-icon icon="file-upload" class="filter mat-color-accent"
+                                        matTooltip="{{'AUDIT.ATTACHMENTS' | translate}}" style="font-size: 18px;">
+                                    </fa-icon>
+                                </button>
+                            </span>
+                            <span
+                                *ngIf="canAccess_entityType_feature_CanAddAndViewQuestionLevelDocuments && filesCount > 0"
+                                style="margin-left: -10px;">
+                                ({{filesCount}})
+                            </span>
+                        </div>
+                        <div fxFlex class="mr-1" *ngIf="selectedWorkspaceId && !listView && isAnalyticsTab">
+                            <a>
+                                <fa-icon icon="bars" matTooltip="Apps vertical" (click)="openAppsView()"
+                                    class="mat-color-accent cursor-pointer kanban-icon-dashboard"
+                                    [ngClass]="{'active': !listView}"></fa-icon>
+                            </a>
+                        </div>
+                        <div fxFlex class="mr-1" *ngIf="selectedWorkspaceId && listView && isAnalyticsTab">
+                            <a>
+                                <fa-icon icon="bars" (click)="openAppsView()" matTooltip="Apps Horizontal"
+                                    class="mat-color-accent cursor-pointer" [ngClass]="{'active': listView}"></fa-icon>
+                            </a>
+                        </div>
+                        <div fxFlex *ngIf="isAnalyticsTab">
+                            <a color="warn">
+                                <fa-icon icon="store" matTooltip="{{ 'APP.APPSTORE' | translate}}"
+                                    (click)="openAppsSettings(false)" class="goal-unique-menu"></fa-icon>
+                            </a>
+                        </div>
+                        <div fxFlex>
+                            <a class="detail_close mt-05" color="warn"
+                                matTooltip="{{'TESTMANAGEMENT.CLOSEDIALOG' | translate}}" (click)="closeDialog()">
+                                <fa-icon icon="times"></fa-icon>
+                            </a>
+                        </div>
+                    </div>
+                </mat-card-title>
+                <mat-card-content class="testrun-tab">
+                    <kendo-tabstrip [tabPosition]="position" (tabSelect)="onTabSelect($event)" class="mt-1" id="tab">
+                        <kendo-tabstrip-tab title="{{'AUDIT.QUESTIONDETAILS' | translate | softLabelsPipe :softLabels }}" [selected]="true">
+                            <ng-template kendoTabContent>
+                                <question-preview [question]="questionData">
+                                </question-preview>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'PAYROLL.COMMENTS' | translate}}"
+                        *ngIf="canAccess_entityType_feature_CanAddAndViewAuditQuestionLevelComments">
+                            <ng-template kendoTabContent>
+                                <snovasys-comments *ngIf="questionData.questionId" [receiverId]="questionData.questionId" [componentModel]="componentModel"
+                                [isPermissionExists]="true">
+                              </snovasys-comments>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'TESTMANAGEMENT.HISTORY' | translate}}">
+                            <ng-template kendoTabContent>
+                                <question-history [selectedConduct]=null [question]="questionData">
+                                </question-history>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'AUDIT.ANALYTICS' | translate}}"
+                            *ngIf="canAccess_entityType_feature_CanViewQuestionLevelAnalytics">
+                            <ng-template kendoTabContent>
+                                <div class="text-center" *ngIf="!loaded">
+                                    Loading...
+                                </div>
+                                <div *ngIf="selectedWorkspaceId" style="height: calc(100vh - 200px);">
+                                    <ndc-dynamic [ndcDynamicFactory]="dashboard.component"
+                                        [ndcDynamicComponent]="dashboard.component"
+                                        *ngIf="dashboard" [ndcDynamicInjector]="injector"
+                                        [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+                                    </ndc-dynamic>
+                                </div>
+                                <div *ngIf="!selectedWorkspaceId" class="text-center"> No dashboard is created for the
+                                    current question. </div>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'AUDIT.CONDUCTHISTORY' | translate | softLabelsPipe :softLabels}}"
+                            *ngIf="canAccess_entityType_feature_CanViewConductHistory">
+                            <ng-template kendoTabContent>
+                                <question-conduct-history [question]="questionData">
+                                </question-conduct-history>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'AUDIT.CUSTOMFIELD' | translate}}"
+                            *ngIf="canAccess_entityType_feature_CanViewQuestionLevelCustomFields">
+                            <ng-template kendoTabContent>
+                                <audit-custom-field [selectedAudit]="selectedAudit" [fileType]="'audit'"
+                                    [selectedConduct]=null [question]="questionData">
+                                </audit-custom-field>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                        <kendo-tabstrip-tab title="{{'USERSTORY.CUSTOMFIELDSHISTORY'|translate}}"
+                            *ngIf="canAccess_entityType_feature_CanViewQuestionLevelCustomFields">
+                            <ng-template kendoTabContent>
+                                <div class="text-center" *ngIf="!projectcomponentLoaded">
+                                    Loading...
+                                </div>
+                                <div *ngIf="projectcomponentLoaded" style="height: calc(100vh - 206px);" id="style-1">
+                                    <ndc-dynamic [ndcDynamicFactory]="customHistoryComponent.component"
+                                        [ndcDynamicComponent]="customHistoryComponent.component"
+                                        [ndcDynamicInjector]="injector"
+                                        [ndcDynamicInputs]="customHistoryComponent.inputs"
+                                        [ndcDynamicOutputs]="customHistoryComponent.outputs">
+                                    </ndc-dynamic>
+                                </div>
+                            </ng-template>
+                        </kendo-tabstrip-tab>
+                    </kendo-tabstrip>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+<!--------dropzone dialog------>
+<sat-popover #FileUploadPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="mobile-view-popover p-1" id="style-1" style="max-height: 360px;">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [referenceId]="questionData?.questionId" [selectedParentFolderId]="questionData?.questionId"
+                [selectedStoreId]="selectedStoreId" [isFromFeedback]="false" [isButtonVisible]="isButtonVisible"
+                [getFilesByReferenceId]="true"></app-dropzone>
+        </div>
+    </mat-card>
+</sat-popover>
+<!--------dropzone dialog------>
+
+<sat-popover backdropClass="backdrop-color" #FilesPopover hasBackdrop scrollStrategy="reposition"
+    [interactiveClose]="false">
+    <mat-card class="p-0 expense-recipts-width">
+        <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+            <div fxFlex class="text-center">
+                {{'AUDIT.ATTACHMENTS' | translate}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center" class="cursor-pointer">
+                <span class="inline_edit_close_btn" (click)="closeFilesPopup()">
+                    <fa-icon icon="times"></fa-icon>
+                </span>
+            </div>
+        </div>
+        <mat-card-content class="p-05 mobile-view-popover" id="style-1">
+            <div fxLayout="row wrap" fxFlex="100">
+                <div class="mt-05 mb-05 userStory-name" fxFlex="100" fxLayout="column">
+                    <span fxLayout="row" *ngFor="let img of files;let i = index">
+                        <fa-icon icon="circle" class="fa-xs mr-05 mt-05" fxFlex="12px"></fa-icon>
+                        <a target="_blank" [href]="sanitizeUrl(img.filePath)" fxFlex="calc(100% - 20px)"
+                            class="add-test-case allgoals_txt userStory-name-control" [matTooltip]="img.fileName"
+                            matTooltipShowDelay="300">{{img.fileName}}</a>
+                    </span>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

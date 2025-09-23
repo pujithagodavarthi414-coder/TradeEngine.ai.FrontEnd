@@ -1,0 +1,289 @@
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeIndex)"
+  textToDisplay="{{ 'PRODUCTIVITYDASHBOARD.PERMISSION' | translate }}">
+</app-common-message-box>
+<div *ngIf="(canAccess_feature_EmployeeIndex)" class="full-height">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{'PRODUCTIVITYDASHBOARD.PRODUCTIVITYINDEX' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 5px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+          <mat-slide-toggle
+            [matTooltip]="(isDetailedView == true) ? ('PRODUCTIVITYDASHBOARD.SWITCHTOCHARTVIEW' | translate) : ('PRODUCTIVITYDASHBOARD.SWITCHTODETAILEDVIEW' | translate)"
+            class="archive-switch" [(ngModel)]="isDetailedView" [checked]="isDetailedView" (change)="openDetailedView()">
+          </mat-slide-toggle>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" style="cursor: pointer;">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+        <!-- <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="isDetailedView">
+          <button mat-icon-button (click)="exportToExcel()" matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading">
+            </mat-progress-bar>
+            <fa-icon class="mat-color-accent cursor-pointer" icon="file-excel">
+            </fa-icon>
+          </button>
+        </div> -->
+
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel productive-panel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxLayout="row wrap" fxLayoutAlign="center center" fxFlex.xs="100">
+              <div class="mb-05">
+                <button mat-raised-button (click)="dateFilterType('week')"
+                  color="{{primaryWeek}}">{{'ACTIVITYTRACKER.WEEK' | translate}}</button>
+              </div>
+              <div class="mb-05">
+                <button mat-raised-button (click)="dateFilterType('month')"
+                  color="{{primaryMonth}}">{{'ACTIVITYTRACKER.MONTH' | translate}}</button>
+              </div>
+              <div class="mb-05">
+                <button mat-raised-button (click)="dateFilterType('daterange')"
+                  color="{{primaryDateRange}}">{{'ACTIVITYTRACKER.DATERANGE' | translate}}
+                </button>
+              </div>
+            </div>
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0">
+              <div *ngIf="week" fxFlex fxLayoutAlign="center center" class="mt-05">
+                <fa-icon (click)="getWeekBasedOnDate('left')" class="icon-button" icon="chevron-left"></fa-icon>
+                <span class="month-display-elsement">&nbsp;&nbsp;&nbsp;&nbsp;{{selectedWeek | date: "MMM -
+                  yyyy"}}&nbsp;&nbsp;</span><span *ngIf="weekNumber"
+                  class="month-display-elsement">W{{weekNumber}}&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <fa-icon (click)="getWeekBasedOnDate('right')" class="icon-button" icon="chevron-right">
+                </fa-icon>
+              </div>
+              <div *ngIf="month" fxFlex fxLayoutAlign="center center" class="mt-05">
+                <fa-icon (click)="getMonthBasedOnDate('left')" class="icon-button" icon="chevron-left">
+                </fa-icon>
+                <span class="month-display-elsement">&nbsp;&nbsp;&nbsp;&nbsp;{{selectedMonth | date:
+                  "MMM-yyyy"}}&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <fa-icon (click)="getMonthBasedOnDate('right')" class="icon-button" icon="chevron-right">
+                </fa-icon>
+              </div>
+              <div *ngIf="dateRange">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                  <mat-label>{{ 'PERMISSIONHISTORY.FROMDATE' | translate }}</mat-label>
+                  <input matInput [matDatepicker]="picker1" autocomplete="off" (click)="picker1.open()"
+                    (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="fromDate" [readonly]="true">
+                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                  <mat-label>{{ 'PERMISSIONHISTORY.TODATE' | translate }}</mat-label>
+                  <input matInput [matDatepicker]="picker2" autocomplete="off" (click)="picker2.open()"
+                    (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="toDate" [min]="fromDate"
+                    [readonly]="true">
+                  <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                  <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="(canAccess_feature_ManageAppFilters)">
+              <mat-select [(value)]="selectedFilterValue" (selectionChange)="changeFilterValue($event.value)">
+                <mat-option value="all">{{ 'ACTIVITYTRACKER.ALL' | translate }}</mat-option>
+                <mat-option value="reportingOnly">{{ 'PRODUCTIVITYDASHBOARD.REPORTINGONLY' | translate }}</mat-option>
+                <mat-option value="mySelf">{{ 'PRODUCTIVITYDASHBOARD.MYSELF' | translate }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress && !isDetailedView">
+  </mat-progress-bar>
+  <div class="activity-data filter-margin m-0 app-height-search-2 paging-move" id="style-1">
+    <div style="min-height: 400px; text-align: center" *ngIf="!anyOperationInProgress || isDetailedView">
+      <ejs-chart #roundcol style='display:block;' [chartArea]='chartArea' [width]='width' align='center'
+        id='column-container' [primaryXAxis]='primaryXAxis' [primaryYAxis]='primaryYAxis' [title]='title'
+        [tooltip]='tooltip' (load)='load($event)' [legendSettings]='legend' (pointRender)='pointRender($event)'>
+        <e-series-collection>
+          <e-series [dataSource]='employeeIndex.data' type='Column' xName='userName' yName='productivityIndex'
+            name="{{ 'ACTIVITYTRACKER.PRODUCTIVITY' | translate }}" width=2 [cornerRadius]='radius'>
+          </e-series>
+        </e-series-collection>
+      </ejs-chart>
+    </div>
+    <!-- <div *ngIf="isDetailedView">
+      <kendo-grid [data]="employeeIndex" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+        [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false" [scrollable]="true"
+        [columnMenu]="true" (dataStateChange)="dataStateChange($event)"
+        (columnVisibilityChange)="onVisibilityChange($event)">
+        <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+          pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+        </kendo-grid-messages>
+        <kendo-grid-column field="userName" title="{{'PRODUCTIVITYDASHBOARD.DEVELOPERNAME' | translate}}" width="150"
+          [hidden]="checkVisibility('userName')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row" (click)="goToProfile(dataItem.userId)">
+              <div *ngIf="dataItem.userProfileImage != null && dataItem.userProfileImage != ''">
+                <app-avatar [src]="dataItem.userProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                  size="30">
+                </app-avatar>
+              </div>
+              <div *ngIf="dataItem.userProfileImage == null || dataItem.userProfileImage == ''">
+                <app-avatar [name]="dataItem.userName | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{dataItem.userName}}"
+                matTooltipShowDelay="400" fxFlex>
+                {{ dataItem?.userName }}
+              </span>
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="productivityIndex" title="{{'PRODUCTIVITYDASHBOARD.PRODUCTIVITYINDEX' | translate}}"
+          width="150" [hidden]="checkVisibility('productivityIndex')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'ProductivityIndex');$event.stopPropagation();">
+              {{ dataItem?.productivityIndex }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="grpIndex" title="{{'PRODUCTIVITYDASHBOARD.GRPINDEX' | translate}}" width="130"
+          [hidden]="checkVisibility('grpIndex')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'GrpIndex');$event.stopPropagation();">
+              {{ dataItem?.grpIndex }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="CompletedUserStoriesCount"
+          title="{{'PRODUCTIVITYDASHBOARD.COMPLETEDUSERSTORIESCOUNT' | translate}}" width="170"
+          [hidden]="checkVisibility('CompletedUserStoriesCount')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'Completed');$event.stopPropagation();">
+              {{ dataItem?.completedUserStoriesCount }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="percentageOfBouncedUserStories"
+          title="{{'PRODUCTIVITYDASHBOARD.PERCENTAGEOFBOUNCEDUSERSTORIES' | translate}}" width="150"
+          [hidden]="checkVisibility('percentageOfBouncedUserStories')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'BouncedStories');$event.stopPropagation();">
+              {{ dataItem?.percentageOfBouncedUserStories }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="userStoriesBouncedBackOnceCount"
+          title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKONCE' | translate}}" width="190"
+          [hidden]="checkVisibility('userStoriesBouncedBackOnceCount')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'BouncedOnce');$event.stopPropagation();">
+              {{ dataItem?.userStoriesBouncedBackOnceCount }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="userStoriesBouncedBackMoreThanOnceCount"
+          title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKMORETHANONCE' | translate}}" width="225"
+          [hidden]="checkVisibility('userStoriesBouncedBackMoreThanOnceCount')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'BouncedMoreThenOnce');$event.stopPropagation();">
+              {{ dataItem?.userStoriesBouncedBackMoreThanOnceCount }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="avgReplan" title="{{'PRODUCTIVITYDASHBOARD.NUMBEROFREPLANS' | translate}}" width="150"
+          [hidden]="checkVisibility('avgReplan')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row"
+              (click)="openUserStoriesDailog(dataItem,'Replan');$event.stopPropagation();">
+              {{ dataItem?.avgReplan }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+      </kendo-grid>
+    </div> -->
+  </div>
+</div>
+
+<kendo-excelexport [data]="data" fileName="employee-index.xlsx" #excelExport1>
+  <kendo-excelexport-column field="userName" title="{{'PRODUCTIVITYDASHBOARD.DEVELOPERNAME' | translate}}" width="150"
+    *ngIf="!checkVisibility('userName')">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="productivityIndex" title="{{'PRODUCTIVITYDASHBOARD.PRODUCTIVITYINDEX' | translate}}"
+    *ngIf="!checkVisibility('productivityIndex')" width="150">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="grpIndex" title="{{'PRODUCTIVITYDASHBOARD.GRPINDEX' | translate}}" width="130"
+    *ngIf="!checkVisibility('grpIndex')">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="completedUserStoriesCount" *ngIf="!checkVisibility('CompletedUserStoriesCount')"
+    title="{{'PRODUCTIVITYDASHBOARD.COMPLETEDUSERSTORIESCOUNT' | translate}}" width="170">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="percentageOfBouncedUserStories"
+    *ngIf="!checkVisibility('percentageOfBouncedUserStories')"
+    title="{{'PRODUCTIVITYDASHBOARD.PERCENTAGEOFBOUNCEDUSERSTORIES' | translate}}" width="150">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="userStoriesBouncedBackOnceCount"
+    *ngIf="!checkVisibility('userStoriesBouncedBackOnceCount')"
+    title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKONCE' | translate}}" width="190">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="userStoriesBouncedBackMoreThanOnceCount"
+    *ngIf="!checkVisibility('userStoriesBouncedBackMoreThanOnceCount')"
+    title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKMORETHANONCE' | translate}}" width="225">
+  </kendo-excelexport-column>
+
+  <kendo-excelexport-column field="avgReplan" title="{{'PRODUCTIVITYDASHBOARD.NUMBEROFREPLANS' | translate}}"
+    *ngIf="!checkVisibility('avgReplan')" width="150">
+  </kendo-excelexport-column>
+</kendo-excelexport>
+
+<ng-template #drillDownUserStoryPopupComponent let-data>
+  <app-profile-component-drilldownuserstoryPopup [data]=[data] (closeParentDialog)="closeCurrentDialog()"
+    (exportExcel)="exportDrillDownExcel()" [excelDrillDownLoading]="excelDrillDownLoading">
+  </app-profile-component-drilldownuserstoryPopup>
+</ng-template>
+
+<ng-template #detailedView let-data>
+  <app-dashboard-component-employeeIndexDetailedView [data]=[data] (visibilityChange)="onVisibilityChange($event)"
+    (dataStateChanged)="dataStateChange($event)" (excelDrillDown)="exportDrillDownExcel()" (excelDownload) = "exportToExcel()"
+    [excelDrillDownLoading]="excelDrillDownLoading" [employeeIndex] = "detailedViewData" [anyOperationInProgress] = "anyOperationInProgress" [excelLoading]="loading">
+  </app-dashboard-component-employeeIndexDetailedView>
+</ng-template>

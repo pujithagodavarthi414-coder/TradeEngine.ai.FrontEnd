@@ -1,0 +1,55 @@
+<div [ngClass]="isFromDashboard && notFromProfile ? 'full-height' : ''" class="p-0 m-0" *ngIf="(canAccess_feature_WorkAllocationSummary)">
+    <mat-card-title [ngClass]="isFromDashboard ? 'drag-handler' : ''" class="data-table-header">
+        <div fxLayout="row" fxLayoutGap="5px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+            <div fxFlex="50" class="card-title-text p-05">{{ 'DASHBOARD.WORKALLOCATIONSUMMARY' | translate | titlecase }}</div>
+            <div fxFlex="50" fxLayout="row wrap" fxLayoutGap="0" fxLayoutAlign="end center" *ngIf="notFromProfile">
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02"
+                    *ngIf="entities?.length > 1 || (canAccess_feature_ManageAppFilters)">
+                    <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" style="cursor: pointer;"
+                    *ngIf="entities?.length > 1 || (canAccess_feature_ManageAppFilters)">
+                    <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu"
+                        matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content id="widget-scroll-id" [ngClass]="isFromDashboard && notFromProfile ? 'no-drag google-chart-height' : 'widget-list-name'"
+        scrollStrategy="reposition">
+        <google-chart [data]="columnChart" (chartReady)="ready()" (chartSelect)='select($event)' (chartError)='error()'>
+        </google-chart>
+    </mat-card-content>
+</div>
+<mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+        <mat-form-field class="full-width" (click)="$event.stopPropagation()" *ngIf="entities?.length > 1">
+            <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                    {{entity.name}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="full-width" *ngIf="(canAccess_feature_ManageAppFilters)">
+            <mat-select [(value)]="selectedFilterValue" (selectionChange)="changeFilterValue($event.value)">
+                <mat-option *ngIf="isAll" value="all">{{ 'PRODUCTIVITYDASHBOARD.ALL' | translate }}</mat-option>
+                <mat-option *ngIf="isReportedOnly" value="reportingOnly">{{ 'PRODUCTIVITYDASHBOARD.REPORTINGONLY' | translate }}</mat-option>
+                <mat-option *ngIf="isMyself" value="mySelf">{{ 'PRODUCTIVITYDASHBOARD.MYSELF' | translate }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </mat-card>
+</mat-menu>
+<app-common-message-box *ngIf="!(canAccess_feature_WorkAllocationSummary)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<ng-template #drillDownUserStoryPopupComponent1 let-data>
+    <app-profile-component-drilldownuserstoryPopup [data]=[data] (closeParentDialog) = "closeCurrentDialog()"></app-profile-component-drilldownuserstoryPopup>
+</ng-template>

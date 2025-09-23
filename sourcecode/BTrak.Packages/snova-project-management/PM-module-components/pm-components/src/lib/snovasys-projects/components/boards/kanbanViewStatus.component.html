@@ -1,0 +1,166 @@
+<mat-progress-bar color="primary" mode="indeterminate"
+  *ngIf="(anyOperationInProgress$ | async) || (createUserstoryLoading$ | async)  || (sprintUserstoryLoading$|async)">
+</mat-progress-bar>
+
+<sat-popover #addKanbanUserStory verticalAlign="below" horizontalAlign="end" [interactiveClose]="false"
+  backdropClass="backdrop-color" hasBackdrop>
+  <mat-card class="filter-data p-0">
+    <app-pm-component-add-user-story *ngIf="addUserStory" [goal]="goal" [userStoryId]="userStory.userStoryId"
+      [goalReplanId]="goalReplanId" [sprint]="sprint" (closeDialog)="closeUserStoryDialog()">
+    </app-pm-component-add-user-story>
+  </mat-card>
+</sat-popover>
+
+
+<input matInput [value]="(canAccess_entityType_feature_AddOrUpdateWorkItem)" #accessForUserstoryEdit hidden />
+
+<div fxLayout="row wrap" fxLayoutGap="3px" fxLayout.sm="column" *ngIf="(getUserStoriesLoading$ | async)" class="mt-05">
+  <div [fxFlex]="kanbanBoardFlexPercentage" class="new_user mb-05 loading-bg"
+    *ngFor="let workflow of (workflowStatus$ | async)">
+    <mat-card class="p-0 m-0 full-width">
+      <mat-card-title class="p-1 kanban-load-title">
+      </mat-card-title>
+      <mat-card-content class="kanban-loading-bg kanban_data">
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<div fxLayout="row wrap" fxLayout.sm="column" fxLayoutAlign="space-between stretch" class="mt-05"
+  *ngIf="!(getUserStoriesLoading$ | async)">
+  <div [fxFlex]="kanbanBoardFlexPercentage" class="new_user custom-box"
+    *ngFor="let workflow of (workflowStatus$ | async)">
+    <div fxLayout="column" fxLayoutAlign="stretch">
+      <mat-card class="p-0 m-0 full-width" id="draggable">
+        <mat-card-title class="p-0" [style.backgroundColor]="workflow.userStoryStatusColor">
+          <div class="card-title-text font_icon_add p-05" style="display: flex; position: relative;">
+            <span class="hide-content-overflow mr-05">{{ workflow.userStoryStatusName }} ({{(userStories$
+              | async
+              | searchfilter :userStoryStatusId.value
+              | versionnamefilter: versionNamesearchText
+              | resultfilter: searchText:'userStoryName'
+              | userStoryfilter: 'ownerUserId':ownerUserList
+              | bugPriorityfilter:'bugPriorityId':bugPriorityIdList
+              | componentFilter:'projectFeatureId': componentList
+              | workItemTypesFilter:'userStoryTypeId': userStoryTypeList
+              | userStorysubTasksTagsFilter: searchTags) ?.length}})</span>
+            <input matInput [value]="workflow.userStoryStatusId" #userStoryStatusId hidden />
+
+            <mat-icon *ngIf="(((userStorySearchCriteria.isGoalsPage && isPermissionForAddUserStory) || (!userStorySearchCriteria.isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem))  &&
+            isGoalUserStory && notFromAudits
+               && (workflow.canDelete == true)
+             && ((userStories$
+              | async
+              | searchfilter: userStoryStatusId.value
+              | versionnamefilter: versionNamesearchText
+              | resultfilter: searchText:'userStoryName'
+              | userStoryfilter: 'ownerUserId':ownerUserList
+              | bugPriorityfilter:'bugPriorityId':bugPriorityIdList
+              | workItemTypesFilter:'userStoryTypeId': userStoryTypeList
+              | componentFilter:'projectFeatureId': componentList)
+              | userStorysubTasksTagsFilter: searchTags)?.length > 0)"
+              [satPopoverAnchorFor]="archiveAllCompleteUserStoryPopover"
+              #archiveAllCompleteUserStoryPopUp="satPopoverAnchor"
+              (click)="archiveAllCompleteUserStoryPopover.open();getUserStoryStatusId(workflow.userStoryStatusId)"
+              class="pull-right add-newtask" aria-hidden="true"
+              matTooltip="{{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}} "
+              style="position: absolute; right: 5px;" [ngStyle]="setHeightForIcon(workflow)">archive
+            </mat-icon>
+
+
+            <fa-icon icon="plus" *ngIf="(!isListViewType || (isListViewType && !isActiveGoalStatusId)) && (workflow.canAdd == true && ((userStorySearchCriteria.isGoalsPage && isPermissionForAddUserStory) || (!userStorySearchCriteria.isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem)) && 
+            isGoalUserStory) && notFromAudits && (!isFromSprint || (isFromSprint && !isDeleteSprint))"
+              [satPopoverAnchorFor]="addKanbanUserStory" #addKanbanUserStoryPopover="satPopoverAnchor"
+              (click)="addNewUserStory(addKanbanUserStoryPopover)" class="add-newtask" aria-hidden="true"
+              matTooltip="{{ 'ADDNEWTASK' | translate }} " style="position: absolute; right: 5px;">
+            </fa-icon>
+
+            <!-- <fa-icon icon="archive" *ngIf="(((userStorySearchCriteria.isGoalsPage && isPermissionForAddUserStory) || (!userStorySearchCriteria.isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem)) && !isListViewType &&
+            isGoalUserStory && notFromAudits
+               && (workflow.orderId == (workflowStatus$ | async).length) && (workflow.taskStatusId == verificationCompletedTaskStatusId || workflow.taskStatusId == doneTaskStatusId)
+             && ((userStories$
+              | async
+              | searchfilter: userStoryStatusId.value
+              | versionnamefilter: versionNamesearchText
+              | resultfilter: searchText:'userStoryName'
+              | userStoryfilter: 'ownerUserId':ownerUserList
+              | bugPriorityfilter:'bugPriorityId':bugPriorityIdList
+              | workItemTypesFilter:'userStoryTypeId': userStoryTypeList
+              | componentFilter:'projectFeatureId': componentList)
+              | userStoryTagsFilter: searchTags)?.length > 0)"
+              [satPopoverAnchorFor]="archiveAllCompleteUserStoryPopover"
+              #archiveAllCompleteUserStoryPopUp="satPopoverAnchor" (click)="archiveAllCompleteUserStoryPopover.open();getUserStoryStatusId(workflow.userStoryStatusId)"
+              class="pull-right add-newtask" aria-hidden="true"
+              matTooltip="{{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}} ">
+            </fa-icon> -->
+
+
+            <sat-popover #archiveAllCompleteUserStoryPopover verticalAlign="below" backdropClass="backdrop-color"
+              hasBackdrop horizontalAlign="end">
+              <mat-card class="filter-data p-0">
+                <mat-card-title class="text-center mat-bg-primary">
+                  <div class="card-title-text p-05">{{'USERSTORY.ARCHIVEUSERSTORY' | translate}}</div>
+              </mat-card-title>
+              <mat-card-content>
+                  <div class="card-content p-05">
+                    <span>
+                      {{ 'USERSTORY.ARCHIVEUSERSTORIES' | translate | softLabelsPipe : softLabels}}
+                    </span>
+                  </div>
+                <div class="text-center">
+                  <button mat-raised-button color="primary" class="mr-05" (click)="ArchiveAllUserStories()"
+                    [disabled]="(archiveUserStoriesInProgress$ | async)">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                      *ngIf="(archiveUserStoriesInProgress$ | async)">
+                    </mat-progress-bar>
+                    <fa-icon icon="check" class="mr-05"></fa-icon>{{ 'YES' | translate }}
+                  </button>
+                  <button mat-raised-button (click)="closeDialog(); (false)"
+                    [disabled]="(archiveUserStoriesInProgress$ | async)">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+                  </button>
+                </div>
+                </mat-card-content>
+              </mat-card>
+            </sat-popover>
+          </div>
+
+        </mat-card-title>
+        <mat-card-content class="p-05" id="style-1" [ngStyle]="setHeights()" [ngStyle]="{ 'height': checkFilter() ? 'calc(100vh - 256px)' : 'calc(100vh - 208px)', 
+                       'max-height': checkFilter() ? 'calc(100vh - 256px)' : 'calc(100vh - 208px)' }">
+          <div fxFlex="auto" [dragula]="dragulaBoardUniqueId" [attr.data-userstoryStatusId]="workflow.userStoryStatusId"
+            [(dragulaModel)]="
+                userStoriesIntoDictionaryByWorkflowStatusId[
+                  workflow.userStoryStatusId
+                ]
+              " id="{{workflow.userStoryStatusId}}" style="height: 100%"
+            [ngStyle]="{ 'pointer-events': (createUserstoryLoading$ | async)  ? 'none' : '' }">
+            <div fxLayout="row wrap" *ngFor="
+                  let userStory of (userStories$
+                    | async
+                    | searchfilter: userStoryStatusId.value
+                    | versionnamefilter: versionNamesearchText
+                    | userStorysubTasksTagsFilter: searchTags
+                    | resultfilter: searchText:'userStoryName'
+                    | userStoryfilter: 'ownerUserId':ownerUserList
+                    | bugPriorityfilter:'bugPriorityId':bugPriorityIdList
+                    | workItemTypesFilter:'userStoryTypeId': userStoryTypeList
+                    | componentFilter:'projectFeatureId': componentList)
+                " [attr.data-userStoryId]="userStory.userStoryId" [ngStyle]="{
+                  'background-color':
+                    userStory.userStoryId === selectedUserStoryId ? '#e6f5ff' : ''}"
+              [ngStyle]="{ 'pointer-events': (createUserstoryLoading$ | async)  ? 'none' : '' }"
+              [attr.data-userStoryStatusId]="userStory.userStoryStatusId" (click)="handleUserStorySelected(userStory)">
+              <app-pm-component-kanban-view-summary class="full-width" *ngIf="workflow && userStory"
+                [workflow]="workflow" [userStory]="userStory" [goal]="goal"
+                [isGoalsPage]="userStorySearchCriteria.isGoalsPage" [sprint]="sprint" [notFromAudits]="notFromAudits"
+                [isLoading]="(anyOperationInProgressForAutoLogging$|async)" [goalReplanId]="goalReplanId"
+                (highLightUserStory)="selectUserStory($event)" (updateAutoLog)="LogAction($event)"
+                (openUniquePage)="getOpenUniquePage($event)"></app-pm-component-kanban-view-summary>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

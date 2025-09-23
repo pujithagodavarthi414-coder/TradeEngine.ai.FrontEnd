@@ -1,0 +1,174 @@
+<div class="full-height">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+        <div class="card-title-text full-width ml-05 p-0" fxFlex *ngIf="!isEditAppName">
+          <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+            *ngIf="(canAccess_feature_DragApps)">
+            {{ dashboardName | titlecase }}
+          </span>
+          <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+            {{ dashboardName | titlecase }}
+          </span>
+        </div>
+        <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+          <mat-form-field>
+            <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+               [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+              matInputAutofocus />
+          </mat-form-field>
+        </div>
+        <div fxFlex="250px" fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="210px" class="search_goalinput ml-1" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'GENERICFORM.CLICKHERETOADDOBSERVATIONTYPE' | translate }}"
+              [satPopoverAnchorFor]="upsertObservationTypePopover" #upsertObservationTypePopUp="satPopoverAnchor"
+              (click)="createObservationTypePopupOpen(upsertObservationTypePopUp);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <!-- class="btrak bg-white" -->
+  <div class="activity-data filter-margin m-0 no-drag" id="style-1">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="observationTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{'GENERICFORM.OBSERVATIONTYPENAME' | translate  | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [sortable]="true" prop="observationTypeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.observationTypeName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center"
+            title="{{'GENERICFORM.EDITOBSERVATIONTYPE' | translate  | softLabelsPipe : softLabels}}" mat-icon-button
+            [satPopoverAnchorFor]="upsertObservationTypePopover" #upsertObservationTypePopUp="satPopoverAnchor"
+            (click)="editObservationTypePopupOpen(row,upsertObservationTypePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center"
+            title="{{'GENERICFORM.DELETEOBSERVATONTYPE' | translate  | softLabelsPipe : softLabels}}" mat-icon-button
+            [satPopoverAnchorFor]="deleteObservationTypePopover" #deleteObservationTypePopUp="satPopoverAnchor"
+            (click)="deleteObservationTypePopupOpen(row,deleteObservationTypePopUp)">
+            <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+<sat-popover backdropClass="backdrop-color" #upsertObservationTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'GENERICFORM.ADDORUPDATEOBSERVATIONTYPE' | translate }}
+      </div>
+    </mat-card-title>
+    <a *ngIf="isEdit" class="detail_close mt-05" color="warn" (click)="closePopUp()">
+      <fa-icon icon="times"></fa-icon>
+    </a>
+    <mat-card-content class="P-05 custom-height" id="style-1">
+      <form [formGroup]="observationTypeForm" #formDirective="ngForm" novalidate
+        (submit)="observationTypeForm.valid && upsertObservationType(formDirective)">
+        <div fxLayout="row wrap" class="mb-05">
+          <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+            <mat-form-field class="full-width">
+              <input matInput formControlName="observationTypeName"
+                placeholder="{{'GENERICFORM.OBSERVATIONTYPENAME' | translate  | softLabelsPipe : softLabels}}" required>
+              <mat-error *ngIf="observationTypeForm.get('observationTypeName').hasError('maxlength')">
+                {{'GENERICFORM.OBSERVATIONTYPENAMEMAXLENGTH' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+              <mat-error
+                *ngIf="observationTypeForm.get('observationTypeName').hasError('required') && observationTypeForm.get('observationTypeName').touched">
+                {{'GENERICFORM.OBSERVATIONTYPEISREQUIRED' | translate  | softLabelsPipe : softLabels}}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="45" fxLayout="column wrap" class="ml-1">
+            <button mat-raised-button type="button" (click)="openCustomForm();$event.stopPropagation()">
+              <fa-icon icon="plus" class="mr-05" matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}"
+                class="filter mat-color-accent">
+              </fa-icon>
+              <span class="mr-05">
+                {{'USERSTORYTYPES.ADDCUSTOMFIELDS'| translate}}
+              </span>
+            </button>
+          </div>
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage  | softLabelsPipe : softLabels}}</mat-error>
+        <div *ngIf="!isEdit && customFormComponent">
+          <span class="customfield-name hide-content-overflow goal-cursor"
+            matTooltip="{{ customFormComponent.formName }}" matTooltipShowDelay="1000"
+            matTooltipClass="tooltip-overflow" (click)="editFormComponent()">
+            {{ customFormComponent.formName }}</span>
+        </div>
+        <div class="custom-hrm-dropzone">
+          <app-custom-field-component *ngIf="isFormType" [moduleTypeId]="moduleTypeId"
+            [referenceTypeId]="observationTypeId" [isButtonVisible]="isButtonVisible" [referenceId]="observationTypeId"
+            [isDeletePermission]=true [isAddPermission]=true [isEditFieldPermission]=true>
+          </app-custom-field-component>
+        </div>
+        <div class="text-center m-1">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!observationTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertObservationTypePopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteObservationTypePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop
+  horizontalAlign="end">
+  <mat-card class="filter-data p-05">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mb-1">
+        <span> {{ 'GENERICFORM.AREYOUSUREYOUWANTTODELETEOBSERVATIONTYPE' | translate | softLabelsPipe : softLabels }}
+        </span>
+      </div>
+    </mat-card-title>
+    <div class="text-center">
+      <button mat-raised-button type="button" color="primary" class="mr-05"
+        (click)="deleteObservationType(); $event.stopPropagation()" [disabled]="isAnyOperationIsInprogress">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+        <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+      </button>
+      <button mat-raised-button type="button" (click)="closeArchivePopup()" [disabled]="isAnyOperationIsInprogress">
+        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'PERMISSIONHISTORY.NO' | translate }}
+      </button>
+    </div>
+    <br />
+    <mat-error *ngIf="isThereAnError">{{ validationErrorMessage | softLabelsPipe : softLabels }}</mat-error>
+  </mat-card>
+</sat-popover>
+
+
+<ng-template #appCustomFormComponent let-data>
+  <app-custom-form-component [data]=[data] (closeMatDialog)="closeMatDialog()" (submitFormComponent)="submitFormComponent($event)"></app-custom-form-component>
+</ng-template>

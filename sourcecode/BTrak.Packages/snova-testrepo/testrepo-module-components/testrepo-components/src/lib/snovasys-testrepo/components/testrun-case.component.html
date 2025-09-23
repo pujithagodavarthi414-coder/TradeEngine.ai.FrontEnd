@@ -1,0 +1,241 @@
+<div class="testrail-case-details section-cases-operations"
+    [ngStyle]="{ 'background-color': caseSelected == true ? '#e0dbdb' : ''}" fxLayout="row wrap">
+
+    <div fxFlex="2px" class="testrail-userstory-left" [style.backgroundColor]="caseDetail.statusColor">
+        &nbsp;
+    </div>
+
+    <input matInput [value]="(canAccess_entityType_feature_AddOrUpdateStatus)" #accessSingleUpdate hidden />
+
+    <div fxFlex="20px" class="custom-testrun-checkbox" *ngIf="!testRunCompleted">
+        <mat-checkbox *ngIf="(canAccess_entityType_feature_AddOrUpdateStatus)" class="mr-05"
+            [(ngModel)]="isCaseSelected" (change)="changeStatus($event.checked)"></mat-checkbox>
+    </div>
+    <div fxFlex="5" fxFlex.lg="12" fxFlex.md="12" class="text-overflow-wrap" (click)="previewTestcase()">
+        <a>{{caseDetail.testCaseIdentity}}</a>
+    </div>
+    <div fxFlex class="m-0 ml-05 userStory-name text-overflow-wrap" (click)="previewTestcase()" #testRunCaseTitle
+        (mouseover)="checkTitleTooltipStatus()">
+        <span class="user-select-text" [matTooltip]="showTitleTooltip ? caseDetail.title : ''"
+            matTooltipShowDelay="300">
+            {{caseDetail.title}}
+        </span>
+    </div>
+    <div fxFlex="44px" (click)="$event.stopPropagation()">
+        <a *ngIf="caseDetail.bugsCount > 0" matTooltip="{{'TESTMANAGEMENT.BUGSCOUNT' | translate}}"
+            [satPopoverAnchorFor]="scenarioBugs" #scenarioBugsPopover="satPopoverAnchor"
+            (click)="$event.stopPropagation();openBugsPopover(scenarioBugsPopover)">
+            <fa-icon icon="bug"></fa-icon>
+        </a>
+        <span *ngIf="caseDetail.bugsCount > 0"
+            class="testsuite-sections-count scenario-bugs-place scenario-bugs-count-padding">
+            {{caseDetail.bugsCount}}
+        </span>
+    </div>
+    <div fxFlex="5" fxFlex.md="9" fxFlex.lg="9" class="m-0 ml-05 text-overflow-wrap" (click)="$event.stopPropagation()"
+        ngClass.sm="mr-05">
+        <img class="testcase-user-img" matTooltip="{{caseDetail.assignToName}}"
+            src="../../../../assets/images/faces/18.png" *ngIf="!caseDetail.assignToName"
+            (click)="openUpdateAssigneePopover(accessSingleUpdate.value)"
+            [satPopoverAnchorFor]="updateAssigneePopover" />
+        <div *ngIf="caseDetail.assignToName">
+            <app-avatar matTooltip="{{caseDetail.assignToName}}"
+                [name]="caseDetail.assignToName | removeSpecialCharacters" [src]="caseDetail.assignToProfileImage"
+                [isRound]="true" size="25" (click)="openUpdateAssigneePopover(accessSingleUpdate.value)"
+                [satPopoverAnchorFor]="updateAssigneePopover">
+            </app-avatar>
+        </div>
+    </div>
+    <mat-chip matTooltip="{{'TESTMANAGEMENT.TESTCASESTATUS' | translate}}" fxFlex="8"
+        (click)="openUpdateStatusPopover(accessSingleUpdate.value)" [satPopoverAnchorFor]="updateStatusPopover"
+        class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        [style.backgroundColor]="caseDetail.statusColor">
+        {{ caseDetail.statusName }}
+    </mat-chip>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #updateAssigneePopover verticalAlign="below" hasBackdrop
+    [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress$ | async">
+        </mat-progress-bar>
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="updateAssigneePopover.close()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                    {{'TESTMANAGEMENT.UPDATEASSIGNTO' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="testrun-inline-editor">
+                <mat-form-field class="mt-05 full-width">
+                    <mat-select [(ngModel)]="updatedAssigneeValue"
+                        placeholder="{{'TESTMANAGEMENT.ASSIGNTO' | translate}}"
+                        (selectionChange)="updateAssignTo($event.value)">
+                        <mat-select-trigger>
+                            {{selectedAssignee}}
+                        </mat-select-trigger>
+                        <mat-option class="testrun-cases-assignee" *ngFor="let user of (usersList$ | async)"
+                            [value]="user.id">
+                            <div>
+                                <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                                    [name]="user.value | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img" src="{{user.profileImage}}"
+                                    style="float: none; max-width: none !important;" *ngIf="user.profileImage" />
+                            </div>
+                            <div>{{user.value}}</div>
+                        </mat-option>
+                    </mat-select>
+                    <mat-hint>{{'TESTMANAGEMENT.ASSIGNTOHINT' | translate}}</mat-hint>
+                </mat-form-field>
+            </mat-card-content>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #updateStatusPopover verticalAlign="center" hasBackdrop
+    [interactiveClose]="false" scrollStrategy="reposition" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress$ | async">
+        </mat-progress-bar>
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="updateStatusPopover.close()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                    {{'TESTMANAGEMENT.UPDATESTATUS' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="testrun-inline-editor" *ngIf="loadStatus">
+                <div fxLayout="row wrap">
+                    <div fxFlex="80" fxFlex.md="80">
+                        <mat-form-field class="mt-05 full-width">
+                            <mat-select [(ngModel)]="updatedStatusValue"
+                                placeholder="{{'TESTMANAGEMENT.STATUS' | translate}}"
+                                (selectionChange)="checkIsFailed($event.value)">
+                                <mat-option *ngFor="let status of (statusList$ | async)" [value]="status.id">
+                                    {{status.value}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-hint>{{'TESTMANAGEMENT.STATUSHINT' | translate}}</mat-hint>
+                        </mat-form-field>
+                    </div>
+                    <div *ngIf="(canAccess_entityType_feature_AddOrUpdateStatus) 
+                            && isCaseFailed && isBugBoardEnable" fxLayoutAlign="end start" class="mt-08" fxFlex="10">
+                        <a class="add-test-case mt-08 " matTooltip="{{'USERSTORY.ADDBUG' | translate}}"
+                            [satPopoverAnchorFor]="addBug" #addBugPopover="satPopoverAnchor"
+                            (click)="openBugPopover(addBugPopover)">
+                            <fa-icon class="add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+                        </a>
+                    </div>
+                    <div fxFlex="5" fxFlexOffset="3px" class="testcase-icon">
+                        <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORTESTCASE' | translate}}" icon="image"
+                            class="ml-05 mat-color-accent icon-button" [satPopoverAnchorFor]="fileUploadPopover"
+                            #fileUploadPopup="satPopoverAnchor"
+                            (click)="openFileUploadPopover(testRunStatusReferenceTypeId,fileUploadPopup);">
+                        </fa-icon>
+                    </div>
+                </div>
+
+                <editor class="mt-1 dfree-header testcase-outline"
+                    apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" [init]="initSettings"
+                    placeholder="Add comment" menubar="false" height="100" [(ngModel)]="updatedStatusComment">
+                </editor>
+
+                <mat-hint>{{'TESTMANAGEMENT.STATUSCOMMENTHINT' | translate}}</mat-hint>
+                <div class="text-center mb-05">
+                    <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+                        (click)="updateStatus()" [disabled]="disableUpdate">
+                        <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.UPDATE' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button (click)="updateStatusPopover.close()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>
+                        {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+
+            </mat-card-content>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #scenarioBugs hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+            <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'USERDETAIL.BUGS' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="goal-bugs" id="style-1" *ngIf="caseDetail.bugsCount > 0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(bugsInTestCaseProgress$ | async)">
+            </mat-progress-bar>
+            <div fxLayout="column" *ngIf="!(bugsInTestCaseProgress$ | async)" fxLayoutGap="5px">
+                <div fxLayout="row" *ngFor="let bug of (scenarioBugs$ | async);let i = index" fxLayoutGap="5px">
+                    <div fxFlex="15px">
+                        <fa-icon matTooltip="{{ bug.bugPriorityName }} ({{bug.bugPriorityDescription}})"
+                            icon="{{bug.bugPriorityIcon}}"
+                            [ngStyle]="setColorForBugPriorityTypes(bug.bugPriorityColor)">
+                        </fa-icon>
+                    </div>
+                    <div fxFlex="70" class="word-break display-pre-line">
+                        <span>{{bug.userStoryName}}</span>
+                    </div>
+                    <mat-chip matTooltip="{{'USERDETAIL.BUGSTATUS' | translate}}" fxFlex
+                        class="allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="bug.statusHexValue">
+                        {{ bug.status }}
+                    </mat-chip>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<!--------Upload test case dialog------>
+<sat-popover #fileUploadPopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone" *ngIf="isFileUploadPopover">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px">
+                    <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="mobile-view-popover p-1">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="referenceId"
+                [selectedParentFolderId]="referenceId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true">
+            </app-dropzone>
+        </div>
+    </mat-card>
+</sat-popover>
+<!--------Upload test case dialog------>
+
+<sat-popover #addBug hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05"> {{'USERSTORY.ADDBUG' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <testcase-scenario-bug *ngIf="loadBug" [isBugFromTestRail]="isBugFromTestRail" [projectId]="projectsId"
+                [caseData]="caseDetail" [isBugFromUserStory]="isBugFromUserStory" [isSprintUserStories]=false
+                (closeBug)="closeBugsPopover()">
+            </testcase-scenario-bug>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,57 @@
+<ng-container *ngIf="(canAccess_feature_AssetsAllocatedToMe)">
+  <div class="full-height">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+          <div fxFlex class="card-title-text p-05 ml-05" fxLayoutAlign="start center" class="p-1"
+            fxLayoutAlign.xs="center center">{{'ASSETS.ASSETSALLOCATEDTOME' | translate | titlecase}}
+          </div>
+          <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+            fxLayoutAlign="end center">
+            <mat-form-field ngClass.xs="full-width">
+              <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="search()">
+            </mat-form-field>
+            <span class="close_icon" style="top: 17px !important;right: 10px !important">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data filter-margin m-0 no-drag app-height-search-2" id="style-1">
+      <ngx-datatable class="btrak" [rows]="assetsAllocatedToMeList$ | async" [columnMode]="'force'" [headerHeight]="35"
+        [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"  [scrollbarH]="true" 
+        [loadingIndicator]="assetsAllocatedToMeDataLoading$ | async" [sorts]="[{prop: 'assignedDateFrom', dir: 'desc'}]"
+        (sort)="onSort($event)" (page)='setPage($event)' [selectionType]="'single'" (select)='onSelect($event)'
+        [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate, selectedMessage: false}"
+        style="cursor: pointer;">
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.ASSETCODE' | translate}}" sortable="true" prop="assetNumber">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.ASSETNAME' | translate}}" sortable="true" prop="assetName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}<span *ngIf="checkForMACAddress(value)">&nbsp;({{row.assetUniqueNumber}})</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'ASSETS.ASSIGNEDDATE' | translate}}" sortable="true" prop="assignedDateFrom">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.assignedDateFrom != null">{{ row.assignedDateFrom | date: "dd-MMM-yyyy"  }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+</ng-container>
+<ng-container *ngIf="!(canAccess_feature_AssetsAllocatedToMe) && !(roleFeaturesIsInProgress$|async)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

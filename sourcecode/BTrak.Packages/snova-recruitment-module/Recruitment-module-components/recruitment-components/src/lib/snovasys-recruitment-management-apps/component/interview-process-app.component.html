@@ -1,0 +1,200 @@
+<div class="full-height" *ngIf="canAccess_feature_AddInterviewProcess">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}">
+            {{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              (change)="getInterviewProcess()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'INTERVIEWPROCESS.ADDPROCESSTOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertInterviewPopover" #upsertInterviewPopUp="satPopoverAnchor"
+              (click)="createInterviewProcess(upsertInterviewPopUp); clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="20px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag accessible-ip-height">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [scrollbarH]="true" [limit]="10" [rows]="interviewProcess" [loadingIndicator]="isAnyOperationIsInprogress"
+      [ngClass]="isFromRoute ? 'full-height' : ''" [virtualization]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}" [flexGrow]="1"
+        [sortable]="true" minWidth="150" prop="interviewProcessName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.interviewProcessName }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'INTERVIEWTYPES.INTERVIEWTYPENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        minWidth="150" prop="interviewTypeIds">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.interviewTypeNames }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false" minWidth="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'INTERVIEWPROCESS.EDITINTERVIEWTYPETITLE' | translate }}"
+            [satPopoverAnchorFor]="upsertInterviewPopover" #upsertInterviewPopUp="satPopoverAnchor"
+            (click)=" editInterviewProcess(row,upsertInterviewPopUp)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'INTERVIEWPROCESS.ARCHIVEINTERVIEWPROCESS' | translate }}"
+            [satPopoverAnchorFor]="deleteInterviewProcessPopover" #deleteInterviewProcessPopup="satPopoverAnchor"
+            (click)="deleteInterviewProcessPopupOpen(row,deleteInterviewProcessPopup)" *ngIf="!isArchived"
+            mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'INTERVIEWPROCESS.UNARCHIVEINTERVIEWPROCESS' | translate }}"
+            [satPopoverAnchorFor]="deleteInterviewProcessPopover" #deleteInterviewProcessPopup="satPopoverAnchor"
+            (click)="deleteInterviewProcessPopupOpen(row,deleteInterviewProcessPopup)" *ngIf="isArchived"
+            mat-icon-button>
+            <mat-icon style="cursor:pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+
+
+  </div>
+
+
+
+  <!--Edit  dialog-->
+  <sat-popover #upsertInterviewPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="before">
+    <mat-card class="filter-data p-0" fxFlex="320px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ interviewprocessTitle }}
+        </div>
+      </mat-card-title>
+      <form [formGroup]="addInterviewForm" novalidate #formDirective="ngForm"
+        (submit)="formDirective.valid && UpsertInterviewProcess(formDirective)">
+        <div class="card-content p-05 mt-05">
+          <div class="card-content p-05 mt-05">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <input matInput formControlName="interviewProcessName"
+                placeholder="{{ 'INTERVIEWPROCESS.INTERVIEWPROCESS' | translate }}" required />
+              <mat-error *ngIf="addInterviewForm.get('interviewProcessName').hasError('maxlength')">
+                {{ 'INTERVIEWPROCESS.INTERVIEWPROCESSMAX' | translate }}</mat-error>
+              <mat-error
+                *ngIf="addInterviewForm.get('interviewProcessName').hasError('required') && addInterviewForm.get('interviewProcessName').touched">
+                {{ 'INTERVIEWPROCESS.INTERVIEWPROCESSFIELDREQUIRED' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="card-content p-05 mt-05" fxLayout="row" fxLayoutAlign="space-around center">
+
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="interviewTypeId" [compareWith]="compareSelectedInterviewTypesFn"
+                placeholder="{{ 'INTERVIEWTYPES.INTERVIEWTYPENAME' | translate }}" multiple>
+                <mat-option #allInterviewsSelected (click)="toggleAllInterviewTypesSelection1()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="interviewType.interviewTypeId"
+                  *ngFor="let interviewType of interviewTypes; let i = index" #allInterviewsSelected
+                  (click)="toggleInterviewTypesPerOne1()">
+                  {{ interviewType.interviewTypeName }}
+                </mat-option>
+              </mat-select>
+
+              <mat-error>
+                <span
+                  *ngIf="!addInterviewForm.get('interviewTypeId').valid &&addInterviewForm.get('interviewTypeId').touched">
+                  {{ 'INTERVIEWPROCESS.PLEASESELECTINTERVIEWTYPES' | translate }}</span>
+              </mat-error>
+            </mat-form-field>
+
+
+          </div>
+        </div>
+        <div class="text-center mb-1 mt-05">
+          <button mat-raised-button color="primary" class="mr-05" type="submit"
+            [disabled]="!addInterviewForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeAddInterviewFormPopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </sat-popover>
+  <!--Edit dialog-->
+
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteInterviewProcessPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'INTERVIEWPROCESS.ARCHIVEINTERVIEWPROCESS' | translate
+          }}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'INTERVIEWPROCESS.UNARCHIVEINTERVIEWPROCESS' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'INTERVIEWPROCESS.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'INTERVIEWPROCESS.DESIGNU' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteInterviewProcess() ;">
+            <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteInterviewProcess();">
+            <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteInterviewProcessPopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+
+
+<app-common-message-box *ngIf="!canAccess_feature_AddInterviewProcess"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

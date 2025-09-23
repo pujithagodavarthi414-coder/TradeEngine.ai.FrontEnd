@@ -1,0 +1,220 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="center">
+            <span *ngIf="!employeeBankDetailsId">{{'HRMANAGAMENT.ADDBANKDETAILS' | translate}}</span>
+            <span *ngIf="employeeBankDetailsId">{{'HRMANAGAMENT.EDITBANKDETAILS' | translate}}</span>
+        </div>
+    </div>
+</mat-card-title>
+<div class="p-1">
+    <form [formGroup]="employeeBankDetailsForm" novalidate #formDirective="ngForm"
+        (submit)="employeeBankDetailsForm.valid && saveEmployeeBankDetails(formDirective)">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="ifscCode"
+                        placeholder="{{ 'CREDITORDETAILS.IFSCCODE' | translate }}">
+                    <mat-error>
+                        <span *ngIf="employeeBankDetailsForm.get('ifscCode').hasError('pattern')">
+                            {{'CREDITORDETAILS.VALIDIFSCCODE' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="accountNumber"
+                        placeholder="{{'HRMANAGAMENT.ACCOUNTNUMBER' | translate}}" required>
+                    <mat-error>
+                        <span *ngIf="employeeBankDetailsForm.get('accountNumber').hasError('maxlength')">
+                            {{'HRMANAGAMENT.ACCOUNTNUMBERSHOULDNOTEXCEED20CHARACTERS' | translate}}</span>
+                        <span
+                            *ngIf="employeeBankDetailsForm.get('accountNumber').hasError('required') && employeeBankDetailsForm.get('accountNumber').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERACCOUNTNUMBER' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="accountName"
+                        placeholder="{{'HRMANAGAMENT.ACCOUNTNAME' | translate}}" required>
+                    <mat-error>
+                        <span *ngIf="employeeBankDetailsForm.get('accountName').hasError('maxlength')">
+                            {{'HRMANAGAMENT.SHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                        <span
+                            *ngIf="employeeBankDetailsForm.get('accountName').hasError('required')&& employeeBankDetailsForm.get('accountName').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERACCOUNTNAME' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="buildingSocietyRollNumber"
+                        placeholder="{{'HRMANAGAMENT.BUILDINGSOCIETYROLLNUMBER' | translate}}">
+                    <mat-error>
+                        <span *ngIf="employeeBankDetailsForm.get('buildingSocietyRollNumber').hasError('maxlength')">
+                            {{'HRMANAGAMENT.SHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                        <!-- <span
+                            *ngIf="employeeBankDetailsForm.get('buildingSocietyRollNumber').hasError('required')&& employeeBankDetailsForm.get('buildingSocietyRollNumber').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERBUILDINGSOCIETYROLLNUMBER' | translate}}</span> -->
+                    </mat-error>
+                </mat-form-field>
+
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="60" fxFlex.xs="100" *ngIf="!(canAccess_feature_ManageBank)">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'CREDITORDETAILS.BANK' | translate}}" formControlName="bankId" required>
+                        <mat-option *ngFor="let bank of bankList" [value]="bank.bankId">
+                            {{ bank.bankName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <mat-error class="P-06"
+                            *ngIf="employeeBankDetailsForm.get('bankId').hasError('required') && employeeBankDetailsForm.get('bankId').touched">
+                            {{ 'CREDITORDETAILS.BANKISREQUIRED' | translate }}
+                        </mat-error>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="52" fxFlex.xs="100" *ngIf="(canAccess_feature_ManageBank)">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'CREDITORDETAILS.BANK' | translate}}" formControlName="bankId" required>
+                        <mat-option *ngFor="let bank of bankList" [value]="bank.bankId">
+                            {{ bank.bankName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <mat-error class="P-06"
+                            *ngIf="employeeBankDetailsForm.get('bankId').hasError('required') && employeeBankDetailsForm.get('bankId').touched">
+                            {{ 'CREDITORDETAILS.BANKISREQUIRED' | translate }}
+                        </mat-error>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="8" *ngIf="(canAccess_feature_ManageBank)">
+                <button mat-icon-button matTooltip="{{ 'BANK.CREATEBANKTOOLTIP' | translate }}" type="button"
+                    [satPopoverAnchorFor]="upsertBankPopover" #upsertBankPopUp="satPopoverAnchor"
+                    (click)="createBankPopupOpen(upsertBankPopUp);">
+                    <fa-icon icon="plus" class="filter mat-color-accent">
+                    </fa-icon>
+                </button>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="branchName" placeholder="{{'HRMANAGAMENT.BRANCHNAME' | translate}}"
+                        required>
+                    <mat-error>
+                        <span *ngIf="employeeBankDetailsForm.get('branchName').hasError('maxlength')">
+                            {{'HRMANAGAMENT.SHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                        <span
+                            *ngIf="employeeBankDetailsForm.get('branchName').hasError('required')&& employeeBankDetailsForm.get('branchName').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERBRANCHNAME' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="effectiveFrom" [matDatepicker]="picker1" (click)="picker1.open()"
+                        placeholder="{{'EMPLOYEEEDUCATIONDETAILS.STARTDATE' | translate}}" required
+                        [max]="employeeBankDetailsForm.get('effectiveTo').value" autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeBankDetailsForm.get('effectiveFrom').hasError('required')&& employeeBankDetailsForm.get('effectiveFrom').touched">
+                            {{'HRMANAGAMENT.PLEASEENTERSTARTDATE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="effectiveTo" [matDatepicker]="picker2" (click)="picker2.open()"
+                        placeholder="{{'HRMANAGAMENT.ENDDATE' | translate}}" autocomplete="off" [readonly]="true"
+                        [min]="employeeBankDetailsForm.get('effectiveFrom').value">
+                    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                    <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!employeeBankDetailsForm.valid || (upsertEmployeeBankDetailsInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="upsertEmployeeBankDetailsInProgress$ | async">
+                </mat-progress-bar>
+                <span *ngIf="!this.employeeBankDetailsId">
+                    <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+                </span>
+                <span *ngIf="this.employeeBankDetailsId">
+                    <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                </span>
+            </button>
+            <button mat-button mat-raised-button (click)="closePopover(formDirective);(false)"
+                [disabled]="(upsertEmployeeBankDetailsInProgress$ | async)">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+    </form>
+</div>
+
+<sat-popover #upsertBankPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex="500px">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">{{'BANK.ADDBANK' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="bankForm" #bankFormDirective="ngForm" novalidate
+                (submit)="bankForm.valid && upsertBank(bankFormDirective)">
+                <div fxLayout="row wrap" class="p-05" fxLayoutGap="10px">
+                    <div fxFlex="98.5">
+                        <mat-form-field class="full-width">
+                            <input matInput placeholder="{{'BANK.BANK' | translate}}" formControlName="bankName"
+                                required>
+                            <mat-error class="P-06"
+                                *ngIf="bankForm.get('bankName').hasError('required') && bankForm.get('bankName').touched">
+                                {{ 'BANK.BANKISREQUIRED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="98.5">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{'BANK.COUNTRY' | translate}}" formControlName="countryId"
+                                required>
+                                <mat-option *ngFor="let country of countries" [value]="country.countryId">
+                                    {{ country.countryName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error class="P-06"
+                                *ngIf="bankForm.get('countryId').hasError('required') && bankForm.get('countryId').touched">
+                                {{ 'BANK.REQUIREDCOUNTRYERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="mt-1 text-center">
+                    <button mat-button mat-raised-button color="primary" class="mr-1" type="submit"
+                        [disabled]="!bankForm.valid||upsertBankIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertBankIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertBankPopUp(bankFormDirective)"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,516 @@
+<div class="default full-height" class="p-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip=" {{'HISTORICALREPORT.WORKITEMSANALYSISBOARD' | translate | titlecase}}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{'HISTORICALREPORT.WORKITEMSANALYSISBOARD' | translate | titlecase}} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="projectFilter">
+                    {{'ADVANCEDSEARCH.PROJECT' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="goalFilter">
+                    {{'PRODUCTIVITYDASHBOARD.GOAL' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="assigneFilter">
+                    {{'HISTORICALREPORT.ASSIGNEE' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="userStoryFilter">
+                    {{'HISTORICALREPORT.USERSTORY' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="branchFilter">
+                    {{'LOGTIMEREPORT.BRANCH' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="verifiedFilter">
+                    {{'HISTORICALREPORT.VERIFIEDBY' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="redGoalFilter">
+                    {{ 'HISTORICALREPORT.GOALISINRED' | translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="redWorkItemFilter">
+                    {{ 'HISTORICALREPORT.WORKITEMISINRED' | translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="userStoryTypeFilter">
+                    {{'USERDETAIL.USERSTORYTYPE' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="userStoryPriorityFilter">
+                    {{'HISTORICALREPORT.USERSTORYPRIORITY' | translate}}</button>
+            </mat-menu>
+            <mat-menu #projectFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'PRODUCTIVITYDASHBOARD.SELECTPROJECT'|translate}}"
+                                [(ngModel)]="projectId" (selectionChange)="selectedProjectId($event.value)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="proj.projectId" *ngFor="let proj of projectsList">
+                                    {{proj.projectName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #goalFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <input matInput type="text" placeholder="{{'PRODUCTIVITYDASHBOARD.GOAL' | translate}}"
+                                [(ngModel)]="searchGoalText" (input)="searchGoal()">
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #assigneFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'HISTORICALREPORT.PLEASESELECTASSIGNE'|translate}}"
+                                [(ngModel)]="selectedUser" (selectionChange)="selectUser($event.value)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="user.teamMemberId" *ngFor="let user of employeeList">
+                                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                                        <div fxFlex="35px">
+                                            <app-avatar [name]="user.teamMemberName | removeSpecialCharacters"
+                                                [src]="user.profileImage" [isRound]="true" size="30">
+                                            </app-avatar>
+                                        </div>
+                                        <div fxFlex>
+                                            <p class="mat-body-2">
+                                                {{ user.teamMemberName }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #userStoryFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field class="full-width">
+                        <input matInput type="text" placeholder="{{'HISTORICALREPORT.USERSTORY' | translate}}"
+                            [(ngModel)]="searchUserStoryText" (input)="searchUserStory()">
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #branchFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field>
+                        <mat-select placeholder="{{'LOGTIMEREPORT.SELECTBRANCH' | translate}}" [(ngModel)]="branchId"
+                            (selectionChange)="selectedBranch($event.value)">
+                            <mat-option value="0">All</mat-option>
+                            <mat-option *ngFor="let branch of (branchList$ | async)" [value]="branch.branchId">
+                                {{branch.branchName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #verifiedFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field>
+                        <mat-select placeholder="{{ 'PROJECTS.PLEASESELECTUSER' | translate }}"
+                            [(ngModel)]="selectedVerifiedUser" (selectionChange)="selectVerifiedUser($event.value)">
+                            <mat-option value="0">All</mat-option>
+                            <mat-option [value]="user.id" *ngFor="let user of UsersList">
+                                {{user.fullName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #verifiedDoneFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="picker3" (click)="picker3.open()" [(ngModel)]="verifiedDate"
+                            placeholder="{{'HISTORICALREPORT.VERIFIEDON' | translate}}" required autocomplete="off"
+                            [readonly]="true" (dateChange)="dateVerifiedChanged($event)" [max]="maxDate">
+                        <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                        <mat-datepicker #picker3></mat-datepicker>
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #redGoalFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <span class="mr-1">{{ 'HISTORICALREPORT.GOALISINRED' | translate }}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isGoalInRed" [checked]="isGoalInRed"
+                        (change)="getWorkItemsDetailsReport()"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #redWorkItemFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <span class="mr-1">{{ 'HISTORICALREPORT.WORKITEMISINRED' | translate }}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isWorkItemInRed"
+                        [checked]="isWorkItemInRed" (change)="getWorkItemsDetailsReport()"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #userStoryTypeFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field>
+                        <mat-select placeholder="{{'USERSTORY.PLEASESELECTUSERSTORYTYPE'|translate}}"
+                            [(ngModel)]="userStoryTypeId" (selectionChange)="selectedUserStoryTypeId($event.value)">
+                            <mat-option value="0">All</mat-option>
+                            <mat-option [value]="userStoryType.userStoryTypeId"
+                                *ngFor="let userStoryType of (userStoryTypes$ | async)">
+                                {{userStoryType.userStoryTypeName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #userStoryPriorityFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <mat-form-field>
+                        <mat-select placeholder="{{'HISTORICALREPORT.SELECTUSERSTORYPRIORITY'|translate}}"
+                            [(ngModel)]="userStoryPriorityId"
+                            (selectionChange)="selectedUserStoryPriorityId($event.value)">
+                            <mat-option value="0">All</mat-option>
+                            <mat-option [value]="userStoryPriority.bugPriorityId"
+                                *ngFor="let userStoryPriority of userStoryPriorities">
+                                {{userStoryPriority.priorityName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-card>
+            </mat-menu>
+        </div>
+    </mat-card-title>
+</div>
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+</mat-progress-bar>
+<div class="activity-data histotical-work-report no-drag">
+    <mat-card-content class="p-0 m-0">
+        <div class="activity-data">
+            <kendo-grid [data]="historicalWork" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false" [scrollable]="true"
+                [columnMenu]="true" (dataStateChange)="dataStateChange($event)"
+                (columnVisibilityChange)="onVisibilityChange($event)">
+                <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+                    pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+                </kendo-grid-messages>
+                <kendo-grid-column field="userStoryName"
+                    title="{{'HISTORICALREPORT.USERSTORY' | translate | softLabelsPipe : softLabels}}" width="300"
+                    [hidden]="checkVisibility('userStoryName')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline" *ngIf="dataItem.userStoryName != null"
+                            (click)="navigateToUserStoriesPage(dataItem);$event.stopPropagation();">
+                            <a matTooltip="{{ dataItem.userStoryName }}">
+                                {{ dataItem.userStoryName }}
+                            </a>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="createdDateTime" title="{{'HISTORICALREPORT.CREATEDDATE' | translate}}"
+                    width="150" [hidden]="checkVisibility('createdDateTime')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span
+                            *ngIf="dataItem.createdDateTime != null"  matTooltip="{{dataItem.createdDateTimeZoneNam}}">{{ dataItem.createdDateTime | date: "dd-MMM-yyyy"  }}
+                            <span class="timezone-name" *ngIf="(dataItem.createdDateTime | covertTimeIntoUtcTime) != Offset"
+                            >{{ dataItem.createdDateTimeZoneAbbreviation}}
+                            </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="createdBy" title="{{'HISTORICALREPORT.CREATEDBY' | translate}}"
+                    [hidden]="checkVisibility('createdBy')" width="200">
+                    <ng-template kendoGridHeaderTemplate let-column>
+                        {{'HISTORICALREPORT.CREATEDBY' | translate}}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.createdBy != null"
+                            (click)="navigateToUserProfile(dataItem.createdByUserId);$event.stopPropagation();"
+                            fxLayout="row" class="icon-button">
+                            <a matTooltip="{{ dataItem.createdBy }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.createdByProfileImage"
+                                    [name]="dataItem.createdBy | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.createdByProfileImage"
+                                    src="{{dataItem.createdByProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.createdBy}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="projectName"
+                    title="{{'WORKLOGGING.PROJECT' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('projectName')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline" *ngIf="dataItem.projectName !=null"
+                            (click)="navigateToProjectDetailsPage(dataItem); $event.stopPropagation();">
+                            <a matTooltip="{{ dataItem.projectName }}">
+                                {{dataItem.projectName}}
+                            </a>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="goalName"
+                    title="{{'HISTORICALREPORT.GOALNAME' | translate | softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('goalName')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline" *ngIf="dataItem.goalName !=null"
+                            (click)="navigateToGoalDetailsPage(dataItem); $event.stopPropagation();">
+                            <a matTooltip=" {{ dataItem.goalName }} ">
+                                {{ dataItem.goalName }}
+                            </a>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="sprintName"
+                    title="{{'SPRINTS.SPRINTS' | translate | softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('sprintName')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline" *ngIf="dataItem.projectName !=null"
+                            (click)="navigateToSprintDetailsPage(dataItem); $event.stopPropagation();">
+                            {{dataItem.sprintName}}
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="developer"
+                    title="{{'HISTORICALREPORT.ASSIGNEDUSER' | translate}}" [hidden]="checkVisibility('developer')"
+                    width="200">
+                    <ng-template kendoGridHeaderTemplate let-column>
+                        {{'HISTORICALREPORT.ASSIGNEDUSER' | translate}}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.developer != null"
+                            (click)="navigateToUserProfile(dataItem.ownerUserId);$event.stopPropagation();"
+                            fxLayout="row" class="icon-button">
+                            <a matTooltip="{{ dataItem.developer }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.developerProfileImage"
+                                    [name]="dataItem.developer | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.developerProfileImage"
+                                    src="{{dataItem.developerProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.developer}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="deadLineDate"
+                    title="{{'USERSTORYUNIQUE.DEADLINEDATE' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('deadLineDate')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span
+                            *ngIf="dataItem.deadLineDate !=null" matTooltip="{{dataItem.deadlineDateTimeZoneNam}}">{{ dataItem.deadLineDate | date: "dd-MMM-yyyy"  }}
+                            <span class="timezone-name" *ngIf="(dataItem.deadLineDate | covertTimeIntoUtcTime) != Offset"
+                            >{{ dataItem.deadlineDateTimeZoneAbbreviation }}
+                            </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="estimatedTime"
+                    title="{{'HISTORICALREPORT.ESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('estimatedTime')">
+                </kendo-grid-column>
+                <kendo-grid-column field="spentTime" title="{{'HISTORICALREPORT.SPENTTIME' | translate}}" width="150"
+                    [hidden]="checkVisibility('spentTime')">
+                </kendo-grid-column>
+                <kendo-grid-column field="qaApprovedDate" title="{{'HISTORICALREPORT.VERIFIEDDATE' | translate}}"
+                    width="200" [hidden]="checkVisibility('qaApprovedDate')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span
+                            *ngIf="dataItem.qaApprovedDate !=null"  matTooltip="{{dataItem.approvedDateTimeZoneName}}">{{ dataItem.qaApprovedDate | date: "dd-MMM-yyyy"  }}
+                            <span class="timezone-name" *ngIf="(dataItem.qaApprovedDate | covertTimeIntoUtcTime) != Offset"
+                            >{{ dataItem.approvedDateTimeZoneAbbreviation }}
+                            </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="approvedUserName"
+                    title="{{'HISTORICALREPORT.VERIFIEDBY' | translate}}"
+                    [hidden]="checkVisibility('approvedUserName')" width="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.approvedUserName != null"
+                            (click)="navigateToUserProfile(dataItem.approvedUserId);$event.stopPropagation();"
+                            fxLayout="row" class="icon-button">
+                            <a matTooltip="{{ dataItem.approvedUserName }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.approvedUserProfileImage"
+                                    [name]="dataItem.approvedUserName | removeSpecialCharacters" [isRound]="true"
+                                    size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.approvedUserProfileImage"
+                                    src="{{dataItem.approvedUserProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.approvedUserName}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="isBoardProductive"
+                    title="{{'HISTORICALREPORT.ISBOARDPRODUCTIVE' | translate}}" width="100"
+                    [hidden]="checkVisibility('isBoardProductive')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.isBoardProductive !=null">
+                            <span *ngIf="dataItem.isBoardProductive == 1"> Yes </span>
+                            <span *ngIf="dataItem.isBoardProductive == 0"> No </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="isBoardTracked" title="{{'HISTORICALREPORT.ISBOARDTRACKED' | translate}}"
+                    width="100" [hidden]="checkVisibility('isBoardTracked')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.isBoardTracked !=null">
+                            <span *ngIf="dataItem.isBoardTracked == 1"> Yes </span>
+                            <span *ngIf="dataItem.isBoardTracked == 0"> No </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="delayDays" title="{{'HISTORICALREPORT.DELAYDAYS' | translate}}" width="100"
+                    [hidden]="checkVisibility('delayDays')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.deadLineDate != null">
+                            <span>{{dataItem.deadLineDate | deadLineDateFilter: true}}</span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="repalnUserStoriesCount"
+                    title="{{'HISTORICALREPORT.REPLANUSERSTORIESCOUNT' | translate}}" width="150"
+                    [hidden]="checkVisibility('repalnUserStoriesCount')">
+                </kendo-grid-column>
+                <kendo-grid-column field="bouncedBackCount" title="{{'HISTORICALREPORT.BOUNCEBACKCOUNT' | translate}}"
+                    [hidden]="checkVisibility('bouncedBackCount')">
+                </kendo-grid-column>
+                <kendo-grid-column field="bugsCount" title="{{'HISTORICALREPORT.BUGSCOUNT' | translate}}" width="150"
+                    [hidden]="checkVisibility('bugsCount')">
+                </kendo-grid-column>
+                <kendo-grid-column field="numberOfTestScenarios"
+                    title="{{'HISTORICALREPORT.NUMBEROFTESTSCENARIOS' | translate}}" width="150"
+                    [hidden]="checkVisibility('numberOfTestScenarios')">
+                </kendo-grid-column>
+                <kendo-grid-column field="blockedDate" title="{{'HISTORICALREPORT.BLOCKEDDATE' | translate}}"
+                    width="200" [hidden]="checkVisibility('blockedDate')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span
+                            *ngIf="dataItem.blockedDate !=null"  matTooltip="{{dataItem.blockedTimeZoneName}}">{{ dataItem.blockedDate | date: "dd-MMM-yyyy"  }}
+                            <span class="timezone-name" *ngIf="(dataItem.blockedDate | covertTimeIntoUtcTime) != Offset"
+                            >{{ dataItem.blockedTimeZoneAbbreviation }}
+                            </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="blockeddBy"
+                    title="{{'HISTORICALREPORT.BLOCKEDBY' | translate}}" width="150"
+                    [hidden]="checkVisibility('blockeddBy')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.blockeddBy != null"
+                            (click)="navigateToUserProfile(dataItem.blockedUserId);$event.stopPropagation();"
+                            fxLayout="row" class="icon-button">
+                            <a matTooltip="{{ dataItem.blockeddBy }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.blockedUserProfileImage"
+                                    [name]="dataItem.blockeddBy | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.blockedUserProfileImage"
+                                    src="{{dataItem.blockedUserProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.blockeddBy}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="commentsCount" title="{{'HISTORICALREPORT.COMMENTSCOUNT' | translate}}"
+                    width="150" [hidden]="checkVisibility('commentsCount')">
+                </kendo-grid-column>
+                <kendo-grid-column field="workItemIsInRed"
+                    title="{{'HISTORICALREPORT.WORKITEMISINRED' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('workItemIsInRed')">
+                </kendo-grid-column>
+                <kendo-grid-column field="goalIsInRed"
+                    title="{{'HISTORICALREPORT.GOALISINRED' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('goalIsInRed')">
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="goalResponsibleUser"
+                    title="{{'HISTORICALREPORT.GRP' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('goalResponsibleUser')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.goalResponsibleUser != null"
+                            (click)="navigateToUserProfile(dataItem.goalResponsibleUserId);$event.stopPropagation();"
+                            fxLayout="row" class="icon-button">
+                            <a matTooltip="{{ dataItem.goalResponsibleUser }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.goalResponsibleUserProfileImage"
+                                    [name]="dataItem.goalResponsibleUser | removeSpecialCharacters" [isRound]="true"
+                                    size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.goalResponsibleUserProfileImage"
+                                    src="{{dataItem.goalResponsibleUserProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.goalResponsibleUser}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="projectResponsiblePerson"
+                    title="{{'HISTORICALREPORT.PRP' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('projectResponsiblePerson')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.projectResponsiblePerson != null"
+                            (click)="navigateToUserProfile(dataItem.projectResponsiblePersonId);$event.stopPropagation();"
+                            class="icon-button" fxLayout="row">
+                            <a matTooltip="{{ dataItem.projectResponsiblePerson }}">
+                                <app-avatar class="employee_img m-0"
+                                    *ngIf="!dataItem.projectResponsiblePersonProfileImage"
+                                    [name]="dataItem.projectResponsiblePerson | removeSpecialCharacters"
+                                    [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.projectResponsiblePersonProfileImage"
+                                    src="{{dataItem.projectResponsiblePersonProfileImage}}"> &nbsp;
+
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.projectResponsiblePerson}}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="assigneeBranchName" title="{{'HISTORICALREPORT.ASSIGNEEBRANCH' | translate}}"
+                    width="150" [hidden]="checkVisibility('assigneeBranchName')">
+                </kendo-grid-column>
+                <kendo-grid-column class="userstory-hover" field="lastUpdatedBy"
+                    title="{{'HISTORICALREPORT.LASTUPDATEDBY' | translate}}" width="150"
+                    [hidden]="checkVisibility('lastUpdatedBy')">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem.lastUpdatedBy != null"
+                            (click)="navigateToUserProfile(dataItem.lastUpdatedUserId);$event.stopPropagation();"
+                            class="icon-button" fxLayout="row">
+                            <a matTooltip="{{ dataItem.lastUpdatedBy }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.lastUpdatedUserProfileImage"
+                                    [name]="dataItem.lastUpdatedBy | removeSpecialCharacters" [isRound]="true"
+                                    size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.lastUpdatedUserProfileImage"
+                                    src="{{dataItem.lastUpdatedUserProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.lastUpdatedBy}}
+                            </span>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="workItemType"
+                    title="{{'HISTORICALREPORT.WORKITEMTYPE' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('workItemType')">
+                </kendo-grid-column>
+                <kendo-grid-column field="workItemPriority"
+                    title="{{'HISTORICALREPORT.WORKITEMPRIORITY' | translate| softLabelsPipe : softLabels}}" width="150"
+                    [hidden]="checkVisibility('workItemPriority')">
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </mat-card-content>
+</div>
+
+<ng-template #uniqueUserstoryDialogWorkItem let-data>
+    <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+  </ng-template>

@@ -1,0 +1,331 @@
+<mat-card-title class="">
+  <div class="card-title-text" fxLayout="row">
+    <div fxFlex fxLayoutAlign="end center">
+      <fa-icon class="icon-button" icon="times" (click)="cancelDialog()"></fa-icon>
+    </div>
+  </div>
+</mat-card-title>
+<form class="mt-1 invoice-upsert-form" id="style-1" [formGroup]="invoiceForm" novalidate>
+  <!-- <div class="invoice-container invoice-padding">
+    <div class="custom-dropzone" ngx-dropzone (change)="filesSelected($event)" [accept]="'image/*'"
+      [maxFileSize]="20971520" [disabled]="imageIsInprogress" [multiple]="false">
+      <ngx-dropzone-label>
+        <span>{{'BILLINGMANAGEMENT.DRAGANDDROPIMAGEHERE' | translate}}</span>
+      </ngx-dropzone-label>
+      <ngx-dropzone-image-preview
+        style="height: 60px !important;min-height: 60px !important;max-height: 60px !important;"
+        ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f" [removable]="true"
+        (removed)="onRemove(f)">
+      </ngx-dropzone-image-preview>
+    </div>
+  </div> -->
+  <div class="invoice-padding">
+    <div class="invoice-container">
+      <div>
+        <h6><b>{{ 'BILLINGMANAGEMENT.BILLTO' | translate }}</b></h6>
+        <div fxLayout="row wrap">
+          <div fxFlex="50" fxLayoutAlign="start center" class="d-block">
+            <ng-select [multiple]="false" [searchable]="true" [clearable]="false"
+              class="full-wdith invoice-select invoice-client" formControlName="clientId">
+              <ng-option [value]="client.clientId" *ngFor="let client of clientList">
+                {{client.fullName}}
+              </ng-option>
+            </ng-select>
+            <div fxLayout="row" class="mb-05 mt-05">
+              <!-- <button mat-raised-button color="primary" type="button" (click)="addInvoiceTask()">
+                <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+                {{ 'BILLINGMANAGEMENT.TASK' | translate }}
+              </button> -->
+              <a (click)="closeDialog();" class="custom-link">
+                <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+                {{'BILLINGMANAGEMENT.ADDCLIENT' | translate | softLabelsPipe : softLabels }}
+              </a>
+            </div>
+          </div>
+          <!-- <div fxFlex="50" fxLayoutAlign="end center">
+            <h6><b>Snovatest</b></h6>
+          </div> -->
+        </div>
+      </div>
+      <hr>
+      <div>
+        <div fxLayout="row wrap">
+          <div fxFlex="50" fxLayoutAlign="start center" fxLayout="row wrap">
+            <div fxFlex="100" class="mt-02 invoice-page">
+              <mat-form-field class="invoice-title-field">
+                <input matInput placeholder="{{ 'BILLINGMANAGEMENT.TITLE(OPTIONAL)' | translate }}"
+                  class="invoice-title" formControlName="invoiceTitle" trim>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100">
+              <span><b>{{ 'BILLINGMANAGEMENT.INVOICE#' | translate }}: </b></span>
+              <mat-form-field class="ml-05">
+                <input class="invoice-move-top" placeholder="" matInput formControlName="invoiceNumber" required trim>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" class="mt-n2">
+              <span><b>{{ 'BILLINGMANAGEMENT.PO#' | translate }}:</b> </span>
+              <mat-form-field class="ml-05">
+                <input class="invoice-move-top" placeholder="" matInput formControlName="pO" trim>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" class="mt-n2">
+              <mat-form-field>
+                <input class="invoice-move-top" matInput [matDatepicker]="picker"
+                  placeholder="{{ 'BILLINGMANAGEMENT.ISSUEDATE' | translate }}" (click)="picker.open()"
+                  formControlName="issueDate" [max]="maxDate" (dateChange)="changeDateFrom($event.value)">
+                <!-- <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle> -->
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxFlex="50" fxLayout="row wrap" fxLayoutAlign="end start">
+            <div fxFlex="100" class="mt-02" fxLayoutAlign="end start">
+              <!-- <mat-form-field fxFlex="50px" >
+                <mat-select placeholder="">   
+                  <mat-option value="option1">INR</mat-option> 
+                  <mat-option value="option2">USD</mat-option>
+                  <mat-option value="option3">GBP</mat-option>
+                </mat-select>
+              </mat-form-field> -->
+              <span fxFlex="95px">
+                <ng-select [multiple]="false" [searchable]="true" [clearable]="false"
+                  class="invoice-select invoice-select-price" (change)="onChangeCurrency($event)"
+                  formControlName="currencyId">
+                  <ng-option [value]="currency.currencyId" *ngFor="let currency of currencyList">
+                    <!-- <div fxFlex="row wrap">
+                    <div fxFlex="30px">
+                      <img src="../../../../../assets/images/faces/face-8.jpeg">
+                    </div>
+                    <div fxFlex>
+                      test 2
+                    </div>
+                  </div> -->
+                    {{currency.currencyCode}}{{currency.currencySymbol}}
+                  </ng-option>
+                </ng-select>
+              </span>
+              <!-- <span>0.00</span> -->
+            </div>
+            <div fxFlex="100" class="mt-02" fxLayoutAlign="end start">
+              <!-- <span>0.00</span> -->
+              <span class="invoice-amount-price">{{totalInvoiceValue | number}}</span>
+            </div>
+            <div fxFlex="100" class="mt-02" fxLayoutAlign="end start">
+              <span class="mt-05"><b>{{ 'BILLINGMANAGEMENT.DUE' | translate }}: </b></span>
+              <mat-form-field class="ml-05">
+                <input matInput [matDatepicker]="picker2" placeholder="" (click)="picker2.open()"
+                  formControlName="dueDate" [min]="minDate" (dateChange)="changeDateTo($event.value)">
+                <!-- <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle> -->
+                <mat-datepicker #picker2></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="invoice-container invoice-padding">
+    <div class="table-responsive overflow-visible">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>{{ 'BILLINGMANAGEMENT.TASK' | translate }}</th>
+            <th>{{ 'BILLINGMANAGEMENT.RATE' | translate }}</th>
+            <th>{{ 'BILLINGMANAGEMENT.HOURS' | translate }}</th>
+            <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+            <!-- <th></th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr formArrayName="invoiceTasks" *ngFor="let task of getInvoiceTaskControls();let i = index">
+            <ng-container [formGroupName]="i">
+              <td>
+                <!-- <fa-icon class="mr-05  add-icon invoice-item-save" icon="plus"></fa-icon> -->
+                <mat-form-field class="d-block">
+                  <input matInput placeholder="{{ 'BILLINGMANAGEMENT.TITLE' | translate }}" class="invoice-title"
+                    formControlName="taskName" trim>
+                </mat-form-field>
+                <mat-form-field class="d-block">
+                  <input matInput placeholder="{{ 'BILLINGMANAGEMENT.DESCRIPTION' | translate }}" class="invoice-title"
+                    formControlName="taskDescription" trim>
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field class="full-wdith">
+                  <input matInput placeholder="0.00" class="invoice-title" formControlName="rate" amountOnly
+                    (input)="checkTaskTotal(i)">
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field class="full-wdith">
+                  <input matInput placeholder="0.00" class="invoice-title" formControlName="hours" amountOnly
+                    (input)="checkTaskTotal(i)">
+                </mat-form-field>
+              </td>
+              <td>
+                <div>
+                  <!-- <label>{{currencySymbol}}{{calculateTaskAmount(task.get('rate').value,task.get('hours').value)}}</label> -->
+                  <label>{{currencySymbol}}{{task.get('total').value | number}}</label>
+                  <fa-icon icon="trash" class="icon-button ml-1" style="position: absolute;"
+                    (click)="removeTaskAtIndex(i)"></fa-icon>
+                </div>
+              </td>
+              <!-- <div class="invoice-item-edit-delete">
+                <fa-icon icon="trash" class="icon-button" (click)="removeTaskAtIndex(i)"></fa-icon>
+              </div> -->
+              <!-- <td>
+                <fa-icon class="icon-button" icon="trash" (click)="removeTaskAtIndex(i)"></fa-icon>
+              </td> -->
+            </ng-container>
+          </tr>
+        </tbody>
+      </table>
+      <div fxLayout="row" class="mb-1 mt-05">
+        <!-- <button mat-raised-button color="primary" type="button" (click)="addInvoiceTask()">
+          <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+          {{ 'BILLINGMANAGEMENT.TASK' | translate }}
+        </button> -->
+        <a (click)="addInvoiceTask()" class="custom-link">
+          <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>{{'BILLINGMANAGEMENT.TASK' | translate}}
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="invoice-container invoice-padding">
+    <div class="table-responsive overflow-visible">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>{{ 'BILLINGMANAGEMENT.ITEM' | translate }}</th>
+            <th>{{ 'BILLINGMANAGEMENT.PRICE' | translate }} </th>
+            <th>{{ 'BILLINGMANAGEMENT.QTY' | translate }}</th>
+            <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+            <!-- <th></th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr formArrayName="invoiceItems" *ngFor="let item of getInvoiceItemControls();let i = index">
+            <ng-container [formGroupName]="i">
+              <td>
+                <!-- <fa-icon class="mr-05  add-icon invoice-item-save" icon="plus"></fa-icon> -->
+                <mat-form-field class="d-block">
+                  <input matInput placeholder="{{ 'BILLINGMANAGEMENT.TITLE' | translate }}" class="invoice-title"
+                    formControlName="itemName" trim>
+                </mat-form-field>
+                <mat-form-field class="d-block">
+                  <input matInput placeholder="{{ 'BILLINGMANAGEMENT.DESCRIPTION' | translate }}" class="invoice-title"
+                    formControlName="itemDescription" trim>
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field class="full-wdith">
+                  <input matInput placeholder="0.00" class="invoice-title" formControlName="price" amountOnly
+                    (input)="checkItemTotal(i)">
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field class="full-wdith">
+                  <input matInput placeholder="0.00" class="invoice-title" formControlName="quantity" amountOnly
+                    (input)="checkItemTotal(i)">
+                </mat-form-field>
+              </td>
+              <td>
+                <div>
+                  <!-- <label>{{currencySymbol}}{{calculateItemAmount(task.get('price').value,task.get('quantity').value)}</label> -->
+                  <label>{{currencySymbol}}{{item.get('total').value | number}}</label>
+                  <fa-icon icon="trash" class="icon-button ml-1" style="position: absolute;"
+                    (click)="removeItemAtIndex(i)"></fa-icon>
+                </div>
+              </td>
+              <!-- <div class="invoice-item-edit-delete">
+                <fa-icon icon="trash" class="icon-button" (click)="removeItemAtIndex(i)"></fa-icon>
+              </div> -->
+            </ng-container>
+          </tr>
+        </tbody>
+      </table>
+      <div fxLayout="row" class="mb-1 mt-05">
+        <!-- <button mat-raised-button color="primary" type="button" (click)="addInvoiceItem()">
+          <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+          {{ 'BILLINGMANAGEMENT.ITEM' | translate }}
+        </button> -->
+        <a (click)="addInvoiceItem()" class="custom-link">
+          <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>{{'BILLINGMANAGEMENT.ITEM' | translate}}
+        </a>
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row" class="mt-05 invoice-padding invoice-container">
+    <div fxFlex="48">
+      <h6 class="mb-0"><b>{{ 'BILLINGMANAGEMENT.TERMS' | translate }}</b></h6>
+      <mat-form-field class="d-block">
+        <textarea rows="5" matInput class="invoice-title" formControlName="terms" style="resize: none;"></textarea>
+      </mat-form-field>
+      <h6 class="mb-0"><b>{{ 'BILLINGMANAGEMENT.NOTES' | translate }}</b></h6>
+      <mat-form-field class="d-block">
+        <textarea rows="5" matInput class="invoice-title" formControlName="notes" style="resize: none;"></textarea>
+      </mat-form-field>
+    </div>
+    <div fxFlex>
+      <div fxLayout="row" class="mt-05 ml-1">
+        <div fxFlex="49" fxLayout="column">
+          <span><b>{{ 'BILLINGMANAGEMENT.SUBTOTAL' | translate }}:</b></span>
+          <span class="mt-n2">{{ 'BILLINGMANAGEMENT.DISCOUNT' | translate }}: (
+            <mat-form-field fxFlex="45px" class="invoice-discount">
+              <input matInput class="invoice-title invoice-discount-price" placeholder="0.00" formControlName="discount"
+                (input)="calculateDiscount(invoiceForm.get('discount').value)" amountOnly>
+            </mat-form-field>%)</span>
+        </div>
+        <div fxFlex="50" fxLayout="column">
+          <span fxLayoutAlign="end center"><b>{{currencySymbol}}{{subTotalInvoiceValue | number}}</b></span>
+          <span fxLayoutAlign="end center"> ({{currencySymbol}}{{discountInvoiceValue | number}})</span>
+        </div>
+      </div>
+      <hr class="ml-1">
+      <div fxLayout="row" class="mt-05  ml-1">
+        <div fxFlex="49" fxLayout="column">
+          <span><b>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}:</b></span>
+          <span>{{ 'BILLINGMANAGEMENT.PAID' | translate }}:</span>
+        </div>
+        <div fxFlex="50" fxLayout="column">
+          <span fxLayoutAlign="end center"><b>{{currencySymbol}}{{totalInvoiceValue | number}}</b></span>
+          <span fxLayoutAlign="end center"> {{currencySymbol}}{{amountPaid | number}}</span>
+        </div>
+      </div>
+      <hr class="ml-1">
+      <div fxLayout="row" class="mt-05 ml-1">
+        <div fxFlex="49">
+          <span><b>{{ 'BILLINGMANAGEMENT.AMOUNTDUE' | translate }}:</b></span>
+        </div>
+        <div fxFlex="50">
+          <span fxLayoutAlign="end center"><b>{{currencySymbol}}{{dueAmount | number}}</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div fxLayout="row" class="mt-05 invoice-padding invoice-container">
+    <div fxFlex>
+      <app-custom-field-component [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+        [referenceId]="referenceId" [assetReferenceId]="assetReferenceId" [isFromAssets]=true [reload]="isreload"
+        [isEditFieldPermission]="isEditFieldPermission" (emitCustomFieldsLength)="getCustomFieldLength($event)">
+      </app-custom-field-component>
+    </div>
+  </div>
+</form>
+<div fxLayout="row" class="mt-1 invoice-padding ">
+  <div fxFlex fxLayoutAlign="end center">
+    <button class="mr-1" mat-raised-button color="primary" type="button" (click)="upsertInvoice()"
+      [disabled]="anyOperationIsInprogress">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationIsInprogress">
+      </mat-progress-bar>
+      <fa-icon mat-icon-button class="mr-05" icon="save"></fa-icon>
+      {{ 'BILLINGMANAGEMENT.SAVE' | translate }}
+    </button>
+    <button mat-raised-button type="button" (click)="cancelDialog()">
+      <fa-icon mat-icon-button class="mr-05" icon="times"></fa-icon>
+      {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+    </button>
+  </div>
+</div>

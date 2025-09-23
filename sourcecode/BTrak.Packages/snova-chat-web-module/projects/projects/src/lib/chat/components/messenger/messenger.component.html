@@ -1,0 +1,456 @@
+<mat-sidenav-container class="screen">
+  <mat-sidenav class="left" opened mode="side">
+    <div class="whiteLinehr"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-0 messengerMenus">
+          <ng-container>
+            <div class="d-flex flex-column disableselect hoverBackground" (click)="getChannelsList()"
+              [class.active]="displayingList == 'channels'">
+              <mat-icon class="icon">groups</mat-icon>
+              <span class="badgeChannels"
+                *ngIf="channelsTotalUnreadCount>0 && channelsTotalUnreadCount <= 9 && taggedme==false">{{channelsTotalUnreadCount}}</span>
+              <span class="badgeChannels" *ngIf="channelsTotalUnreadCount> 9  && taggedme==false">9+</span>
+              <span class="taggedBadgeChannels"
+                *ngIf="channelsTotalUnreadCount>0 && channelsTotalUnreadCount <= 9 && taggedme==true">{{channelsTotalUnreadCount}}</span>
+              <span class="taggedBadgeChannels" *ngIf="channelsTotalUnreadCount> 9  && taggedme==true">9+</span>
+              <small class="text">{{ 'CHATAPP.TOPICS' | translate }}</small>
+            </div>
+            <div class="whiteLinehr"></div>
+            <div class="d-flex flex-column disableselect hoverBackground" (click)="getRecentChatsList()"
+              [class.active]="displayingList == 'recentChats'">
+              <mat-icon matBadge="{{colleaguesTotalUnreadCount}}" [matBadgeHidden]="colleaguesTotalUnreadCount == 0"
+                matBadgeColor="warn" class="icon">chat</mat-icon>
+              <small class="text">{{ 'CHATAPP.RECENTS' | translate }}</small>
+            </div>
+            <div class="whiteLinehr"></div>
+            <div class="d-flex flex-column disableselect hoverBackground" (click)="getColleaguesList()"
+              [class.active]="displayingList == 'colleagues'">
+              <mat-icon matBadge="{{colleaguesTotalUnreadCount}}" [matBadgeHidden]="colleaguesTotalUnreadCount == 0"
+                matBadgeColor="warn" class="icon">account_box</mat-icon>
+              <small class="text">{{ 'CHATAPP.COLLEAGUES' | translate }}</small>
+            </div>
+            <div class="whiteLinehr"></div>
+          </ng-container>
+        </div>
+        <div class="col-0">
+          <div class="whiteLine"></div>
+        </div>
+        <div class="col p-0 mt-05">
+          <div *ngIf="displayingList == 'colleagues'">
+            <div fxFlex class="search_goalinput m-1 mt-0 mb-0" fxLayoutAlign="start center" *ngIf="colleaguesTemp.length>10">
+              <div fxLayoutAlign="start center">
+                  <input class="search_goal full-width border ml-15" placeholder="Search"
+                    [(ngModel)]="searchText" autocomplete="off" (input)="filterColleagues($event)">
+              </div>
+              <span class="close_icon insearch" fxLayoutAlign="end center">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                      (click)="closeSearch()" style="cursor:pointer">
+                      close</mat-icon>
+              </span>
+            </div>
+           
+            <!-- <div class="input-group border rounded-pill m-05" style="background-color: white;">
+              <div class="input-group-prepend border-0">
+                <button type="button" class="btn"><mat-icon style="color: rgb(168, 163, 163);">search</mat-icon></button>
+              </div>
+              <input type="search" placeholder="Search" class="form-control bg-none border-0 p-0" [(ngModel)]="searchText" autocomplete="off" (input)="filterColleagues($event)">
+            </div> -->
+          
+            <div class="scrollBar">
+              <ng-container>
+                <div class="scrollBar-content">
+                  <a mat-list-item *ngFor="let colleague of colleaguesList" (click)="changeColleague(colleague)">
+                    <div class="p-03 m-0 mainList fontStyle" [class.active]="colleague.userId == selectedcolleagueId">
+                      <div class="profileOfColleague">
+                        <a *ngIf="colleague.statusOfUser== true " class="badge-position disableselect">
+                          <span class="onlinebadge">B</span>
+                          <div *ngIf="colleague.profileImage != null && colleague.profileImage != ''">
+                            <app-avatar [src]="colleague.profileImage" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                          <div *ngIf="colleague.profileImage == null || colleague.profileImage == ''">
+                            <app-avatar [name]="colleague.fullName | removeSpecialCharacters" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                        </a>
+                        <a *ngIf="colleague.statusOfUser == false " class="badge-position disableselect">
+                          <span class="offlinebadge">B</span>
+                          <div *ngIf="colleague.profileImage != null && colleague.profileImage != ''">
+                            <app-avatar [src]="colleague.profileImage" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                          <div *ngIf="colleague.profileImage == null || colleague.profileImage == ''">
+                            <app-avatar [name]="colleague.fullName | removeSpecialCharacters" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                        </a>
+                      </div>
+                      &nbsp;
+                      <div  style="padding-top: 5px;"
+                        *ngIf="colleague.id== loggedInUserId  &&  colleague.fullName.length > 21"
+                        class="colleageorChannelName" matTooltip={{colleague.fullName}} matTooltipPosition="above"
+                        matTooltipClass="primary-tooltip">
+                        {{ colleague.fullName | slice:0:21}}{{ colleague.fullName.length > 21 ? '...' : ''}}
+                      </div>
+                      <div style="padding-top: 5px;"
+                        *ngIf="colleague.id== loggedInUserId && colleague.fullName.length <= 21"
+                        class="colleageorChannelName">
+                        {{colleague.fullName}}
+                      </div>
+                      <div style="width: 80%;" *ngIf="colleague.id != loggedInUserId">
+                        <span *ngIf="colleague.fullName.length > 20 " class="colleageorChannelName"
+                          matTooltip={{colleague.fullName}} matTooltipPosition="above" matTooltipClass="primary-tooltip">
+                          <span *ngIf="colleague.typingStatus == false ">
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true"
+                            style="padding-top: 5px;" >{{ colleague.fullName | slice:0:20 }}{{ colleague.fullName.length
+                              > 20 ? '...' : ''}}</div>
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                              style="padding-top: 5px;" class="offlineName">{{ colleague.fullName | slice:0:20 }}{{
+                              colleague.fullName.length > 20 ? '...' : ''}}</div>
+                          </span>
+                          <span *ngIf="colleague.typingStatus == true ">
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true">{{
+                              colleague.fullName | slice:0:20 }}{{ colleague.fullName.length > 20 ? '...' : ''}}</span>
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                              class="offlineName">{{ colleague.fullName | slice:0:20 }}{{ colleague.fullName.length > 20 ?
+                              '...' : ''}}</span>
+                          </span>
+                          <span *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus ==  true">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </span>
+                          <p *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus == false" style="  margin-bottom: 0px;
+                            height: 12px;
+                            padding-top: 6px;">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </p>
+                          <span class="badgeCount singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  false">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCount doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount> 9 && colleague.typingStatus ==  false"> 9+</span>
+                          <span class="badgeCountAndTyping singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  true">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCountAndTyping doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount > 9 && colleague.typingStatus ==  true">9+</span>
+                        </span>
+                        <span *ngIf=" colleague.fullName.length <= 20 " class="colleageorChannelName">
+                          <span *ngIf="colleague.typingStatus == true ">
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true">{{
+                              colleague.fullName }}</span>
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                              class="offlineName">{{ colleague.fullName }}</span>
+                          </span>
+                          <span *ngIf="colleague.typingStatus == false">
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true"
+                            style="padding-top: 5px;" >{{ colleague.fullName }}</div>
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                            style="padding-top: 5px;" class="offlineName">{{ colleague.fullName }}</div>
+                          </span>
+                          <span *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus ==  true">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </span>
+                          <p *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus == false" style="  margin-bottom: 0px;
+                          height: 12px;
+                          padding-top: 6px;">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </p>
+                          <span class="badgeCount singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  false">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCount doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount> 9 && colleague.typingStatus ==  false"> 9+</span>
+                          <span class="badgeCountAndTyping singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  true">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCountAndTyping doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount > 9 && colleague.typingStatus ==  true">9+</span>
+                        </span>
+                        <div class="typingStatusOfColleague" *ngIf="colleague.typingStatus ==  true">typing..</div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+          <div *ngIf="displayingList == 'recentChats'">
+            <div fxFlex class="search_goalinput m-1 mt-0 mb-0" fxLayoutAlign="start center" *ngIf="recentsTemp.length>10">
+              <div fxLayoutAlign="start center">
+                  <input class="search_goal full-width border ml-15" placeholder="Search"
+                    [(ngModel)]="searchText" autocomplete="off" (input)="filterRecents($event)">
+              </div>
+              <span class="close_icon insearch" fxLayoutAlign="end center">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                      (click)="closeSearch()" style="cursor:pointer">
+                      close</mat-icon>
+              </span>
+            </div>
+            <div class="scrollBar">
+              <ng-container>
+                <div class="scrollBar-content">
+                  <a mat-list-item *ngFor="let colleague of recentChatsList" (click)="changeColleague(colleague)">
+                    <div class="p-03 m-0 mainList fontStyle" 
+                      [class.active]="colleague.userId == selectedcolleagueId">
+                      <div  class="profileOfColleague" >
+                        <a *ngIf="colleague.statusOfUser== true " class="badge-position disableselect">
+                          <span class="onlinebadge">B</span>
+                          <div *ngIf="colleague.profileImage != null && colleague.profileImage != ''">
+                            <app-avatar [src]="colleague.profileImage" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                          <div *ngIf="colleague.profileImage == null || colleague.profileImage == ''">
+                            <app-avatar [name]="colleague.fullName | removeSpecialCharacters" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                        </a>
+                        <a *ngIf="colleague.statusOfUser == false " class="badge-position disableselect">
+                          <span class="offlinebadge">B</span>
+                          <div *ngIf="colleague.profileImage != null && colleague.profileImage != ''">
+                            <app-avatar [src]="colleague.profileImage" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                          <div *ngIf="colleague.profileImage == null || colleague.profileImage == ''">
+                            <app-avatar [name]="colleague.fullName | removeSpecialCharacters" [isRound]="true" size="34">
+                            </app-avatar>
+                          </div>
+                        </a>
+                      </div>
+                      &nbsp;
+                      <div style="padding-top: 5px;"
+                        *ngIf="colleague.id== loggedInUserId  &&  colleague.fullName.length > 21"
+                        class="colleageorChannelName" matTooltip={{colleague.fullName}} matTooltipPosition="above"
+                        matTooltipClass="primary-tooltip">
+                        {{ colleague.fullName | slice:0:21}}{{ colleague.fullName.length > 21 ? '...' : ''}}
+                      </div>
+                      <div style="padding-top: 5px;"
+                        *ngIf="colleague.id== loggedInUserId && colleague.fullName.length <= 21"
+                        class="colleageorChannelName">
+                        {{colleague.fullName}}
+                      </div>
+                      <div style="width: 80%;" *ngIf="colleague.id != loggedInUserId">
+                        <span *ngIf="colleague.fullName.length > 20 " class="colleageorChannelName"
+                          matTooltip={{colleague.fullName}} matTooltipPosition="above" matTooltipClass="primary-tooltip">
+                          <span *ngIf="colleague.typingStatus == false ">
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true"
+                              >{{ colleague.fullName | slice:0:20 }}{{ colleague.fullName.length
+                              > 20 ? '...' : ''}}</div>
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                            style="padding-top: 5px;"  class="offlineName">{{ colleague.fullName | slice:0:20 }}{{
+                              colleague.fullName.length > 20 ? '...' : ''}}</div>
+                          </span>
+                          <span *ngIf="colleague.typingStatus == true ">
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true">{{
+                              colleague.fullName | slice:0:20 }}{{ colleague.fullName.length > 20 ? '...' : ''}}</span>
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                              class="offlineName">{{ colleague.fullName | slice:0:20 }}{{ colleague.fullName.length > 20 ?
+                              '...' : ''}}</span>
+                          </span>
+                          <span *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus ==  true">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </span>
+                          <p *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus == false" style="  margin-bottom: 0px;
+                            height: 12px;
+                            padding-top: 6px;">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </p>
+                          <span class="badgeCount singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  false">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCount doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount> 9 && colleague.typingStatus ==  false"> 9+</span>
+                          <span class="badgeCountAndTyping singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  true">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCountAndTyping doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount > 9 && colleague.typingStatus ==  true">9+</span>
+                        </span>
+                        <span *ngIf=" colleague.fullName.length <= 20 " class="colleageorChannelName">
+                          <span *ngIf="colleague.typingStatus == true ">
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true">{{
+                              colleague.fullName }}</span>
+                            <span *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                              class="offlineName">{{ colleague.fullName }}</span>
+                          </span>
+                          <span *ngIf="colleague.typingStatus == false">
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== true"
+                              style="padding-top: 5px;">{{ colleague.fullName }}</div>
+                            <div *ngIf="colleague.messagesUnReadCount ==0 && colleague.statusOfUser== false"
+                            style="padding-top: 5px;"  class="offlineName">{{ colleague.fullName }}</div>
+                          </span>
+                          <span *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus ==  true">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </span>
+                          <p *ngIf="colleague.messagesUnReadCount !=0 && colleague.typingStatus == false" style="  margin-bottom: 0px;
+                          height: 12px;
+                          padding-top: 6px;">
+                            <strong>
+                              {{ colleague.fullName | slice:0:16 }}{{ colleague.fullName.length > 16 ? '...' :
+                              ''}}</strong>
+                          </p>
+                          <span class="badgeCount singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  false">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCount doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount> 9 && colleague.typingStatus ==  false"> 9+</span>
+                          <span class="badgeCountAndTyping singleDigitCount"
+                            *ngIf="colleague.messagesUnReadCount !=0 && colleague.messagesUnReadCount <= 9 && colleague.typingStatus ==  true">
+                            {{colleague.messagesUnReadCount}}</span>
+                          <span class="badgeCountAndTyping doubleDigitCount "
+                            *ngIf="colleague.messagesUnReadCount > 9 && colleague.typingStatus ==  true">9+</span>
+                        </span>
+                        <div *ngIf="colleague.typingStatus ==  true" class="typingStatusOfColleague">typing..</div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+          <div *ngIf="displayingList == 'channels'">
+            <div class="addChannel">
+              <span type="button" class="pr-1 mb-05" *ngIf="canAccess_feature_AddOrUpdateChannel"
+                (click)="openChannelCreationDialog()">
+                {{'CHATAPP.CREATETOPIC' | translate}}
+              </span>
+            </div>
+            <ng-container>
+              <div class="scrollBar-content scrollBar">
+                <a mat-list-item class="p-0" *ngFor="let channel of channelList" (click)="changeChannel(channel)"
+                  (contextmenu)="onContextMenu($event, channel)">
+                  <div class="p-03 m-0 mainList fontStyle" [class.active]="channel.id == selectedChannelId">
+                    <div class="profileOfColleague">
+                    <a *ngIf="channel.channelImage!=null">
+                      <img class="rounded-circle profileImage" src="{{channel.channelImage}}">
+                    </a>
+                    <a *ngIf="channel.channelImage==null">
+                      <img class="rounded-circle profileImage"
+                        src="https://pngimage.net/wp-content/uploads/2018/05/avatar-png-images-1.png">
+                    </a>
+                    </div>&nbsp;
+                    <div style="width: 80%;">
+                    <div *ngIf="channel.channelName.length > 21" class="colleageorChannelName"
+                      matTooltip={{channel.channelName}} matTooltipPosition="above" matTooltipClass="primary-tooltip">
+                      <span *ngIf="channel.messagesUnReadCount > 0 && channel.typingStatus == true "><strong>{{ channel.channelName | slice:0:16}}{{
+                          channel.channelName .length > 16 ? '...' : ''}}</strong></span>
+                      <span *ngIf="channel.messagesUnReadCount <= 0 && channel.typingStatus == true ">{{ channel.channelName | slice:0:21}}{{
+                        channel.channelName .length > 21 ? '...' : ''}}</span>
+                        <div *ngIf="channel.typingStatus == false " >
+                      <div class="channelBadgeCount singleDigitCount"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==false">
+                        {{channel.messagesUnReadCount}}</div>
+                      <div class="channelBadgeCount doubleDigitCount"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==false">9+</div>
+                      <div class="badgeCount singleDigitCount"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==true">
+                        {{channel.messagesUnReadCount}}</div>
+                      <div class="badgeCount doubleDigitCount"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==true">9+</div>
+                        </div>
+                        <div *ngIf="channel.messagesUnReadCount > 0 && channel.typingStatus == false " style="margin-top: 6px;"><strong>{{ channel.channelName | slice:0:16}}{{
+                          channel.channelName .length > 16 ? '...' : ''}}</strong>
+                          <span class="channelBadgeCount singleDigitCount" style="margin-top: 4px;"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==false">
+                        {{channel.messagesUnReadCount}}</span>
+                      <span class="channelBadgeCount doubleDigitCount" style="margin-top: 4px;"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==false">9+</span>
+                      <span class="badgeCount singleDigitCount" style="margin-top: 4px;"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==true">
+                        {{channel.messagesUnReadCount}}</span>
+                      <span class="badgeCount doubleDigitCount" style="margin-top: 4px;"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==true">9+</span>
+                        </div>
+                      <div *ngIf="channel.messagesUnReadCount <= 0 && channel.typingStatus == false " style="margin-top: 4px;;">{{ channel.channelName | slice:0:21}}{{
+                        channel.channelName .length > 21 ? '...' : ''}}</div>
+                      </div>
+                    <div *ngIf="channel.channelName.length <= 21" class="colleageorChannelName">
+                      <span *ngIf="channel.messagesUnReadCount > 0 && channel.typingStatus == true "><strong>{{ channel.channelName | slice:0:16}}{{
+                          channel.channelName .length > 16 ? '...' : ''}}</strong></span>
+                      <span *ngIf="channel.messagesUnReadCount <= 0 && channel.typingStatus == true ">{{channel.channelName }}</span>
+                      <div *ngIf="channel.messagesUnReadCount > 0 && channel.typingStatus == false " style="margin-top: 6px;"><strong>{{ channel.channelName | slice:0:16}}{{
+                        channel.channelName .length > 16 ? '...' : ''}}</strong>
+                        <span class="channelBadgeCount singleDigitCount" style="margin-top: 4px;"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==false">
+                        {{channel.messagesUnReadCount}}</span>
+                        <span class="channelBadgeCount doubleDigitCount" style="margin-top: 4px;"
+                            *ngIf="channel.messagesUnReadCount> 9  && taggedme==false">9+</span>
+                          <span class="badgeCount singleDigitCount" style="margin-top: 4px;"
+                            *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==true">
+                            {{channel.messagesUnReadCount}}</span>
+                          <span class="badgeCount doubleDigitCount" style="margin-top: 4px;"
+                            *ngIf="channel.messagesUnReadCount> 9  && taggedme==true">9+</span>
+                      </div>
+                       <div *ngIf="channel.messagesUnReadCount <= 0 && channel.typingStatus == false " style="color:white;margin-top: 6px;">{{channel.channelName }}</div>
+                        <div *ngIf=" channel.typingStatus == true ">
+                      <div class="channelBadgeCount singleDigitCount"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==false">
+                        {{channel.messagesUnReadCount}}</div>
+                      <div class="channelBadgeCount doubleDigitCount"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==false">9+</div>
+                      <div class="badgeCount singleDigitCount"
+                        *ngIf="channel.messagesUnReadCount !=0 && channel.messagesUnReadCount <= 9 && taggedme==true">
+                        {{channel.messagesUnReadCount}}</div>
+                      <div class="badgeCount doubleDigitCount"
+                        *ngIf="channel.messagesUnReadCount> 9  && taggedme==true">9+</div>
+                        </div>
+                    </div>
+                    <div *ngIf="channel.typingStatus ==  true" class="typingStatusOfColleague">{{typingChannelName}} is typing...</div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x"
+      [style.top]="contextMenuPosition.y" [matMenuTriggerFor]="contextMenu">
+    </div>
+    <mat-menu #contextMenu="matMenu">
+      <a class="contextMenuItem" (click)="archiveChannel()">Archive topic</a>
+    </mat-menu>
+  </mat-sidenav>
+  <app-ChatComponent class="right" [channel]="channel" [colleague]="colleague" [message]="messageToChatComponent"
+    [colleaguePresentedInArchivedChannel]="colleaguePresentedInArchivedChannel"
+    (messageToUserOrChannel)="sendMessagesToUserOrChannel($event)" (archivedChannelOpened)="archivedChannelOpened($event)"
+    (openChannelChatById)="openChannelChatFromDetails($event)"
+    [refreshChannelMemberList]="refreshChannelMemberList">
+  </app-ChatComponent>
+</mat-sidenav-container>
+<div class="modal" tabindex="-1" role="dialog" [ngStyle]="{'display':display}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <strong class="modal-title">{{'CHATAPP.UPLOADS' | translate}}</strong>
+      </div>
+      <div class="modal-body">
+        <br>
+        <div *ngIf="uploading">
+          {{'CHATAPP.UPLOADING' | translate}} {{fileCounter}} {{'CHATAPP.OF' | translate}} {{totalFileCount}}
+          {{'CHATAPP.FILES' | translate}}
+        </div>
+        <div class="progress" *ngIf="uploading">
+          <div class="progress-bar" [style.width]="progressValue + '%'">{{progressValue}}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

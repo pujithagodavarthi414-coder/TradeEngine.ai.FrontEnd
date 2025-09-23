@@ -1,0 +1,237 @@
+<div class="full-height" *ngIf="(canAccess_feature_HourlyTdsConfiguration)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+          <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+              <span fxFlex="100" class="hide-content-overflow"
+                matTooltip="{{ 'TAXALLOWANCE.HOURLYTDSCONFIGURATION' | translate | titlecase }}">{{ 'TAXRANGE.HOURLYTDSCONFIGURATION' | translate | titlecase }}</span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+              <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-slide-toggle
+                  [matTooltip]="(isArchivedTypes == false) ? ('TAXALLOWANCE.SEEARCHIVEDITEMS' | translate) : ('TAXALLOWANCE.SEEUNARCHIVEDITEMS' | translate)"
+                  class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+                  (change)="getHourlyTdsConfiguration()">
+                </mat-slide-toggle>
+              </div>
+              <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                fxLayoutAlign.xs="start center">
+                <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                  <mat-form-field class="full-width">
+                    <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                      [(ngModel)]="searchText" (input)="search($event)">
+                  </mat-form-field>
+                </div>
+                <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+                <button mat-icon-button matTooltip="{{ 'TAXRANGE.CREATEHOURLYTDSCONFIGURATION' | translate }}"
+                  [satPopoverAnchorFor]="upsertHourlyTdsConfigurationPopover" #upsertHourlyTdsConfigurationPopUp="satPopoverAnchor"
+                  (click)="createHourlyTdsPopupOpen(upsertHourlyTdsConfigurationPopUp);clearForm()" *ngIf="!isArchivedTypes">
+                  <fa-icon icon="plus" class="filter mat-color-accent">
+                  </fa-icon>
+                </button>
+                <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+              </div>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        </mat-card-title>
+      </mat-card>
+      <div class="activity-data no-drag">
+        <mat-progress-bar mode="indeterminate" *ngIf="isAnyOperationIsInprogress"></mat-progress-bar>
+        <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+        [rowHeight]="50" [limit]="50" [rows]="hourlyTdsData"
+        [scrollbarH]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'BRANCH.BRANCHNAME' | translate }}" [sortable]="true" prop="branchName">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.branchName }}">{{ row?.branchName }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+        
+          <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.MAXLIMIT' | translate }}" [sortable]="true" prop="maxLimit">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.maxLimit }}">{{ row?.maxLimit }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.TAXPERCENTAGE' | translate }}" [sortable]="true" prop="taxPercentage">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.taxPercentage }}">{{ row?.taxPercentage }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column name="{{ 'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate }}" [sortable]="true" prop="activeFrom">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.activeFrom }}">{{ row?.activeFrom | date:"dd-MM-yyyy" }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column name="{{ 'PAYROLLROLECONFIGURATION.ACTIVETO' | translate }}" [sortable]="true" prop="activeTo">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span matTooltip="{{ row?.activeTo }}">{{ row?.activeTo | date:"dd-MM-yyyy" }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.EDITHOURLYTDS' | translate }}" *ngIf="!isArchivedTypes"
+                [satPopoverAnchorFor]="upsertHourlyTdsConfigurationPopover" #upsertHourlyTdsConfigurationPopUp="satPopoverAnchor"
+                (click)="editupsertHourlyTdsPopupOpen(row,upsertHourlyTdsConfigurationPopUp)" mat-icon-button>
+                <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+              <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEHOURLYTDS' | translate }}"
+              *ngIf="!isArchivedTypes"
+                [satPopoverAnchorFor]="deleteHourlyTdsPopover" #deleteHourlyTdsPopUp="satPopoverAnchor"
+                (click)="deleteHourlyTdsPopUpOpen(row, deleteHourlyTdsPopUp)" mat-icon-button>
+                <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+              </button>
+              <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEHOURLYTDS' | translate }}"
+              [satPopoverAnchorFor]="deleteHourlyTdsPopover" #deleteHourlyTdsPopUp="satPopoverAnchor"
+                (click)="deleteHourlyTdsPopUpOpen(row, deleteHourlyTdsPopUp)" *ngIf="isArchivedTypes" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+            </ng-template>
+          </ngx-datatable-column>
+
+        </ngx-datatable>
+
+      </div>
+
+    <sat-popover backdropClass="backdrop-color" #upsertHourlyTdsConfigurationPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex.gt-sm="600px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{popOverHeading | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        
+        <form [formGroup]="hourlyTdsForm" #formDirective="ngForm" novalidate
+          (submit)="hourlyTdsForm.valid && upsertHourlyTds(formDirective)">
+          <div>  
+            <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+                <div fxFlex="48.5">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                            formControlName="branchId" required>
+                            <mat-option *ngFor="let branch of (branchList$ | async)"
+                                [value]="branch.branchId">
+                                {{ branch.branchName }}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error class="P-06"
+                        *ngIf="hourlyTdsForm.get('branchId').hasError('required') && hourlyTdsForm.get('branchId').touched">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="48.5">
+                    <mat-form-field class="full-width">
+                        <input formControlName="maxLimit" placeholder="{{'PAYROLLBRANCHCONFIGURATION.MAXLIMIT' | translate}}"
+                             matInput type="number" (keypress)="omitSpecialChar($event)" min="0" required/>
+                        <mat-error class="P-06"
+                        *ngIf="hourlyTdsForm.get('maxLimit').hasError('required') && hourlyTdsForm.get('maxLimit').touched">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.MAXLIMITREQUIRED' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="48.5">
+                    <mat-form-field class="full-width">
+                        <input formControlName="taxPercentage" placeholder="{{'PAYROLLBRANCHCONFIGURATION.TAXPERCENTAGE' | translate}}"
+                             matInput type="number" (keypress)="omitSpecialChar($event)" min="0" max="100" required/>
+                        <mat-error class="P-06"
+                        *ngIf="hourlyTdsForm.get('taxPercentage').hasError('required') && hourlyTdsForm.get('taxPercentage').touched">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.TAXPERCENTAGEREQUIRED' | translate }}
+                      </mat-error>
+                      <mat-error class="P-06"
+                        *ngIf="hourlyTdsForm.get('taxPercentage').hasError('max')">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.TAXPERCENTAGE100' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="48.5">
+                    <mat-form-field class="full-width">
+                        <mat-label>{{ 'PAYROLLROLECONFIGURATION.ACTIVEFROM' | translate }}</mat-label>
+                        <input formControlName="activeFrom" matInput [(ngModel)] ="minDate" [matDatepicker]="picker" required>
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-error class="P-06"
+                        *ngIf="hourlyTdsForm.get('activeFrom').hasError('required') && hourlyTdsForm.get('activeFrom').touched">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.ACTIVEFROMREQUIRED' | translate }}
+                      </mat-error>
+                      </mat-form-field>
+                </div>
+                <div fxFlex="48.5">
+                    <mat-form-field class="full-width">
+                        <mat-label>{{ 'PAYROLLROLECONFIGURATION.ACTIVETO' | translate }}</mat-label>
+                        <input [min]="minDate" formControlName="activeTo" matInput [matDatepicker]="picker1">
+                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                        <mat-datepicker #picker1></mat-datepicker>
+                      </mat-form-field>
+                </div>
+                </div>
+            <!-- </div>            -->
+            <div class="mt-1 mb-05 text-center">
+              <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!hourlyTdsForm.valid||isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertHourlyTdsPopup(formDirective)" type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+
+  <sat-popover backdropClass="backdrop-color" #deleteHourlyTdsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEHOURLYTDS' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+            {{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEHOURLYTDS' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEHOURLYTDSTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEHOURLYTDSTEXT' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHourlyTds();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHourlyTds();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteHourlyTdsDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+</div>
+<app-common-message-box
+  *ngIf="!(canAccess_feature_HourlyTdsConfiguration)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

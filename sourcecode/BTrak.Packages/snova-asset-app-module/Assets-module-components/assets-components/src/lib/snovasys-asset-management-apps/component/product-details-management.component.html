@@ -1,0 +1,336 @@
+<ng-container *ngIf="(canAccess_feature_ViewProductDetails)" >
+  <div class="full-height">
+  <mat-card class="p-0 m-0 flex-wrap-mat-card">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row" fxLayoutAlign="start center">
+        <div fxFlex fxFlex.lt-lg="20" class="card-title-text p-05 hide-content-overflow">
+          {{'ASSETS.PRODUCTDETAILS' | translate | titlecase}}
+        </div>
+        <div fxFlex="80px" fxLayoutAlign="end center">
+          <button mat-icon-button
+            *ngIf="(canAccess_feature_AddOrUpdateProduct) && (canAccess_feature_ViewProductDetails)"
+            (click)="addProductDetail(editProductDetailsPopover)" [satPopoverAnchorFor]="addProductDetails"
+            #editProductDetailsPopover="satPopoverAnchor">
+            <fa-icon class="filter mat-color-accent" icon="box" matTooltip="{{'ASSETS.ADDPRODUCTDETAILS' | translate}}">
+            </fa-icon>
+          </button>
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}"></fa-icon>
+          </button>
+          <button type="submit" mat-icon-button [matMenuTriggerFor]="filterMenu"
+            matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-label>{{'ASSETS.SELECTPRODUCTNAME' | translate}}</mat-label>
+              <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}"
+                (selectionChange)="productSelected($event.value, $event)" [(ngModel)]="selectedProductId">
+                <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                <mat-option value="option" *ngFor="let product of productsList$ | async" [value]="product.productId">
+                  {{product.productName}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput placeholder="{{'ASSETS.PRODUCTCODE' | translate}}" [(ngModel)]="searchProductCode"
+                (input)="searchByProductCode()">
+              <span class="close_icon ml-05" style="top: 5px !important;">
+                <span *ngIf="!searchProductCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchProductCode" class="icon-button" aria-hidden="false"
+                  (click)="closeProductCodeSearch()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput placeholder="{{'ASSETS.MANUFACTURERCODE' | translate}}"
+                [(ngModel)]="searchManufactureCode" (input)="searchByManufactureCode()">
+              <span class="close_icon ml-05" style="top: 5px !important;">
+                <span *ngIf="!searchManufactureCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchManufactureCode" class="icon-button" aria-hidden="false"
+                  (click)="closeManufactureCodeSearch()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{'ASSETS.SELECTSUPPLIER' | translate}}</mat-label>
+              <mat-select placeholder="{{'ASSETS.SUPPLIER' | translate}}"
+                (selectionChange)="supplierSelected($event.value, $event)" [(ngModel)]="selectedSupplierId">
+                <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                <mat-option value="option" *ngFor="let supplier of suppliersList$ | async"
+                  [value]="supplier.supplierId">{{supplier.supplierName}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+        <!-- <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+          <button mat-menu-item [ngClass]="{ 'active': searchByProductName }" [matMenuTriggerFor]="isProductName"
+            (click)="$event.stopPropagation()"> {{'ASSETS.PRODUCTNAME' | translate}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': searchByProductCodes }" [matMenuTriggerFor]="isProductCode"
+            (click)="$event.stopPropagation()"> {{'ASSETS.PRODUCTCODE' | translate}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': searchByManufactureCodes }"
+            [matMenuTriggerFor]="isManufactureCode" (click)="$event.stopPropagation()">
+            {{'ASSETS.MANUFACTURERCODE' | translate}}</button>
+          <button mat-menu-item [ngClass]="{ 'active': searchBySupplier }" [matMenuTriggerFor]="isSupplier"
+            (click)="$event.stopPropagation()"> {{'ASSETS.SUPPLIER' | translate}}</button>
+        </mat-menu>
+        <mat-menu #isProductName="matMenu">
+          <mat-card class="filter-data p-03" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field class="full-width">
+                <mat-label>{{'ASSETS.SELECTPRODUCTNAME' | translate}}</mat-label>
+                <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}"
+                  (selectionChange)="productSelected($event.value)" [(ngModel)]="selectedProductId">
+                  <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                  <mat-option value="option" *ngFor="let product of productsList$ | async" [value]="product.productId">
+                    {{product.productName}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #isProductCode="matMenu">
+          <mat-card class="filter-data p-03" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field ngClass.xs="full-width">
+                <input matInput placeholder="{{'ASSETS.PRODUCTCODE' | translate}}" [(ngModel)]="searchProductCode"
+                  (input)="searchByProductCode()">
+              </mat-form-field>
+              <span class="close_icon mr-05">
+                <span *ngIf="!searchProductCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchProductCode" class="icon-button" aria-hidden="false"
+                  (click)="closeProductCodeSearch()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </div>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #isManufactureCode="matMenu">
+          <mat-card class="filter-data p-03" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field ngClass.xs="full-width">
+                <input matInput placeholder="{{'ASSETS.MANUFACTURERCODE' | translate}}"
+                  [(ngModel)]="searchManufactureCode" (input)="searchByManufactureCode()">
+              </mat-form-field>
+              <span class="close_icon mr-05">
+                <span *ngIf="!searchManufactureCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchManufactureCode" class="icon-button" aria-hidden="false"
+                  (click)="closeManufactureCodeSearch()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </div>
+          </mat-card>
+        </mat-menu>
+        <mat-menu #isSupplier="matMenu">
+          <mat-card class="filter-data p-03" (click)="$event.stopPropagation()">
+            <div fxFlex="180px" class="ml-05 mr-05">
+              <mat-form-field class="full-width">
+                <mat-label>{{'ASSETS.SELECTSUPPLIER' | translate}}</mat-label>
+                <mat-select placeholder="{{'ASSETS.SUPPLIER' | translate}}"
+                  (selectionChange)="supplierSelected($event.value)" [(ngModel)]="selectedSupplierId">
+                  <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                  <mat-option value="option" *ngFor="let supplier of suppliersList$ | async"
+                    [value]="supplier.supplierId">{{supplier.supplierName}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </mat-card>
+        </mat-menu> -->
+
+
+        <!-- <div fxFlex class="filter-section" [hidden]="!isOpen" fxLayoutAlign="end center">
+          <ul>
+            <li [ngClass]="{ 'active': searchByProductName }" [satPopoverAnchorFor]="productNamePopover" hasBackdrop
+              (click)="productNamePopover.open()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.PRODUCTNAME' | translate}}
+              </a>
+              <sat-popover #productNamePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+                  <mat-form-field class="full-width">
+                    <mat-label>{{'ASSETS.SELECTPRODUCTNAME' | translate}}</mat-label>
+                    <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}"
+                      (selectionChange)="productSelected($event.value)" [(ngModel)]="selectedProductId">
+                      <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                      <mat-option value="option" *ngFor="let product of productsList$ | async"
+                        [value]="product.productId">{{product.productName}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </mat-card>
+              </sat-popover>
+            </li>
+            <li [ngClass]="{ 'active': searchByProductCodes }" [satPopoverAnchorFor]="productCodePopover"
+              (click)="productCodePopover.toggle()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.PRODUCTCODE' | translate}}
+              </a>
+              <sat-popover #productCodePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+                  
+                </mat-card>
+              </sat-popover>
+            </li>
+            <li [ngClass]="{ 'active': searchByManufactureCodes }" [satPopoverAnchorFor]="manufacterCode"
+              (click)="manufacterCode.toggle()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.MANUFACTURERCODE' | translate}}
+              </a>
+              <sat-popover #manufacterCode verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+             
+                </mat-card>
+              </sat-popover>
+            </li>
+            <li [ngClass]="{ 'active': searchBySupplier }" [satPopoverAnchorFor]="supplierPopover"
+              (click)="supplierPopover.open()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.SUPPLIER' | translate}}
+              </a>
+              <sat-popover #supplierPopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+                  <mat-form-field class="full-width">
+                    <mat-label>{{'ASSETS.SELECTSUPPLIER' | translate}}</mat-label>
+                    <mat-select placeholder="{{'ASSETS.SUPPLIER' | translate}}"
+                      (selectionChange)="supplierSelected($event.value)" [(ngModel)]="selectedSupplierId">
+                      <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+                      <mat-option value="option" *ngFor="let supplier of suppliersList$ | async"
+                        [value]="supplier.supplierId">{{supplier.supplierName}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </mat-card>
+              </sat-popover>
+            </li>
+          </ul>
+        </div> -->
+
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+        <b>{{'ASSETS.SEARCHTEXT' | translate}}:&nbsp;</b>
+        {{ searchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="productName">
+        <b>{{'ASSETS.PRODUCTNAME' | translate}}:&nbsp;</b>
+        {{ productName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="productSelected('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchProductCode">
+        <b>{{'ASSETS.PRODUCTCODE' | translate}}:&nbsp;</b>
+        {{ searchProductCode }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeProductCodeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchManufactureCode">
+        <b>{{'ASSETS.MANUFACTURERCODE' | translate}}:&nbsp;</b>
+        {{ searchManufactureCode }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeManufactureCodeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="vendor">
+        <b>{{'ASSETS.SUPPLIER' | translate}}:&nbsp;</b>
+        {{ vendor }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="supplierSelected('all',null)">
+        </fa-icon>
+      </mat-chip>
+    </div>
+  </mat-card>
+
+  <div class="activity-data filter-margin m-0 no-drag pagination-move-left" id="style-1" [ngClass]="isPadding ? 'asset-footer-padding' : ''">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [rows]="productDetailsList$ | async" [columnMode]="'force'" [headerHeight]="35"
+      [footerHeight]="45" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)"
+      (page)='setPage($event)' [loadingIndicator]="productDetailsLoading$ | async"
+      [sorts]="[{prop: 'productName', dir: 'asc'}]">
+      <ngx-datatable-column minWidth="150" name="{{'ASSETS.PRODUCTNAME' | translate}}" sortable="true" prop="productName">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{value}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'ASSETS.PRODUCTCODE' | translate}}" sortable="true" prop="productCode">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{value}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'ASSETS.MANUFACTURERCODE' | translate}}" sortable="true" prop="manufacturerCode">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{value}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'ASSETS.VENDOR' | translate}}" sortable="true" prop="supplierName">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          {{value}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{'ACTIONS' | translate}}" [sortable]="false"
+        *ngIf="(canAccess_feature_AddOrUpdateProduct)">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <button class="text-center" matTooltip="{{'ASSETS.EDITPRODUCTDETAILS' | translate}}"
+            (click)="editProductDetailsId(row,editProductDetailsPopover)" [satPopoverAnchorFor]="addProductDetails"
+            #editProductDetailsPopover="satPopoverAnchor" mat-icon-button>
+            <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" matTooltip="{{'ASSETS.DELETEPRODUCTDETAILS' | translate}}"
+            (click)="getProductDetailsId(row,deleteProductDetailsPopover)" [satPopoverAnchorFor]="deleteProductDetails"
+            #deleteProductDetailsPopover="satPopoverAnchor" mat-icon-button>
+            <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- <ng-container
+    *ngIf="(canAccess_feature_AddOrUpdateProduct) && (canAccess_feature_ViewProductDetails)">
+    <div class="floating-right-fab-button">
+      <div class="handle">
+        <button mat-fab color="accent" matTooltip="{{'ASSETS.ADDPRODUCTDETAILS' | translate}}"
+          [satPopoverAnchorFor]="addProductDetails" #editProductDetailsPopover="satPopoverAnchor"
+          (click)="addProductDetail(editProductDetailsPopover)">
+          <mat-icon> add </mat-icon>
+        </button>
+      </div>
+    </div>
+  </ng-container> -->
+
+  <sat-popover #addProductDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <app-am-component-product-details [editProductDetailsData]="editProductDetailsData"
+        (closePopup)="closeUpsertProductDetailsPopover()">
+      </app-am-component-product-details>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover #deleteProductDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{'ASSETS.DELETEPRODUCTDETAILS' | translate}}</div>
+      </mat-card-title>
+      <div class="card-content p-1">
+        <div class="text-center mb-1">{{'ASSETS.AREYOUSUREWANTTODELETEPRODUCTDETAILS?' | translate}}
+        </div>
+        <div fxLayoutAlign="space-around center">
+          <button type="button" mat-button mat-raised-button class="mr-05" color="primary"
+            (click)="deleteProductDetail();"><i class="fa fa-check"></i>{{'YES' | translate}}</button>
+          <button type="button" mat-button mat-raised-button (click)="cancelProductDetails()"><i
+              class="fa fa-times"></i>{{'NO' | translate}}</button>
+        </div>
+      </div>
+    </mat-card>
+  </sat-popover>
+</div>
+</ng-container>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewProductDetails)"
+  textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box>

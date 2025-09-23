@@ -1,0 +1,136 @@
+<div [ngClass]="isFromDialog ? 'statusreport-dialog-height' : ''" id="style-1"
+  class="testsuite-tab ng-star-inserted" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="5px">
+  <div fxFlex="24" fxFlex.md="29" fxFlex.sm="35" fxFlex.lt-sm="100" >
+    <mat-card class="p-0 mat-card custom-box" [ngClass]="isFromDialog ? 'statusreport-dialog-card-height' : 'statusreport-card-height'" id="style-1">
+      <div class="p-0" id="sr-1">
+        <div fxLayout="row" fxLayoutGap="0" class="mb-05 mt-05 ml-05 mr-05">
+          <div fxFlex class="search_goalinput" ngClass.xs="full-width" id="sr-2">
+            <input type="text" name="search" class="full-width search_goal"
+              placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]='searchText'>
+            <span class="close_icon mt-n3" [ngStyle]="{ 'display': !searchText ? 'none' : '' }">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+        <div class="p-0 m-0" [ngStyle]="{'height' : isFromDialog ?  'calc(100vh - 260px)' : 'calc(100vh - 160px)'}" id="style-1">
+          <div class="p-0">
+            <span *ngIf="!anyOperationInProgress">
+              <mat-list-item *ngFor="let form of (genericFormListDetails | statusReportsNameFilter : searchText)">
+                <mat-card class="p-05" (click)="getForm(form)"
+                  [ngStyle]="{ 'background-color': form.statusReportingConfigurationId == selectedConfigurationId ? '#eaeaea' : '' }">
+                  <mat-card-title>
+                    <div fxFlex="95" class="testsuite-title-overflow">
+                      <b class="testsuites-on-hover">
+                        <span [matTooltip]="form.formName" matTooltipClass="tooltip-overflow">{{form.formName}}
+                        </span>
+                      </b>
+                    </div>
+                  </mat-card-title>
+                  <div fxLayout="row wrap" class="mt-05">
+                    <div fxFlex>
+                      {{form.reportingDays}}
+                    </div>
+                    <div fxFlex="5" *ngIf="(form.isSubmitted == true)">
+                      <fa-icon aria-hidden="false" matTooltip="{{ 'STATUSREPORT.REPORTSUBMITTED' | translate }}"
+                        icon="check">
+                      </fa-icon>
+                    </div>
+                  </div>
+                </mat-card>
+              </mat-list-item>
+              <mat-card *ngIf="(genericFormListDetails | statusReportsNameFilter : searchText).length === 0"
+                class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                <div fxLayout="row" fxFlex="100">
+                  <div fxFlex="8" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                  </div>
+                  <div fxFlex="90" class="p-05 ml-1">
+                    <p class="m-0">{{'STATUSREPORT.NOREPORTSFOUND' | translate | softLabelsPipe : softLabels}}</p>
+                  </div>
+                </div>
+              </mat-card>
+            </span>
+            <span *ngIf="anyOperationInProgress">
+              <mat-list-item>
+                <div fxLayout="row wrap">
+                  <div class="ml-1" fxFlex="100" *ngFor="let run of [1,2,3]">
+                    <mat-card class="loading-card goal-card  goals-loader project-dtl p-05">
+                      <div fxLayout="row wrap">
+                        <div fxFlex="100">
+                          <div fxLayout="row">
+                            <div fxFlex="70">
+                              <p class="mat-small empty-text loading-bg"></p>
+                            </div>
+                          </div>
+                          <div fxLayout="row" class="mt-05">
+                            <div fxFlex="70">
+                              <p class="mat-small empty-text loading-bg"></p>
+                            </div>
+                            <div fxFlex="3" fxLayout="start center" fxFlexOffset="15px">
+                              <p class="mat-small empty-text goal-loader-img loading-bg">
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </mat-card>
+                  </div>
+                </div>
+              </mat-list-item>
+            </span>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+  <div fxFlex="75" fxFlex.md="70" fxFlex.sm="64" fxFlex.lt-sm="100" id="sr-3">
+    <mat-card class="p-0 mat-card custom-box" [ngClass]="isFromDialog ? 'statusreport-dialog-card-height' : 'statusreport-card-height'" id="style-1">
+      <mat-card-title class="full-width data-table-header" *ngIf="isStatusReportVisible">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <b [matTooltip]="selectedFromName">{{selectedFromName}}</b>
+        </div>
+      </mat-card-title>
+      <mat-card-content class="p-0" *ngIf="isStatusReportVisible && openForm == true">
+        <div class="mt-1 ml-2">
+          <mat-checkbox [(ngModel)]="isCheked" (change)="addComment()">
+            {{ 'STATUSREPORT.DOYOUWANTTOSKIPTHEREPORT' | translate }}
+          </mat-checkbox>
+        </div>
+        <div id="style-1" [ngStyle]="{'height' : isFromDialog ?  'calc(100vh - 260px)' : 'calc(100vh - 199px)'}">
+          <div class="p-1">
+            <div class="pl-1" fxLayout="row wrap" fxLayoutGap="10px" fxLayout.xs="column"
+              *ngIf="(showCommentBox == false)">
+              <div fxFlex class="mt-1" *ngIf="!isReadOnly">
+                <formio [form]="formSrc" [options]="options"
+                 (change)="onChangeNew($event.data)" (submit)="onSubmit()">
+                </formio>
+              </div>
+            </div>
+            <div class="pl-1" fxLayout="row wrap" fxLayoutGap="10px" fxLayout.xs="column"
+              *ngIf="(showCommentBox == true)">
+              <div fxFlex>
+                <editor class="dfree-header custom-logtime-comment" (onKeyUp)="checkValidation()"
+                apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="description" menubar="false"
+                  [init]="initSettings" background="white" height="120" [(ngModel)]="alternativeComment">
+                </editor>
+                <mat-error>
+                  <span *ngIf="(commentValidation == true)">{{ 'STATUSREPORT.COMMENTISREQUIRED' | translate }}</span>
+                </mat-error>
+                <mat-error>
+                  <span *ngIf="(alternativeComment?.length > 500)">{{ 'STATUSREPORT.COMMENTLENGTHEXCEEDED' | translate }}</span>
+                </mat-error>
+                <button class="mt-1 pull-right" mat-raised-button color="primary" type="button"
+                  (click)="createAStatusReport()" [disabled]="buttonDisable || (alternativeComment?.length > 500)">
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{'MYPROFILE.SUBMIT' | translate}}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

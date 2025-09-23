@@ -1,0 +1,134 @@
+<div class="m-0 p-0 full-height"
+    *ngIf="((canAccess_feature_ViewEmployeeReportToDetails) || (canAccess_feature_CanEditOtherEmployeeDetails))">
+    <mat-card class="p-0 m-0 canteen-manage" fxLayout="column">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                    {{'REPORTTO.ASSIGNEDREPORTS' | translate | titlecase}}
+                </div>
+                <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+                    fxLayoutAlign="end center">
+                    <mat-form-field ngClass.xs="full-width">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button
+                        *ngIf="(((canAccess_feature_AddOrUpdateEmployeeReportingToDetails)  && permission) || (canAccess_feature_CanEditOtherEmployeeDetails))"
+                        mat-icon-button matTooltip="{{'REPORTTO.ADDREPORT' | translate}}"
+                        [satPopoverAnchorFor]="addReportToDetails" #editReportToDetailsPopover="satPopoverAnchor"
+                        (click)="editReportTo(null,editReportToDetailsPopover)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{'SEARCH' | translate}}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+    </mat-card>
+    <div class="activity-data no-drag"
+        *ngIf="(((canAccess_feature_ViewEmployeeReportToDetails)  && permission) || (canAccess_feature_CanEditOtherEmployeeDetails))">
+        <ngx-datatable class="btrak" [rows]="reportToList$ | async" [columnMode]="'force'" [headerHeight]="35"
+            [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+            [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)"
+            (page)='setPage($event)' [loadingIndicator]="reportToDetailsLoading$ | async"
+            [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{'REPORTTO.REPORTTO' | translate}}" [flexGrow]="1" prop="reportToEmployeeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.reportToEmployeeName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'HRMANAGAMENT.DESIGNATION' | translate}}" [flexGrow]="1"
+                prop="designationName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.designationName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'REPORTTO.REPORTINGFROM' | translate}}" [flexGrow]="1" prop="reportingFrom">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.reportingFrom | date: "dd-MMM-yyyy" }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'REPORTTO.REPORTINGMETHOD' | translate}}" [flexGrow]="1"
+                prop="reportingMethod">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.reportingMethod }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'REPORTTO.COMMENTS' | translate}}" [flexGrow]="1" prop="comments">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.comments }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false"
+                *ngIf="((canAccess_feature_AddOrUpdateEmployeeReportingToDetails)&& permission) || (canAccess_feature_CanEditOtherEmployeeDetails)">
+                <ng-template let-row="row" let-va lue="value" ngx-datatable-cell-template>
+                    <button class="text-center" [satPopoverAnchorFor]="addReportToDetails"
+                        #editReportToDetailsPopover="satPopoverAnchor"
+                        (click)="editReportTo(row,editReportToDetailsPopover)"
+                        matTooltip="{{'REPORTTO.EDITREPORT' | translate}}" mat-icon-button>
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" [satPopoverAnchorFor]="deleteReportPopup"
+                        #deleteReportToPopover="satPopoverAnchor" (click)="getreportToId(row, deleteReportToPopover)"
+                        matTooltip="{{'REPORTTO.DELETEREPORT' | translate}}" mat-icon-button>
+                        <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+<!-- <ng-container
+    *ngIf="(((canAccess_feature_AddOrUpdateEmployeeReportingToDetails$ | async)  && permission) || (canAccess_feature_CanEditOtherEmployeeDetails$ | async ))">
+    <div class="floating-right-fab-button">
+        <div class="handle">
+            <button mat-fab color="accent" matTooltip="{{'REPORTTO.ADDREPORT' | translate}}"
+                [satPopoverAnchorFor]="addReportToDetails" #editReportToDetailsPopover="satPopoverAnchor"
+                (click)="addReportToPopover(editReportToDetailsPopover)">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+    </div>
+</ng-container> -->
+
+<sat-popover #deleteReportPopup [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center" horizontalAlign="center">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'HRMANAGAMENT.DELETEREPORTTODETAILS' | translate}}</div>
+        </mat-card-title>
+        <div class="card-content p-1">
+            <div class="text-center mb-1">{{'HRMANAGAMENT.AREYOUSUREWANTTODELETE' | translate}}
+            </div>
+            <div fxLayoutAlign="space-around center">
+                <button mat-button mat-raised-button class="mr-05" color="primary" class="mr-1" type="button"
+                    (click)="deleteReportDilogue()"><i class="fa fa-check"></i> {{'YES' | translate}}</button>
+                <button mat-button mat-raised-button (click)="cancelDeleteEmergencyPopup()" type="button"><i
+                        class="fa fa-times"></i>{{'NO' | translate}}</button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addReportToDetails [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <app-hr-component-add-report-to [selectedEmployeeId]="employeeId" [isPermission]="permission"
+            [editReportToDetailsData]="editReportToDetailsData" (closeReportPopup)="closeUpsertReportToPopover()">
+        </app-hr-component-add-report-to>
+    </mat-card>
+</sat-popover>

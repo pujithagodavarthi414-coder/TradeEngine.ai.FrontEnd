@@ -1,0 +1,169 @@
+<form [formGroup]="userStoryScenarioBugForm" #formDirective="ngForm" novalidate
+    (submit)="userStoryScenarioBugForm.valid && addBugToUserStory()">
+    <div class="card-content p-05">
+        <div fxLayout="row wrap" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-xs="100" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <input formControlName="userStoryName" matInput placeholder="{{ 'USERSTORY.BUG' | translate }}"
+                        required />
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('userStoryName').hasError('required')">
+                            {{ 'USERSTORY.PLEASEENTERBUGNAME' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                        <span *ngIf="userStoryScenarioBugForm.get('userStoryName').hasError('maxlength')">
+                            {{ 'USERSTORY.BUGNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap">
+            <div fxFlex="100" fxFlex.gt-xs="100" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'GOALS.SELECTUSER' | translate }}" formControlName="ownerUserId"
+                        required (selectionChange)="getAssigneeValue($event.value)">
+                        <!-- <mat-select-trigger>
+                            {{selectedMember}}
+                        </mat-select-trigger> -->
+                        <mat-option [value]="user.id" *ngFor="let user of (usersList$ | async)">
+                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                <div fxFlex="35px">
+                                    <app-avatar [name]="user.value | removeSpecialCharacters" [src]="user.profileImage"
+                                        [isRound]="true" size="30">
+                                    </app-avatar>
+                                </div>
+                                <div fxFlex="75">
+                                    <p class="mat-body-2">
+                                        {{ user.value }}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('ownerUserId').hasError('required')">
+                            {{ 'PROJECTS.PLEASESELECTUSER' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap">
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width" *ngIf="!isSprintUserStories">
+                    <mat-select formControlName="goalId"
+                        placeholder="{{ 'USERSTORIESWAITINGFORQAAPPROVAL.GOAL' | translate | softLabelsPipe : softLabels}}"
+                        required>
+                        <mat-option value="option" [value]="goal.goalId"
+                            *ngFor="let goal of goalsList | resultfilter: bugBoardId: 'bugBoard'">
+                            {{goal.goalShortName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="(goalsList | resultfilter: bugBoardId: 'bugBoard').length != 0 && userStoryScenarioBugForm.get('goalId').hasError('required')">
+                            {{ 'USERSTORY.PLEASESELECTGOAL' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                        <span *ngIf="(goalsList | resultfilter: bugBoardId: 'bugBoard').length === 0">
+                            {{ 'USERSTORY.THEREARENOBUGBOARDGOALS' | translate | softLabelsPipe : softLabels}}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="full-width" *ngIf="isSprintUserStories">
+                    <mat-select formControlName="sprintId" placeholder="{{ 'SPRINTS.SPRINTNAME' | translate}}" required>
+                        <mat-option value="option" [value]="sprint.sprintId"
+                            *ngFor="let sprint of (sprints | resultfilter: bugBoardId: 'bugBoard')">
+                            {{sprint.sprintName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="(sprints | resultfilter: bugBoardId: 'bugBoard').length != 0 && userStoryScenarioBugForm.get('sprintId').hasError('required')">
+                            {{ 'USERSTORY.PLEASESELECTSPRINT' | translate}}
+                        </span>
+                        <span *ngIf="(sprints | resultfilter: bugBoardId: 'bugBoard').length === 0">
+                            {{ 'USERSTORY.THEREARENOBUGBOARDSPRINTS' | translate}}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="projectFeatureId"
+                        placeholder="{{ 'USERSTORY.SELECTCOMPONENT' | translate }}">
+                        <mat-option value="option" [value]="feature.projectFeatureId"
+                            *ngFor="let feature of (projectFeatures$ | async)">
+                            {{ feature.projectFeatureName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap" class="mr-05">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="bugPriorityId"
+                        placeholder="{{ 'USERSTORY.SELECTBUGPRIORITY' | translate }}" required>
+                        <mat-option value="option" [value]="priority.bugPriorityId"
+                            *ngFor="let priority of (bugPriorities$ | async)">
+                            <fa-icon icon="{{priority.icon}}" [ngStyle]="setColorForBugPriorityTypes(priority.color)">
+                            </fa-icon> {{ priority.priorityName }}&nbsp;-&nbsp;{{"USERSTORY."+priority.description | translate }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span *ngIf="userStoryScenarioBugForm.get('bugPriorityId').hasError('required')">
+                            {{ 'GOALS.SELECTBUGPRIORITY' | translate }}
+                        </span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="48" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                    <input formControlName="versionName" matInput trim
+                        placeholder="{{ 'USERSTORY.VERSIONNAME' | translate }}" />
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row wrap" fxLayoutGap="10px" class="mb-05">
+            <div fxFlex="100" fxFlex.gt-xs="48">
+                <app-common-estimatedTime [estimatedTime]="estimatedTime"
+                    (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+                </app-common-estimatedTime>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="48">
+                <mat-form-field class="full-width" *ngIf="!isSprintUserStories">
+                    <input formControlName="deadLineDate" matInput [matDatepicker]="picker" (click)="picker.open()"
+                        placeholder="{{ 'USERSTORY.DEADLINE' | translate }}" />
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+                <!-- <mat-form-field class="full-width"  *ngIf="!isSprintUserStories">
+                    <input matInput formControlName="deadLineDate"
+                      [owlDateTimeTrigger]="deadlineDatePicker" [owlDateTime]="deadlineDatePicker"
+                      placeholder="{{ 'USERSTORY.DEADLINE' | translate }}" />
+                    <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker"
+                      style="float:right;position:absolute;right:0">
+                    </fa-icon>
+                    <owl-date-time #deadlineDatePicker></owl-date-time>
+                  </mat-form-field> -->
+                <mat-form-field class="full-width" *ngIf="isSprintUserStories">
+                    <input matInput formControlName = "sprintEstimatedTime" (blur)="saveEstimatedTime($event.target.value)"
+                      placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}" amountOnly>
+                  </mat-form-field>
+                  <mat-error *ngIf="isValidation">
+                    {{ 'USERSTORY.ESTIMATEDTIMEINSPCANNOTGREATERTHAN99HOURS' | translate }}
+                  </mat-error>
+            </div>
+        </div>
+        <app-pm-component-tags [userStoryId]="userStoryId" [isFromUserStory]= true (setUserStoryTags)="saveUserStoryTags($event)"></app-pm-component-tags>
+
+        <div class="text-center mt-05">
+            <button mat-raised-button color="primary" class="mr-05" type="submit" [disabled]="bugFormDisabled">
+                <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'TESTMANAGEMENT.ADD' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeUserStoryDialog();">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'DISMISS' | translate }}
+            </button>
+        </div>
+    </div>
+</form>

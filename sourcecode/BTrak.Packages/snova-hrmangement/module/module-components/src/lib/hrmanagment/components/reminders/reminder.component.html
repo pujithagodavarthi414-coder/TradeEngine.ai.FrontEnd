@@ -1,0 +1,166 @@
+<div class="roles p-0 m-333">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'REMINDER.REMINDERS' | translate}}</div>
+                </div>
+                <div fxFlex="50px" *ngIf="(canAccess_feature_ConfigurePerformance) && reminders.length != 0">
+                    <button mat-icon-button [satPopoverAnchorFor]="upsertReminderPopover"
+                        #upsertReminderPopup="satPopoverAnchor" matTooltip="{{ 'REMINDER.ADDREMINDER' | translate}}"
+                        (click)="openaddReminderPopup(upsertReminderPopup)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div *ngIf="reminders.length > 0 && hasReminderPermissions" class="cursor-auto">
+        <kendo-grid [data]="reminders" [sortable]="true" [filterable]="false" [loading]="isAnyOperationIsInprogress">
+            <kendo-grid-column field="remindOn" title="{{'REMINDER.SCHEDULEDON' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b class="cursor-auto">
+                        {{ dataItem.remindOn | utcToLocalTime | date: 'dd-MMM-yyyy'   }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="notificationType" title="{{'REMINDER.REMINDERTYPE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.notificationType == 1" class="cursor-auto">
+                        {{ 'HRMANAGAMENT.EMAIL' | translate }}
+                    </div>
+                    <div *ngIf="dataItem.notificationType == 2" class="cursor-auto">
+                        {{ 'REMINDER.PUSHNOTIFICATION' | translate }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="status" title="{{'REMINDER.STATUS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="cursor-auto" *ngIf="dataItem.status === 'New'">
+                        {{ 'REMINDER.NEW' | translate }}
+                    </div>
+                    <div class="cursor-auto" *ngIf="dataItem.status === 'Failed'">
+                        {{ 'REMINDER.FAILED' | translate }}
+                    </div>
+                    <div class="cursor-auto" *ngIf="dataItem.status === 'Success'">
+                        {{ 'REMINDER.SUCCESS' | translate }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="{{'REMINDER.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon *ngIf="(dataItem.status == 'New')" class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="upsertReminderPopover" #upsertReminderPopup="satPopoverAnchor"
+                        matTooltip="{{ 'REMINDER.EDITREMINDER' | translate}}"
+                        (click)="editReminder(dataItem,upsertReminderPopup)"></fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer ml-1 mr-1"
+                        [satPopoverAnchorFor]="deleteReminderPopover" #deleteReminderPopup="satPopoverAnchor"
+                        matTooltip="{{ 'REMINDER.DELETEREMINDER' | translate}}"
+                        (click)="openDeletePopup(dataItem,deleteReminderPopup)" icon="trash">
+                    </fa-icon>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box *ngIf="!isAnyOperationIsInprogress && reminders.length === 0 && hasReminderPermissions"
+        textToDisplay="{{'REMINDER.YOUDONTHAVEANYREMINDERS' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="upsertReminderPopover" #upsertReminderPopup="satPopoverAnchor"
+                (click)="openaddReminderPopup(upsertReminderPopup)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'REMINDER.ADDREMINDER' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+</div>
+
+<sat-popover #deleteReminderPopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1">{{ 'REMINDER.REMINDERDELETETEXT' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteReminder();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #upsertReminderPopover backdropClass="backdrop-color" [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary">{{ reminderName }}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05" style="width: 340px;">
+            <form [formGroup]="reminderForm" novalidate (submit)="reminderForm.valid && upsertReminder()"
+                #formDirective="ngForm">
+                <div class="full-width mt-1">
+                    <div class="mb-05 font-bold">{{ 'REMINDER.REMINDERTYPE' | translate }}*
+                    </div>
+                    <mat-radio-group aria-label="select an option" formControlName="notificationType">
+                        <div fxLayout="row">
+                            <mat-radio-button fxFlex="50" value=1 class="pr-05">{{ 'HRMANAGAMENT.EMAIL' | translate }}
+                            </mat-radio-button>
+                            <mat-radio-button fxFlex="50" value=2 class="pr-05">
+                                {{ 'REMINDER.PUSHNOTIFICATION' | translate }}
+                            </mat-radio-button>
+                        </div>
+                    </mat-radio-group>
+                    <mat-error
+                        *ngIf="reminderForm.get('notificationType').hasError('required') && reminderForm.get('notificationType').touched">
+                        {{ 'REMINDER.REMINDERTYPEISREQUIRED' | translate }}
+                    </mat-error>
+                </div>
+                <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex>
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                formControlName="RemindOn" [min]="minDate"
+                                placeholder="{{'REMINDER.REMINDON' | translate}}" required autocomplete="off">
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                            <mat-error>
+                                <span
+                                    *ngIf="reminderForm.get('RemindOn').hasError('required') && reminderForm.get('RemindOn').touched">
+                                    {{'REMINDER.REMINDONDATEISREQUIRED' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="full-width mt-1">
+                    <textarea matInput formControlName="additionalInfo" rows="2"
+                        placeholder="{{ 'REMINDER.ADDITIONALINFO' | translate }}"></textarea>
+                    <mat-error *ngIf="reminderForm.get('additionalInfo').hasError('maxLength')">
+                        {{ 'REMINDER.INFOLENGTHEXCEEDED' | translate }}
+                    </mat-error>
+                </div>
+                <div fxLayout="row" class="mt-1 mb-05">
+                    <div fxFlex fxLayoutAlign="center center" class="m-0 p-0">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!(reminderForm.valid && !isAnyOperationIsInprogress)">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>{{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertReminder()" type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(hasReminderPermissions)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

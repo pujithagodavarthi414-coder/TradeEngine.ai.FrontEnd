@@ -1,0 +1,197 @@
+<app-common-message-box *ngIf="!(canAccess_feature_LogTimeReport)"
+  textToDisplay="{{'LOGTIMEREPORT.PERMISSION' | translate}}">
+</app-common-message-box>
+<div class="p-0 log full-height" *ngIf="(canAccess_feature_LogTimeReport)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow">{{'LOGTIMEREPORT.DAILYLOGTIMEREPORT' | translate | titlecase}}</span>
+        </div>
+        <div class="mr-05 search_goalinput" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px">
+          <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="shift-timing-close SearchIconAlignment">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-lg-n4" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" [matMenuTriggerFor]="filterMenu"
+            matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="user-cog" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateValue" [value]="selectedDateValue"
+                (click)="picker.open()" (dateChange)="selectedDate($event.value)">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="lineManager?.length > 0">
+              <mat-select (selectionChange)="selectedLineManagerId($event.value)" [(ngModel)]="lineManagerId"
+                placeholder="{{'LOGTIMEREPORT.SELECTLINEMANAGER'|translate}}">
+                <mat-option value="0">{{'ADVANCEDSEARCH.ALL' | translate}}
+                </mat-option>
+                <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    src="{{person.profileImage}}">{{person.userName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+
+        <mat-menu #dateSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field>
+              <input matInput [matDatepicker]="picker1" [(ngModel)]="selectedDateValue" [value]="selectedDateValue"
+                (click)="picker1.open()" (dateChange)="selectedDate($event.value)">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+
+
+        <mat-menu #lineManagerSearch="matMenu">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field>
+              <mat-select (selectionChange)="selectedLineManagerId($event.value)" [(ngModel)]="lineManagerId"
+                placeholder="{{'LOGTIMEREPORT.SELECTLINEMANAGER'|translate}}">
+                <mat-option value="0">{{'ADVANCEDSEARCH.ALL' | translate}}
+                </mat-option>
+                <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    src="{{person.profileImage}}">{{person.userName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText || isDateFilter || lineManagerFilter || isEntityFilter">
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+          <b>{{'SEARCH' | translate}}:&nbsp;</b>
+          {{ searchText }}
+          <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+          </fa-icon>
+      </mat-chip>
+
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="isDateFilter">
+        <b>{{'Selected date' | translate}}:&nbsp;</b>
+        {{ selectedDateFilter }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateFilter()">
+        </fa-icon>
+    </mat-chip>
+
+    <mat-chip disableRipple matRipple class="mr-08" *ngIf="lineManagerFilter">
+      <b>{{'Selected line manager'|translate}}:&nbsp;</b>
+      {{ selectedLineManagerName }}
+      <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeLineManagerFilter()">
+      </fa-icon>
+  </mat-chip>
+
+  <mat-chip disableRipple matRipple class="mr-08" *ngIf="selectedEntity">
+    <b>{{'Selected entity' | translate}}:&nbsp;</b>
+    {{ selectedEntityName }}
+    <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeEntityFilter()">
+    </fa-icon>
+</mat-chip>
+  </div>
+    <mat-card fxLayout.gt-md="row" class="p-05 m-0">
+      <div fxLayout="row wrap" fxFlex fxLayoutAlign="end center" fxLayoutAlign.lt-md="start center">
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(26, 252, 6);"></fa-icon>
+          {{'LOGTIMEREPORT.LOGTIMEGREATERTHANOREQUALTOSPENTTIME' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(252, 6, 18);"></fa-icon>
+          {{'LOGTIMEREPORT.LOGTIMELESSTHANSPENTTIME' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(252, 198, 226);"></fa-icon>
+          {{'LOGTIMEREPORT.CASUALLEAVEORSICKLEAVE' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(214, 172, 118);"></fa-icon>
+          {{'LOGTIMEREPORT.WORKFROMHOMEORONSITE' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(255,102,0);"></fa-icon>
+          {{'LOGTIMEREPORT.LEAVEWITHOUTINTIMATION' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(255,51,153);"></fa-icon>
+          {{'LOGTIMEREPORT.FIRSTORSECONDHALFLEAVE' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(211, 211, 211);"></fa-icon>
+          {{'LOGTIMEREPORT.FUTUREDAYS' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(0,255,255);"></fa-icon>
+          {{'LOGTIMEREPORT.HOLIDAY' | translate}}
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" style="color:rgb(136,170,255);"></fa-icon>
+          {{'LOGTIMEREPORT.WEEKOFF' | translate}}
+        </span>
+      </div>
+    </mat-card>
+  </mat-card>
+  
+  <div class="monthly_logtime">
+    <div class="activity-data">
+      <mat-card-content class="p-0 m-0">
+        <div class="activity-data">
+          <kendo-grid [data]="gridData" [scrollable]="true" [pageSize]="state.take" [skip]="state.skip"
+            [sort]="state.sort" [filter]="state.filter" [sortable]="true" [pageable]="true"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column width="150" field="employeeName"
+              title="{{'LOGTIMEREPORT.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="officeSpentTime" title="{{'LOGTIMEREPORT.OFFICESPENTTIME' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="loggedSpentTime" title="{{'LOGTIMEREPORT.LOGGEDSPENTTIME' | translate}}">
+            </kendo-grid-column>
+            <kendo-grid-command-column width="150" title="{{'LOGTIMEREPORT.OVERALLSTATUSTIME' | translate}}">
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="progress-bar" [ngStyle]="{ 'background' : dataItem.status }" style="width:200px ;">
+                  &nbsp;
+                </div>
+              </ng-template>
+            </kendo-grid-command-column>
+          </kendo-grid>
+          <div *ngIf="anyOperationInProgress" class="k-i-loading"></div>
+        </div>
+      </mat-card-content>
+
+    </div>
+  </div>

@@ -1,0 +1,462 @@
+<div class="full-height" *ngIf="(canAccess_feature_EmployeeLoans)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'EMPLOYEELOAN.EMPLOYEELOANTITLE' | translate | titlecase }}">{{ 'EMPLOYEELOAN.EMPLOYEELOANTITLE' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchivedTypes == false) ? ('EMPLOYEELOAN.SEEARCHIVEDITEMS' | translate) : ('EMPLOYEELOAN.SEEUNARCHIVEDITEMS' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+                            (change)="getAllEmployeeLoans()"></mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button mat-icon-button matTooltip="{{ 'EMPLOYEELOAN.CREATEEMPLOYEELOANTOOLTIP' | translate }}"
+                            [satPopoverAnchorFor]="upsertEmployeeLoanPopover"
+                            #upsertEmployeeLoanPopUp="satPopoverAnchor"
+                            (click)="createEmployeeLoanPopupOpen(upsertEmployeeLoanPopUp);clearForm()"
+                            *ngIf="!isArchivedTypes">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="50" [rows]="company" [loadingIndicator]="isAnyOperationIsInprogress"
+            [scrollbarH]="true"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.NAME' | translate }}" [sortable]="true" prop="name">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.name }}">{{ row?.name }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.EMPLOYEENAME' | translate }}" [sortable]="true"
+                prop="employeeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span fxFlex="25px" style="display: inline-table;cursor: pointer;" (click)="goToProfile(row.userId)">
+                        <app-avatar [name]="row?.employeeName | removeSpecialCharacters" [src]="row?.profileImage"
+                            [isRound]="true" size="30">
+                        </app-avatar>
+                    </span>
+                    <span matTooltip="{{ row?.employeeName }}">&nbsp;{{ row?.employeeName }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANAMOUNT' | translate }}" [sortable]="true"
+                prop="loanAmount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="row?.loanAmount">{{row?.modifiedLoanAmount}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANTAKENON' | translate }}" [sortable]="true"
+                prop="loanTakenOn">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span
+                        matTooltip="{{ row?.loanTakenOn | date: 'dd-MMM-yyyy'}}">{{ row?.loanTakenOn | date: "dd-MMM-yyyy"}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANINTERESTPERCENTAGEPERMONTH' | translate }}"
+                [sortable]="true" prop="loanInterestPercentagePerMonth">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="row?.loanInterestPercentagePerMonth">{{row?.loanInterestPercentagePerMonth}}
+                    </span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.TIMEPERIODINMONTHS' | translate }}" [sortable]="true"
+                prop="timePeriodInMonths">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.timePeriodInMonths }}">{{ row?.timePeriodInMonths }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <!-- <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANTYPE' | translate }}" [sortable]="true"
+                prop="loanTypeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.loanTypeName }}">{{ row?.loanTypeName }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.COMPOUNDEDPERIOD' | translate }}" [sortable]="true"
+                prop="periodTypeName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.periodTypeName }}">{{ row?.periodTypeName }}</span>
+                </ng-template>
+            </ngx-datatable-column> -->
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANPAYMENTSTARTDATE' | translate }}" [sortable]="true"
+                prop="loanPaymentStartDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span
+                        matTooltip="{{ row?.loanPaymentStartDate | date: 'dd-MMM-yyyy'}}">{{ row?.loanPaymentStartDate | date: "dd-MMM-yyyy"}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANBALANCEAMOUNT' | translate }}" [sortable]="true"
+                prop="modifiedLoanBalanceAmount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="row?.modifiedLoanBalanceAmount">{{row?.modifiedLoanBalanceAmount}}
+                    </span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANTOTALPAIDAMOUNT' | translate }}" [sortable]="true"
+                prop="modifiedTotalPaidAmount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="row?.modifiedTotalPaidAmount">{{row?.modifiedTotalPaidAmount}}
+                    </span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.LOANCLEAREDDATE' | translate }}" [sortable]="true"
+                prop="loanClearedDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span
+                        matTooltip="{{ row?.loanClearedDate | date: 'dd-MMM-yyyy'}}">{{ row?.loanClearedDate | date: "dd-MMM-yyyy"}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEELOAN.DESCRIPTION' | translate }}" [sortable]="true"
+                prop="description">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.description }}">{{ row?.description }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="2" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div class="employeeloan-icons">
+                        <button class="text-center" title="{{ 'EMPLOYEELOAN.EDITEMPLOYEELOAN' | translate }}"
+                            [satPopoverAnchorFor]="upsertEmployeeLoanPopover"
+                            #upsertEmployeeLoanPopUp="satPopoverAnchor"
+                            (click)="editEmployeeLoanPopupOpen(row,upsertEmployeeLoanPopUp)"
+                            *ngIf="!isArchivedTypes && row.isVisible != false && row.isPaid != true" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" title="{{ 'EMPLOYEELOAN.ARCHIVEEMPLOYEELOAN' | translate }}"
+                            [satPopoverAnchorFor]="deleteEmployeeLoanPopover"
+                            #deleteEmployeeLoanPopUp="satPopoverAnchor"
+                            (click)="deleteEmployeeLoanPopUpOpen(row, deleteEmployeeLoanPopUp)"
+                            *ngIf="!isArchivedTypes && row.isVisible != false && !row.isApproved && row.isPaid != true" mat-icon-button>
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                        </button>
+                        <button class="text-center" title="{{ 'EMPLOYEELOAN.UNARCHIVEEMPLOYEELOAN' | translate }}"
+                            [satPopoverAnchorFor]="deleteEmployeeLoanPopover"
+                            #deleteEmployeeLoanPopUp="satPopoverAnchor"
+                            (click)="deleteEmployeeLoanPopUpOpen(row, deleteEmployeeLoanPopUp)" *ngIf="isArchivedTypes"
+                            mat-icon-button>
+                            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                        </button>
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.APPROVE' | translate }}"
+                            [satPopoverAnchorFor]="approveEmployeeLoanPopover"
+                            #approveEmployeeLoanPopUp="satPopoverAnchor"
+                            (click)="approveEmployeeLoanPopUpOpen(row, approveEmployeeLoanPopUp)"
+                            *ngIf="!row.isApproved && !isArchivedTypes && (canAccess_feature_ApproveEmployeeLoans) && row.isPaid != true"
+                            mat-icon-button>
+                            <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.ISAPPROVEED' | translate }}"
+                            mat-icon-button *ngIf="row.isApproved && row.isPaid != true">
+                            <fa-icon icon="check" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.UNAPPROVE' | translate }}"
+                            *ngIf="row.isApproved && (canAccess_feature_ApproveEmployeeLoans) && row.isPaid != true"
+                            (click)="approveEmployeeLoanPopUpOpen(row, approveEmployeeLoanPopUp)"
+                            [satPopoverAnchorFor]="approveEmployeeLoanPopover"
+                            #approveEmployeeLoanPopUp="satPopoverAnchor" mat-icon-button>
+                            <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!--Edit EMPLOYEELOAN dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertEmployeeLoanPopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="start">
+        <mat-card class="p-0 mr-0" fxFlex="500px">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ employeeLoan | translate }}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="employeeLoanForm" #formDirective="ngForm" novalidate
+                    (submit)="employeeLoanForm.valid && upsertEmployeeLoan(formDirective)">
+                    <div>
+                        <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='text' matInput formControlName="name"
+                                        placeholder="{{ 'EMPLOYEELOAN.NAME' | translate }}" required>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('name').hasError('required') && employeeLoanForm.get('name').touched">
+                                        {{'EMPLOYEELOAN.LOANNAMEREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                    <mat-error *ngIf="employeeLoanForm.get('name').hasError('maxlength')">
+                                        {{ 'EMPLOYEELOAN.LOANNAMELENGHTREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'EMPLOYEERESIGNATION.EMPLOYEENAME' | translate}}"
+                                        formControlName="employeeId" required
+                                        (selectionChange)="getSelectedEmployees()">
+                                        <mat-select-trigger>
+                                            {{selectedEmployees}}
+                                        </mat-select-trigger>
+                                        <mat-option #allEmployeeSelected value="option"
+                                            *ngFor="let emp of  employeeListDataDetails" [value]="emp.employeeId">
+                                            <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                                                <div fxFlex="35px">
+                                                    <app-avatar [name]="emp.userName | removeSpecialCharacters"
+                                                        [src]="emp.profileImage" [isRound]="true" size="30">
+                                                    </app-avatar>
+                                                </div>
+                                                <div>
+                                                    <p class="mat-body-2">
+                                                        {{emp.userName}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('employeeId').hasError('required') && employeeLoanForm.get('employeeId').touched">
+                                        {{'EMPLOYEELOAN.EMPLOYEENAMEREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' matInput formControlName="loanAmount"
+                                        [readonly]="isEditLoanAmount"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANAMOUNT' | translate }}" required>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('loanAmount').hasError('required') && employeeLoanForm.get('loanAmount').touched">
+                                        {{'EMPLOYEELOAN.LOANAMOUNTREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input matInput [matDatepicker]="loanTakenOn" formControlName="loanTakenOn"
+                                        (click)="loanTakenOn.open();"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANTAKENON' | translate }}">
+                                    <mat-datepicker-toggle matSuffix [for]="loanTakenOn"></mat-datepicker-toggle>
+                                    <mat-datepicker #loanTakenOn></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' max="100" matInput
+                                        formControlName="loanInterestPercentagePerMonth"
+                                        placeholder="* {{ 'EMPLOYEELOAN.LOANINTERESTPERCENTAGEPERMONTH' | translate }}">
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('loanInterestPercentagePerMonth').hasError('required') && employeeLoanForm.get('loanInterestPercentagePerMonth').touched">
+                                        {{'EMPLOYEELOAN.LOANINTERESTPERCENTAGEPERMONTHREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' max="100" matInput formControlName="timePeriodInMonths"
+                                        required placeholder="{{ 'EMPLOYEELOAN.TIMEPERIODINMONTHS' | translate }}">
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('timePeriodInMonths').hasError('required') && employeeLoanForm.get('timePeriodInMonths').touched">
+                                        {{'EMPLOYEELOAN.TIMEPERIODINMONTHSREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <!-- <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'EMPLOYEELOAN.LOANTYPE' | translate}}"
+                                        formControlName="loanTypeId" required>
+                                        <mat-option *ngFor="let loanType of loanTypes" [value]="loanType.loanTypeId">
+                                            {{ loanType.loanTypeName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('loanTypeId').hasError('required') && employeeLoanForm.get('loanTypeId').touched">
+                                        {{ 'EMPLOYEELOAN.LOANTYPEREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'EMPLOYEELOAN.COMPOUNDEDPERIOD' | translate}}"
+                                        formControlName="compoundedPeriodId">
+                                        <mat-option *ngFor="let COMPOUNDEDPERIOD of periodTypes"
+                                            [value]="COMPOUNDEDPERIOD.periodTypeId">
+                                            {{ COMPOUNDEDPERIOD.periodTypeName }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div> -->
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input matInput [matDatepicker]="loanPaymentStartDate" [readonly]="isEditLoanAmount"
+                                        formControlName="loanPaymentStartDate" (click)="loanPaymentStartDate.open();"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANPAYMENTSTARTDATE' | translate }}" required>
+                                    <mat-datepicker-toggle matSuffix [for]="loanPaymentStartDate">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #loanPaymentStartDate></mat-datepicker>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('loanPaymentStartDate').hasError('required') && employeeLoanForm.get('loanPaymentStartDate').touched">
+                                        {{ 'EMPLOYEELOAN.LOANPAYMENTSTARTDATEREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' max="100" matInput formControlName="loanBalanceAmount"
+                                        readonly="true"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANBALANCEAMOUNT' | translate }}">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' max="100" matInput formControlName="loanTotalPaidAmount"
+                                        readonly="true"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANTOTALPAIDAMOUNT' | translate }}">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input matInput [matDatepicker]="loanClearedDate" formControlName="loanClearedDate"
+                                        (click)="loanClearedDate.open();"
+                                        placeholder="{{ 'EMPLOYEELOAN.LOANCLEAREDDATE' | translate }}">
+                                    <mat-datepicker-toggle matSuffix [for]="loanClearedDate"></mat-datepicker-toggle>
+                                    <mat-datepicker #loanClearedDate></mat-datepicker>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('loanClearedDate').hasError('required') && employeeLoanForm.get('loanClearedDate').touched">
+                                        {{ 'PAYROLLCALCULATIONCONFIGURATIONS.LOANCLEAREDDATEREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <textarea type='text' matInput formControlName="description"
+                                        placeholder="{{ 'EMPLOYEELOAN.DESCRIPTION' | translate }}" required>
+                                    </textarea>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeLoanForm.get('description').hasError('required') && employeeLoanForm.get('description').touched">
+                                        {{'EMPLOYEELOAN.LOANDESCRIPTIONREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                    <mat-error *ngIf="employeeLoanForm.get('description').hasError('maxlength')">
+                                        {{ 'EMPLOYEELOAN.LOANDESCRIPTIONLENGHTREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div>
+                        </div>
+                        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                        <div class="mt-05 mb-05 text-center">
+                            <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                                [disabled]="!employeeLoanForm.valid||isAnyOperationIsInprogress">
+                                <mat-progress-bar color="primary" mode="indeterminate"
+                                    *ngIf="isAnyOperationIsInprogress">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                            </button>
+                            <button mat-button mat-raised-button (click)="closeUpsertEmployeeLoanPopup(formDirective)"
+                                type="button">
+                                <fa-icon class="mr-05" icon="times"></fa-icon>
+                                {{ 'CANCEL' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Edit COMAPN dialog-->
+
+    <!--Delete EMPLOYEELOAN dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteEmployeeLoanPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isEmployeeLoanArchived">
+                    {{ 'EMPLOYEELOAN.ARCHIVEEMPLOYEELOANTITLE' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isEmployeeLoanArchived">
+                    {{ 'EMPLOYEELOAN.UNARCHIVEEMPLOYEELOANTITLE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isEmployeeLoanArchived">
+                    {{ 'EMPLOYEELOAN.ARCHIVEEMPLOYEELOANTEXT' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isEmployeeLoanArchived">
+                    {{ 'EMPLOYEELOAN.UNARCHIVEEMPLOYEELOANTEXT' | translate }}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" *ngIf="isEmployeeLoanArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteEmployeeLoan();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" *ngIf="!isEmployeeLoanArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteEmployeeLoan();">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteEmployeeLoanDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Delete EMPLOYEELOAN dialog-->
+
+    <!--Approve EMPLOYEELOAN dialog-->
+    <sat-popover #approveEmployeeLoanPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="!isEmployeeLoanApproved">
+                    {{'EMPLOYEELOAN.APPROVETITLE' | translate}}</div>
+                <div class="card-title-text mb-1" *ngIf="isEmployeeLoanApproved">
+                    {{'EMPLOYEELOAN.UNAPPROVETITLE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="!isEmployeeLoanApproved">
+                    {{'EMPLOYEELOAN.APPROVEBONUSTEXT' | translate}}
+                </div>
+                <div class="card-content mb-1" *ngIf="isEmployeeLoanApproved">
+                    {{'EMPLOYEELOAN.UNAPPROVEBONUSTEXT' | translate}}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteEmployeeLoan();">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeApproveEmployeeLoanDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Approve EMPLOYEELOAN dialog-->
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeLoans)"
+    textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

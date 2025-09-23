@@ -1,0 +1,247 @@
+<div class="p-0">
+  <div fxLayout="row" fxLayoutGap="0" class="mb-05 mt-05 ml-05 mr-05">
+    <div fxFlex class="custom-searchbar search-testsuites">
+      <input type="text" name="search" class="full-width p-03 search_goal" placeholder="{{'ASSETS.SEARCH' | translate}}"
+        [(ngModel)]='searchText'>
+      <div class="close_icon clear-search mt-02">
+        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">close
+        </mat-icon>
+      </div>
+    </div>
+    <div fxFlex="30px" fxLayoutAlign="end center" hasBackdrop
+      *ngIf="(canAccess_entityType_feature_AddOrUpdateScenario) && !fromCustomApp">
+      <a class="add-test-case" matTooltip="{{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe :softLabels}}"
+        [satPopoverAnchorFor]="addTestSuite" #addTestSuitePopover="satPopoverAnchor"
+        (click)="openTestSuiteDialog(addTestSuitePopover)">
+        <fa-icon class="add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+      </a>
+    </div>
+    <div fxFlex="30px" fxLayoutAlign="end center" [satPopoverAnchorFor]="datePopover" hasBackdrop
+      (click)="datePopover.toggle()">
+      <div fxFlex>
+        <span class="pull-right date-filter">
+          <fa-icon matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}" icon="filter"
+            class="mat-color-accent filter-operation">
+          </fa-icon>
+        </span>
+      </div>
+      <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+        <mat-card class="filter-data">
+          <a [ngClass]="{ 'active': (dateFrom && dateTo) }">
+            {{'TESTMANAGEMENT.CREATEDDATE' | translate}}:
+          </a>
+          <br>
+          <div class="mr-1 mt-02">
+            <mat-form-field class="mr-05">
+              <mat-label> {{'TESTMANAGEMENT.DATEFROM' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate" (click)="picker1.open()"
+                readonly class="date-picker" [(ngModel)]="dateFrom" (dateChange)="changeDeadline(dateFrom,dateTo)">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="mr-05">
+              <mat-label> {{'TESTMANAGEMENT.TODATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="dateFrom" [max]="maxDate"
+                (click)="picker2.open()" readonly class="date-picker" [(ngModel)]="dateTo">
+              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div class="close_icon date_search mt-1-05">
+            <mat-icon *ngIf="dateFrom || dateTo" class="icon-button" aria-hidden="false" (click)="closeDateFilter()"
+              style="cursor:pointer">close</mat-icon>
+          </div>
+        </mat-card>
+      </sat-popover>
+    </div>
+    <div fxFlex="30px" fxLayoutAlign="end center" hasBackdrop
+      *ngIf="(canAccess_entityType_feature_ExportAndImportScenarios) && (testSuitesCount$ | async) > 0">
+      <div fxFlex>
+        <span class="pull-right date-filter">
+          <fa-icon style="cursor: pointer;"
+            matTooltip="{{'TESTMANAGEMENT.IMPORTTESTSUITES' | translate | softLabelsPipe :softLabels}}"
+            [satPopoverAnchorFor]="editThreeDotsPopover" (click)="$event.stopPropagation();editThreeDotsPopover.open()"
+            icon="file-import" class="mat-color-accent filter-operation">
+          </fa-icon>
+        </span>
+      </div>
+    </div>
+    <div fxFlex="30px" fxLayoutAlign="end center" hasBackdrop
+      *ngIf="(canAccess_entityType_feature_ExportAndImportScenarios) && (testSuitesCount$ | async) > 0">
+      <div fxFlex>
+        <span class="pull-right date-filter">
+          <fa-icon style="cursor: pointer;"
+            matTooltip="{{'TESTMANAGEMENT.EXPORTTESTSUITES' | translate | softLabelsPipe :softLabels}}"
+            icon="file-export" class="mat-color-accent filter-operation" [satPopoverAnchorFor]="exportPopover"
+            (click)="openExportPopover()">
+          </fa-icon>
+        </span>
+      </div>
+      <sat-popover backdropClass="backdrop-color" #exportPopover verticalAlign="below" hasBackdrop
+        [interactiveClose]="false" horizontalAlign="end">
+        <mat-card class="filter-data p-0" style="max-width: 300px;">
+          <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+              {{'TESTMANAGEMENT.EXPORTTESTSUITES' | translate | softLabelsPipe :softLabels}}
+            </div>
+          </mat-card-title>
+          <mat-form-field class="p-05 full-width mb-05">
+            <input matInput placeholder="{{'TESTMANAGEMENT.PROJECTNAME' | translate}}" [(ngModel)]="projectName"
+              [disabled]="true" />
+          </mat-form-field>
+          <mat-form-field class="p-05 full-width mb-1">
+            <input matInput placeholder="{{'TESTMANAGEMENT.TESTSUITENAMEOPTIONAL' | translate}}"
+              [(ngModel)]="testSuiteName" />
+            <mat-hint>{{'TESTMANAGEMENT.EXPORTEG' | translate}}</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="p-05 full-width mb-05">
+            <textarea matInput placeholder="{{'HRMANAGAMENT.TO' | translate}}" [(ngModel)]="toMails"></textarea>
+            <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}<br/>
+              {{'TESTMANAGEMENT.PRESSENTERTOADDMORETHANONEEMAIL' | translate}}
+            </mat-hint>
+          </mat-form-field>
+          <span class="ml-05 mb-05" style="color: red; font-size: 11px;"
+            *ngIf="emptyMail">{{'TESTMANAGEMENT.ENTEREXPORTEMAILADDRESS' | translate}}</span>
+          <div class="text-center mb-05">
+            <button class="mr-1" mat-button mat-raised-button color="primary" type="button" (click)="exportTestSuites()"
+              [disabled]="disableExport">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableExport">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="file-export"></fa-icon>
+              {{'TESTMANAGEMENT.EXPORT' | translate}}
+            </button>
+            <button mat-button mat-raised-button type="button" (click)="closeExportPopover()">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+            </button>
+          </div>
+        </mat-card>
+      </sat-popover>
+    </div>
+  </div>
+  <div class="p-0 m-0 test-suites-list" id="style-1">
+    <div class="p-0">
+      <span *ngIf="!(anyOperationInProgress$ | async)">
+        <mat-list-item
+          *ngFor="let testSuite of (testsuitesList$ | async | testrailName: searchText: 'testsuite' | dateFilter : dateFrom : dateTo)">
+          <testsuite-item-summary class="full-width" [testSuite]="testSuite"
+            (click)="handleClickOnTestSuiteItem(testSuite)" (updateId)="getUpdatedId($event)"
+            (updateDescription)="getUpdatedDescription($event)" (deleteId)="getDeletedId($event)"
+            [testSuiteSelected]="testSuite.testSuiteId === selectedTestSuiteId" [testSuiteId]="selectedTestSuiteId">
+          </testsuite-item-summary>
+        </mat-list-item>
+        <mat-card
+          *ngIf="(testsuitesList$ | async | testrailName: searchText: 'testsuite' | dateFilter : dateFrom : dateTo).length === 0"
+          class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+              <p class="m-0">{{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}</p>
+            </div>
+          </div>
+        </mat-card>
+      </span>
+      <span *ngIf="anyOperationInProgress$ | async">
+        <mat-list-item>
+          <testsuites-list-loading class="full-width"></testsuites-list-loading>
+        </mat-list-item>
+      </span>
+    </div>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #addTestSuite verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.ADDTESTSUITE' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <app-testrail-testsuite-edit *ngIf="loadAddTestSuite" (closeTestSuite)="closeTestSuiteDialog()">
+    </app-testrail-testsuite-edit>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+  hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()" horizontalAlign="end">
+  <mat-card class="filter-data p-0" fxLayout="column">
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" [satPopoverAnchorFor]="importPopover"
+        (click)="openImportPopover(false)">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-import" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'TESTMANAGEMENT.IMPORTTESTSUITESFROMXML'| translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" [satPopoverAnchorFor]="importPopover"
+        (click)="openImportPopover(true)">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-import" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'TESTMANAGEMENT.IMPORTTESTSUITESFROMCSV'|translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" (click)="downloadTestCasesCsvTemplate()">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-csv" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'TESTMANAGEMENT.DOWNLOADTESTSUITESSAMPLE' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #importPopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0" style="width: 250px;">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.IMPORTTESTSUITES' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <div class="mt-05 mb-05 p-05">
+      <div ngx-dropzone multiple="false" [accept]="acceptableFileFormat" class="custom-scenario-import" ngx-dropzone
+        (change)="filesSelected($event)" style="padding: 3px;">
+        <ngx-dropzone-label>
+          <span *ngIf="!isCsvImport">{{'TESTMANAGEMENT.DRAGANDDROPXMLFILEHERE' | translate}}</span>
+          <span *ngIf="isCsvImport">{{'TESTMANAGEMENT.DRAGANDDROPCSVFILEHERE' | translate}}</span>
+        </ngx-dropzone-label>
+        <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+          (removed)="onRemove(f)">
+          <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">{{ f.name }}
+            ({{ f.type }})
+          </ngx-dropzone-label>
+        </ngx-dropzone-preview>
+      </div>
+    </div>
+    <div class="text-center mb-05">
+      <button class="mr-1" mat-button mat-raised-button color="primary" type="button" (click)="importTestSuites()"
+        [disabled]="disableImport">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="importProgress">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="file-export"></fa-icon>
+        {{'TESTMANAGEMENT.IMPORT' | translate}}
+      </button>
+      <button mat-button mat-raised-button type="button" (click)="closeImportPopover()">
+        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>

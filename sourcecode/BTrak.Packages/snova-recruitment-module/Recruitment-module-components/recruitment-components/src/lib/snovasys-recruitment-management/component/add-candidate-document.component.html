@@ -1,0 +1,117 @@
+<div>
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1" *ngIf="!isEdit">{{ 'DOCUMENT.ADDCANDIDATEDOCUMENT' |
+        translate }}
+      </div>
+      <div class="card-title-text  mat-bg-primary p-05 mb-1" *ngIf="isEdit">{{ 'DOCUMENT.EDITCANDIDATEDOCUMENT' |
+        translate }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="documentForm" #documentFormDirective="ngForm" novalidate
+        (submit)="documentForm.valid && upsertDocument(documentFormDirective)">
+        <div>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="document" placeholder="{{ 'DOCUMENT.DOCUMENT' | translate }}" required>
+            <mat-error *ngIf="documentForm.get('document').hasError('maxlength')">
+              {{ 'DOCUMENT.DOCUMENTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="documentForm.get('document').hasError('required') && documentForm.get('document').touched">
+              {{ 'DOCUMENT.DOCUMENTNAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="description" placeholder="{{ 'DOCUMENT.DESCRIPTION' | translate }}"
+              required>
+            <mat-error *ngIf="documentForm.get('description').hasError('maxlength')">
+              {{ 'DOCUMENT.DESCRIPTIONNAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="documentForm.get('description').hasError('required') && documentForm.get('description').touched">
+              {{ 'DOCUMENT.DESCRIPTIONREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="documentTypeId" placeholder="{{ 'DOCUMENT.DOCUMENTTYPE' | translate }}">
+                <mat-option *ngFor="let document of documentTypes" [value]="document.documentTypeId">
+                  {{document.documentTypeName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <fa-icon icon="plus" aria-hidden="false" aria-label="add" class="filter mat-color-accent goal-cursor mt-1"
+              matTooltip="{{'DOCUMENTTYPE.CREATEDOCUMENTTYPETOOLTIP' | translate }}"
+              [satPopoverAnchorFor]="upsertDocumentTypePopover" #upsertDocumentTypePopUp="satPopoverAnchor"
+              (click)="createDocumentType(upsertDocumentTypePopUp); clearForm()">
+            </fa-icon>
+          </div>
+          <mat-checkbox formControlName="isResume" class="full-width mt-1">
+            {{'DOCUMENT.ISRESUME' | translate }}</mat-checkbox>
+        </div>
+        <div class="custom-hrm-dropzone" style="padding: 10px; width: 550px;"
+          *ngIf="canAccess_feature_ManageCandidateDocuments">
+          <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="true"
+            [referenceId]="candidateDocumentReferenceId" [selectedParentFolderId]="selectedParentFolderId"
+            [selectedStoreId]="selectedStoreId" [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+            (closeFilePopup)="closeFilePopup()" [isToUploadFiles]="isToUploadFiles">
+          </app-dropzone>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!documentForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> <span *ngIf="!isEdit">{{ 'SAVE' | translate }}</span>
+            <span *ngIf="isEdit">{{ 'DOCUMENT.UPDATE' | translate }}</span>
+          </button>
+          <button mat-button mat-raised-button (click)="closedialog()" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #upsertDocumentTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ documentTypeTitle }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="documentTypeForm" #formDirective="ngForm" novalidate
+        (submit)="documentTypeForm.valid && upsertDocumentType(formDirective)">
+        <div>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="documentTypeName"
+              placeholder="{{'DOCUMENTTYPE.DOCUMENTTYPENAME' | translate }}" required>
+            <mat-error *ngIf="documentTypeForm.get('documentTypeName').hasError('maxlength')">
+              {{ 'DOCUMENTTYPE.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="documentTypeForm.get('documentTypeName').hasError('required') && documentTypeForm.get('documentTypeName').touched">
+              {{ 'DOCUMENTTYPE.NAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!documentTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertDocumentTypePopUpPopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

@@ -1,0 +1,93 @@
+<div class="full-height" *ngIf="canAccess_feature_CanViewNumberOfAuditsSubmitted">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow p-05">
+                        {{'AUDIT.TOTALNOOFAUDITSSUBMITTED' | translate | softLabelsPipe :softLabels | titlecase}}
+                    </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                    <button type="button" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent"
+                            matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}">
+                        </fa-icon>
+                    </button>
+                </div>
+                <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                    <button mat-menu-item [matMenuTriggerFor]="fromDateFilter">
+                        {{'HISTORICALREPORT.FROMDATE' | translate}}</button>
+                    <button mat-menu-item [matMenuTriggerFor]="toDateFilter">
+                        {{'HISTORICALREPORT.TODATE' | translate}}</button>
+                </mat-menu>
+                <mat-menu #fromDateFilter="matMenu">
+                    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                        <div fxFlex="180px" class="ml-05 mr-05">
+                            <mat-form-field class="full-width">
+                                <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                    [(ngModel)]="fromDate" placeholder="{{'HISTORICALREPORT.FROMDATE' | translate}}"
+                                    required autocomplete="off" [readonly]="true"
+                                    (dateChange)="dateFromChanged($event)">
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                    </mat-card>
+                </mat-menu>
+                <mat-menu #toDateFilter="matMenu">
+                    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                        <div fxFlex="180px" class="ml-05 mr-05">
+                            <mat-form-field class="full-width">
+                                <input matInput [matDatepicker]="picker2" (click)="picker2.open()" [(ngModel)]="toDate"
+                                    placeholder="{{'HISTORICALREPORT.TODATE' | translate}}" required autocomplete="off"
+                                    [readonly]="true" (dateChange)="dateToChanged($event)">
+                                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                    </mat-card>
+                </mat-menu>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="no-drag" fxLayout="column">
+        <div>
+            <kendo-grid [data]="auditsList" [pageSize]="state.take" [skip]="state.skip" [sort]="sort"
+                [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                [selectable]="true" [loading]="isAnyOperationIsInprogress" (pageChange)="pageChange($event)"
+                (cellClick)="selectedRow($event)" [scrollable]="true" [style]="{'width': 'max-content'}"
+                (sortChange)="sortChange($event)">
+                <kendo-grid-messages 
+                pagerOf="{{ 'KENDOGRIDMESSAGES.OF' | translate }}"
+                pagerItems="{{ 'KENDOGRIDMESSAGES.ITEMS' | translate }}"
+                noRecords = "{{ 'KENDOGRIDMESSAGES.NORECORDS' | translate }}">
+                </kendo-grid-messages>
+                <kendo-grid-column width="200" field="branchName" title="{{'AUDIT.BRANCHNAME' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">
+                            {{ dataItem.branchName }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="200" field="submittedAudits" title="{{'AUDIT.SUBMITTEDAUDITS' | translate | softLabelsPipe :softLabels}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">{{ dataItem.submittedAudits }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </div>
+</div>
+
+<app-common-message-box
+    *ngIf="!canAccess_feature_CanViewNumberOfAuditsSubmitted"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>
+
+
+<ng-template #DrillDownDialog let-data>
+    <app-fm-component-submitted-audit-preview [data]=[data]></app-fm-component-submitted-audit-preview>
+  </ng-template>

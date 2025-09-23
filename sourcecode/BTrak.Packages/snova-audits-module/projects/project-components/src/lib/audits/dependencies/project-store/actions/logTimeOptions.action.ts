@@ -1,0 +1,32 @@
+import { Action } from "@ngrx/store";
+import { LogTimeOption } from "../../models/logTimeOption";
+
+export enum userStoryLogTimeActionTypes {
+  LogTimeOptionsTriggered = "[SnovaAudisModule LogTimeOptions Component] Initial Data Load Triggered",
+  LogTimeOptionsCompleted = "[SnovaAudisModule LogTimeOptions Component] Initial Data Load Completed",
+  LogTimeOptionsCompletedfromCache = "[SnovaAudisModule LogTimeOptions Component] Initial Data Load Completed From Cache"
+}
+
+export class LogTimeOptionsTriggered implements Action {
+  type = userStoryLogTimeActionTypes.LogTimeOptionsTriggered;
+  logTimeOptions: LogTimeOption[];
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class LogTimeOptionsCompleted implements Action {
+  type = userStoryLogTimeActionTypes.LogTimeOptionsCompleted;
+
+  constructor(public logTimeOptions: LogTimeOption[]) {}
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class LogTimeOptionsCompletedfromCache implements Action {
+  type = userStoryLogTimeActionTypes.LogTimeOptionsCompletedfromCache;
+  logTimeOptions: LogTimeOption[];
+  constructor() {}
+}
+
+export type LogTimeOptionsActions =
+  | LogTimeOptionsTriggered
+  | LogTimeOptionsCompleted
+  | LogTimeOptionsCompletedfromCache;

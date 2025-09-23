@@ -1,0 +1,132 @@
+<mat-card-title class="mrl0604">
+    <div class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center">
+        <span>{{'LEAVETYPES.ENCASHMENTRULES' | translate}}</span>
+    </div>
+</mat-card-title>
+<mat-card class="mr-06 leave-type-configmat" id="style-1" fxLayout="column">
+    <div fxFlex="200px">
+        <mat-form-field class="mt-1 full-width">
+            <mat-select placeholder="{{'LEAVETYPES.SELECTFREQUENCY' | translate}}" (selectionChange)="change($event)"
+                required>
+                <mat-option value="option" *ngFor="let frequency of leaveFrequenciesList$ | async" [value]="frequency">
+                    {{ frequency.dateFrom | date: "dd-MMM-yyyy" }} - {{ frequency.dateTo | date: "dd-MMM-yyyy" }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <mat-progress-bar *ngIf="loadFrequencyDetailsInprogress$ | async">
+    </mat-progress-bar> 
+
+    <div>
+        <form [formGroup]="encashmentForm" #formDirective="ngForm" novalidate
+            (submit)="encashmentForm.valid && upsertLeaveFrequency(false)">
+            <div fxFlex fxLayout="column">
+                <div class="activity-data mrl0604 leave-type-configencashmentform" id="style-1">
+                    <div *ngIf="selectedFrequency">
+                        <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                            <div fxFlex="25" fxFlex.lt-md="100">
+                                <mat-radio-group aria-label="Select an option" [(ngModel)]="isPaid"
+                                    formControlName="isPaid" (change)="onChange($event)">
+                                    <mat-radio-button value="1">{{'LEAVETYPES.PAID' | translate}}</mat-radio-button>
+                                    <mat-radio-button class="ml-05" value="2">{{'LEAVETYPES.UNPAID' | translate}}
+                                    </mat-radio-button>
+                                </mat-radio-group>
+                            </div>
+                        </div>
+
+                        <div class="mt-1" fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px"
+                            *ngIf="showEncashmentDetails">
+                            <div fxFlex="20" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                                <mat-radio-group aria-label="Select an option" [required]= "showEncashmentDetails"
+                                    formControlName="isToCarryForward" (change)="toggleIsToCarryForward($event.value)">
+                                    <mat-radio-button value="1">{{'LEAVETYPES.CANCARRYFORWARD' | translate}}</mat-radio-button>
+                                    <mat-radio-button class="ml-05" value="2">{{'LEAVETYPES.ENCASHED' | translate}}
+                                    </mat-radio-button>
+                                </mat-radio-group>
+                            </div>
+                            <div fxFlex="80" fxFlex.lt-md="100" *ngIf="showCarryForwardDetails">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="carryForwardLeavesCount" type="number"
+                                        placeholder="{{'LEAVETYPES.LEAVESTOCARRYFORWARD' | translate}}" [required]= "showCarryForwardDetails">
+                                    <mat-error
+                                        *ngIf="encashmentForm.get('carryForwardLeavesCount').hasError('required') && encashmentForm.get('carryForwardLeavesCount').touched">
+                                        {{'LEAVETYPES.NOOFLEAVESTOCARRYFORWARDREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="80" fxFlex.lt-md="100" *ngIf="showEncashedDetails">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="encashedLeavesCount" type="number"
+                                        placeholder="{{'LEAVETYPES.LEAVESTOENCAHED' | translate}}" [required]= "showEncashedDetails">
+                                    <mat-error
+                                        *ngIf="encashmentForm.get('encashedLeavesCount').hasError('required') && encashmentForm.get('encashedLeavesCount').touched">
+                                        {{'LEAVETYPES.NOOFLEAVESTOENCASHREQUIREDERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                            <div fxFlex="20" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                                {{'LEAVETYPES.RESTRICTIONTYPETITLE' | translate}}
+                            </div>
+                            <div fxFlex="75" fxFlex.lt-md="100">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'LEAVETYPES.SELECTRESTRICTIONTYPE' | translate}}"
+                                        formControlName="restrictionTypeId" required>
+                                        <mat-option value="option"
+                                            *ngFor="let restrictionType of (restrictionTypesList$ | async)"
+                                            [value]="restrictionType.restrictionTypeId">
+                                            {{ restrictionType.restrictionType}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error *ngIf="encashmentForm.get('restrictionTypeId').hasError('required')">
+                                        {{'LEAVETYPES.RESTRICTIONTYPERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div fxLayout="row" class="mt-1" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                            <div fxFlex="20" fxFlex.lt-md="100" fxLayoutAlign="start center">
+                                {{'LEAVETYPES.NOOFDAYSTOINTIMATE' | translate}}
+                            </div>
+                            <div fxFlex="75" fxFlex.lt-md="100">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="noOfDaysToBeIntimated" type="number"
+                                        placeholder="{{'LEAVETYPES.NOOFDAYSTOINTIMATE' | translate}}" required>
+                                    <mat-error
+                                        *ngIf="encashmentForm.get('noOfDaysToBeIntimated').hasError('required')&& encashmentForm.get('noOfDaysToBeIntimated').touched">
+                                        {{'LEAVETYPES.NOOFDAYSTOINTIMATEERROR' | translate}}
+                                    </mat-error>
+                                    <mat-error *ngIf="encashmentForm.get('noOfDaysToBeIntimated').hasError('max')">
+                                        {{'LEAVETYPES.NOOFDAYSTOINTIMATERESTRICTERROR' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                                <span><b>{{'LEAVETYPES.NOTE' | translate}}: </b>{{'LEAVETYPES.INTIMATECOUNTMESSAGE' | translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div fxLayout="row" class="pull-right">
+                        <button mat-button mat-raised-button class="mr-1"  [disabled]="(isUpsertFrequencyInProgress$ | async)" (click)="previousPage()">
+                            {{'LEAVETYPES.PREVIOUS' | translate}}
+                        </button>
+                        <button mat-raised-button color="primary" class="mr-1 text-center"
+                            (click)="upsertLeaveFrequency(false)"
+                            [disabled]="!encashmentForm.valid || (isUpsertFrequencyInProgress$ | async)">
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{'LEAVETYPES.SAVE' | translate}}
+                        </button>
+                        <button type="button" mat-button mat-raised-button class="mr-1"
+                            [disabled]="!encashmentForm.valid || (isUpsertFrequencyInProgress$ | async)"
+                            (click)='upsertLeaveFrequency(true)'>
+                            {{'LEAVETYPES.FINISH' | translate}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</mat-card>

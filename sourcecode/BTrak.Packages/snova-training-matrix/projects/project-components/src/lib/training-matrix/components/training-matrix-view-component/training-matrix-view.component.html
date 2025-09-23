@@ -1,0 +1,261 @@
+<div *ngIf="canAccess_feature_ViewTrainingMatrix" class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+
+                <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap" fxLayoutAlign.xs="start center" *ngIf="!profilePage">
+                        
+                    <mat-form-field class="full-width">
+                        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                    </mat-form-field>
+                      
+
+                    <div fxFlex="20px">
+                        <span class="close_icon" style="right: 0px !important;">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button mat-icon-button matTooltip="{{ 'TRAININGMANAGEMENT.CREATECOURSE' | translate }}"
+                        (click)="openCreateTrainingCourseDialog(null)"
+                        *ngIf="!isArchived && canAccess_feature_AddOrUpdateTrainingCourse">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+               
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="no-drag" fxLayout="column">
+        <div *ngIf="resultsAreInProgress" class="text-center">
+            Loading...
+        </div>
+        <div *ngIf="!resultsAreInProgress">
+            <kendo-grid 
+                [data]="userAssignments" 
+                [pageSize]="state.take" 
+                [skip]="state.skip" 
+                [sort]="state.sort"
+                [filter]="state.filter"
+                [sortable]="true"
+                [pageable]="true"
+                [filterable]="false"
+                [loading]="isAnyOperationIsInprogress"
+                (dataStateChange)="dataStateChange($event)"
+                [selectable]="false"
+                class="training-k-grid"
+                style="width: 100%">
+                <kendo-grid-messages
+                pagerOf="{{ 'KENDOGRIDMESSAGES.OF' | translate }}"
+                pagerItems="{{ 'KENDOGRIDMESSAGES.ITEMS' | translate }}"
+                noRecords="{{ 'KENDOGRIDMESSAGES.NORECORDS' | translate }}">
+                </kendo-grid-messages>
+                <kendo-grid-column 
+                    [locked]="lockColumns"
+                    field="userFullName"
+                    title="{{('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)}}"
+                    width="250">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        <span [matTooltip]="('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)">
+                            {{('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)}}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem class="cursor-default">
+                        <div [matTooltip]="dataItem.userFullName" (click)="navigateToProfile(dataItem)">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <app-avatar *ngIf="!dataItem.userProfileImage"
+                                        [name]="dataItem.userFullName | removeSpecialCharacters"
+                                        [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="dataItem.userProfileImage" src="{{dataItem.userProfileImage}}">
+                                </div>
+                                <div class="col-sm-10">
+                                    <div class="cursor-pointer">
+                                        {{ dataItem.userFullName }} <span class="compliance-percentage">{{ GetCompliancePercentage(dataItem) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-command-column *ngIf="canAccess_feature_AssignOrUnassignTrainingCourse" [locked]="lockColumns" width="75" class="text-center">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        <span [matTooltip]="('TRAININGMANAGEMENT.ACTION' | translate)">
+                            {{'TRAININGMANAGEMENT.ACTION' | translate}}
+                        </span>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem class="text-center cursor-default">
+                        <button class="text-center" *ngIf="canAccess_feature_AssignOrUnassignTrainingCourse"
+                            [matTooltip]="('TRAININGMANAGEMENT.EDITASSIGNMENTS' | translate)"
+                            mat-icon-button [satPopoverAnchorFor]="editTrainingAssignmentsPopover"
+                            #addOrUpdateAssignmentsPopup="satPopoverAnchor"
+                            (click)="editTrainingAssignmentsPopupOpen(dataItem,addOrUpdateAssignmentsPopup,null);$event.stopPropagation();">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-template>
+                </kendo-grid-command-column>
+                <kendo-grid-command-column 
+                [locked]="false" 
+                *ngFor="let course of trainingCourses; let i = index"
+                [width]="200"
+                [headerStyle]="{'text-align': 'center', 'background-color': '#ececec'}"                
+                class="text-center training-matrix-col">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    <span [matTooltip]="(course.courseName | softLabelsPipe : softLabels)">
+                        {{course.courseName | softLabelsPipe : softLabels}}
+                    </span>
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem class="cursor-default">
+                    <div *ngFor="let assignment of dataItem.assignments">
+                        <div *ngIf="assignment.trainingCourseId == course.id" (dblclick)="openStatusPopover(assignment, statusPopUp);$event.preventDefault();" #statusPopUp="satPopoverAnchor" [satPopoverAnchorFor]="statusPopover" [matTooltip]="assignment.statusName + ' (Assign:' + (assignment.createdDateTime | date: 'dd/MM/yyyy') + ')'" [matTooltipClass]="'my-tooltip'">
+                            <div [ngStyle]="{'color': assignment.statusColor, 'font-weight': '600' }">
+                                <span>{{ assignment.statusGivenDate != null ? (assignment.statusGivenDate | date:'dd/MM/yyyy') : assignment.statusName }}</span>
+                                <br>
+                                <span>
+                                    <fa-icon [ngStyle]="{'color': assignment.statusColor, 'font-weight': '600' }" icon="{{assignment.statusIcon}}" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="checkAssignmentExists(dataItem, course)" 
+                    [satPopoverAnchorFor]="editTrainingAssignmentsPopover"
+                    #addOrUpdateAssignmentsPopup="satPopoverAnchor"
+                    (dblclick)="editTrainingAssignmentsPopupOpen(dataItem,addOrUpdateAssignmentsPopup,course);$event.stopPropagation();">
+                        <div [ngStyle]="{ 'font-weight': '600' }">
+                            <div [ngStyle]="{'color': 'grey', 'font-weight': '600' }">
+                                <span>N/A</span>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #editTrainingAssignmentsPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">
+                    {{'TRAININGMANAGEMENT.EDITASSIGNMENTS' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <mat-form-field [formGroup]="assignmentsForm" *ngIf="!selectedCourseFromColumn">
+                    <mat-label>{{'TRAININGMANAGEMENT.TRAININGCOURSES' | translate}}</mat-label>
+                    <mat-select formControlName="assignments" [(ngModel)]="selectedTrainingCourseIds"
+                        panelClass="dropdown-custom-class" multiple (selectionChange)="assignmentsChange()">
+                        <mat-option #allCoursesSelected (click)="toggleAllCoursesSelected($event)" [value]="0">
+                            {{ 'ACTIVITYTRACKER.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="course.id" *ngFor="let course of trainingCourses">
+                            {{ course.courseName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <p class="text-center" *ngIf="selectedCourseFromColumn">{{ 'TRAININGMANAGEMENT.ASSIGN' | translate }} <strong>{{ selectedCourseFromColumn.courseName }}</strong></p>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="configureAssignents();">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'TRAININGMANAGEMENT.ASSIGN' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeEditTrainingAssignmentseDialog();"
+                        [disabled]="isUpsertExpenseInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #statusPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">
+                    {{'TRAININGMANAGEMENT.EDITTRAININGASSIGNMENT' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <form [formGroup]="statusForm" id="style-1" class="full-width" #formDirective="ngForm" novalidate
+                (submit)="statusForm.valid">
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field>
+                                <mat-label>{{'TRAININGMANAGEMENT.OUTCOME' | translate}}</mat-label>
+                                <mat-select formControlName="statusId" [(ngModel)]="selectedStatusId"
+                                    panelClass="dropdown-custom-class">
+                                    <mat-option [value]="status.id" *ngFor="let status of statuses">
+                                        {{ status.statusName }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex fxFlex.gt-xl="33.3">
+                            <mat-form-field class="full-width">
+                                <!-- [max]="maxDate"  -->
+                                <input matInput [matDatepicker]="picker" (click)="picker.open()" [(ngModel)]="statusGivenDate"
+                                    placeholder="{{'TRAININGMANAGEMENT.OUTCOMEDATE' | translate}}" formControlName="statusGivenDate"
+                                        readOnly="true" autocomplete="off">
+                                <mat-datepicker-toggle matSuffix [for]="picker" ></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="text-center p-1">
+                        <button class="mr-1" mat-button mat-raised-button color="primary"
+                            [disabled]="isStatusesInProgress || !statusForm.valid" (click)="addOrUpdateAssignmentStatus();">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isStatusesInProgress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'TRAININGMANAGEMENT.SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeStatusDialog();"
+                            [disabled]="isStatusesInProgress">
+                            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<ng-template #addTrainingCourse let-data>
+    <custom-app-add-new-training-course [data]=[data]></custom-app-add-new-training-course>
+</ng-template>
+
+<app-common-message-box *ngIf="!canAccess_feature_ViewTrainingMatrix"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

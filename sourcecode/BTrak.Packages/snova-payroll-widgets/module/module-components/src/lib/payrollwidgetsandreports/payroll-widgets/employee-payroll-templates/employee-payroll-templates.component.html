@@ -1,0 +1,193 @@
+<div class="full-height" *ngIf="(canAccess_feature_ConfigureEmployeePayrollTemplates)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'EMPLOYEETEMPLATE.TITLE' | translate | titlecase }}">{{'EMPLOYEETEMPLATE.TITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle [matTooltip]="(isArchived == false) ? ('EMPLOYEETEMPLATE.SEEAPPROVEDITEMS' | translate) : ('EMPLOYEETEMPLATE.SEEUNAPPROVEDITEMS' | translate)" class="mr-1 archive-switch"
+              [(ngModel)]="isArchived" [checked]="isArchived" (change)="filterSlabs()"></mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput mr-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="employeepayrollConfigs" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="150" name="Employee Name" [flexGrow]="1" [sortable]="true" prop="employeeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.employeeName }}">{{ row?.employeeName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="Payroll Template" [flexGrow]="1" [sortable]="true" prop="payrollName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.payrollName }}">{{ row?.payrollName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="Active From" [flexGrow]="1" [sortable]="true" prop="activeFrom">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.activeFrom }}">{{ row?.activeFrom | date: "dd-MMM-yyyy"}}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="Active To" [flexGrow]="1" [sortable]="true" prop="activeTo">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.activeTo }}">{{ row?.activeTo | date: "dd-MMM-yyyy"}}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'EMPLOYEETEMPLATE.EDITEMPLOYEETEMPLATE' | translate }}"
+            *ngIf="!isArchived" mat-icon-button [satPopoverAnchorFor]="upsertPayGradePopover"
+            #upsertPayGradePopUp="satPopoverAnchor" (click)="editTaxSlabPopupOpen(row,upsertPayGradePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+
+          <button class="text-center" title="{{'EMPLOYEETEMPLATE.APPROVE' | translate }}"
+            *ngIf="!row.isApproved && row.payrollName != null" mat-icon-button
+            [satPopoverAnchorFor]="approveBonusPopover" #approveBonusPopUp="satPopoverAnchor"
+            (click)="approveBonusPopUpOpen(row,approveBonusPopUp)">
+            <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{'EMPLOYEEBONUS.ISAPPROVEED' | translate }}"
+            *ngIf="row.isApproved && row.payrollName != null" mat-icon-button>
+
+            <fa-icon icon="check" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{'EMPLOYEETEMPLATE.APPROVE' | translate }}"
+          *ngIf="row.isApproved && row.payrollName != null" mat-icon-button
+          [satPopoverAnchorFor]="approveBonusPopover" #approveBonusPopUp="satPopoverAnchor"
+          (click)="approveBonusPopUpOpen(row,approveBonusPopUp)">
+          <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+        </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertPayGradePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ payGradeEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="payGradeForm" #formDirective="ngForm" novalidate
+          (submit)="payGradeForm.valid && upsertTaxSlab(formDirective)">
+          <div>
+            <mat-form-field class="full-width mr-1" fxFlex="45%">
+              <input matInput formControlName="employeeName" placeholder="Employee Name" required>
+              <mat-error *ngIf="payGradeForm.get('employeeName').hasError('maxlength')">
+                {{ 'EMPLOYEETEMPLATE.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="payGradeForm.get('employeeName').hasError('required') && payGradeForm.get('employeeName').touched">
+                {{ 'EMPLOYEETEMPLATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width mr-1" fxFlex="45%" (click)="$event.stopPropagation();">
+              <mat-select formControlName="payrollTemplateId" placeholder="Template" required>
+                <mat-option [value]="template.payRollTemplateId" *ngFor="let template of tempEmployeeTemplates">
+                  {{template.payRollTemplateName}}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="payGradeForm.get('payrollTemplateId').hasError('required') && payGradeForm.get('payrollTemplateId').touched">
+                {{ 'EMPLOYEETEMPLATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width mr-1" fxFlex="45">
+
+              <input matInput [matDatepicker]="activeFrom" formControlName="activeFrom" (click)="activeFrom.open();checkValidations()" (blur)="checkValidations()"
+                placeholder="Active From">
+              <mat-datepicker-toggle matSuffix [for]="activeFrom"></mat-datepicker-toggle>
+              <mat-datepicker #activeFrom></mat-datepicker>          
+
+            </mat-form-field>
+            <mat-form-field class="full-width mr-1" fxFlex="50">
+
+              <input matInput [matDatepicker]="activeTo" formControlName="activeTo" [min]="payGradeForm.get('activeFrom').value" (click)="activeTo.open();checkValidations()" (blur)="checkValidations()"
+                placeholder="Active To">
+              <mat-datepicker-toggle matSuffix [for]="activeTo"></mat-datepicker-toggle>
+              <mat-datepicker #activeTo></mat-datepicker>
+
+
+            </mat-form-field>
+
+
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 text-center mb-05">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!payGradeForm.valid || isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertTaxSlabsPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <sat-popover backdropClass="backdrop-color" #approveBonusPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isApproved">{{ 'EMPLOYEETEMPLATE.TEMPLATEAPPROVAL' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isApproved">{{ 'EMPLOYEETEMPLATE.TEMPLATEUNAPPROVAL' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isApproved">
+          {{ 'EMPLOYEETEMPLATE.APPROVETEMPLATE' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isApproved">
+          {{ 'EMPLOYEETEMPLATE.UNAPPROVETEMPLATE' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteTaxSlab();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteApproveBonusDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+<app-common-message-box
+  *ngIf="!(canAccess_feature_ConfigureEmployeePayrollTemplates)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,387 @@
+<div *ngIf="(canAccess_feature_CanAccessProbation)">
+    <div class="roles p-0 m-333" *ngIf="isMainMenu" id="pf-1">
+        <div fxLayout="row" class="my-profiletabs widget-tab-static-label">
+            <div fxFlex>
+                <mat-tab-group class="testrail-tabs form-submission" [selectedIndex]="selectedTab"
+                    (selectedTabChange)="selectedMatTab($event)" style="height: 41px;">
+                    <mat-tab label="ACTIVEREVIEWS">
+                        <ng-template mat-tab-label>
+                            {{ 'PROBATION.ACTIVEREVIEWS' |  translate }}
+                        </ng-template>
+                    </mat-tab>
+                    <mat-tab label="PASTREVIEWS">
+                        <ng-template mat-tab-label>
+                            {{ 'PROBATION.PASTREVIEWS' |  translate }}
+                        </ng-template>
+                    </mat-tab>
+                </mat-tab-group>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput pr-05" fxLayoutAlign="end center"
+                fxLayoutAlign.xs="start center" *ngIf="(selectedTab == 1)">
+                <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                        [(ngModel)]="searchText" (keydown.enter)="getProbations()">
+                </div>
+                <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+                    style="cursor:pointer;top: 10px !important">
+                    <span *ngIf="!searchText"></span>
+                    <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                        style="cursor:pointer">
+                        close</mat-icon>
+                </span>
+            </div>
+        </div>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress && (selectedTab == 0)">
+        </mat-progress-bar>
+        <div *ngIf="selectedTab == 0" class="m-1">
+            <app-common-message-box
+                *ngIf="!isAnyOperationIsInprogress && probations.length == 0 && (isManager || isOwner)"
+                textToDisplay="You don't have any active reviews. Click below button to start a new review.">
+                <ng-template ng-message-tmp>
+                    <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                        [matMenuTriggerFor]="filterMenu" (click)="openMenu()" id="pf-2">
+                        <fa-icon class="mr-05" icon="plus"></fa-icon>
+                        {{ 'PROBATION.STARTANEWREVIEW' |  translate }}
+                    </button>
+                    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                        <mat-card class="filter-data" style="width: 280px;">
+                            <mat-form-field class="full-width">
+                                <mat-label>Probation configurations</mat-label>
+                                <mat-select [(ngModel)]="selectedConfigurationId" (click)="$event.stopPropagation()"
+                                    placeholder="Probation configurations"
+                                    (selectionChange)="probationConfigurationSelected($event.value)">
+                                    <mat-option value="selectone">
+                                        {{ 'PROBATION.SELECTAPROBATIONTYPE' |  translate }}
+                                    </mat-option>
+                                    <mat-option *ngFor="let probationConfiguration of probationConfigurations"
+                                        [value]="probationConfiguration.configurationId">
+                                        {{probationConfiguration.configurationName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </mat-card>
+                    </mat-menu>
+                </ng-template>
+            </app-common-message-box>
+            <div *ngIf="!isAnyOperationIsInprogress && probations.length > 0">
+                <div fxLayout="row" class="m-1 cursor-pointer" (click)="resumeProbation(probations[0])">
+                    <div fxFlex="550px" fxLayoutAlign="start center" fxLayout="column">
+                        <div fxFlex="45px" fxLayoutAlign="space-around center" style="font-size: 20px;">
+                            {{ 'PROBATION.PROBATIONREVIEW' |  translate }}
+                            {{ probations[0].createdDateTime | utcToLocalTime | date: 'dd-MMM-yyyy'  }}
+                        </div>
+                        <div fxFlex="30px" fxLayoutAlign="space-around center">
+                            {{ 'PROBATION.THEREISAACTIVEREVIEWFORTHISUSERCLICKTOCONTINUEWITHTHEREVIEW' |  translate }}
+                        </div>
+                    </div>
+                    <div fxFlex="40px" fxLayoutAlign="start center">
+                        <fa-icon class="mr-05" icon="angle-right"
+                            matTooltip="{{ 'PROBATION.CLICKHERETOCONTINUEWITHTHEACTIVEREVIEW' |  translate }}"></fa-icon>
+                    </div>
+                    <div fxFlex></div>
+                </div>
+            </div>
+        </div>
+        <div class="probation-form" id="style-1" *ngIf="selectedTab == 1">
+            <app-common-message-box *ngIf="!isAnyOperationIsInprogress && probations.length == 0"
+                textToDisplay="{{ 'PROBATION.THEREARENOPREVIOUSREVIEWS' |  translate }}">
+            </app-common-message-box>
+            <div *ngIf="probations.length > 0">
+                <kendo-grid #grid [data]="closedProbations" [pageSize]="state.take" [skip]="state.skip"
+                    [sortable]="true" [pageable]="true" [filterable]="false" (dataStateChange)="dataStateChange($event)"
+                    [sort]="state.sort">
+                    <kendo-grid-column field="configurationName" title="{{ 'PROBATION.REVIEW' |  translate }}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">{{ dataItem.configurationName }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="createdBy" title="{{ 'PROBATION.STARTEDBY' |  translate }}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <app-avatar class="employee_img mt-0" *ngIf="!dataItem.createdByUserImage"
+                                (click)="profilePage(dataItem.createdByUserId);$event.stopPropagation();"
+                                [name]="dataItem.createdByUserName | removeSpecialCharacters" [isRound]="true"
+                                size="30">
+                            </app-avatar>
+                            <img class="employee_img" src="{{dataItem.createdByUserImage}}"
+                                (click)="profilePage(dataItem.createdByUserId);$event.stopPropagation();"
+                                *ngIf="dataItem.createdByUserImage">{{dataItem.createdByUserName}}
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="createdOn" title="{{ 'PROBATION.STARTEDON' |  translate }}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">
+                                {{ dataItem.createdDateTime | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm' }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="closedBy" title="{{ 'PROBATION.CLOSEDBY' |  translate }}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <app-avatar class="employee_img mt-0" *ngIf="!dataItem.closedByUserImage"
+                                (click)="profilePage(dataItem.closedByUserId);$event.stopPropagation();"
+                                [name]="dataItem.closedByUserName | removeSpecialCharacters" [isRound]="true" size="30">
+                            </app-avatar>
+                            <img class="employee_img" src="{{dataItem.closedByUserImage}}"
+                                (click)="profilePage(dataItem.closedByUserId);$event.stopPropagation();"
+                                *ngIf="dataItem.closedByUserImage">{{dataItem.closedByUserName}}
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-column field="latestModificationOn" title="{{ 'PROBATION.CLOSEDON' |  translate }}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <div class="cursor-pointer">
+                                {{ dataItem.latestModificationOn | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm' }}
+                            </div>
+                        </ng-template>
+                    </kendo-grid-column>
+                    <kendo-grid-command-column title="{{'PROBATION.ACTIONS' | translate}}">
+                        <ng-template kendoGridCellTemplate let-dataItem>
+                            <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="eye"
+                                matTooltip="{{ 'PROBATION.VIEWPROBATION' |  translate }}"
+                                (click)="resumeProbation(dataItem)"></fa-icon>
+                            <fa-icon class="mat-color-accent cursor-pointer mr-1" *ngIf="isManager"
+                                [satPopoverAnchorFor]="deleteConfigurationPopover"
+                                #deleteConfigurationPopup="satPopoverAnchor"
+                                matTooltip="{{ 'PROBATION.DELETE' |  translate }}"
+                                (click)="openDeletePopup(deleteConfigurationPopup,false)" icon="trash-alt">
+                            </fa-icon>
+                            <fa-icon class="mat-color-accent cursor-pointer mr-1" *ngIf="dataItem.pdfUrl"
+                                matTooltip="{{ 'APP.EXPORTDATATOPDF' | translate}}"
+                                (click)="downloadPdf(dataItem.pdfUrl)" icon="download">
+                            </fa-icon>
+                        </ng-template>
+                    </kendo-grid-command-column>
+                </kendo-grid>
+                <div [ngClass]="{'k-i-loading': isAnyOperationIsInprogress}"></div>
+            </div>
+        </div>
+    </div>
+    <div class="roles p-0 m-333" *ngIf="!isMainMenu">
+        <div class="m-1">
+            <a (click)="navigateToMainMenu()">
+                <fa-icon class="mr-1" icon="arrow-left"
+                    matTooltip="{{ 'PROBATION.GOBACKTOPROBATIONPAGE' |  translate }}">
+                </fa-icon>
+            </a>
+            {{ 'PROBATION.PROBATION' |  translate }}
+        </div>
+        <div fxLayout="row" class="my-profiletabs widget-tab-static-label">
+            <div fxFlex>
+                <mat-tab-group class="custom-tab-overflow mt-06 mr-08" (selectedTabChange)="selectedMenuMatTab($event)">
+                    <mat-tab style="width: 250px !important" label="EMPLOYEE">
+                        <ng-template mat-tab-label>
+                            {{ 'PROBATION.EMPLOYEE' |  translate }}
+                        </ng-template>
+                    </mat-tab>
+                    <mat-tab style="width: 250px !important" label="MANAGER" *ngIf="(isManager || isShare)">
+                        <ng-template mat-tab-label>
+                            {{ 'PROBATION.MANAGER' |  translate }}
+                        </ng-template>
+                    </mat-tab>
+                    <mat-tab style="width: 250px !important" label="360" *ngIf="(isManager || isInvitee || isShare)">
+                        <ng-template mat-tab-label>
+                            360
+                        </ng-template>
+                    </mat-tab>
+                </mat-tab-group>
+            </div>
+            <div fxFlex="116px" class="mt-02" *ngIf="!isOpen && pdfUrl">
+                <button mat-button mat-raised-button class="text-center" color="primary" (click)="downloadPdf(pdfUrl)"
+                    style="width: 106px;">
+                    <fa-icon class="mr-05" icon="print"></fa-icon>
+                    {{ 'PROBATION.PRINT' |  translate }}
+                </button>
+            </div>
+            <div fxFlex="130px" class="mt-02" *ngIf="!isShare && isManager && isOpen">
+                <button mat-button mat-raised-button class="text-center" color="primary" style="width: 122px;"
+                    (click)="shareProbation(true)">
+                    <fa-icon class="mr-05" icon="share-square"></fa-icon>
+                    {{ 'PROBATION.SHARE' |  translate }}
+                </button>
+            </div>
+            <div fxFlex="130px" class="mt-02" *ngIf="isShare && isManager && isOpen">
+                <button mat-button mat-raised-button class="text-center" color="primary" style="width: 122px;"
+                    (click)="shareProbation(false)">
+                    <fa-icon class="mr-05" icon="undo"></fa-icon>
+                    {{ 'PROBATION.UNSHARE' |  translate }}
+                </button>
+            </div>
+            <div fxFlex="160px" *ngIf="isOpen && isShare && isManager" class="mt-02">
+                <button mat-button mat-raised-button class="text-center" color="primary" style="width: 152px;"
+                    (click)="changeOpenReview(false)">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'PROBATION.CLOSEREVIEW' |  translate }}
+                </button>
+            </div>
+            <div fxFlex="160px" *ngIf="!isOpen && isManager" class="mt-02">
+                <button mat-button mat-raised-button class="text-center" color="primary" style="width: 152px;"
+                    (click)="changeOpenReview(true)">
+                    <fa-icon class="mr-05" icon="redo"></fa-icon>
+                    {{ 'PROBATION.REOPENREVIEW' |  translate }}
+                </button>
+            </div>
+            <div fxFlex="122px" class="mt-02" *ngIf="isManager">
+                <button mat-button mat-raised-button class="text-center" color="primary" style="width: 114px;"
+                    [satPopoverAnchorFor]="deleteConfigurationPopover" #deleteConfigurationPopup="satPopoverAnchor"
+                    (click)="openDeletePopup(deleteConfigurationPopup,true)">
+                    <fa-icon class="mr-05" icon="trash-alt"></fa-icon>
+                    {{ 'PROBATION.DELETE' |  translate }}
+                </button>
+            </div>
+        </div>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+        <div>
+            <div class="m-1" *ngIf="selectedMenuIndex == 0 && !isAnyOperationIsInprogress">
+                <div class="m-0 p-0" *ngIf="isCompleted || isOwner" style="height: calc(100vh - 230px);" id="style-1">
+                    <formio [form]="formJson" [submission]="formData" (submit)="onDataSubmit(false)"
+                        [readOnly]="(!(isOwner && isOpen)) || isCompleted">
+                    </formio>
+                </div>
+                <app-common-message-box *ngIf="(!isCompleted && !isOwner)"
+                    textToDisplay="{{ 'PROBATION.REVIEWNOTYETSUBMITTED' |  translate }}">
+                </app-common-message-box>
+                <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+                    (click)="onDataSubmit(true)" *ngIf="!isCompleted && isOwner && isOpen" style="right: 100px;">
+                    {{ 'FINISH' | translate }}
+                </button>
+            </div>
+            <div class="m-1" *ngIf="selectedMenuIndex == 1 && !isAnyOperationIsInprogress">
+                <div class="m-0 p-0">
+                    <div class="m-0 p-0" *ngIf="isCompleted || isManager" id="style-1" style="height: calc(100vh - 230px);">
+                        <formio [form]="formJson" [submission]="formData" (submit)="onDataSubmit(false)"
+                            [readOnly]="(!(isManager && isOpen)) || isCompleted">
+                        </formio>
+                    </div>
+                    <app-common-message-box *ngIf="(!isCompleted && !isManager)"
+                        textToDisplay="{{ 'PROBATION.REVIEWNOTYETSUBMITTED' |  translate }}">
+                    </app-common-message-box>
+                    <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+                        (click)="onDataSubmit(true)" *ngIf="!isCompleted && isManager && isOpen" style="right: 100px;">
+                        {{ 'FINISH' | translate }}
+                    </button>
+                </div>
+            </div>
+            <div class="m-1" *ngIf="selectedMenuIndex == 2 && !isAnyOperationIsInprogress">
+                <div *ngIf="(isManager || isShare)">
+                    <div *ngIf="isManager">
+                        <button mat-button mat-raised-button class="mb-1 text-center" color="primary"
+                            [matMenuTriggerFor]="userMenu" (click)="openMenu()" *ngIf="isOpen">
+                            <fa-icon class="mr-05" icon="plus"></fa-icon>
+                            {{ 'PROBATION.INVITEUSER' |  translate }}
+                        </button>
+                        <mat-menu #userMenu="matMenu" xPosition="before" class="custom-matpanel">
+                            <mat-card class="filter-data">
+                                <mat-form-field class="full-width" [formGroup]="probationForm">
+                                    <mat-select formControlName="selectedRoles" (click)="$event.stopPropagation()"
+                                        placeholder="{{ 'FORMSUBMISSION.SELECTAUSER' | translate }}" multiple required>
+                                        <app-select-all [model]="probationForm.get('selectedRoles')"
+                                            [values]="userIds">
+                                        </app-select-all>
+                                        <mat-option *ngFor="let type of usersDropdown" [value]="type.id">
+                                            <app-avatar class="employee_img" *ngIf="!type.profileImage"
+                                                [name]="type.fullName | removeSpecialCharacters" [isRound]="true"
+                                                size="30">
+                                            </app-avatar>
+                                            <img class="employee_img" src="{{type.profileImage}}"
+                                                *ngIf="type.profileImage">{{type.fullName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <div>
+                                    <button class="pull-right" [disabled]="(!probationForm.valid)" mat-button
+                                        mat-raised-button (click)="inviteUser();">
+                                        {{ 'PIVOTGRID.OK' | translate }}
+                                    </button>
+                                </div>
+                            </mat-card>
+                        </mat-menu>
+                    </div>
+                    <kendo-grid [data]="probationSubmissions" [sortable]="true" [sort]="inviteeState.sort"
+                        [filterable]="false" [pageable]="false" [loading]="isAnyOperationIsInprogress"
+                        (cellClick)="showInviteeForm($event)" [selectable]="true" (sortChange)="sortChange($event)">
+                        <kendo-grid-column field="submittedBy" title="{{ 'PROBATION.NAME' |  translate }}">
+                            <ng-template kendoGridCellTemplate let-dataItem>
+                                <app-avatar class="employee_img mt-0" *ngIf="!dataItem.submittedByProfileImage"
+                                    [name]="dataItem.submittedByName | removeSpecialCharacters" [isRound]="true"
+                                    size="30">
+                                </app-avatar>
+                                <img class="employee_img" src="{{dataItem.submittedByProfileImage}}"
+                                    *ngIf="dataItem.submittedByProfileImage">{{dataItem.submittedByName}}
+                            </ng-template>
+                        </kendo-grid-column>
+                        <kendo-grid-column field="invitedOn" title="{{ 'PROBATION.INVITEDON' |  translate }}">
+                            <ng-template kendoGridCellTemplate let-dataItem>
+                                <div>
+                                    {{ dataItem.submittedOn | utcToLocalTime | date: 'dd-MMM-yyyy HH:mm'  }}
+                                </div>
+                            </ng-template>
+                        </kendo-grid-column>
+                    </kendo-grid>
+                </div>
+                <div *ngIf="(isManager || isShare)">
+                    <div class="mt-1 mb-1" *ngIf="showInviteeReview">
+                        <div class="m-0 p-0">
+                            {{ 'PROBATION.SUBMITTEDBY' |  translate }} - <b>{{inviteeName}}</b>
+                            <fa-icon class="mat-color-accent cursor-pointer mr-1 pull-right"
+                                (click)="closeInviteeForm()" icon="times-circle">
+                            </fa-icon>
+                        </div>
+                        <div class="m-1" *ngIf="isinviteeCompleted">
+                            <formio [form]="formJson" [submission]="inviteeformData" [readOnly]="true">
+                            </formio>
+                        </div>
+                        <div class="m-1" *ngIf="!isinviteeCompleted">
+                            <app-common-message-box
+                                textToDisplay="{{ 'PROBATION.REVIEWNOTYETSUBMITTED' |  translate }}">
+                            </app-common-message-box>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <div *ngIf="isInvitee && isOpen">
+                    <div class="mt-1 mb-1">
+                        <div class="m-0 p-0" *ngIf="!isCompleted">
+                            <b>{{ 'PROBATION.SUBMITYOURREVIEWHERE' | translate }}</b>
+                        </div>
+                        <div class="m-0 p-0" *ngIf="isCompleted">
+                            <b>{{ 'PROBATION.YOURREVIEW' | translate }}</b>
+                        </div>
+                        <div style="height: calc(100vh - 252px)" id="style-1">
+                            <formio [form]="formJson" [submission]="formData" (submit)="onDataSubmit(false)"
+                                [readOnly]="(!isOpen) || isCompleted">
+                            </formio>
+                        </div>
+                        <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+                            (click)="onDataSubmit(true)" *ngIf="!isCompleted && isOpen" style="right: 100px;">
+                            {{ 'FINISH' | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<sat-popover #deleteConfigurationPopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                {{ 'PROBATION.DELETEPROBATION' |  translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'PROBATION.AREYOUSUREYOUWANTTODELETETHEPROBATIONREVIEW?' |  translate }}
+            </div>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteReview();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<app-common-message-box *ngIf="!(canAccess_feature_CanAccessProbation) && !(isAnyOperationIsInprogress)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

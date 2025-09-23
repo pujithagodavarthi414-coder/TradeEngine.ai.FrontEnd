@@ -1,0 +1,67 @@
+<div style="display: grid; padding: 10px !important;" fxLayout="row">
+  <!-- <mat-progress-bar color="primary" mode="indeterminate"></mat-progress-bar> -->
+  <!-- <div class="form-control ui fluid selection dropdown" style="padding: 0px !important;" *ngIf="!isMultiSelectOptionRequired">
+      <select class="form-control choices__input" 
+      (change)="GetFormRecordValues($event.target.value)" [(ngModel)]="value" [disabled]="disableds">
+          <option value="null" disabled><span>{{placeholder}}</span></option>
+          <option class="choices__item choices__item--choice is-selected choices__item--selectable is-highlighted mt-1"
+              *ngFor="let option of options" [value]="option.value">
+              <span>{{option.label}}</span></option>
+      </select>
+  </div> -->
+  <div style="width: 100% !important;">
+  <ng-select [items]="options" bindLabel="label" bindValue="value" [disabled]="disableds" (change)="valueChangeEvent($event)" [(ngModel)]="value" placeholder="{{placeholder}}" [multiple]="isMultiSelectOptionRequired" style="border: 1px solid #ced4da;border-radius:0.25rem">
+  </ng-select>
+  </div>
+  <button mat-icon-button matTooltip="Add" (click)="openDataSourcePopup();clearForm()" *ngIf="!disableds && isAddOptionRequired && (dataSource == 'values' || dataSource == 'url' || dataSource == 'custom')">
+      <fa-icon icon="plus" class="filter mat-color-accent" id="app-3">
+      </fa-icon>
+  </button>
+</div>
+
+<ng-template #updateDataSourceDialog let-data>
+  
+<div class="custom-dialog" *ngIf="dataSource == 'custom'">
+<div class="custom-close" mat-dialog-close (click)="closeDataSource()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+</div>
+</div>
+<mat-card class="p-0 mr-0" *ngIf="dataSource != 'custom'">
+  <mat-card-title class="text-center">
+    <div class="card-title-text  mat-bg-primary p-05 mb-1">Add
+    </div>
+  </mat-card-title>
+  <mat-card-content class="P-05" *ngIf="dataSource == 'values' || dataSource == 'url'">
+    <form [formGroup]="dataSourceForm" #formDirective="ngForm" novalidate
+      (submit)="dataSourceForm.valid && upsertDataSource(formDirective)">
+      <div>
+        <mat-form-field class="full-width">
+          <input matInput formControlName="name" placeholder="Name"
+            required>
+          <mat-error *ngIf="dataSourceForm.get('name').hasError('maxlength')">
+            Data source name should not be greater then 50 characters</mat-error>
+          <mat-error
+            *ngIf="dataSourceForm.get('name').hasError('required') && dataSourceForm.get('name').touched">
+            Data source name is mandatory
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div class="mt-1 text-center">
+        <button mat-raised-button color="primary" class="mr-1 glossy-button-button"
+          [disabled]="!dataSourceForm.valid||isAnyOperationIsInprogress">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon> Add
+        </button>
+        <button mat-button mat-raised-button (click)="closeDataSource()" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          Cancel
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
+<div *ngIf="dataSource == 'custom'">
+<app-submit-form-component-dup [companyId]='selectedCompany' [customapplicationid]="selectedCustomAppName" [formId]="selectedFormName" (formsubmitted)="refreshList()"></app-submit-form-component-dup>
+</div>
+</ng-template>

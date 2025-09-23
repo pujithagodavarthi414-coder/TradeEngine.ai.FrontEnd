@@ -1,0 +1,144 @@
+<div fxLayout="row wrap" fxLayout.sm="column" *ngIf="canAccess_feature_WorkflowManagement" class="gridster-noset">
+  <div fxFlex="100" fxFlex.gt-md="15" *ngIf="!isGoalsPage">
+    <app-pm-component-workflows *ngIf="allWorkFlowRecords" [allWorkFlowRecords]="allWorkFlowRecords"
+      [workflowId]="workflowId" [workFlowFormClose]="workFlowFormClose" (SaveWorkFlow)="SaveWorkFlow($event)"
+      (getWorkFlowById)="GetWorkFlowById($event)" [validationmessage]="validationmessage"
+      [clearWorkFlowForm]="clearWorkFlowForm">
+    </app-pm-component-workflows>
+  </div>
+  <div fxFlex="100" fxFlex.gt-md="{{isGoalsPage ? '' : 85}}" style="overflow: auto;">
+    <div class="p-0 workflow-datalist">
+      <mat-card-title class="" *ngIf="!isGoalsPage">
+        <div class="card-title-text p-05 drag-handler">
+          <b>{{ workFlowName }}</b>
+          <!-- <button mat-icon-button class="add_btn pull-right" (click)="clearWorkFlowStatusForm()"
+            [satPopoverAnchorFor]="addWorkFlowStatusPopover" (click)="addWorkFlowStatusPopover.open()"
+            matTooltip=" {{'WORKFLOWMANAGEMENT.WORKFLOWTOOLTIP' | translate }} ">
+            <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+          </button> -->
+        </div>
+
+        <sat-popover #addWorkFlowStatusPopover verticalAlign="below" hasBackdrop [autoFocus]="false"
+          horizontalAlign="start" backdropClass="backdrop-color" (click)="clearWorkFlowStatusForm()">
+          <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+              <div class="card-title-text p-05 mat-bg-primary">{{'WORKFLOWMANAGEMENT.ADDWORKFLOWSTATUS' | translate | titlecase }}
+              </div>
+            </mat-card-title>
+            <form [formGroup]="selectStatus" novalidate (submit)="selectStatus.valid && SaveWorkFlowStatus()">
+              <div class="card-content p-05">
+                <div fxLayout="row" fxLayoutGap="5px">
+                  <div>
+                    <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                      <mat-select placeholder="{{ 'WORKFLOWMANAGEMENT.SELECTSTATUS' | translate }}"
+                        formControlName="status" multiple (selectionChange)="GetStatuslist($event.value)" required>
+                        <mat-option #allSelected (click)="toggleAllGoalStatusSelection()" [value]="0">
+                          {{'WORKFLOWMANAGEMENT.SELECTALL' | translate }}
+                        </mat-option>
+                        <mat-option [value]="roles.userStoryStatusId"
+                          (click)="toggleGoalStatusPerOne(allSelected.viewValue)" *ngFor="let roles of statusDropDown">
+                          {{ roles.userStoryStatusName }} ( {{roles.taskStatusName}} )
+                        </mat-option>
+                      </mat-select>
+                      <mat-error>
+                        <span *ngIf="!selectStatus.get('status').valid &&selectStatus.get('status').touched">
+                          {{ 'WORKFLOWMANAGEMENT.PLEASESELECTSTATUS' | translate }}</span>
+                      </mat-error>
+                    </mat-form-field>
+                    <mat-error *ngIf="isThereAnError" class="alert-alert-danger">{{validationmessage}}</mat-error>
+                  </div>
+                </div>
+                <div class="text-center mt-05">
+                  <button type="submit" [disabled]="!selectStatus.valid" class="mr-05" mat-raised-button color="primary"
+                    [disabled]="loadSpinner">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadSpinner">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'ADD' | translate }}
+                  </button>
+                  <button mat-raised-button type="button" (click)="closeWorkFlowStatusForm()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                  </button>
+                </div>
+              </div>
+
+            </form>
+          </mat-card>
+        </sat-popover>
+
+        <sat-popover #addNewStatusPopover verticalAlign="start" hasBackdrop [autoFocus]="false" horizontalAlign="start"
+          backdropClass="backdrop-color">
+          <mat-card class="filter-data p-0">
+
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+            </mat-progress-bar>
+
+            <mat-card-title class="text-center">
+              <div class="card-title-text mat-bg-primary p-05">{{ 'WORKFLOWMANAGEMENT.ADDNEWSTATUS' | translate }}</div>
+            </mat-card-title>
+            <form [formGroup]="statusForm" novalidate (submit)="statusForm.valid && SaveStatus()">
+              <div class="card-content p-05">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                  <input formControlName="statusName" matInput
+                    placeholder="{{ 'WORKFLOWMANAGEMENT.STATUSNAME' | translate }}" (keyup)="onKey()" required />
+                  <mat-error>
+                    <span *ngIf="
+                        statusForm.get('statusName').hasError('maxlength') &&
+                        statusForm.get('statusName').touched
+                      ">{{ 'WORKFLOWMANAGEMENT.PLEASEENTERSTATUSNAME' | translate }}</span>
+                    <span
+                      *ngIf="statusForm.get('statusName').hasError('maxlength')">{{ 'WORKFLOWMANAGEMENT.MAXLENGTHERROR' | translate }}</span>
+                  </mat-error>
+                </mat-form-field>
+                <span *ngIf="isThereAnError" class="alert-alert-danger">{{   validationmessage   }}</span>
+                <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                  <input formControlName="statusColor" matInput
+                    placeholder="{{'WORKFLOWMANAGEMENT.STATUSCOLOR' | translate }}" [cpPosition]="'bottom'"
+                    [(colorPicker)]="color" [style.background]="color" (colorPickerChange)="
+                      statusForm.get('statusColor').setValue($event)
+                    " [value]="color" required />
+                  <mat-error>
+                    <span *ngIf=" 
+                        statusForm.get('statusColor').hasError('maxlength') &&
+                        statusForm.get('statusColor').touched
+                      ">{{ 'WORKFLOWMANAGEMENT.PLEASEENTERSTATUSCOLOR' | translate }}</span>
+                    <span
+                      *ngIf="statusForm.get('statusColor').hasError('maxlength')">{{ 'WORKFLOWMANAGEMENT.MAXLENGTHERROR' | translate }}</span>
+                  </mat-error>
+                </mat-form-field>
+                <div class="text-center mt-05">
+                  <button type="submit" [disabled]="!statusForm.valid || showSpinner" mat-raised-button color="primary"
+                    class="mr-05">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner">
+                    </mat-progress-bar>
+                    <fa-icon icon="sync" class="mr-05"></fa-icon>{{ 'WORKFLOWMANAGEMENT.UPDATE' | translate }}
+                  </button>
+                  <button mat-raised-button (click)="closestatusForm()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </mat-card>
+        </sat-popover>
+      </mat-card-title>
+
+      <mat-card-content [ngClass]="settingsHeight ? 'workFlow-Settings' : (individualHeight ? 'workFlow-individual': '')"
+        class="p-0 workflow_data" id="style-1" *ngIf="workflowId"
+        [ngStyle]="{ 'height': isGoalsPage == true ? '400px' : '' }">
+        <app-pm-component-workflowmanagement [workFlowStatuses]="workFlowStatusesTableData" [workflowId]="workflowId"
+          [workFlowStatusTransitionTableDataDetails]=" 
+                  workFlowStatusTransitionTableData" [anyOperationInProgress]="isLoading"
+          (getworkflowStatusAll)="GetAllWorkFlowStatus()" (reOrderImplementation)="reOrderSet()">
+        </app-pm-component-workflowmanagement>
+        <app-pm-component-workflowstatustransition [workflowId]="workflowId" [disabledbutton]="disabledbutton"
+          [workFlowStatuses]="workFlowStatusesTableData"></app-pm-component-workflowstatustransition>
+      </mat-card-content>
+    </div>
+  </div>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_WorkflowManagement"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

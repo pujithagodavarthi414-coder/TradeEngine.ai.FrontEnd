@@ -1,0 +1,132 @@
+<app-common-message-box *ngIf="!(canAccess_feature_LeavesReport)"
+  textToDisplay=" {{ 'LEAVESREPORT.DONTHAVEPERMISSIONS' | translate }}">
+</app-common-message-box>
+<div class="p-0 full-height" *ngIf="(canAccess_feature_LeavesReport)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayoutGap="5px">
+        <div fxFlex class="p-1">{{'LEAVESREPORT.LEAVESREPORT' | translate | titlecase}}
+        </div>
+        <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333">
+          <!-- <mat-form-field fxLayoutAlign="end center">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchLeaves"
+              (input)="searchLeaveReports()">
+          </mat-form-field>
+          <span class="close_icon">
+            <span *ngIf="!searchLeaves">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchLeaves" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span> -->
+
+          <mat-form-field class="custom-searchbar" fxLayoutAlign="end center">
+            <div class="m-0 p-0" fxLayout="row">
+              <div fxFlex class="m-0 p-0">
+                <input matInput [(ngModel)]="searchLeaves" placeholder="{{'SEARCH' | translate}}"
+                  (input)="searchLeaveReports()" />
+                <span class="filters-close assets-list-search mr-05 mt-02">
+                  <mat-icon *ngIf="searchLeaves" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">close</mat-icon>
+                </span>
+              </div>
+            </div>
+          </mat-form-field>
+
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" *ngIf="entities?.length > 1">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf="entities?.length > 1">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+      <mat-form-field (click)="$event.stopPropagation()">
+        <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+          (selectionChange)="entityValues($event.value)">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+  </mat-menu>
+  <div class="activity-data">
+    <mat-card-content class="p-0 m-0">
+      <div class="activity-data">
+        <kendo-grid [data]="gridData" [scrollable]="true" [pageSize]="state.take" [skip]="state.skip"
+          [sort]="state.sort" [filter]="state.filter" [sortable]="true" [pageable]="true" [columnMenu]="true"
+          (dataStateChange)="dataStateChange($event)">
+          <kendo-grid-column field="employeeName" width="150" title="{{ 'LEAVESREPORT.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}">
+          </kendo-grid-column>
+          <kendo-grid-column field="employeeId" width="150" title="{{ 'LEAVESREPORT.EMPLOYEEID' | translate | softLabelsPipe : softLabels }}"></kendo-grid-column>
+          <kendo-grid-column field="dateOfJoining" width="150" title="{{ 'LEAVESREPORT.DATEOFJOINING' | translate }}">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div *ngIf="dataItem.dateOfJoining !=null">
+                {{ dataItem.dateOfJoining | date: "dd-MMM-yyyy"  }}
+              </div>
+            </ng-template>
+          </kendo-grid-column>
+          <kendo-grid-column field="branchName" width="150" title="{{ 'LEAVESREPORT.BRANCHNAME' | translate }}"></kendo-grid-column>
+          <kendo-grid-column field="totalLeaves" width="150" title="{{ 'LEAVESREPORT.TOTALLEAVES' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="eligibleLeaves" width="150" title="{{ 'LEAVESREPORT.ELIGIBLELEAVES' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="eligibleLeavesYTD" width="150" title="{{ 'LEAVESREPORT.ELIGIBLELEAVESYTD' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="leavesTaken" width="150" title="{{ 'LEAVESREPORT.LEAVESTAKEN' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="onsiteLeaves" width="150" title="{{ 'LEAVESREPORT.ONSITE' | translate }}"></kendo-grid-column>
+          <kendo-grid-column field="workFromHomeLeaves" width="150" title="{{ 'LEAVESREPORT.WORKFROMHOME' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="unplannedLeaves" width="150" title="{{ 'LEAVESREPORT.UNPLANNEDLEAVES' | translate }}">
+          </kendo-grid-column>
+          <kendo-grid-column field="paidLeaves" width="150" title="{{ 'LEAVESREPORT.PAIDLEAVES' | translate }}"></kendo-grid-column>
+          <kendo-grid-column field="unpaidLeaves" width="150" title="{{ 'LEAVESREPORT.UNPAIDLEAVES' | translate }}">
+          </kendo-grid-column>
+        </kendo-grid>
+        <div *ngIf="anyOperationInProgress" class="k-i-loading"></div>
+      </div>
+    </mat-card-content>
+
+  </div>
+  <mat-menu #accountMenu1="matMenu" class="dialog_window" (click)="$event.stopPropagation();" style="width:250px;">
+    <mat-card-title class="text-center">
+      <div class="card-title-text">Add Employee Deduction
+      </div>
+    </mat-card-title>
+    <div class="card-content">
+      <!-- <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <mat-select placeholder="Select Employee" (selectionChange)="selectedUser($event.value)">
+          <mat-option value="0">Select</mat-option>
+          <mat-option *ngFor="let employee of employeelist" [value]="employee.userId">{{employee.firstName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field> -->
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <input matInput type="number" placeholder="Unpaid Leaves">
+      </mat-form-field>
+      <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+        <input matInput [matDatepicker]="dp" placeholder="Select Date" [formControl]="date">
+        <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+        <mat-datepicker #dp startView="multi-year" (yearSelected)="chosenYearHandler($event)"
+          (monthSelected)="chosenMonthHandler($event, dp)" panelClass="example-month-picker">
+        </mat-datepicker>
+      </mat-form-field>
+    </div>
+    <div class="text-center mb-1">
+      <button class="hover_button mr-1"> <i class="fa fa-plus"></i> Add </button>
+      <button class="hover_button cancel_button"> <i class="fa fa-times"></i> Cancel</button>
+    </div>
+  </mat-menu>
+</div>

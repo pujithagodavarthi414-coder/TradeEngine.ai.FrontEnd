@@ -1,0 +1,28 @@
+export class UserStoryLogTimeModel {
+  userStorySpentTimeId: string;
+  userStoryId: string;
+  parentUserStoryId: string;
+  dateFrom: Date;
+  dateTo: Date;
+  logTimeOptionId: string;
+  comment: string;
+  rawSpentTime: string;
+  rawRemainingTimeSetOrReducedBy: any;
+  spentTime: any;
+  remainingTimeSetOrReducedBy: any;
+  remainingTimeInMin: any;
+  spentTimeInMin: any;
+  userId: string;
+  userInput: string;
+  fullName: string;
+  profileImage: string;
+  createdDateTime: Date;
+  estimatedTime : any;
+  totalSpentTime : any;
+  remainingSpentTime: any;
+  startTime: any;
+  endTime: any;
+  breakType: any;
+  isFromSprint : any;
+  isFromAdhoc : boolean;
+}

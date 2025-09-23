@@ -1,0 +1,259 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler"
+            style="color: white; background-color: #303f9f;">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow"
+                        matTooltip="{{ 'ACTIVITYTRACKER.LATESTSCREENSHOTS' | translate }}">{{
+                        'ACTIVITYTRACKER.LATESTSCREENSHOTS' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button type="submit" mat-icon-button class="pull-right cursor-pointer" (click)="resetFilter()"
+                        matTooltip=" {{'RESET' | translate}}">
+                        <fa-icon icon="redo-alt" class="filter" style="color: white;">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+    <div class="no-drag">
+        <div *ngIf="isSelected">
+            <mat-card class="p-05">
+                <div fxLayout="row wrap" style="height: 20px;">
+                    <div fxFlex>
+                        <mat-checkbox [(ngModel)]="selectAll" (change)="onChecked($event)">Select all</mat-checkbox>
+                    </div>
+                    <div fxFlex fxLayoutAlign="end center" class="mt-lg-n3">
+                        <button [satPopoverAnchorFor]="deleteScreenshotPopover"
+                            #deleteScreenshotPopUp="satPopoverAnchor" (click)="openDeletePopup(deleteScreenshotPopUp)"
+                            matTooltip="{{ 'ACTIVITYTRACKER.DELETESCREENSHOT' | translate }}" mat-icon-button>
+                            <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </div>
+                </div>
+            </mat-card>
+        </div>
+        <!-- <mat-card *ngIf="noData">
+            <div fxLayoutAlign="center center" fxLayout="column" *ngIf="noData" class="no-data">
+                {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+            </div>
+        </mat-card> -->
+
+        <app-common-message-box *ngIf="noData" textToDisplay="{{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}">
+        </app-common-message-box>
+        <div *ngIf="!noData">
+            <mat-card class="pr-0 pt-0 pb-0">
+                <div class="screenshot-screen-height full-width" id="style-1">
+                    <div *ngFor="let list of userActivityScreenshots">
+                        <div fxLayout="row wrap">
+                            <ng-container *ngFor="let lst of list.screenshotDetails">
+                                <div class="screenshot-max-width">
+                                    <span class="galleryImage">
+                                        <img class="img-size" *ngIf="!lst?.isArchived" [src]="lst.screenShotUrl"
+                                            value="lst.screenShotId" />
+                                        <!-- <img class="img-size" *ngIf="!lst?.isArchived"
+                                            [src]="lst.screenShotUrl | fetchSizedAndCachedImage: '250':'150'"
+                                            (click)='openModal(lst.screenShotId)' value="lst.screenShotId" /> -->
+                                        <img class="img-size" *ngIf="lst?.isArchived"
+                                            src="../../../../../assets/images/deleted.png" value="lst.screenShotId" />
+                                        <!-- <img class="img-size" *ngIf="lst?.isArchived"
+                                            src="../../../../../assets/images/deleted.png"
+                                            (click)='openModal(lst.screenShotId)' value="lst.screenShotId" /> -->
+                                        <!-- <input id="lst.screenShotId" *ngIf="!lst?.isArchived && list.isDelete"
+                                            [(ngModel)]="lst.isSelected" class="chk" name="delete_CheckBox"
+                                            type="checkbox" value="lst.screenShotId"
+                                            (click)='onChange(lst.screenShotId)' /> -->
+                                    </span>
+                                    <div fxLayout="row" class="full-width">
+                                        <div fxFlex="40px" class="mt-03">
+                                            <app-avatar class="employee_img" *ngIf="!lst.profileImage"
+                                                [name]="lst.name | removeSpecialCharacters" [isRound]="true" size="30">
+                                            </app-avatar>
+                                            <img class="employee_img" src="{{lst.profileImage}}" style="float: none;"
+                                                *ngIf="lst.profileImage" />
+                                        </div>
+                                        <div fxFlex="79" class="mt-02">
+                                            <div fxLayout="row">
+                                                <div fxFlex="100" class="hide-content-overflow">
+                                                    <label class="mb-0 assets-name-control hide-content-overflow"
+                                                        matTooltip="{{lst.name}}">{{ lst.name }}</label>
+                                                </div>
+                                            </div>
+                                            <div fxLayout="row">
+                                                <div fxFlex="100" class="hide-content-overflow">
+                                                    <label class="mb-0 assets-name-control hide-content-overflow"
+                                                        matTooltip="{{lst.screenShotDateTime | timeZoneData: 'mediumTime'}}{{ ' ' + lst?.timeZoneName }}">
+                                                        {{lst.screenShotDateTime | timeZoneData: 'mediumTime'}}{{ ' ' +
+                                                        lst?.timeZoneAbbreviation }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+            </mat-card>
+            <!-- <div class="pagination-position" style="margin-left: -7px;">
+                <mat-paginator *ngIf="(totalCount > 25)" class="paging-move" [length]="totalCount" [pageSize]="pageSize"
+                  [pageIndex]="pageIndex" [pageSizeOptions]="pageSizeOptions" (page)="getScreenshots($event)">
+                </mat-paginator>
+            </div> -->
+
+            <div id="myModal" class="custom-modal">
+                <button [satPopoverAnchorFor]="deleteScreenshotPopover" #deleteScreenshotPopUp="satPopoverAnchor"
+                    class="pull-right button-top-screenshot" (click)="closeModal()"
+                    matTooltip="{{ 'TIMEPUNCHCARD.CANCEL' | translate }}" mat-icon-button>
+                    <fa-icon icon="times" class="mat-color-accent"></fa-icon>
+                </button>
+                <button *ngIf="!imageDetails?.isArchived && imageDetails?.isDelete"
+                    [satPopoverAnchorFor]="deleteScreenshotPopover" #deleteScreenshotPopUp="satPopoverAnchor"
+                    class="pull-right button-top-screenshot" (click)="openDeletePopup(deleteScreenshotPopUp)"
+                    matTooltip="{{ 'ACTIVITYTRACKER.DELETESCREENSHOT' | translate }}" mat-icon-button>
+                    <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                </button>
+                <div class="modal-content">
+                    <div class="mySlides">
+                        <img *ngIf="imageDetails?.isArchived" src="../../../../../assets/images/deleted.png"
+                            style="width:100%;height:100%">
+                        <img *ngIf="!imageDetails?.isArchived" src="{{ screenImg }}" style="width:100%;height:100%">
+                    </div>
+                </div>
+                <fa-icon *ngIf="prevarrow" icon="angle-left" (click)="plusSlides(-1)" class="prev mat-color-accent">
+                </fa-icon>
+                <fa-icon *ngIf="nextarrow" icon="angle-right" (click)="plusSlides(1)" class="next mat-color-accent">
+                </fa-icon>
+                <div class="activity-screenshot-details">
+                    <div class="ml-5">
+                        <div fxLayout="row wrap" fxLayout.xs="column" class="mt-05">
+                            <div fxFlex="30" fxFlex.sm="40" fxFlex.xs="100" class="mt-1-05">
+                                <app-avatar class="employee_img" *ngIf="!imageDetails?.profileImage"
+                                    [name]="imageDetails?.name | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img" src="{{imageDetails.profileImage}}"
+                                    *ngIf="imageDetails?.profileImage" />
+                                <div>
+                                    <div><label class="mb-0 activity-screenshot-font-details">{{ imageDetails?.name
+                                            }}</label>
+                                    </div>
+                                    <div fxFlex><label
+                                            class="mb-0 assets-name-control hide-content-overflow activity-screenshot-font-details"
+                                            matTooltip="{{ imageDetails?.roleName }}">
+                                            {{ imageDetails?.roleName }}</label>
+                                    </div>
+                                    <div class="mb-05"><label class="mb-0 activity-screenshot-font-details">{{
+                                            imageDetails?.screenShotDateTime | timeZoneData: 'medium'}}{{ ' ' +
+                                            imageDetails?.timeZoneName }}</label>
+                                    </div>
+                                    <div class="mt-05 mb-05">
+                                        <div><label
+                                                class="mb-0 activity-screenshot-font-details">{{'ACTIVITYTRACKER.PRODUCTIVITY'
+                                                | translate}}</label>
+                                        </div>
+                                        <div fxLayout="row wrap" fxLayoutAlign="start center">
+                                            <div fxFlex="18" fxFlex.md="26" fxFlex.sm="35" fxFlex.xs="29"
+                                                [ngClass]="[imageDetails?.applicationTypeName == 'Productive' ? 'productivity-productive' : 'productivity-normal' ]">
+                                                {{'ACTIVITYTRACKER.PRODUCTIVE' | translate}}</div>
+                                            <div fxFlex="18" fxFlex.md="32" fxFlex.sm="37" fxFlex.xs="34"
+                                                [ngClass]="[imageDetails?.applicationTypeName == 'UnProductive' ? 'productivity-unproductive' : 'productivity-normal' ]">
+                                                {{'ACTIVITYTRACKER.UNPRODUCTIVE' | translate}}</div>
+                                            <div fxFlex="18" fxFlex.md="21" fxFlex.sm="26" fxFlex.xs="22"
+                                                [ngClass]="[imageDetails?.applicationTypeName == 'Neutral' ? 'productivity-neutral' : 'productivity-normal' ]">
+                                                {{'ACTIVITYTRACKER.NEUTRAL' | translate}}</div>
+                                        </div>
+                                    </div>
+                                    <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutGap.lt-lg="0px"
+                                        *ngIf="imageDetails?.recordActivity || imageDetails?.mouseTracking">
+                                        <div fxFlex="33" fxFlex.md="100" fxFlex.lt-lg="100"
+                                            *ngIf="imageDetails?.recordActivity">
+                                            <fa-icon matTooltip="{{'ACTIVITYTRACKER.KEYSTROKESPERMIN' | translate}}"
+                                                class="mr-05 icon-button mat-color-accent" icon="keyboard">
+                                            </fa-icon><label
+                                                class="mb-0 mr-05 activity-screenshot-font-details">{{'ACTIVITYTRACKER.KEYSTROKESPERMIN'
+                                                | translate}}:
+                                                {{ imageDetails?.keyStroke }}</label>
+                                        </div>
+                                        <div fxFlex="50" fxFlex.md="100" fxFlex.md-lg="100"
+                                            *ngIf="imageDetails?.mouseTracking">
+                                            <fa-icon matTooltip="{{'ACTIVITYTRACKER.MOUSECLICKPERMIN' | translate}}"
+                                                class="mr-05 icon-button mat-color-accent" icon="mouse">
+                                            </fa-icon><label
+                                                class="mb-0 activity-screenshot-font-details">{{'ACTIVITYTRACKER.MOUSECLICKPERMIN'
+                                                | translate}}:
+                                                {{ imageDetails?.mouseMovement }}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div fxFlex="60" fxFlex.sm="50" fxFlex.xs="100" class="mt-05 activity-font-custom">
+                                <div fxLayout="row wrap">
+                                    <div fxFlex="100" class="hide-content-overflow">
+                                        <label *ngIf="imageDetails?.isArchived"
+                                            class="mb-0 activity-screenshot-font-details assets-name-control hide-content-overflow"
+                                            matTooltip="{{imageDetails?.reason}}">Reason
+                                            :
+                                            {{ imageDetails?.reason }}</label>
+                                    </div>
+                                    <div fxFlex="100" class="hide-content-overflow">
+                                        <label *ngIf="imageDetails?.isArchived"
+                                            class="mb-0 activity-screenshot-font-details assets-name-control hide-content-overflow"
+                                            matTooltip="{{imageDetails?.deletedByUser}}">Deleted by
+                                            :
+                                            {{ imageDetails?.deletedByUser }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<sat-popover #deleteScreenshotPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0" fxFlex="320px">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{ 'ACTIVITYTRACKER.DELETESCREENSHOTS' | translate }}
+            </div>
+        </mat-card-title>
+        <form [formGroup]="deleteForm" novalidate #passwordFormDirective="ngForm">
+            <div class="card-content p-05 mt-05">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="reason" placeholder="{{ 'ACTIVITYTRACKER.REASON' | translate }}"
+                        required>
+                    <mat-error>
+                        <span *ngIf="deleteForm.get('reason').hasError('required') && deleteForm.get('reason').touched">
+                            {{'ACTIVITYTRACKER.PLEASEENTERREASON' | translate}}</span>
+                        <span
+                            *ngIf="deleteForm.get('reason').hasError('required') && deleteForm.get('reason').untouched">
+                            {{'ACTIVITYTRACKER.PLEASEENTERREASON' | translate}}</span>
+                        <span *ngIf="deleteForm.get('reason').hasError('maxlength')">
+                            {{'ACTIVITYTRACKER.REASONHASEXCEEDEDTHEMAXIMUMLENTH' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div class="text-center mb-1 mt-05">
+                <button type="submit" mat-button mat-raised-button (click)="deleteScreenshots(passwordFormDirective)"
+                    class="mr-05" color="primary">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'ACTIVITYTRACKER.DELETE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closePopup(passwordFormDirective);">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+<!-- <app-common-message-box *ngIf="!( canAccess_feature_ViewActivityScreenshots)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->

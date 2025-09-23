@@ -1,0 +1,267 @@
+<mat-card class="custom-box mb-0 mt-03 p-0">
+    <mat-progress-bar color="primary" mode="indeterminate"
+        *ngIf="(anyOperationInProgress$ | async) || (reOrderOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div class="p-0 m-0 audits-category-question-list fit-content-audit-question-list" id="style-1">
+        <div class="p-0 audits-category-questions" *ngIf="loadAuditRelatedData && isAuditLoaded">
+            <div class="testsuite-description">
+                <div class="ml-05 pull-right" fxLayout="row">
+                    <div class="mt-05 mr-05" fxFlex>
+                        <span class="pull-right">
+                            <fa-icon style="cursor: pointer;" matTooltip="{{'AUDIT.DOCUMENTS' | translate}}"
+                                icon="cloud-upload-alt" class="mr-1 mat-color-accent filter-operation"
+                                (click)="openAuditDocuments()"
+                                *ngIf="canAccess_entityType_feature_CanAddAndViewAuditLevelDocuments && !isAuditArchived">
+                            </fa-icon>
+                            <fa-icon style="cursor: pointer;" matTooltip="{{'AUDIT.COPYORMOVEQUESTIONS' | translate | softLabelsPipe :softLabels}}"
+                                icon="copy" class="mat-color-accent filter-operation"
+                                (click)="copyOrMoveQuestionsDailogOpen()"
+                                *ngIf="canAccess_entityType_feature_CopyOrMoveQuestions && !isAuditArchived">
+                            </fa-icon>
+                            <fa-icon *ngIf="categorySelected" style="cursor: pointer;"
+                                matTooltip="{{'TESTMANAGEMENT.CLICKHERETOADVANCESEARCH' | translate}}" icon="filter"
+                                class="ml-1 mat-color-accent filter-operation" (click)="filterOpen = !filterOpen">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </div>
+                <div class="p-05" fxLayout="row" *ngIf="isAuditLoaded">
+                    <div class="column">
+                        <div>
+                            <span>
+                                <b>
+                                    <span class="word-break user-select-text testsuite-text"
+                                        matTooltip="{{'AUDIT.AUDITNAME' | translate | softLabelsPipe :softLabels}}">{{selectedAudit.auditName}}
+                                    </span>
+                                </b>
+                                <span class="ml-02 audit-description" *ngIf="selectedAudit.auditDescription &&
+                                                                    selectedAudit.auditDescription.length > 0">
+                                    (<span class="word-break user-select-text"
+                                        [innerHTML]="selectedAudit.auditDescription">
+                                    </span>)
+                                </span>
+                            </span>
+                            <span class="ml-05" fxFlex="20px"
+                                *ngIf="isAnyOfQuestionsSelected && canAccess_entityType_feature_CopyOrMoveQuestionsFromCategoryToCategory">
+                                <fa-icon class="update-status" icon="file-export"
+                                    matTooltip="{{ 'AUDIT.MOVEQUESTIONS' | translate | softLabelsPipe :softLabels }}"
+                                    (click)="openMoveQuestionsPopover()" [satPopoverAnchorFor]="moveQuestionsPopover">
+                                </fa-icon>
+                            </span>
+                            <span class="ml-05" fxFlex="20px"
+                                *ngIf="isAnyOfQuestionsSelected && canAccess_entityType_feature_CopyOrMoveQuestionsFromCategoryToCategory">
+                                <fa-icon class="update-status" icon="copy"
+                                    matTooltip="{{ 'AUDIT.COPYQUESTIONS' | translate | softLabelsPipe :softLabels }}"
+                                    (click)="openCopyQuestionsPopover()" [satPopoverAnchorFor]="copyQuestionsPopover">
+                                </fa-icon>
+                            </span>
+                            <span class="ml-05" fxFlex="20px"
+                                *ngIf="isAnyOfQuestionsSelected && canAccess_entityType_feature_ArchiveOrUnarchiveAuditQuestions">
+                                <fa-icon class="update-status" icon="trash"
+                                    matTooltip="{{ 'AUDIT.DELETEQUESTIONS' | translate | softLabelsPipe :softLabels }}"
+                                    (click)="openDeleteQuestionsPopover()">
+                                </fa-icon>
+                            </span>
+                        </div>
+                        <div class="p-05">
+                            <mat-chip disableRipple matRipple class="mr-08" *ngIf="tagNames">
+                                <b>{{'APP.TAGS' | translate}}:&nbsp;</b>
+                                {{ tagNames }}
+                            </mat-chip>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <questions-filter *ngIf="filterOpen" [auditId]="selectedAudit.auditId"
+                [selectedCategoryData]="categorySelected.auditCategoryId" [isAudit]="isAuditOrNot"
+                [isHierarchical]="isHierarchical">
+            </questions-filter>
+            <div *ngIf="!(anyOperationInProgress$ | async)">
+                <mat-card *ngIf="loadAuditCategoryRelatedData != null && !loadAuditCategoryRelatedData"
+                    class="p-0 mt-05 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05">
+                            <p *ngIf="canAccess_entityType_feature_AddOrUpdateAuditCategory && !isAuditArchived"
+                                class="m-0">
+                                {{'AUDIT.THREEARENOCATEGORIESAVILABLEINAUDIT' | translate | softLabelsPipe :softLabels}}
+                            </p>
+                            <p *ngIf="!canAccess_entityType_feature_AddOrUpdateAuditCategory || isAuditArchived"
+                                class="m-0">
+                                {{'AUDIT.NOTHREEARENOCATEGORIESAVILABLEINAUDIT' | translate | softLabelsPipe :softLabels}}
+                            </p>
+                        </div>
+                    </div>
+                </mat-card>
+                <div *ngIf="loadAuditCategoryRelatedData">
+                    <div *ngIf="!isHierarchical">
+                        <div class="ml-1 mt-05 testsuite-text" fxLayout="row" *ngIf="isAuditCategoryLoaded">
+                            <mat-checkbox
+                                *ngIf="canAccess_entityType_feature_CopyOrMoveQuestionsFromCategoryToCategory && (questionsCount > 0) && !isAuditArchived"
+                                class="mr-05" [(ngModel)]="isMultiQuestionsSelected"
+                                (change)="changeStatus($event.checked)" style="position: relative; top: 3px;">
+                            </mat-checkbox>
+                            <span *ngIf="!categoryName" class="word-break user-select-text"
+                                matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{categorySelected.auditCategoryName}}</span>
+                            <span *ngIf="categoryName" class="word-break user-select-text"
+                                matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{categoryName}}</span>
+                            <span matTooltip="{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}"
+                                class="ml-05 badge-item test-case-count-number">{{questionsCount}}</span>
+                        </div>
+                        <div *ngIf="isAuditCategoryLoaded">
+                            <div class="ml-1">
+                                <span
+                                    *ngIf="!categoryDescription && categorySelected.auditCategoryDescription != null && categorySelected.auditCategoryDescription.length > 0"
+                                    class="section-description word-break user-select-text mb-05"
+                                    [innerHTML]="categorySelected.auditCategoryDescription"></span>
+                                <span *ngIf="categoryDescription"
+                                    class="section-description word-break user-select-text mb-05"
+                                    [innerHTML]="categoryDescription"></span>
+                            </div>
+                        </div>
+                        <mat-card-content class="p-0 mb-0" *ngIf="isAuditCategoryLoaded">
+                            <mat-list class="compact-list mb-05" dragula="questions" [(dragulaModel)]="questionsModel"
+                                [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                                <mat-divider class="mat-divider-position">
+                                </mat-divider>
+                                <!-- <mat-list-item *ngFor="let question of sampleList" -->
+                                <mat-list-item *ngFor="let question of (questions$ | async)"
+                                    style="line-height: 45px; height: 45px !important;"
+                                    [attr.data-questionId]="question.questionId"
+                                    [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+                                    <question-case class="full-width" (click)="handleClick(question)"
+                                        (questionPreview)="getQuestionPreviewDetails($event)"
+                                        (questionSelection)="getQuestionSelection($event)"
+                                        (questionsSelected)="getQuestionsSelected($event)"
+                                        [selectedAudit]="selectedAudit"
+                                        [questionSelected]="question.questionId === selectedQuestionId"
+                                        [questionDetails]="question" [allQuestionsSelect]="selection">
+                                    </question-case>
+                                </mat-list-item>
+                            </mat-list>
+                        </mat-card-content>
+                        <div fxLayout="row" class="mt-1"
+                            *ngIf="canAccess_entityType_feature_AddOrUpdateAuditQuestions && !isAuditArchived">
+                            <div fxFlex="100" class="mb-05 mt-02">
+                                <a class="ml-05 new-testcase" (click)="upsertAuditQuestion()">
+                                    <fa-icon icon="plus" class="mr-05 add-icon"></fa-icon>
+                                    <b>{{'AUDIT.ADDQUESTION' | translate | softLabelsPipe :softLabels}}</b>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-1" *ngIf="isHierarchical && loadHierarchicalQuestions">
+                        <hierarchical-questions (questionPreview)="getQuestionPreviewDetails($event)"
+                            (questionSelection)="getQuestionSelection($event)"
+                            (questionsSelected)="getQuestionsSelected($event)"
+                            [hierarchicalData]="hierarchicalCategoryData" [questionsData]="(questions$ | async)"
+                            [selectedAudit]="selectedAudit" [selectedQuestion]="questionFromPreview"
+                            [allQuestionsSelect]="selection">
+                        </hierarchical-questions>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <mat-card *ngIf="isAuditLoaded == false" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+            <div fxLayout="row" fxFlex="100">
+                <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                    <p class="m-0">
+                        {{'AUDIT.SELECTAUDITTOVIEWCONTENTS' | translate | softLabelsPipe :softLabels}}
+                    </p>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+</mat-card>
+
+<sat-popover backdropClass="backdrop-color" #moveQuestionsPopover verticalAlign="below" hasBackdrop
+    [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="filter-data p-0" style="max-width: 250px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.MOVEQUESTIONS' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content *ngIf="loadMoveQuestions">
+            <form [formGroup]="moveQuestionsForm" novalidate
+                (submit)="moveQuestionsForm.valid && moveQuestionsToCategory()">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'AUDIT.CATEGORY' | translate}}" formControlName="auditCategoryId"
+                        required>
+                        <mat-option *ngFor="let category of (categoryList$ | async)" [value]="category.id">
+                            <pre class="sections-order-cases">{{category.value}}</pre>
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="moveQuestionsForm.get('auditCategoryId').hasError('required')">
+                        {{'AUDIT.PLEASESELECTCATGEORY' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <span style="color: red; font-size: 11px;" class="mt-05" *ngIf="categorySameError">
+                    {{'AUDIT.CATGEORYSAMEERROR' | translate}}
+                </span>
+                <div class="text-center mt-05">
+                    <button class="mr-1" type="submit" mat-button mat-raised-button color="primary"
+                        [disabled]="disableMoveQuestions">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(moveOperationInProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.MOVE' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button (click)="closeMoveQuestionsPopover()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>
+                        {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #copyQuestionsPopover verticalAlign="below" hasBackdrop
+    [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="filter-data p-0" style="max-width: 250px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.COPYQUESTIONS' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content *ngIf="loadMoveQuestions">
+            <form [formGroup]="moveQuestionsForm" novalidate
+                (submit)="moveQuestionsForm.valid && moveQuestionsToCategory()">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'AUDIT.CATEGORY' | translate}}" formControlName="auditCategoryId"
+                        required>
+                        <mat-option *ngFor="let category of (categoryList$ | async)" [value]="category.id">
+                            <pre class="sections-order-cases">{{category.value}}</pre>
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="moveQuestionsForm.get('auditCategoryId').hasError('required')">
+                        {{'AUDIT.PLEASESELECTCATGEORY' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <span style="color: red; font-size: 11px;" class="mt-05" *ngIf="categorySameError">
+                    {{'AUDIT.CATGEORYSAMEERROR' | translate}}
+                </span>
+                <div class="text-center mt-05">
+                    <button class="mr-1" type="submit" mat-button mat-raised-button color="primary"
+                        [disabled]="disableMoveQuestions">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(moveOperationInProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="sync" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.COPY' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button
+                        (click)="$event.stopPropagation(); closeCopyQuestionsPopover()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>
+                        {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

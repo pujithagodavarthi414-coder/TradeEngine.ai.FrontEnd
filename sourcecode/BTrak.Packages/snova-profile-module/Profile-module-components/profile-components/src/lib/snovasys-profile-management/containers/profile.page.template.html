@@ -1,0 +1,248 @@
+<div fxLayout="row wrap">
+  <div fxFlex="100" fxFlex.lt-md="20" fxFlex.gt-md="300px">
+    <mat-card class="profile-sidebar mb-1 pb-0 custom-box mat-card-fx-col">
+      <ng-container *ngIf="(gettingUserProfileDetailsInProgress)">
+        <div class="propic text-center mb-1">
+          <img src="./assets/images/faces/18.png" alt="">
+        </div>
+        <div class="profile-actions mb-1" fxLayoutAlign="center center">
+          <button mat-button mat-raised-button color="primary"
+            matTooltip="{{'HRMANAGAMENT.UPLOADPHOTO' | translate}}">{{'HRMANAGAMENT.UPLOAD' | translate}}</button>
+          <span fxFlex="8px"></span>
+          <button mat-button mat-raised-button
+            matTooltip="{{'HRMANAGAMENT.REMOVEPHOTO' | translate}}">{{'HRMANAGAMENT.REMOVE' | translate}}</button>
+        </div>
+        <div fxLayout="column" fxLayoutAlign="space-around center" class="mb-1">
+          <div>
+            <p class="mat-body-1 empty-text loading-bg"></p>
+          </div>
+          <div>
+            <p class="mat-body-1 empty-text loading-bg"></p>
+          </div>
+        </div>
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="space-around center" class="mb-1">
+          <ngx-avatar matTooltip="{{'HRMANAGAMENT.PRODUCTIVITY' | translate}}" value="0" size="30" round="true"
+            bgColor="#0000FF"></ngx-avatar>
+          <ngx-avatar matTooltip="{{'HRMANAGAMENT.REMAININGLEAVES' | translate}}" value="0" size="30" round="true"
+            bgColor="#8B008B"></ngx-avatar>
+          <ngx-avatar matTooltip="{{'HRMANAGAMENT.APPROVEDLEAVES' | translate}}" value="0" size="30" round="true"
+            bgColor="#008000"></ngx-avatar>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="!(gettingUserProfileDetailsInProgress)">
+        <mat-error>
+          <div fxLayoutAlign="center center" *ngIf="isSize">{{'HRMANAGAMENT.SIZEANDEXTENSION' | translate}}</div>
+        </mat-error>
+        <mat-error>
+          <div fxLayoutAlign="center center" *ngIf="isValidation">
+            {{'HRMANAGAMENT.FILESHOULDBELESSTHAN10MB' | translate}}</div>
+        </mat-error>
+        <mat-error>
+          <div fxLayoutAlign="center center" *ngIf="((!isValidation) && (!isExtension) && (!isSize))">
+            {{'HRMANAGAMENT.PLEASEUPLOADALLOWEDEXTENSION' | translate}}</div>
+        </mat-error>
+        <div fxLayoutAlign="space-around center" class="mb-1">
+          <app-avatar [name]="userData?.fullName | removeSpecialCharacters"
+            [src]="userData?.profileImage | fetchSizedAndCachedImage: '125':''" [isRound]="true" size="125">
+          </app-avatar>
+        </div>
+        <div class="profile-actions mb-1" fxLayoutAlign="center center">
+          <button mat-button mat-raised-button color="primary"
+            [disabled]="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress"
+            matTooltip="{{'HRMANAGAMENT.UPLOADPHOTO' | translate}}" (click)="uploader.click()">
+            <mat-progress-bar color="primary" mode="indeterminate"
+              *ngIf="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress">
+            </mat-progress-bar>{{'HRMANAGAMENT.UPLOAD' | translate}}
+          </button>
+          <input hidden #uploader type="file" mat-button mat-raised-button color="primary"
+            matTooltip="{{'HRMANAGAMENT.UPLOADPHOTO' | translate}}" class="mt-1 mb-1" value="upload"
+            accept=".jpeg,.jpg,.png,.webp" (change)=uploadEventHandler($event.target.files)>
+          <span fxFlex="8px"></span>
+          <button mat-button mat-raised-button *ngIf="userData?.profileImage"
+            [disabled]="(upsertUserProfileImageInProgress$ | async) || uploadProfileImageInProgress"
+            matTooltip="{{'HRMANAGAMENT.REMOVEPHOTO' | translate}}"
+            (click)="removePhoto()">{{'HRMANAGAMENT.REMOVE' | translate}}</button>
+        </div>
+        <div class="text-center mb-1">
+          <div class="main-title"><b>{{userData?.fullName}}</b></div>
+          <div class="subtitle mb-05">{{userData?.roleName}}</div>
+        </div>
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="space-around center" class="mb-1" *ngIf="permission || (canAccess_feature_CanEditOtherEmployeeDetails)">
+          <ngx-avatar matTooltip="{{'HRMANAGAMENT.PRODUCTIVITY' | translate}}"
+            matTooltip="{{'HRMANAGAMENT.PRODUCTIVITY' | translate}}" [value]="userData?.productivityIndex"
+            size="30" round="true" bgColor="#0000FF"></ngx-avatar>
+          <div style="cursor: pointer;" *ngIf="((canAccess_feature_ViewLeaves) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)">
+            <ngx-avatar routerLink="/dashboard/profile/{{selectedUserId}}/leave-history-scheduler"
+              matTooltip="{{'HRMANAGAMENT.REMAININGLEAVES' | translate}}"
+              [value]="userData?.leavesRemaining" size="30" round="true" bgColor="#8B008B"></ngx-avatar>
+          </div>
+          <div style="cursor: pointer;" *ngIf="((canAccess_feature_ViewLeaves) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)">
+            <ngx-avatar routerLink="/dashboard/profile/{{selectedUserId}}/applicable-leaves"
+              matTooltip="{{'HRMANAGAMENT.APPROVEDLEAVES' | translate}}" [value]="userData?.approvedLeaves"
+              size="30" round="true" bgColor="#008000"></ngx-avatar>
+          </div>
+        </div>
+      </ng-container>
+      <div class="profile-nav profile-sidebar-max-height" id="style-1" fxFlex="295px">
+        <mat-nav-list style="padding-top: 0px !important;">
+          <mat-divider></mat-divider>
+          <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/overview" routerLinkActive="list-item-active"
+            (click)="onPreviousSearchPosition()">
+            <mat-icon>perm_identity</mat-icon>
+            {{'MYPROFILE.OVERVIEW' | translate}}
+          </mat-list-item>
+          <ng-container
+            *ngIf="((((canAccess_feature_ViewEmployeePersonalDetails) || 
+            (canAccess_feature_ViewEmployeeIdentificationDetails) || 
+            (canAccess_feature_ViewEmployeeContactDetails) || 
+            (canAccess_feature_ViewEmployeeEmergencyContactDetails) || 
+            (canAccess_feature_ViewEmployeeDependentContactDetails) || 
+            (canAccess_feature_ViewEmployeeImmigrationDetails) || 
+            (canAccess_feature_ViewEmployeeJobDetails) || 
+            (canAccess_feature_ViewEmploymentContractDetails) ||
+             (canAccess_feature_ViewEmployeeSalaryDetails) || 
+             (canAccess_feature_ViewEmployeeBankDetails) || 
+             (canAccess_feature_ViewEmployeeReportToDetails) || 
+             (canAccess_feature_ViewEmployeeWorkExperienceDetails) || 
+             (canAccess_feature_ViewEmployeeEducationDetails) || 
+             (canAccess_feature_ViewEmployeeSkillDetails) || 
+             (canAccess_feature_ViewEmployeeLanguageDetails) || 
+             (canAccess_feature_ViewEmployeeShiftDetails) ||
+             (canAccess_feature_ViewEmployeeMembershipDetails)) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isHrModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/hr-record"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>assignment_ind</mat-icon>
+              {{'HRMANAGAMENT.HRRECORD' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((permission && canAccess_feature_ViewProjects) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isProjectModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/user-stories"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>reorder</mat-icon>
+              {{'MYPROFILE.USERSTORIES' | translate | softLabelsPipe : softLabels}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((permission && canAccess_feature_CanteenPurchasesSummary) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isCanteenModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/canteen-purchases"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>fastfood</mat-icon>
+              {{'MYPROFILE.CANTEENPURCHASES' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="(permission || canAccess_feature_ManageInductionWork || canAccess_feature_CanEditOtherEmployeeDetails) && isHrModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/induction-work"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>book</mat-icon>
+              {{'MYPROFILE.INDUCTIONWORK' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="(permission || canAccess_feature_ManageExitWork || canAccess_feature_CanEditOtherEmployeeDetails) && isHrModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/exit-work"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>book</mat-icon>
+              {{'MYPROFILE.EXITCHECKLIST' | translate}}
+            </mat-list-item>
+          </ng-container> 
+          <ng-container *ngIf="((permission && signatureInvitations.length > 0) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isDocumentModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/signature-inviations"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>pending_actions</mat-icon>
+              {{'SIGNATURE.SIGNATUREINVITATIONS' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((canAccess_feature_AssignAssetsToEmployee && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isAssertModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/assets" routerLinkActive="list-item-active"
+              (click)="onPreviousSearchPosition()">
+              <mat-icon>account_balance</mat-icon>
+              {{'MYPROFILE.ASSETS' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((canAccess_feature_ViewHistoricalTimesheet && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isTimeSheetModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/timesheet-audit"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>view_week</mat-icon>
+              {{'MYPROFILE.TIMESHEETAUDIT' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((canAccess_feature_ApproveOrRejectTimesheet && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isRosteringModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/timesheetApproval"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>view_week</mat-icon>
+              {{'MYPROFILE.TIMESHEETAPPROVAL' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((canAccess_feature_ViewHistoricalTimesheet && permission)|| (canAccess_feature_CanEditOtherEmployeeDetails)) && isTimeSheetModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/view-time-sheet"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>access_time</mat-icon>
+              {{'MYPROFILE.VEIWTIMESHEET' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="(((canAccess_feature_ViewLeaves) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isLeavesModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/leaves-permissions"
+              routerLinkActive="list-item-active">
+              <mat-icon>notes</mat-icon>
+              {{'MYPROFILE.LEAVESANDPERMISSIONS' | translate}}
+            </mat-list-item>
+          </ng-container>
+          <ng-container
+            *ngIf="(((permission || canSubmitPerformance || isManager) && (canAccess_feature_CanAccessPerformance)) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isHrModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/performance"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>poll</mat-icon>
+              {{ 'PERFORMANCE.PERFORMANCE' | translate }}
+            </mat-list-item>
+          </ng-container>
+          <ng-container
+            *ngIf="(((permission || canSubmitProbation || isProbationManager) && (canAccess_feature_CanAccessProbation)) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isHrModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/probation"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>wysiwyg</mat-icon>
+              Probation
+            </mat-list-item>
+          </ng-container>
+          <ng-container *ngIf="((canAccess_feature_UserHistoricalReport && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && isProjectModuleAccess">
+            <mat-list-item routerLink="/dashboard/profile/{{selectedUserId}}/historical-work-report"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>chrome_reader_mode</mat-icon>
+              {{ 'HISTORICALREPORT.HISTORICALREPORT' | translate }}
+            </mat-list-item>
+          </ng-container>
+          <ng-container>
+            <mat-list-item *ngIf="canAccess_feature_ViewProjects && isProjectModuleAccess" routerLink="/dashboard/profile/{{selectedUserId}}/user-activity"
+              routerLinkActive="list-item-active" (click)="onPreviousSearchPosition()">
+              <mat-icon>list_alt</mat-icon>
+              {{ 'MYPROFILE.USERACTIVITY' | translate }}
+            </mat-list-item>
+          </ng-container>
+        </mat-nav-list>
+      </div>
+    </mat-card>
+
+    <!-- Contact Information -->
+    <mat-card class="profile-nav custom-box p-0" *ngIf="userData" id="scrollBar">
+      <mat-card-content class="p-0">
+        <mat-list>
+          <mat-list-item>
+            <mat-icon class="mr-05">email</mat-icon> <span class="mr-05">{{'HRMANAGAMENT.EMAIL' | translate}}</span> -
+            <span class="hide-content-overflow ml-05" matTooltip="{{userData?.email}}">
+              {{userData?.email}}</span>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon class="mr-05">phone</mat-icon> <span class="mr-05">{{'HRMANAGAMENT.PHONE' | translate}}</span> -
+            <span class="hide-content-overflow ml-05"
+              matTooltip="{{userData?.mobileNo}}">{{userData?.mobileNo}}</span>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Profile Views -->
+  <div fxFlex="100" fxFlex.lt-md="80" fxFlex.gt-md="calc(100% - 300px)">
+    <div class="m-0 p-0" id="style-1" style="height: calc(100vh - 50px);">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

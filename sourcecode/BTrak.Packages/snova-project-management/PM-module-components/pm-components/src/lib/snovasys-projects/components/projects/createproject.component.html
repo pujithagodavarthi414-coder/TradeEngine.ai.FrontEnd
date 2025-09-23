@@ -1,0 +1,95 @@
+<div>
+  <form [formGroup]="projectForm" #formDirective="ngForm" novalidate
+    (submit)="(projectForm.valid  && isAllowSpecialCharacter) && saveProject()">
+    <div class="card-content p-05">
+      <input type="hidden" formControlName="projectId"
+        placeholder="{{ 'PROJECTS.PROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+        (click)="$event.stopPropagation()" />
+      <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+        <input formControlName="projectName" matInput
+          placeholder="{{ 'PROJECTS.PROJECTNAME' | translate | softLabelsPipe : softLabels }}"
+          (keypress)="omitSpecialChar($event)" (keyup)="removeSpecialCharacter()" (blur)="clearValidations()" trim
+          required />
+        <mat-error>
+          <span *ngIf="
+              projectForm.get('projectName').hasError('required') &&
+              projectForm.get('projectName').touched
+            ">{{ 'PROJECTS.PLEASEENTERPROJECTNAME' | translate | softLabelsPipe :softLabels }}</span>
+          <span *ngIf="projectForm.get('projectName').hasError('maxlength')">
+            {{ 'PROJECTS.PROJECTNAMECANNOTEXCEED250CHARACTERS' | translate | softLabelsPipe :softLabels }} </span>
+        </mat-error>
+      </mat-form-field>
+      <mat-error>
+        <span *ngIf="!isAllowSpecialCharacter">{{ 'PROJECTS.PROJECTNAMECANNOTSTARTWITHSPECIALCHARACTERS' | translate |
+          softLabelsPipe :softLabels }}</span>
+      </mat-error>
+      <!-- TODO: Build a component to display server error messages and use it every where. -->
+
+      <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+        <mat-select formControlName="projectResponsiblePersonId"
+          placeholder="{{ 'PROJECTS.SELECTPROJECTRESPONSIBLEPERSON' | translate | softLabelsPipe :softLabels }}"
+          (selectionChange)="getProjectResponsiblePerson($event.value)" required>
+          <!-- TODO: Shift all the error or validation messages from html into another constant file -->
+          <mat-select-trigger>
+            {{selectedMember}}
+          </mat-select-trigger>
+          <mat-option [value]="person.id" *ngFor="let person of (projectResponsiblePersons$ | async)">
+            <app-avatar class="employee_img" *ngIf="!person.profileImage" matTooltip="{{ person.fullName }}"
+              [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            <img class="employee_img" *ngIf="person.profileImage" matTooltip="{{ person.fullName }}"
+              [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{ person.fullName }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          <span *ngIf="
+              !projectForm.get('projectResponsiblePersonId').valid &&
+              projectForm.get('projectResponsiblePersonId').touched
+            ">{{ 'PROJECTS.PLEASESELECTPROJECTRESPONSIBLEPERSON' | translate | softLabelsPipe :softLabels }}</span>
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+        <mat-select formControlName="projectTypeId"
+          placeholder="{{ 'CLIENTS.PROJECTTYPE' | translate | softLabelsPipe :softLabels }}">
+          <mat-option value="option" *ngFor="let projectType of projectTypes" [value]="projectType.projectTypeId">
+            {{projectType.projectTypeName}}
+          </mat-option>
+        </mat-select>
+        <!-- <mat-error>
+                <span *ngIf="userForm.get('designationId').hasError('required') && userForm.get('designationId').touched">
+                  {{'HRMANAGAMENT.SELECTDESIGNATION' | translate}}</span>
+              </mat-error> -->
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <input formControlName="projectStartDate" matInput [matDatepicker]="picker" (click)="picker.open()"
+          placeholder="{{ 'PROJECTS.PROJECTSTARTDATE' | translate | softLabelsPipe : softLabels}}"
+          (dateChange)="changeProjectStartDate($event.value)" required />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error>
+          <span *ngIf="
+              projectForm.get('projectStartDate').hasError('required') &&
+              projectForm.get('projectStartDate').touched
+            ">{{ 'PROJECTS.PROJECTSTARTDATEISREQUIRED' | translate | softLabelsPipe :softLabels }}</span>
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <input formControlName="projectEndDate" matInput [matDatepicker]="picker1" (click)="picker1.open()"
+          placeholder="{{ 'PROJECTS.PROJECTENDDATE' | translate | softLabelsPipe : softLabels}}" [min]="todaysDate" />
+        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+        <mat-datepicker #picker1></mat-datepicker>
+      </mat-form-field>
+      <div class="text-center">
+        <button mat-raised-button color="primary" class="mr-1"
+          [disabled]="!projectForm.valid ||(anyOperationInProgress$ | async) || !isAllowSpecialCharacter">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon icon="{{ projectButtonIcon }}" class="mr-05 mb-05"></fa-icon>
+          {{ buttontext | translate | softLabelsPipe :softLabels}}
+        </button>
+        <button mat-raised-button (click)="closedialog(); (false)" [disabled]="(anyOperationInProgress$ | async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon>{{'CANCEL' | translate}}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

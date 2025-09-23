@@ -1,0 +1,66 @@
+<div *ngIf="(canAccess_feature_AddOrUpdateProduct)">
+  <mat-card class="p-0">
+    <mat-card-title>
+      <div fxLayout="row" fxLayoutGap="0">
+        <div fxFlex>
+          <div class="card-title-text p-1">{{'ASSETS.PRODUCTSLISTTITLE' | translate}}</div>
+        </div>
+        <div fxFlex="200px" class="search-bar" fxLayoutAlign="end center">
+          <input type="text" name="search" class="search-field" placeholder="{{'ASSETS.SEARCHPRODUCTNAME' | translate}}"
+            matTooltip="{{'ASSETS.SEARCHPRODUCTNAME' | translate}}" [(ngModel)]='searchText' (input)="searchProducts()">
+          <div class="search-icon">
+            <mat-icon *ngIf="!searchText" aria-hidden="false">search</mat-icon>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">close
+            </mat-icon>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data filter-margin mt-1">
+    <ngx-datatable class="btrak" [rows]="productList$ | async" [columnMode]="'force'" [headerHeight]="35"
+      [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+      [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)"
+      (page)='setPage($event)' [loadingIndicator]="loadProductsListInProgress$ | async">
+      <ngx-datatable-column name="{{'ASSETS.PRODUCTNAME' | translate}}" sortable="true" prop="productName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.productName}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS' | translate}}" [sortable]="false" prop="actions">
+        <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+          <button class="text-center" matTooltip="{{'ASSETS.EDITPRODUCTNAME' | translate}}"
+            [satPopoverAnchorFor]="upsertProductPopover" #upsertProductPopup="satPopoverAnchor"
+            (click)="upsertProductPopUpOpen(row,upsertProductPopup)" mat-icon-button>
+            <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <div class="floating-right-fab-button">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{'ASSETS.ADDNEWPRODUCTTOOLTIP' | translate}}"
+        [satPopoverAnchorFor]="upsertProductPopover" #upsertProductPopup="satPopoverAnchor"
+        (click)="upsertProductPopoverOpen(upsertProductPopup)">
+        <mat-icon> add </mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <sat-popover #upsertProductPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <app-am-component-product *ngIf="isProduct" (closePopup)="closeAddProductForm()"
+        [selectedProductData]="selectedProductDetails"></app-am-component-product>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrUpdateProduct)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

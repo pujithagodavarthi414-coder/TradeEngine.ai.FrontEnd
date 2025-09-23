@@ -1,0 +1,36 @@
+export class GoalsFilter {
+    goalStatusIds : string;
+    goalResponsiblePersonIds : string;
+    userStoryStatusIds : string;
+    ownerUserIds : string;
+    projectIds : string;
+    deadlineDateFrom : string;
+    deadlineDateTo : string;
+    goalName : string;
+    isTrackedGoals : boolean;
+    isProductiveGoals : boolean;
+    isIncludeArchived : boolean;
+    isIncludeParked : boolean;
+    isOnTrack : boolean;
+    isNotOnTrack : boolean;
+    goalFilterId : string;
+    goalTags : string;
+    workItemTags: string;
+    dependencyUserIds: string;
+    bugCausedUserIds: string;
+    userStoryTypeIds: string;
+    versionName: string;
+    userStoryName: string;
+    bugPriorityIds: string;
+    projectFeatureIds: string;
+    createdDateFrom: string;
+    createdDateTo: string;
+    updatedDateFrom: string;
+    updatedDateTo: string;
+    sortBy: string;
+    sprintName: string;
+    sprintStatusIds: string;
+    sprintResponsiblePersonIds: string;
+    sprintStartDate: string;
+    sprintEndDate: string;
+}

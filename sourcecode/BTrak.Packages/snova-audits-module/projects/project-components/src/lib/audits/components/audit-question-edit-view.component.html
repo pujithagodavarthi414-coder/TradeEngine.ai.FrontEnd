@@ -1,0 +1,782 @@
+<div fxLayout="row wrap" class="new-testcase">
+    <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+        <mat-card class="case-edit-preview fit-content-case-edit-preview">
+            <mat-card-title>
+                <div *ngIf="isEditQuestion == false" class="card-title-text pl-0 primary-text">
+                    <b>{{'AUDIT.ADDQUESTION' | translate | softLabelsPipe :softLabels}}</b>
+                    <a class="detail_close" color="warn" matTooltip="{{'TESTMANAGEMENT.CLOSEDIALOG' | translate}}"
+                        (click)="closeQuestionDialog()">
+                        <fa-icon icon="times"></fa-icon>
+                    </a>
+                </div>
+                <div *ngIf="!(isEditQuestion == false)" class="card-title-text pl-0 primary-text">
+                    <b>{{'AUDIT.EDITQUESTION' | translate | softLabelsPipe :softLabels}}</b>
+                    <!-- <span class="test-case-unique-number"><b>{{testCaseDetail.testCaseIdentity}}</b></span>
+                    <fa-icon matTooltip="{{'AUDIT.UPLOADFILESFORTESTCASE' | translate}}" icon="image"
+                        class="ml-1 mat-color-accent icon-button" [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                        #testSuiteFileUploadPopup="satPopoverAnchor-
+                        (click)="openTestCasePopover(testSuiteFileUploadPopup);">
+                    </fa-icon> -->
+                    <a class="detail_close" color="warn" matTooltip="{{'TESTMANAGEMENT.CLOSEDIALOG' | translate}}"
+                        (click)="closeQuestionDialog()">
+                        <fa-icon icon="times"></fa-icon>
+                    </a>
+                </div>
+            </mat-card-title>
+            <mat-progress-bar *ngIf="anyOperationInProgress$ | async" color="primary" mode="indeterminate">
+            </mat-progress-bar>
+            <div *ngIf="!(anyOperationInProgress$ | async)"
+                class="case-edit-preview-scroll fit-content-case-edit-preview-scroll mt-1 p-03" id="style-1">
+                <form [formGroup]="questionForm" novalidate (keydown.enter)="false"
+                    (submit)="questionForm.valid && upsertQuestion()">
+                    <mat-card-content class="p-0" fxLayout="row wrap">
+                        <mat-form-field class="mb-05">
+                            <mat-select placeholder="{{'AUDIT.QUESTIONTYPE' | translate | softLabelsPipe :softLabels}}" required
+                                formControlName="questionTypeId"
+                                (selectionChange)="onChangeQuestionTemplate($event.value,true)">
+                                <mat-option *ngFor="let type of questionTypeList" [value]="type.questionTypeId">
+                                    {{type.questionTypeName}}
+                                </mat-option>
+                                <hr class="m-0">
+                                <mat-option *ngFor="let type of masterQuestionTypeList" [value]="type.questionTypeId">
+                                    <b>{{type.questionTypeName}}</b>
+                                </mat-option>
+                                <!-- <mat-option value="1">Type-1</mat-option>
+                                <mat-option value="2">Type-2</mat-option> -->
+                            </mat-select>
+                            <mat-error
+                                *ngIf="questionForm.get('questionTypeId').hasError('required') && questionForm.get('questionTypeId').touched">
+                                {{'AUDIT.PLEASECHOOSEQUESTIONTYPE' | translate | softLabelsPipe :softLabels}}
+                            </mat-error>
+                        </mat-form-field>
+                        <div *ngIf="canAccess_entityType_feature_CanAddEstimatedTime">
+                            <app-question-estimated-time [estimatedTime]="estimatedTime"
+                                (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+                            </app-question-estimated-time>
+                        </div>
+                        <div fxLayout="row wrap" fxLayoutAlign="start center" class="ml-15 mb-05">
+                            <mat-checkbox class="mr-05" *ngIf="!isMasterQuestionType"
+                                formControlName="isOriginalQuestionTypeScore"
+                                (change)="changeScoreStatus($event.checked)">
+                                {{'AUDIT.ORIGINALSCORE' | translate}}
+                            </mat-checkbox>
+                            <mat-checkbox class="ml-05" formControlName="isQuestionMandatory">
+                                {{'AUDIT.ISMANDATORY' | translate}}
+                            </mat-checkbox>
+                        </div>
+                        <div fxFlex="100" class="row">
+                            <!-- <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"> -->
+                            <div fxFlex="22" fxFlex.xs="100">
+                                <mat-form-field class="full-width pl-1">
+                                    <mat-select placeholder="{{'AUDIT.SELECTPRIORITY' | translate}}"
+                                        formControlName="priorityId"
+                                        (selectionChange)="onChangePriorityValue($event.value)"
+                                        [disabled]="!canAccess_entityType_feature_CanAddOrEditAuditPriority">
+                                        <mat-option *ngFor="let type of priorities" [value]="type.priorityId">
+                                            {{type.priorityName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="22" fxFlex.xs="100" style="margin-left: 10px; margin-right: 10px;">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'AUDIT.SELECTIMPACT' | translate}}"
+                                        formControlName="impactId" (selectionChange)="onChangeImpactValue($event.value)"
+                                        [disabled]="!canAccess_entityType_feature_CanAddOrEditAuditImpact">
+                                        <mat-option *ngFor="let type of impacts" [value]="type.impactId">
+                                            {{type.impactName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="22" fxFlex.xs="100" style="margin-left: 10px; margin-right: 10px;">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'AUDIT.SELECTRISK' | translate}}"
+                                        formControlName="riskId" (selectionChange)="onChangeRiskValue($event.value)"
+                                        [disabled]="!canAccess_entityType_feature_CanAddOrEditAuditRisk">
+                                        <mat-option *ngFor="let type of risks" [value]="type.riskId">
+                                            {{type.riskName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="25" fxFlex.xs="100"
+                                *ngIf="canAccess_entityType_feature_CanHaveQuestionResponsiblePerson"
+                                style="margin-left: 10px; margin-right: 10px;">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'AUDIT.SELECTRESPONSIBLEPERSON' | translate}}"
+                                        formControlName="questionResponsiblePersonId">
+                                        <mat-option [value]="0">Select None</mat-option>
+                                        <mat-option [value]="user.projectMember.id" *ngFor="let user of userList">
+                                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                                <div fxFlex="30px">
+                                                    <app-avatar
+                                                        [name]="user.projectMember.name | removeSpecialCharacters"
+                                                        [src]="user.projectMember.profileImage" [isRound]="true"
+                                                        size="25">
+                                                    </app-avatar>
+                                                </div>
+                                                <div fxFlex="70">
+                                                    <p class="mat-body-2">
+                                                        {{ user.projectMember.name }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <!-- </div> -->
+                        </div>
+                        <mat-form-field class="mb-05" fxFlex="100" fxFlex.gt-sm="100">
+                            <input matInput formControlName="questionName" type="text"
+                                placeholder="{{ 'AUDIT.NAME' | translate }}" required trim>
+                            <mat-error
+                                *ngIf="(questionForm.get('questionName').touched && questionForm.get('questionName').hasError('required'))">
+                                {{ 'AUDIT.PLEASEENTERQUESTIONNAME' | translate | softLabelsPipe :softLabels }}
+                            </mat-error>
+                            <mat-error
+                                *ngIf="(questionForm.get('questionName').touched && questionForm.get('questionName').hasError('maxlength'))">
+                                {{ 'AUDIT.QUESTIONNAMEEXCEED250CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                            </mat-error>
+                        </mat-form-field>
+
+                        <!-- role ids -->
+                        <!-- view roles -->
+                        <div class="full-width" *ngIf="canAccess_entityType_feature_CanConfigureQuestionRoles">
+                            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                <mat-select formControlName="selectedRoles" [compareWith]="compareSelectedRolesFn"
+                                    placeholder="{{ 'WIDGETS.VIEWROLES' | translate }}" multiple>
+                                    <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                                        {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                    <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown" #allSelected
+                                        (click)="toggleRolesPerOne(allSelected.value)">
+                                        {{ roles.roleName }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <!-- select employees  -->
+                            <div class="full-width" (click)="$event.stopPropagation();"
+                                *ngIf="questionForm.get('selectedRoles').value && questionForm.get('selectedRoles').value.length > 0">
+                                <mat-spinner class="highlight-calender mb-1" strokeWidth="2" [diameter]="20"
+                                    *ngIf="employeedLoading"></mat-spinner>
+                                <mat-form-field class="full-width" *ngIf="!employeedLoading">
+                                    <mat-select formControlName="selectedEmployees"
+                                        [compareWith]="compareSelectedEmployeesFn" placeholder="Select employees"
+                                        multiple>
+                                        <mat-option #allEmployeesSelected (click)="toggleAllEmployeesSelected()"
+                                            [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <mat-option [value]="employee.userId" *ngFor="let employee of employeesDropDown"
+                                            #allEmployeesSelected (click)="toggleEmployeesPerOne()">
+                                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                                <div fxFlex="30px">
+                                                    <app-avatar [name]="employee.fullName | removeSpecialCharacters"
+                                                        [src]="employee.profileImage" [isRound]="true" size="25">
+                                                    </app-avatar>
+                                                </div>
+                                                <div fxFlex="70">
+                                                    <p class="mat-body-2">
+                                                        {{ employee.fullName }} ({{ employee.roleName }})
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+
+                            <div class="full-width" (click)="$event.stopPropagation();"
+                                *ngIf="questionForm.get('selectedEmployees').value && questionForm.get('selectedEmployees').value.length > 0">
+                                <!-- <div>
+                                    <mat-checkbox formControlName="canView">
+                                        {{'AUDIT.CANVIEWQUESTION' | translate}}
+                                    </mat-checkbox>
+                                </div>
+                                <div>
+                                    <mat-checkbox formControlName="canEdit">
+                                        {{'AUDIT.CANEDITQUESTION' | translate}}
+                                    </mat-checkbox>
+                                </div>
+                                <div>
+                                    <mat-checkbox formControlName="canAddAction">
+                                        {{'AUDIT.CANADDACTION' | translate}}
+                                    </mat-checkbox>
+                                </div> -->
+                                <mat-form-field class="full-width">
+                                    <mat-select multiple placeholder="Select permissions"
+                                        formControlName="selectedPermissions">
+                                        <mat-option #allPermissionsSelected (click)="toggleAllPermissionsSelected()"
+                                            [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <!-- <mat-option formControlName="canView" #allPermissionsSelected (click)="togglePermissionPerOne()"
+                                        [value]="1"> {{'AUDIT.CANVIEWQUESTION' | translate}}
+                                        </mat-option>
+                                        <mat-option formControlName="canEdit" #allPermissionsSelected (click)="togglePermissionPerOne()"
+                                        [value]="2"> {{'AUDIT.CANEDITQUESTION' | translate}}
+                                        </mat-option> -->
+                                        <mat-option #allPermissionsSelected
+                                            (click)="togglePermissionPerOne(allPermissionsSelected.value)"
+                                            [value]="v.value" *ngFor="let v of permissions"> {{ v.name | translate}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <!-- delete roles 
+                          <mat-form-field class="full-width">
+                            <mat-select formControlName="deleteRoleIds" [compareWith]="compareDeleteSelectedRolesFn"
+                              placeholder="{{ 'WIDGETS.DELETEROLES' | translate }}" multiple>
+                              <mat-option #allDeleteSelected (click)="toggleDeleteAllRolesSelected()" [value]="0">
+                                {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                              <mat-option [value]="role.roleId" *ngFor="let role of rolesDropDown" #allDeleteSelected
+                                (click)="toggleDeleteRolesPerOne()">
+                                {{ role.roleName }}
+                              </mat-option>
+                            </mat-select>
+                          </mat-form-field> -->
+
+                        <mat-form-field class="mb-05" fxFlex="100" fxFlex.gt-sm="100">
+                            <input matInput formControlName="questionHint" type="text"
+                                placeholder="{{ 'AUDIT.QUESTIONHINT' | translate | softLabelsPipe :softLabels }}" trim>
+                            <mat-error *ngIf="questionForm.get('questionHint').hasError('maxlength')">
+                                {{ 'AUDIT.QUESTIONHINTEXCEED800CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                            </mat-error>
+                        </mat-form-field>
+                        <!-- <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05">
+                            <div fxFlex="100">
+                                <ng-container *ngIf="(questionForm.get('viewQuestionHint').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionForm.get('viewQuestionHint').setValue(!questionForm.get('viewQuestionHint').value)">
+                                        <b>{{'AUDIT.ENTERQUESTIONHINT' | translate}}</b>
+                                    </a>
+                                </ng-container>
+                                <ng-container *ngIf="!(questionForm.get('viewQuestionHint').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionForm.get('viewQuestionHint').setValue(!questionForm.get('viewQuestionHint').value)">
+                                        <b>{{'AUDIT.HIDEQUESTIONHINT' | translate}}</b>
+                                    </a>
+                                </ng-container>
+                            </div>
+                            <div fxLayout="row wrap" fxFlex="100"
+                                [hidden]="questionForm.get('viewQuestionHint').value == false">
+                                <div fxFlex="100">
+                                    <editor class="dfree-header custom-logtime-comment"
+                                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+                                        placeholder="Add comment" menubar="false" [init]="initSettings"
+                                        background="white" height="90" formControlName="questionHint"
+                                        (onKeyUp)="checkHintButtonDisabled()">
+                                    </editor>
+                                    <mat-error *ngIf="questionForm.get('questionHint').hasError('maxlength')">
+                                        {{ 'AUDIT.QUESTIONHINTEXCEED800CHARACTERS' | translate }}
+                                    </mat-error>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05">
+                            <div fxFlex="100">
+                                <ng-container *ngIf="(questionForm.get('viewQuestionDescription').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionForm.get('viewQuestionDescription').setValue(!questionForm.get('viewQuestionDescription').value)">
+                                        <b>{{'AUDIT.ENTERQUESTIONDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+                                    </a>
+                                </ng-container>
+                                <ng-container *ngIf="!(questionForm.get('viewQuestionDescription').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="questionForm.get('viewQuestionDescription').setValue(!questionForm.get('viewQuestionDescription').value)">
+                                        <b>{{'AUDIT.HIDEQUESTIONDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+                                    </a>
+                                </ng-container>
+                            </div>
+                            <div fxLayout="row wrap" fxFlex="100"
+                                [hidden]="questionForm.get('viewQuestionDescription').value == false">
+                                <div fxFlex="100">
+                                    <editor class="dfree-header custom-logtime-comment"
+                                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk"
+                                        placeholder="Add comment" menubar="false" [init]="initSettings"
+                                        background="white" height="90" formControlName="questionDescription"
+                                        (onKeyUp)="checkButtonDisabled()">
+                                    </editor>
+                                    <mat-error *ngIf="questionForm.get('questionDescription').hasError('maxlength')">
+                                        {{ 'AUDIT.QUESTIONDESCRIPTIONEXCEED800CHARACTERS' | translate | softLabelsPipe :softLabels }}
+                                    </mat-error>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05">
+                            <mat-form-field *ngIf="questionForm.get('questionTypeId').value == '1'">
+                                <mat-select placeholder="{{ 'AUDIT.RESULT' | translate }}"
+                                    formControlName="questionResult" required>
+                                    <mat-option value="1">Type-1</mat-option>
+                                    <mat-option value="2">Type-2</mat-option>
+                                    <mat-option value="3">Type-3</mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="(questionForm.get('questionResult').touched && questionForm.get('questionResult').hasError('required'))">
+                                    {{ 'AUDIT.PLEASEENTERQUESTIONRESULT' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05"
+                            *ngIf="questionForm.get('questionTypeId').value == '2'">
+                            <mat-radio-group class="radio-group mt-05 mb-05" formControlName="questionTrueOrFalse">
+                                <div fxLayout="row wrap">
+                                    <mat-radio-button value="true"
+                                        [checked]="questionForm.value.questionTrueOrFalse === true">
+                                        <b>{{'AUDIT.TRUE' | translate}}</b>
+                                    </mat-radio-button>
+                                    <mat-radio-button class="ml-1" value="false"
+                                        [checked]="questionForm.value.questionTrueOrFalse === false">
+                                        <b>{{'AUDIT.FALSE' | translate}}</b>
+                                    </mat-radio-button>
+                                </div>
+                            </mat-radio-group>
+                        </div> -->
+                        <!--Dropdown question type-->
+                        <!-- <div class="full-width">
+                            <app-custom-field-component *ngIf="isFormType" [moduleTypeId]="moduletypeId" [reload]="isreload"
+                              [referenceTypeId]="selectedAudit.auditId" [isButtonVisible]=false [referenceId]="questionId"
+                              [isDeletePermission]=true
+                              [isAddPermission]=true
+                              [isEditFieldPermission]=true>
+                            </app-custom-field-component>
+                        </div>
+                        <br>
+                        <div class="row" *ngIf= "enableCustomField">
+                            <button mat-raised-button type="button" class="mr-1" (click)="openCustomForm();$event.stopPropagation()">
+                              <fa-icon icon="plus" class="mr-05" matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}"
+                                class="filter mat-color-accent">
+                              </fa-icon>
+                              <span class="mr-05">
+                                {{'USERSTORYTYPES.ADDCUSTOMFIELDS'| translate}}
+                              </span>
+                            </button>
+                          </div> -->
+
+                        <div fxLayout="row wrap" fxFlex="100" class="mr-05 mb-05 mt-20p"
+                            *ngIf="canAccess_entityType_feature_CanEnableWorkflows && selectedAudit.enableQuestionLevelWorkFlow">
+                            <div fxFlex="100" class="mb-05">
+                                <a class="add-test-case" matTooltip="Select workflow"
+                                    (click)="loadGenericStatusComponent('AuditQuestion');$event.stopPropagation()">
+                                    <fa-icon icon="plus" class="mr-05"></fa-icon>
+                                    <b>Select workflow</b>
+                                </a>
+                            </div>
+                            <div fxLayout="row wrap" fxFlex="100" [hidden]="!displayStatusComponent">
+                                <div class="text-center" *ngIf="!loaded">
+                                    Loading...
+                                </div>
+                                <div *ngIf="loaded">
+                                    <ndc-dynamic [ndcDynamicFactory]="dashboard.component"
+                                        [ndcDynamicComponent]="dashboard.component" [ndcDynamicInjector]="injector"
+                                        [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+                                    </ndc-dynamic>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="canAccessDocs$">
+                            <div class="mt-05 mb-05" fxLayout="row wrap" fxFlex="100" fxLayout.xs="column"
+                                fxLayoutGap.xs="0" fxLayoutGap="10px">
+                                <a (click)="openAddDocumentPopup(addDocumentPopUp)" class="custom-link"
+                                    [satPopoverAnchorFor]="addDocument" #addDocumentPopUp="satPopoverAnchor">
+                                    <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+                                    {{'DOCUMENTTYPE.ADDDOCUMENT' | translate}}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-1 mb-05 question-type-table" fxLayout="row wrap" fxFlex="100"
+                            fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px"
+                            *ngIf="!isMasterQuestionType && questionForm.get('questionTypeId').value != null && (masterQuestionTypeId == dropdownQuestionTypeId || masterQuestionTypeId == booleanQuestionTypeId)">
+                            <table class="table">
+                                <tr>
+                                    <th class="text-align: center;">{{ 'AUDIT.RESULT' | translate }}</th>
+                                    <th style="text-align: center;">{{ 'AUDIT.OPTION' | translate }}</th>
+                                    <th style="text-align: center;">{{ 'AUDIT.SCORE' | translate }}</th>
+                                </tr>
+                                <tr formArrayName="questionOptions"
+                                    *ngFor="let option of questionForm.get('questionOptions')['controls']; let i = index;">
+                                    <ng-container [formGroupName]="i">
+                                        <td style="text-align: center;">
+                                            <mat-checkbox formControlName="questionOptionResult"
+                                                style="position: relative; top: 12px;"></mat-checkbox>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <!-- <mat-form-field>
+                                                <input matInput formControlName="questionOptionName" type="text"
+                                                    placeholder="{{ 'AUDIT.NAME' | translate }}" trim>
+                                            </mat-form-field> -->
+                                            <span
+                                                style="position: relative; top: 12px;">{{option.get('questionOptionName').value}}</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <mat-form-field class="mr-05"
+                                                [hidden]="!(questionForm.get('isOriginalQuestionTypeScore').value != null && questionForm.get('isOriginalQuestionTypeScore').value == true)">
+                                                <input matInput formControlName="questionOptionOriginalScore"
+                                                    type="number" min="-99" max="99"
+                                                    placeholder="{{ 'AUDIT.SCORE' | translate }}" trim>
+                                            </mat-form-field>
+                                            <mat-form-field class="mr-05"
+                                                [hidden]="(questionForm.get('isOriginalQuestionTypeScore').value != null && questionForm.get('isOriginalQuestionTypeScore').value == true)">
+                                                <input matInput formControlName="questionOptionScore" type="number"
+                                                    min="-99" max="99" placeholder="{{ 'AUDIT.SCORE' | translate }}"
+                                                    trim>
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+                                </tr>
+                            </table>
+                        </div>
+                        <!--Dropdown question type-->
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" class="full-width"
+                            *ngIf="!isMasterQuestionType && questionForm.get('questionTypeId').value != null &&
+                            (masterQuestionTypeId == dateQuestionTypeId || masterQuestionTypeId == numericQuestionTypeId
+                            || masterQuestionTypeId == textQuestionTypeId || masterQuestionTypeId == timeQuestionTypeId)">
+                            <!-- <div fxFlex="50" *ngIf="masterQuestionTypeId == dateQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput [matDatepicker]="picker"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}"
+                                        (click)="picker.open()" formControlName="questionOptionDate">
+                                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker></mat-datepicker>
+                                    <mat-error>
+                                        <span
+                                            *ngIf="!questionForm.get('questionOptionDate').valid && questionForm.get('questionOptionDate').touched">
+                                            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == numericQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput formControlName="questionOptionDate"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}" type="number">
+                                    <mat-error>
+                                        <span
+                                            *ngIf="!questionForm.get('questionOptionDate').valid && questionForm.get('questionOptionDate').touched">
+                                            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == textQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput formControlName="questionOptionDate"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}">
+                                    <mat-error>
+                                        <span
+                                            *ngIf="!questionForm.get('questionOptionDate').valid && questionForm.get('questionOptionDate').touched">
+                                            {{'AUDIT.PLEASEPROVIDEANSWER' | translate}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div> -->
+                            <!-- <div fxFlex="50" class="mt-1" *ngIf="masterQuestionTypeId == booleanQuestionTypeId">
+                                <mat-radio-group class="radio-group full-width" formControlName="questionOptionDate">
+                                    <div fxLayout="row wrap">
+                                        <div fxFlex="50">
+                                            <mat-radio-button value="true"
+                                                [checked]="questionForm.value.questionOptionDate === true">
+                                                <b>{{'AUDIT.YES' | translate}}</b>
+                                            </mat-radio-button>
+                                        </div>
+                                        <div fxFlex="50">
+                                            <mat-radio-button class="ml-1" value="false"
+                                                [checked]="questionForm.value.questionOptionDate === false">
+                                                <b>{{'AUDIT.NO' | translate}}</b>
+                                            </mat-radio-button>
+                                        </div>
+                                    </div>
+                                </mat-radio-group>
+                            </div> -->
+                            <!-- <div fxFlex="50" *ngIf="masterQuestionTypeId == timeQuestionTypeId">
+                                <mat-form-field class="full-width">
+                                    <input formControlName="questionOptionDate" matInput
+                                        placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}"
+                                        aria-label="24hr format" [ngxTimepicker]="fullTime" [format]="24" readonly
+                                        [(ngModel)]="intimepicker" />
+                                    <ngx-material-timepicker #fullTime [cancelBtnTmpl]="intimecancelBtn"
+                                        [confirmBtnTmpl]="confirmBtn">
+                                    </ngx-material-timepicker>
+                                    <span class="close-icon-padding close_icon pull-right">
+                                        <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false"
+                                            (click)="closeintime()" style="cursor:pointer">close</mat-icon>
+                                    </span>
+                                </mat-form-field>
+                            </div>  -->
+                            <div fxFlex="50">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput formControlName="questionOptionDate"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="questionTypeScore" type="number" min="-99" max="99"
+                                        placeholder="{{ 'AUDIT.SCORE' | translate }}" trim>
+                                    <mat-error>
+                                        <!-- <span
+                                            *ngIf="!questionForm.get('questionTypeScore').valid && questionForm.get('questionTypeScore').touched">
+                                            {{'AUDIT.PLEASEENTERQUESTIONSCORE' | translate}}</span> -->
+                                        <span *ngIf="questionForm.get('questionTypeScore').hasError('min')">
+                                            {{'AUDIT.PLEASEPROVIDEMINIMUMSCORE' | translate}}</span>
+                                        <span *ngIf="questionForm.get('questionTypeScore').hasError('max')">
+                                            {{'AUDIT.QUESTIONSCOREEXCEED99' | translate | softLabelsPipe :softLabels}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div class="text-center Test-buttons mt-2 mb-05" *ngIf="!isMasterQuestionType">
+                            <button mat-button mat-raised-button color="primary" class="mr-1 test-button" type="submit"
+                                [disabled]="disabledQuestion || disableAddAndSave"
+                                (mouseover)="setQuestionVariable(false)">
+                                <mat-progress-bar *ngIf="disabledQuestion" color="primary" mode="indeterminate">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="save"></fa-icon>
+                                {{'AUDIT.SAVEQUESTION' | translate | softLabelsPipe :softLabels}}
+                            </button>
+                            <button mat-button mat-raised-button color="primary" class="mr-1 test-button" type="submit"
+                                [disabled]="disableAddAndSave || disabledQuestion"
+                                (mouseover)="setQuestionVariable(true)">
+                                <mat-progress-bar *ngIf="disableAddAndSave" color="primary" mode="indeterminate">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="save"></fa-icon>
+                                {{'AUDIT.SAVEANDADDQUESTION' | translate | softLabelsPipe :softLabels}}
+                            </button>
+                            <button mat-button mat-raised-button type="button" (click)="closeQuestionDialog()">
+                                <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                            </button>
+                        </div>
+                    </mat-card-content>
+                </form>
+
+                <form class="full-width" *ngIf="isMasterQuestionType" style="height: 100%;"
+                    [formGroup]="questionTypeForm" novalidate fxLayout="column"
+                    (ngSubmit)="questionTypeForm.valid && upsertQuestionType()" (keydown.enter)="false">
+                    <div fxLayout="row wrap" id="style-1">
+                        <div class="full-width" fxLayout="column"
+                            *ngIf="masterQuestionTypeId == dropdownQuestionTypeId || masterQuestionTypeId == booleanQuestionTypeId">
+                            <div class="mt-05 mb-05" fxLayout="row wrap" fxFlex="100" fxLayout.xs="column"
+                                fxLayoutGap.xs="0" fxLayoutGap="10px">
+                                <a (click)="addQuestionTypeOption()" class="custom-link">
+                                    <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+                                    {{'AUDIT.ADDOPTION' | translate}}
+                                </a>
+                            </div>
+                            <div class="mb-05 question-type-table" fxLayout="row wrap" fxFlex="100" fxLayout.xs="column"
+                                fxLayoutGap.xs="0" fxLayoutGap="10px">
+                                <table class="table">
+                                    <tr>
+                                        <th style="text-align: center;">{{ 'AUDIT.RESULT' | translate }}</th>
+                                        <th style="text-align: center;">{{ 'AUDIT.ORDER' | translate }}</th>
+                                        <th style="text-align: center;">{{ 'AUDIT.OPTION' | translate }}</th>
+                                        <th style="text-align: center;">{{ 'AUDIT.SCORE' | translate }}</th>
+                                    </tr>
+                                    <tr formArrayName="questionTypeOptions"
+                                        *ngFor="let option of getQuestionTypeControls(); let i = index;">
+                                        <ng-container [formGroupName]="i">
+                                            <td class="pt-1" style="text-align: center;">
+                                                <mat-checkbox style="position: relative; top: 12px;"
+                                                    formControlName="questionTypeOptionResult"></mat-checkbox>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <mat-form-field>
+                                                    <input matInput formControlName="questionTypeOptionOrder"
+                                                        type="number" min="0" max="10"
+                                                        placeholder="{{ 'AUDIT.ORDER' | translate }}" trim>
+                                                </mat-form-field>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <mat-form-field>
+                                                    <input matInput formControlName="questionTypeOptionName" type="text"
+                                                        placeholder="{{ 'AUDIT.NAME' | translate }}" trim>
+                                                </mat-form-field>
+                                            </td>
+                                            <td style="text-align: center; position: relative;">
+                                                <mat-form-field>
+                                                    <input matInput formControlName="questionTypeOptionScore"
+                                                        type="number" min="-99" max="99"
+                                                        placeholder="{{ 'AUDIT.SCORE' | translate }}" trim>
+                                                </mat-form-field>
+                                                <ng-container *ngIf="checkRemoveProbability()">
+                                                    <fa-icon icon="trash" class="icon-button ml-1"
+                                                        style="position: absolute; top: 25px;"
+                                                        (click)="removeOption(i,option.get('canQuestionTypeOptionDeleted').value)">
+                                                    </fa-icon>
+                                                </ng-container>
+                                            </td>
+                                        </ng-container>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" class="full-width" *ngIf="masterQuestionTypeId == dateQuestionTypeId
+                            || masterQuestionTypeId == numericQuestionTypeId
+                            || masterQuestionTypeId == timeQuestionTypeId
+                            || masterQuestionTypeId == textQuestionTypeId">
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == dateQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput [matDatepicker]="picker"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}"
+                                        (click)="picker.open()" [disabled]="true" formControlName="questionTypeDate">
+                                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == numericQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput formControlName="questionTypeDate"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}" type="number">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == textQuestionTypeId">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput formControlName="questionTypeDate"
+                                        placeholder="{{'AUDIT.PLEASEPROVIDEANSWER' | translate}}">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" *ngIf="masterQuestionTypeId == timeQuestionTypeId">
+                                <mat-form-field class="full-width">
+                                    <input formControlName="questionTypeDate" matInput
+                                        placeholder="{{'FEEDTIMESHEET.SELECTINTIME'|translate}}"
+                                        aria-label="24hr format" [ngxTimepicker]="fullTime" [format]="24" readonly
+                                        [(ngModel)]="intimepicker" />
+                                    <ngx-material-timepicker #fullTime [cancelBtnTmpl]="intimecancelBtn"
+                                        [confirmBtnTmpl]="confirmBtn">
+                                    </ngx-material-timepicker>
+                                    <span class="close-icon-padding close_icon pull-right">
+                                        <!-- <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false"
+                                            (click)="closeintime()" style="cursor:pointer">close</mat-icon> -->
+                                        <mat-icon *ngIf="intimepicker" class="icon-button" aria-hidden="false"
+                                            style="cursor:pointer">close</mat-icon>
+                                    </span>
+                                </mat-form-field>
+                                <ng-template #intimecancelBtn>
+                                    <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;"
+                                        (click)="closeintime()">
+                                        {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+                                </ng-template>
+                                <ng-template #confirmBtn>
+                                    <p class="feedtimesheet-datepicker-button">{{'ROSTER.OK' | translate}}</p>
+                                </ng-template>
+                            </div>
+                            <div fxFlex="50">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="questionTypeScore" type="number" min="-99" max="99"
+                                        placeholder="{{ 'AUDIT.SCORE' | translate }}" trim>
+                                    <mat-error>
+                                        <!-- <span
+                                            *ngIf="!questionTypeForm.get('questionTypeScore').valid && questionTypeForm.get('questionTypeScore').touched">
+                                            {{'AUDIT.PLEASEENTERQUESTIONSCORE' | translate}}</span> -->
+                                        <span
+                                            *ngIf="questionTypeForm.get('questionTypeScore').hasError('min')">{{'AUDIT.PLEASEPROVIDEMINIMUMSCORE'
+                                            | translate}}</span>
+                                        <span
+                                            *ngIf="questionTypeForm.get('questionTypeScore').hasError('max')">{{'AUDIT.QUESTIONSCOREEXCEED99'
+                                            | translate | softLabelsPipe :softLabels}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxFlex="100" class="mt-1 mb-05">
+                        <div fxFlex fxLayoutAlign="start center">
+                            <button class="mr-05" mat-raised-button color="primary" type="submit"
+                                [disabled]="disableAddAndSave || disabledQuestion"
+                                (mouseover)="setMasterQuestionVariable(false)">
+                                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disabledQuestion">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="save"></fa-icon>{{ 'AUDIT.SAVEQUESTION' | translate | softLabelsPipe :softLabels }}
+                            </button>
+                            <button mat-button mat-raised-button color="primary" class="mr-05 test-button" type="submit"
+                                [disabled]="disableAddAndSave || disabledQuestion"
+                                (mouseover)="setMasterQuestionVariable(true)">
+                                <mat-progress-bar *ngIf="disableAddAndSave" color="primary" mode="indeterminate">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="save"></fa-icon>
+                                {{'AUDIT.SAVEANDADDQUESTION' | translate | softLabelsPipe :softLabels}}
+                            </button>
+                            <button mat-raised-button type="button" (click)="closeQuestionDialog()">
+                                <fa-icon class="mr-05" icon="times"></fa-icon>
+                                {{ 'BILLINGMANAGEMENT.CANCEL' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </mat-card>
+    </div>
+</div>
+
+<ng-template #customFormsComponent let-data>
+    <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)"
+        (submitFormComponent)="submitFormComponent($event)"></app-custom-form-component>
+</ng-template>
+
+
+
+<sat-popover #addDocument hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'DOCUMENTTYPE.ADDDOCUMENT' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content style="width: 500px; height: 250px; overflow-x: hidden; " id="style-1">
+            <!-- <mat-progress-bar color="primary" mode="indeterminate" *ngIf="deleteOperationIsInprogress">
+            </mat-progress-bar> -->
+            <form class="full-width" [formGroup]="documentForm" novalidate (ngSubmit)="documentForm.valid">
+                <div class="mt-05 mb-05" fxLayout="row wrap" fxFlex="100" fxLayout.xs="column" fxLayoutGap.xs="0"
+                    fxLayoutGap="10px">
+                    <a (click)="addDocumentControl()" class="custom-link">
+                        <fa-icon mat-icon-button class="mr-05" icon="plus"></fa-icon>
+                        {{'DOCUMENTTYPE.ADDDOCUMENT' | translate}}
+                    </a>
+                </div>
+                <div class="mb-05 question-type-table" fxLayout="row wrap" fxFlex="100" fxLayout.xs="column"
+                    fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <table class="table">
+                        <tr>
+                            <th style="text-align: center;">{{ 'ACTIVITYTRACKER.NAME' | translate }}</th>
+                            <th style="text-align: center;">{{ 'AUDIT.ORDER' | translate }}</th>
+                            <th style="text-align: center;">{{ 'AUDIT.ISMANDATORY' | translate }}</th>
+                        </tr>
+                        <tr formArrayName="documents" *ngFor="let option of getDocuments(); let i = index;">
+                            <ng-container [formGroupName]="i">
+                                <td style="text-align: center;">
+                                    <mat-form-field>
+                                        <input matInput formControlName="documentName" type="text"
+                                            placeholder="{{ 'ACTIVITYTRACKER.NAME' | translate }}" trim>
+                                    </mat-form-field>
+                                </td>
+                                <td style="text-align: center;">
+                                    <mat-form-field>
+                                        <input matInput formControlName="documentOrder" type="number" min="0" max="10"
+                                            placeholder="{{ 'AUDIT.ORDER' | translate }}" trim>
+                                    </mat-form-field>
+                                </td>
+                                <td class="pt-1" style="text-align: center;">
+                                    <mat-checkbox style="position: relative; top: 12px;"
+                                        formControlName="isDocumentMandatory"></mat-checkbox>
+                                </td>
+                                <td style="text-align: center; position: relative;">
+                                    <ng-container *ngIf="checkRemoveProbabilityForDocuments()">
+                                        <fa-icon icon="trash" class="icon-button ml-1"
+                                            style="position: absolute; top: 24px; right: -10px;" (click)="removeDocument(i)">
+                                        </fa-icon>
+                                    </ng-container>
+                                </td>
+                            </ng-container>
+                        </tr>
+                    </table>
+                </div>
+                <div fxLayout="row wrap" fxFlex="100" fxLayout.xs="column" fxLayoutAlign="center center"
+                fxLayoutGap.xs="0" fxLayoutGap="10px">
+                    <!-- <button mat-button mat-raised-button type="button" (click)="selectDocuments()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.SAVE' | translate}}
+                    </button> -->
+                    <button mat-button mat-raised-button type="button" (click)="closePopup()">
+                        <!-- <fa-icon class="mr-05" icon="times"></fa-icon> -->
+                         {{'TESTMANAGEMENT.SAVE' | translate}}
+                    </button>
+                    </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

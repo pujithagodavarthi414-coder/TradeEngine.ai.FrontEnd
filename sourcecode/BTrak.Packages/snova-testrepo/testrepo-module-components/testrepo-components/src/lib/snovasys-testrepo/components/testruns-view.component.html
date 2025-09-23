@@ -1,0 +1,140 @@
+<div class="testrun-tab" fxLayout="row wrap" fxLayout.lt-sm="column" fxLayoutGap="5px"
+  *ngIf="(testRunsCount$ | async) > 0 || fromCustomApp" (window:resize)="onResize()">
+  <div fxFlex="30px" fxHide.xs>
+    <div class='custom-label veritcal-label'>
+      <div class='custom-label-content' (click)="isTestRun = !isTestRun">
+        {{'TESTMANAGEMENT.RUNS' | translate | softLabelsPipe : softLabels}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isTestRun}"> </fa-icon>
+        </span></div>
+      <div class='custom-label-content' (click)="isTestRunSection = !isTestRunSection">
+        {{'TESTMANAGEMENT.TESTSECTION' | translate}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isTestRunSection}">
+          </fa-icon>
+        </span></div>
+    </div>
+  </div>
+  <div fxFlex="16" fxFlex.xs="100" fxFlex.sm="47" fxFlex.md="45" fxFlex.lg="17" [hidden]="isTestRun"
+    class="testrail-custom">
+    <mat-card class="custom-box mb-0 mt-0 p-0">
+      <testruns-list (loadRunSections)="getLoadRunSections($event)" (requiredIds)="getRequiredIds($event)"
+        [testRunIdApp]="Ids" [fromCustomApp]="fromCustomApp" (loadedSections)="changeSectionsStatus($event)"
+        [projectId]="projectId" (isInclude)="getIsIncludeOrNot($event)" (testSuiteId)="getTestSuiteId($event)"
+        (testRunDescription)="getTestRunDescription($event)" (testRunId)="getTestRunId($event)"
+        (testRunDeleted)="changeStatusOfDelete($event)" (testRunIsCompleted)="getTestRunIsCompleted($event)">
+      </testruns-list>
+    </mat-card>
+  </div>
+  <div fxFlex="16" fxFlex.xs="100" fxFlex.sm="46.5" fxFlex.md="48.5" fxFlex.lg="16" [hidden]="isTestRunSection"
+    class="namesection-custom">
+    <mat-card class="custom-box mb-0 mt-0 p-0">
+      <testruns-sections-list (loadedSections)="changeSectionsStatus($event)" [loadRunSections]="loadRunSections"
+        [requiredIdValues]="requiredValues" (selectedSectionData)="getSelectedSectionData($event)"
+        (hierarchicalCases)="getHierarchicalCases($event)" [sectionSelected]="sectionSelected"
+        [isIncludeAllCases]="isInclude" [selectedTestSuiteId]="testSuitesId" [selectedTestRunId]="testRunsId">
+      </testruns-sections-list>
+    </mat-card>
+  </div>
+  <div fxFlex fxFlex.lt-sm="100">
+    <as-split direction="horizontal" unit="percent" gutterSize="5">
+      <as-split-area size="*" minSize="45">
+        <mat-card class="custom-box mb-0 p-0" ngClass.lt-lg="mt-03" ngClass.gt-lg="mt-0" style="margin: 0 2px;">
+          <testrun-section-cases-view (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+            [projectId]="projectId" [loadSections]="isSectionsLoaded" [selectedSectionData]="sectionData"
+            [sectionTemporaryData]="sectionTemporaryData" [selectedTestRunDescription]="testRunDescription"
+            [selectedTestSuiteId]="testSuitesId" [selectedTestRunId]="testRunsId" [testRunCompleted]="testRunCompleted"
+            [typeOfRun]="typeOfRun" [isHierarchical]="isHierarchical" [selectedCase]="selectedCaseFromPreview">
+          </testrun-section-cases-view>
+        </mat-card>
+      </as-split-area>
+      <as-split-area size="37" minSize="36" maxSize="54" *ngIf="(showCaseStatusPreview) && (screenWidth > 1279)">
+        <div fxFlex="100" *ngIf="showCaseStatusPreview">
+          <testrun-cases-operation [testCaseDetails]="showCaseStatusPreview" [projectId]="statusProjectId"
+            [testRunId]="statusRunId" [testRunCompleted]="isTestRunCompleted" [isHierarchical]="isHierarchical"
+            (closePreview)="closePreviewDialog()" (caseStatusPreviewDetails)="getCasePreviewDetails($event)">
+          </testrun-cases-operation>
+        </div>
+      </as-split-area>
+    </as-split>
+  </div>
+  <div fxFlex="100" *ngIf="showCaseStatusPreview && !(screenWidth > 1279)">
+    <testrun-cases-operation [testCaseDetails]="showCaseStatusPreview" [projectId]="statusProjectId"
+      [testRunId]="statusRunId" [testRunCompleted]="isTestRunCompleted" [isHierarchical]="isHierarchical"
+      (closePreview)="closePreviewDialog()" (caseStatusPreviewDetails)="getCasePreviewDetails($event)">
+    </testrun-cases-operation>
+  </div>
+</div>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && (testRunsCount$ | async) == 0 
+          && (canAccess_entityType_feature_AddOrUpdateRun)"
+  textToDisplay="{{'TESTMANAGEMENT.YOUDONTHAVEANYTESTRUNSINTHEPROJECT' | translate | softLabelsPipe :softLabels}}">
+  <ng-template ng-message-tmp>
+    <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+      *ngIf="canAccess_entityType_feature_AddOrUpdateRun && !fromCustomApp" [satPopoverAnchorFor]="addTestRun"
+      #addRunPopover="satPopoverAnchor" (click)="openTestRunDialog(addRunPopover)">
+      <fa-icon class="mr-05" icon="plus"></fa-icon>
+      {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+    </button>
+  </ng-template>
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && (testRunsCount$ | async) == 0 
+          && !(canAccess_entityType_feature_AddOrUpdateRun)"
+  textToDisplay="{{'TESTMANAGEMENT.NOYOUDONTHAVEANYTESTRUNSINTHEPROJECT' | translate | softLabelsPipe :softLabels}}">
+</app-common-message-box>
+
+<!-- <div class="floating-right-fab-button" *ngIf="(canAccess_entityType_feature_AddOrUpdateRun)">
+  <div class="handle">
+    <button mat-fab color="accent"
+      matTooltip="{{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}"
+      [satPopoverAnchorFor]="addTestRun" #addRunPopover="satPopoverAnchor" (click)="openTestRunDialog(addRunPopover)">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div> -->
+
+<sat-popover backdropClass="backdrop-color" #addTestRun verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'TESTMANAGEMENT.TESTSUITE' | translate | softLabelsPipe : softLabels}}	*"
+          [formControl]="selectedTestSuite">
+          <mat-option *ngFor="let suite of (testsuitesList$ | async)" [value]="suite">
+            {{suite.testSuiteName}}
+          </mat-option>
+        </mat-select>
+        <mat-hint>{{'TESTMANAGEMENT.SELECTTHETESTSUITEFORNEW' | translate | softLabelsPipe : softLabels}}</mat-hint>
+      </mat-form-field>
+      <div class="text-center mt-1">
+        <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+          [disabled]="checkStatusDisabled()" [satPopoverAnchorFor]="addNewTestRun" (click)="addTestRuns()">
+          <fa-icon icon="plus" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.ADD' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeTestRunDialog()">
+          <fa-icon icon="times" class="mr-05"></fa-icon>
+          {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="testrun-popover" #addNewTestRun hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition">
+  <mat-card class="filter-data card-filter-runs p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <testrun-add-new *ngIf="loadNewTestRun" [projectId]="projectId" [selectedTestSuite]="selectedTestSuite"
+        (closeTestRun)="closeNewTestRunDialog()"></testrun-add-new>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

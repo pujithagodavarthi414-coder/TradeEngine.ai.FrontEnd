@@ -1,0 +1,213 @@
+<div class="full-height">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+            <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                <span fxFlex="100" class="hide-content-overflow" matTooltip="{{shipAddressAppTitle}}">{{shipAddressAppTitle}} </span>
+            </div>
+            <div fxFlex fxLayout="row" fxLayout.xs="column">
+                <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                    <mat-slide-toggle
+                        [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                        class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                        (change)="getShipToAddresses()">
+                    </mat-slide-toggle>
+                </div>
+                <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                    fxLayoutAlign.xs="start center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                (input)="filterByName($event)" />
+                        </mat-form-field>
+                    </div>
+                    <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button mat-icon-button matTooltip="{{shipAddressCreateTitle}}" [satPopoverAnchorFor]="addShipAddressPopover"
+                        #shipAddressPopup="satPopoverAnchor" (click)="createShipAddress(shipAddressPopup);clearForm()"
+                        *ngIf="!isArchived">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                    <div fxFlex="36px" *ngIf="isArchived"></div>
+                </div>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div class="activity-data no-drag shipp-to-address-table-height" id="style-1">
+        <kendo-grid [data]="shipAddressListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+            [pageSize]="state.take" [sort]="state.sort" [sortable]="true" [pageable]="true"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="addressName" title="{{ 'SHIPTOADDRESS.ADDRESSNAME' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="description" title="{{ 'SHIPTOADDRESS.ADDRESS' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="isVerified" *ngIf="appType!='shipToAddress'" title="{{ 'SHIPTOADDRESS.ISVERIFIED' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.isVerified">
+                        Verified
+                    </div>
+                    <div *ngIf="!dataItem.isVerified">
+                        Pending
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <!-- <kendo-grid-column width="100" title="{{'BLSUPPLIER.DOCUMENT' | translate}}" *ngIf="appType!='shipToAddress'">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="{{'BLSUPPLIER.DOCUMENT' | translate}}"
+                        *ngIf="dataItem.receipts?.length > 0"
+                        (click)="showReceiptsPopupOpen(dataItem);$event.stopPropagation();"
+                        mat-icon-button>
+                        <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                        <span>({{receiptsCount(dataItem)}})</span>
+                    </button>
+                </ng-template>
+            </kendo-grid-column> -->
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}" [width]="180">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" title="{{shipAddressEditTitle}}"
+                        [satPopoverAnchorFor]="addShipAddressPopover" #shipAddressPopup="satPopoverAnchor"
+                        (click)="editShipAddress(dataItem,shipAddressPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+
+                    <button class="text-center" title="{{shipAddressArchiveTitle}}"
+                        [satPopoverAnchorFor]="deleteShipAddressPopover" #deleteShipAddressPopup="satPopoverAnchor"
+                        (click)="archiveShipAddressPopupOpen(dataItem,deleteShipAddressPopup)" *ngIf="!isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+
+                    <button class="text-center" title="{{shipAddressUnarchiveTitle}}"
+                        [satPopoverAnchorFor]="deleteShipAddressPopover" #deleteShipAddressPopup="satPopoverAnchor"
+                        (click)="archiveShipAddressPopupOpen(dataItem,deleteShipAddressPopup)" *ngIf="isArchived" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                    <button class="text-center" title="Add documents" mat-icon-button 
+                        *ngIf="!isArchived && appType!='shipToAddress'" (click)="openDocumentPopup(dataItem)">
+                        <fa-icon icon="file-alt" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+    <!-- editpopover -->
+    <sat-popover backdropClass="backdrop-color" #addShipAddressPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{shipAddressTitle}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="shipAddressForm" #formDirective="ngForm" novalidate
+                    (submit)="shipAddressForm.valid && upsertShipToAddress(formDirective)">
+                    <div class="p-1 apps-create-height" id="style-1">
+                    <div>
+                        <mat-form-field>
+                            <input matInput formControlName="addressName" placeholder="{{ 'SHIPTOADDRESS.ADDRESSNAME' |  translate }}" required>
+                            <mat-error *ngIf="shipAddressForm.get('addressName').hasError('maxlength')">
+                                {{ 'SHIPTOADDRESS.ADDRESSNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="shipAddressForm.get('addressName').hasError('required') && shipAddressForm.get('addressName').touched">
+                                {{ 'SHIPTOADDRESS.ADDRESSNAMEREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="description" rows="4"
+                              placeholder="{{'SHIPTOADDRESS.ADDRESS' | translate}}" required></textarea>
+                            <mat-error>
+                              <span
+                                *ngIf="shipAddressForm.get('description').hasError('maxlength')">{{'SHIPTOADDRESS.ADDRESSSHOULDNOTEXCEED250CHARACTERS'
+                                | translate}}</span>
+                            </mat-error>
+                          </mat-form-field>
+                    </div>
+                    <div *ngIf="appType!='shipToAddress'">
+                        <mat-checkbox formControlName="isVerified">{{ 'SHIPTOADDRESS.ISITVERIFIED' | translate }}
+                        </mat-checkbox>
+                    </div>
+                    <div *ngIf="appType!='shipToAddress'">
+                        <mat-form-field class="full-width">
+                            <textarea matInput formControlName="comments" rows="4"
+                              placeholder="{{'SHIPTOADDRESS.COMMENTS' | translate}}"></textarea>
+                              <mat-hint align="start">{{'SHIPTOADDRESS.COMMENTSHINT' | translate}}</mat-hint>
+                            <mat-error>
+                              <span
+                                *ngIf="shipAddressForm.get('comments').hasError('maxlength')">{{'SHIPTOADDRESS.ADDRESSSHOULDNOTEXCEED250CHARACTERS'
+                                | translate}}</span>
+                            </mat-error>
+                          </mat-form-field>
+                    </div>
+                </div>
+                    <div class="mb-1 prl-1" fxLayoutAlign="center center">
+                        <mat-error *ngIf="isThereAnError" class="mt-05">{{ validationMessage }}</mat-error>
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!shipAddressForm.valid||isAnyOperationIsInprogress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertShipAddressPopup(formDirective)"
+                            type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <!-- deletepopover -->
+    <sat-popover backdropClass="backdrop-color" #deleteShipAddressPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isArchived && appType!='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.UNARCHIVEBLTOADDRESS' |  translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isArchived && appType!='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.ARCHIVEBLTOADDRESS' |  translate }}</div>
+                    <div class="card-title-text mb-1" *ngIf="isArchived && appType=='shipToAddress'">
+                        {{ 'SHIPTOADDRESS.UNARCHIVESHIPTOADDRESS' |  translate }}</div>
+                    <div class="card-title-text mb-1" *ngIf="!isArchived && appType=='shipToAddress'">
+                        {{ 'SHIPTOADDRESS.ARCHIVESHIPTOADDRESS' |  translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isArchived && appType!='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.AREYOUSUREYOUWANTTOARCHIVETHISBILLTOADDRESS' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isArchived && appType!='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.AREYOUSUREYOUWANTTOUNARCHIVETHISBILLTOADDRESS' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="isArchived && appType=='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.AREYOUSUREYOUWANTTOARCHIVETHISSHIPTOADDRESS' |  translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isArchived && appType=='shipToAddress'">
+                    {{ 'SHIPTOADDRESS.AREYOUSUREYOUWANTTOUNARCHIVETHISSHIPTOADDRESS' |  translate }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" archiveShipToAddress();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+                        [disabled]="isAnyOperationIsInprogress" (click)=" archiveShipToAddress();">
+                        <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeArchiveShipAddressPopup();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>

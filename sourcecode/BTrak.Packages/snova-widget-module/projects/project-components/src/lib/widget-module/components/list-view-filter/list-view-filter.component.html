@@ -1,0 +1,181 @@
+<div fxLayout="row">
+    <div fxFlex *ngIf="displayLocation == 1">
+        <mat-chip disableRipple matRipple class="mr-08 pull-right" *ngIf="selectedFormName">
+            {{ 'RESIDENT.FORMNAME' | translate }} :
+            {{ selectedFormName }}
+        </mat-chip>
+        <span *ngFor="let filters of dynamicFilters">
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.filterKey == 'Project' && filters.isSystemFilter == true && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                {{ selectedProjectName }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                    (click)="removedynamicfilter(filters,'Project')">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.filterKey == 'User' && filters.isSystemFilter == true && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                {{ selectedUserName }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" 
+                    (click)="removedynamicfilter(filters,'User')">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.filterKey == 'Month' && filters.isSystemFilter == true && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                {{ tempMonthDate }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                    (click)="removedynamicfilter(filters,'Month')">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.filterKey == 'Year' && filters.isSystemFilter == true && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                {{ tempYearDate }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                    (click)="removedynamicfilter(filters,'Year')">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.filterKey == 'Date' && filters.isSystemFilter == true && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                <span *ngIf="tempDateFrom && tempDateTo">
+                    {{tempDateFrom | date: "dd-MMM-yyyy"}} {{ 'TESTMANAGEMENT.TO' | translate }}
+                    {{tempDateTo | date: "dd-MMM-yyyy"}}
+                </span>
+                <span *ngIf="tempSingleDate">
+                    {{tempSingleDate | date: "dd-MMM-yyyy"}}
+                </span>
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                    (click)="removedynamicfilter(filters,'Date')">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08 pull-right"
+                *ngIf="(filters.isSystemFilter == false && filters.filterValue)">
+                <b>{{ filters.filterName }}</b> :
+                {{ filters.filterValue }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                    (click)="removedynamicfilter(filters,null)">
+                </fa-icon>
+            </mat-chip>
+        </span>
+    </div>
+    <div fxFlex="25px" class="mr-05" fxLayoutAlign="start center" class="dashboard-options custom-app-padding">
+        <fa-icon icon="filter" matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}" [satPopoverAnchorFor]="userFilter"
+            #userFilterPopover="satPopoverAnchor" (click)="openFilterPopover(userFilterPopover); searchFilter()"
+            class="mat-color-accent cursor-pointer"></fa-icon>
+    </div>
+</div>
+
+<sat-popover #userFilter hasBackdrop verticalAlign="below" [interactiveClose]="true" backdropClass="backdrop-color">
+    <mat-card class="p-0">
+        <mat-card-content class="pl-05 custom-app-filter-key" style="width: 250px;">
+            <mat-form-field fxLayoutAlign="start center">
+                <input name="search" class="search_goal" matInput (input)="searchFilter()"
+                    [(ngModel)]="filterSearchText" [matAutocomplete]="auto" autocomplete="on"
+                    placeholder="{{'APP.SELECTAFILTER' | translate}}" trim>
+                <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="tagsLoadingInProgress"></i>
+                <span class="linked-userstory-close">
+                    <span *ngIf="!filterSearchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </span>
+                <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)" class="auto-width"
+                    (optionSelected)="onChangeTag($event.option.value)">
+                    <mat-option *ngFor="let tag of filteredTags" [value]="tag">
+                        {{tag.filterName}}
+                    </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+            <div fxLayout="row">
+                <div fxFlex *ngIf="selectedFilterValue == '0'">
+                    <mat-form-field class="full-width">
+                        <mat-select placeholder="{{'APP.SELECTAPROJECT' | translate}}"
+                            (selectionChange)="projectselected($event.value)">
+                            <mat-option *ngFor="let project of projectsList" [value]="project.projectId">
+                                {{project.projectName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-error *ngIf="filterValueRequired">
+                        {{ 'APP.PROJECTISREQUIRED' | translate }}
+                    </mat-error>
+                </div>
+                <div fxFlex *ngIf="selectedFilterValue == '1'">
+                    <mat-form-field class="full-width">
+                        <mat-select class="full-width" placeholder="{{'APP.SELECTAUSER' | translate}}"
+                            (selectionChange)="userselected($event.value)">
+                            <mat-select-trigger>
+                                {{tempSelectedUserName}}
+                            </mat-select-trigger>
+                            <mat-option [value]="user.teamMemberId" *ngFor="let user of usersList">
+                                <div fxLayout="row wrap" fxLayoutGap="5px">
+                                    <div fxFlex="35px">
+                                        <app-avatar-c [name]="user.teamMemberName | removeSpecialCharacters"
+                                            [src]="user.profileImage" [isRound]="true" size="30">
+                                        </app-avatar-c>
+                                    </div>
+                                    <div fxFlex="75">
+                                        <p class="mat-body-2">
+                                            {{ user.teamMemberName }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-error *ngIf="filterValueRequired">
+                        {{ 'APP.USERISREQUIRED' | translate }}
+                    </mat-error>
+                </div>
+                <div fxFlex *ngIf="selectedFilterValue == '2'">
+                    <mat-radio-group aria-label="Select an option" [(ngModel)]="dateType" (change)="onDateTypeChange()">
+                        <mat-radio-button value="date" class="pr-05">Date</mat-radio-button>
+                        <mat-radio-button value="dateRange">Date range</mat-radio-button>
+                    </mat-radio-group>
+                    <div *ngIf="dateType == 'date'">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker3" (click)="picker.open()" placeholder="Date"
+                                required autocomplete="off" [(ngModel)]="singleDate" (dateChange)="dateChanged()">
+                            <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                            <mat-datepicker #picker3></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div *ngIf="dateType == 'dateRange'">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker" (click)="picker.open()"
+                                placeholder="{{ 'TESTMANAGEMENT.DATEFROM' | translate }}" required autocomplete="off"
+                                [(ngModel)]="dateFrom" (dateChange)="dateChanged();startDate()" (input)="startDate()"
+                                [max]="maxDate" [min]="minDate">
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+                                placeholder="{{ 'TESTMANAGEMENT.TODATE' | translate }}" required autocomplete="off"
+                                [(ngModel)]="dateTo" (dateChange)="dateChanged()" [min]="minDateForEndDate"
+                                disabled={{endDateBool}} [readonly]="true" autocomplete="off">
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                        </mat-form-field>
+                        <mat-radio-group aria-label="Select an option" [(ngModel)]="dateValue" (change)="onChange()">
+                            <mat-radio-button value="lastWeek" class="pr-05">{{ 'TESTMANAGEMENT.LASTWEEK' | translate}}
+                            </mat-radio-button>
+                            <mat-radio-button value="nextWeek">{{ 'TESTMANAGEMENT.NEXTWEEK' | translate}}
+                            </mat-radio-button>
+                            <mat-radio-button value="thisMonth" class="pr-05">
+                                {{ 'TESTMANAGEMENT.THISMONTH' | translate}}</mat-radio-button>
+                            <mat-radio-button value="lastMonth">{{ 'TESTMANAGEMENT.LASTMONTH' | translate}}
+                            </mat-radio-button>
+                        </mat-radio-group>
+                    </div>
+                </div>
+                <div fxFlex="25px" class="card-content" fxLayoutAlign="start center" *ngIf="selectedFilterValue == '0' || selectedFilterValue == '1' 
+                    || selectedFilterValue == '2'">
+                    <fa-icon icon="plus-circle" matTooltip="{{ 'APP.ADDFILTER' | translate }}"
+                        class="ml-08 mat-color-accent cursor-pointer" (click)="applyDashboardFilters()">
+                    </fa-icon>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

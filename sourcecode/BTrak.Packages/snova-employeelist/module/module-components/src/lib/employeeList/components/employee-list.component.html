@@ -1,0 +1,266 @@
+<ng-container>
+    <div class="projects-list-grid grid-wrapper ml-05 mr-05"
+    [ngClass]="employeeListDataDetails.total == 0 ? 'employee-height2' : 'employee-height'" >
+        <kendo-grid #grid [data]="employeeListDataDetails" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+            [filter]="state.filter" [sortable]="true" [pageable]="employeeListDataDetails.total == 0 ? false : true" [columnMenu]="true"
+            (dataStateChange)="dataStateChange($event)" [selectable]="true" (cellClick)="selectedRow($event)" (columnVisibilityChange)="onVisibilityChange($event)">
+            <kendo-grid-messages pagerOf="{{ 'HRMANAGAMENT.OF' | translate }}"
+                pagerItems="{{ 'HRMANAGAMENT.ITEMS' | translate }}"
+                noRecords="{{ 'HRMANAGAMENT.NORECORDS' | translate }}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="firstName" title="{{'HRMANAGAMENT.FIRSTNAME' | translate}}" [width]="120" [hidden]="checkVisibility('firstName')">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div [matTooltip]="dataItem.firstName" matTooltipShowDelay="200">{{ dataItem.firstName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="surName" title="{{'HRMANAGAMENT.LASTNAME' | translate}}" [width]="120" [hidden]="checkVisibility('surName')">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div [matTooltip]="dataItem.surName" matTooltipShowDelay="200">{{ dataItem.surName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="email" title="{{'HRMANAGAMENT.EMAIL' | translate}}" [width]="120" [hidden]="checkVisibility('email')">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div [matTooltip]="dataItem.email" matTooltipShowDelay="500">{{ dataItem.email }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="employeeNumber" title="{{'LEAVESREPORT.EMPLOYEEID' | translate}}" [width]="120" [hidden]="checkVisibility('employeeNumber')">
+            </kendo-grid-column>
+            <kendo-grid-column field="designationName" title="{{'HRMANAGAMENT.DESIGNATION' | translate}}" [width]="120" [hidden]="checkVisibility('designationName')">
+            </kendo-grid-column>
+            <kendo-grid-column field="employmentStatusName" title="{{'HRMANAGAMENT.EMPLOYEESTATUS' | translate}}"
+                [width]="120" [hidden]="checkVisibility('employmentStatusName')">
+            </kendo-grid-column>
+            <kendo-grid-column field="jobCategoryType" title="{{'HRMANAGAMENT.JOBCATEGORY' | translate}}" [width]="120" [hidden]="checkVisibility('jobCategoryType')">
+            </kendo-grid-column>
+            <kendo-grid-column field="departmentName" title="{{'HRMANAGAMENT.DEPARTMENT' | translate}}" [width]="120" [hidden]="checkVisibility('departmentName')">
+            </kendo-grid-column>
+            <kendo-grid-column field="branchName" title="{{'HRMANAGAMENT.BRANCH' | translate}}" [width]="120" [hidden]="checkVisibility('branchName')">
+            </kendo-grid-column>
+            <kendo-grid-column field="shift" title="{{'HRMANAGAMENT.SHIFT' | translate}}" [width]="120" [hidden]="checkVisibility('shift')">
+            </kendo-grid-column>
+            <kendo-grid-column *ngFor="let col of selectedform.columns" [field]="col.field" [title]="col.title"
+            [hidden]="checkVisibility(col.field)" [filter]="col.type" [filterable]="true" [width]="120">
+            </kendo-grid-column>
+            <kendo-grid-column field="dateOfJoining" title="{{'HRMANAGAMENT.JOINEDDATE' | translate}}" [width]="120" [hidden]="checkVisibility('dateOfJoining')">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div *ngIf="dataItem.dateOfJoining != null">{{ dataItem.dateOfJoining | date: "dd-MMM-yyyy"  }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column field="profileImage" title="{{'HRMANAGAMENT.PROFILEIMAGE' | translate}}"
+                [width]="120">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <img class="employee_img" src="../assets/images/faces/18.png" *ngIf="!dataItem.profileImage"
+                        (click)="goToUserProfile(dataItem.userId);$event.stopPropagation()" />
+                    <img class="employee_img" *ngIf="dataItem.profileImage" src="{{ dataItem.profileImage }}"
+                        (click)="goToUserProfile(dataItem.userId);$event.stopPropagation()" />
+                </ng-template>
+            </kendo-grid-command-column>
+            <!-- <kendo-grid-column *ngIf="isMACApplicable" field="macAddress"
+                title="{{'HRMANAGAMENT.MACTITLE' | translate}}">
+            </kendo-grid-column> -->
+            <kendo-grid-command-column field="enableTracking" title="{{'ACTIVITYAPPS.ENABLETRACKING' | translate}}"
+                *ngIf="(canAccess_feature_ConfigureEmployeeTracking)" [width]="120">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="{{'ACTIVITYAPPS.ENABLETRACKING' | translate}}"
+                        *ngIf="(canAccess_feature_ConfigureEmployeeTracking) && !dataItem.trackEmployee"
+                        [satPopoverAnchorFor]="addTrackerPopovers" #addTrackerPopover="satPopoverAnchor"
+                        (click)="trackEmployee(dataItem,addTrackerPopover);$event.stopPropagation()" mat-icon-button>
+                        <fa-icon icon="cog" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" matTooltip="{{'ACTIVITYAPPS.ENABLEDTRACKING' | translate}}"
+                        *ngIf="(canAccess_feature_ConfigureEmployeeTracking) && dataItem.trackEmployee"
+                        [satPopoverAnchorFor]="addTrackerPopovers" #addTrackerPopover="satPopoverAnchor"
+                        (click)="trackEmployee(dataItem,addTrackerPopover);$event.stopPropagation()" mat-icon-button>
+                        <mat-icon style="color: red !important;">fiber_manual_record</mat-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}"
+                *ngIf="(canAccess_feature_CanEditOtherEmployeeDetails)" [width]="120">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center"
+                        matTooltip="{{'HRMANAGAMENT.EDITEMPLOYEEDETAILS' | translate | softLabelsPipe : softLabels}}"
+                        (click)="editEmployeeDetails(dataItem);$event.stopPropagation()"
+                        mat-icon-button>
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+            <ng-template kendoPagerTemplate let-totalPages="totalPages" let-currentPage="currentPage">
+                <kendo-pager-prev-buttons *ngIf="pageable"></kendo-pager-prev-buttons>
+                <kendo-pager-numeric-buttons *ngIf="pageable" [buttonCount]="4"></kendo-pager-numeric-buttons>
+                <kendo-pager-next-buttons *ngIf="pageable"></kendo-pager-next-buttons>
+                <kendo-pager-info></kendo-pager-info>
+            </ng-template>
+            <kendo-grid-excel fileName="employeeList.xlsx"></kendo-grid-excel>
+        </kendo-grid>
+        <div *ngIf="employeeListDataLoading " class="k-i-loading"></div>
+    </div>
+    <!-- <div class="floating-right-fab-button" *ngIf="(canAccess_feature_CanEditOtherEmployeeDetails)">
+        <div class="handle">
+            <button mat-fab color="accent"
+                matTooltip="{{ 'HRMANAGAMENT.ADDEMPLOYEE' | translate | softLabelsPipe : softLabels }}"
+                [satPopoverAnchorFor]="addEmployeePopovers" #addEmployeePopover="satPopoverAnchor"
+                (click)="addEmployeesForm(addEmployeePopover)">
+                <mat-icon>add</mat-icon>
+            </button>
+
+        </div>
+    </div> -->
+    <!-- <sat-popover #addEmployeePopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="center">
+        <app-hr-create-employee-component (closePopup)="closeDialog()" [isEmployeeEdit]="employeeEdit">
+        </app-hr-create-employee-component>
+    </sat-popover> -->
+    <ng-template #editEmployee let-data>
+        <app-hr-create-employee-component [data]=[data]>
+        </app-hr-create-employee-component>
+    </ng-template>
+    <sat-popover #addTrackerPopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+        [restoreFocus]="false" [interactiveClose]="false" verticalAlign="center"
+        horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05">
+                    {{'ACTIVITYTRACKER.TRACKEMPLOYEE' | translate}}
+                </div>
+            </mat-card-title>
+            <form [formGroup]="activityForm" novalidate #formDirective="ngForm"
+                (submit)="activityForm.valid && upsertTracker()">
+                <div class="apps-popover p-1" id="style-1">
+                    <div fxLayout="column" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                        <div fxFlex="100">
+                            <mat-checkbox formControlName="isTrack" (change)="changeTrack()" class="full-width mt-1">
+                                {{'ACTIVITYTRACKER.TRACKEMPLOYEE' | translate }}</mat-checkbox>
+                        </div>
+                        <div fxFlex="100" [hidden]="!track">
+                            <div fxLayout="row wrap" fxLayout.xs="column" class="m-1">
+                                <div fxFlex="80">
+                                    <span>{{'ACTIVITYAPPS.TRACKAPPANDURLS' | translate}}</span>
+                                </div>
+                                <div fxFlex="20">
+                                    <mat-slide-toggle formControlName="isTracking" (change)="detectTrackingChange()"
+                                        class="ml-1">
+                                    </mat-slide-toggle>
+                                </div>
+                            </div>
+                            <div *ngIf="appsTrack">
+                                <div class="pb-05 marg-left">
+                                    <span>{{'ACTIVITYAPPS.CONTROLWHEATHER' | translate}}</span></div>
+                                <nav class="mt-1 marg-left">
+                                    <mat-button-toggle-group formControlName="app"
+                                        class="custom-button-group1 custom-button mat-button-item"
+                                        style='border-radius:20px'>
+                                        <mat-button-toggle (click)="onClickTrackAlloff();" value="off">
+                                            {{'ACTIVITYAPPS.OFF' | translate}}
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onClickTrackAllApps();" value="App">
+                                            {{'ACTIVITYAPPS.APPS' | translate}}
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onClickTrackAllAppsUrls();" value="AppandUrl">
+                                            {{'ACTIVITYAPPS.APPSANDURLS' | translate}}
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onClickTrackAllAppsUrlsDetailed();"
+                                            value="AppandUrlDetailed">
+                                            {{'ACTIVITYAPPS.APPSANDURLSDETAILED' | translate}}
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onClickTrackUrls();" value="Url">
+                                            {{'ACTIVITYAPPS.URLS' | translate}}
+                                        </mat-button-toggle>
+                                    </mat-button-toggle-group>
+                                </nav>
+                            </div>
+                        </div>
+                        <div fxFlex="100" [hidden]="!track">
+                            <div fxLayout="row wrap" fxLayout.xs="column" class="m-1">
+                                <div fxFlex="80">
+                                    <span>{{'ACTIVITYAPPS.SCREENSHOTFREQUENCY' | translate}}</span>
+                                </div>
+                                <div fxFlex="20">
+                                    <mat-slide-toggle formControlName="isScreenshotTracking"
+                                        (change)="detectScreenshotChange()" class="ml-1"></mat-slide-toggle>
+                                </div>
+                            </div>
+                            <div *ngIf="isScreenshot">
+                                <div class="pb-05">
+                                    <span class="m-1 ml-0">{{'ACTIVITYAPPS.NUMBEROFSCREENSHOTS' | translate}}</span>
+                                    <input class="mr-05" style='width:45px' type="number" min="0"
+                                        formControlName="shotTime"
+                                        (keypress)="omitSpecialChar($event);onChangeScreenShotCount()"
+                                        (paste)="omitSpecialChar($event);onChangeScreenShotCount()"
+                                        (change)="omitSpecialChar($event);onChangeScreenShotCount()" /></div>
+                                <nav class="mt-1">
+                                    <mat-button-toggle-group class="custom-button-group custom-button  mat-button-item"
+                                        style='border-radius:20px' formControlName="shotFrequency">
+                                        <mat-button-toggle (click)="onChangeScreenShotFrequency(0)" value="0">
+                                            {{'ACTIVITYAPPS.NONE' | translate}}
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onChangeScreenShotFrequency(1)" value="1">1x
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onChangeScreenShotFrequency(2)" value="2">2x
+                                        </mat-button-toggle>
+                                        <mat-button-toggle (click)="onChangeScreenShotFrequency(3)" value="3">3x
+                                        </mat-button-toggle>
+                                    </mat-button-toggle-group>
+                                </nav>
+                            </div>
+                        </div>
+                        <div fxFlex="100" [hidden]="!track">
+                            <div fxLayout="row wrap" fxLayout.xs="column" class="m-1">
+                                <div fxFlex="80">
+                                    <span>{{'ACTIVITYAPPS.RECORDACTIVITY' | translate}}</span>
+                                </div>
+                                <div fxFlex="20">
+                                    <mat-slide-toggle formControlName="isKeyboardTracking" class="ml-1"
+                                        (change)="changeKeyboard()">
+                                    </mat-slide-toggle>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex="100" [hidden]="!track">
+                            <div fxLayout="row wrap" fxLayout.xs="column" class="m-1">
+                                <div fxFlex="80">
+                                    <span>{{'ACTIVITYAPPS.MOUSETRACKING' | translate}}</span>
+                                </div>
+                                <div fxFlex="20">
+                                    <mat-slide-toggle formControlName="isMouseTracking" class="ml-1"
+                                        (change)="changeMouse()">
+                                    </mat-slide-toggle>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-view-popover p-1">
+                    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    </div>
+                </div>
+                <div class="text-center mb-1 prl-1">
+                    <button mat-raised-button color="primary" class="mr-05" (click)="$event.stopPropagation()"
+                        [disabled]="upsertEnableTracking || !activityForm.valid">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertEnableTracking">
+                        </mat-progress-bar>
+                        <fa-icon icon="save" class="mr-05"></fa-icon> {{'ACTIVITYTRACKER.SAVE' | translate}}
+                    </button>
+                    <button mat-raised-button (click)="closeTrackDialog()" type="reset"
+                        [disabled]="upsertEmployeeInProgress$ | async">
+                        <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-card>
+    </sat-popover>
+</ng-container>
+
+<!-- <div *ngIf="!(canAccess_feature_ViewAllEmployees)">
+    <span>{{ 'HRMANAGAMENT.PERMISSIONMESSAGE' | translate | softLabelsPipe : softLabels}}</span>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewAllEmployees)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->

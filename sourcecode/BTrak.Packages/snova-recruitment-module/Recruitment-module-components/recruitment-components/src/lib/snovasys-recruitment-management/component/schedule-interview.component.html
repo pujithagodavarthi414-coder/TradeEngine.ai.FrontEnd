@@ -1,0 +1,417 @@
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="openClosingPopup()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<div style="position: relative;">
+  <div class="text-center mat-bg-primary">
+    <div class="card-title-text p-05"> {{ 'CANDIDATES.SCHEDULORCANCEL' | translate }}
+    </div>
+  </div>
+
+  <div fxLayout="start center">
+    <div fxFlex="100" id="style-1">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationsInprogress">
+      </mat-progress-bar>
+      <div [style.display]="initialLoading ? 'none' : 'block'">
+      <ngx-datatable class="btrak" [columnMode]="3" [headerHeight]="35" [footerHeight]="50" [rowHeight]="40"
+        [limit]="10" [scrollbarH]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}" [rows]="rowData">
+        <ngx-datatable-column name="{{ 'INTERVIEWPROCESS.STAGE' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <label class="assets-name-control hide-content-overflow activity-font-color mb-0 mt-05"
+              matTooltip="{{ row?.interviewTypeName }}">{{ row?.interviewTypeName }}</label>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIVITYTRACKER.ACTION' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent primary"
+              [satPopoverAnchorFor]="phonePopover" #phonePopup="satPopoverAnchor"
+              (click)="callCandidatePopover(phonePopup,row)" *ngIf="row.isPhoneCalling"
+              matTooltip="{{'INTERVIEWTYPES.ISPHONE' | translate }}">
+              <mat-icon>phone</mat-icon>
+            </button>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent primary"
+              [satPopoverAnchorFor]="phonePopover" #phonePopup="satPopoverAnchor"
+              (click)="callCandidatePopover(phonePopup,row)" *ngIf="row.isVideoCalling"
+              matTooltip="{{'INTERVIEWTYPES.ISVIDEO' | translate }}">
+              <mat-icon>video_call</mat-icon>
+            </button>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent primary"
+              *ngIf="!row.isPhoneCalling && !row.isVideoCalling" matTooltip="{{'INTERVIEWTYPES.DIRECT' | translate }}">
+              <mat-icon>group</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'INTERVIEWPROCESS.SCHEDULE' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent"
+              matTooltip="{{'INTERVIEWPROCESS.SCHEDULE' | translate }}" *ngIf="canAccess_feature_AddInterviewSchedule"
+              [satPopoverAnchorFor]="scheduleInterviewPopover" #addScheduleInterviewPopup="satPopoverAnchor"
+              (click)="addScheduleInterPopup(addScheduleInterviewPopup, row,false);">
+              <mat-icon>schedule</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PERMISSIONMANAGEMENT.CANCEL' | translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent" matTooltip="Cancel"
+              *ngIf="row.scheduleId != '00000000-0000-0000-0000-000000000000' && canAccess_feature_ManageCancelInterviewSchedule"
+              [satPopoverAnchorFor]="cancelSchedulePopover" #cancelSchedulePopup="satPopoverAnchor"
+              (click)="cancelSchedulePopupOpen(cancelSchedulePopup, row);">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'INTERVIEWPROCESS.FEEDBACK' | translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <button mat-menu-item class="allgoals_icons icon-button mat-color-accent"
+              matTooltip="{{ 'INTERVIEWPROCESS.FEEDBACK' | translate}}" [satPopoverAnchorFor]="feedbackPopover"
+              #addFeedbackPopup="satPopoverAnchor"
+              *ngIf="row.scheduleId != '00000000-0000-0000-0000-000000000000' && row.interviewProcessConfigurationId"
+              (click)="addFeedPopup(addFeedbackPopup,row);formValidate()">
+              <mat-icon>feedback</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'USERSTORYUNIQUE.STATUS' | translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <mat-chip fxFlex="15" fxFlex.gt-md="90px" [satPopoverAnchorFor]="inLineEditScheduleStatusPopover"
+              #inLineEditSchedulePopup="satPopoverAnchor"
+              (click)="$event.stopPropagation();saveScheduleStatus(inLineEditSchedulePopup,row)"
+              class="ml-05 mr-2 allgoals_process text-center goal-cursor userstory_color mt-03" mat-sm-chip
+              [style.backgroundColor]="row?.statusColor" matTooltip="{{row?.statusName}} "
+              *ngIf="row.scheduleId != '00000000-0000-0000-0000-000000000000'">
+              {{ row?.statusName }}
+            </mat-chip>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+      </div>
+    </div>
+  </div>
+</div>
+
+<sat-popover #inLineEditScheduleStatusPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+  hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+
+  <mat-card class="filter-data p-0">
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-1 mat-bg-primary">
+          {{'GOALS.UPDATESTATUS' |translate}}
+        </div>
+      </mat-card-title>
+      <div class="card-content p-05">
+        <span class="hide-mat-form-label">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select placeholder="{{'STATUS'|translate}}" [(ngModel)]="scheduleStatusId"
+              (selectionChange)="changeScheduleStatus($event.value)">
+              <mat-option *ngFor="let scheduleStatuses of scheduleStatus" [value]="scheduleStatuses.scheduleStatusId">
+                {{ scheduleStatuses.status }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </span>
+      </div>
+    </div>
+    <div class="text-center p-05">
+      <button mat-raised-button color="primary" class="mr-05" (click)="upsertScheduleStatus(); $event.stopPropagation()"
+        [disabled]="isAnyOperationIsInprogress">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+        <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+      </button>
+      <button mat-raised-button (click)="closeScheduleStatusDialogWindow(); (false)"
+        [disabled]="isAnyOperationIsInprogress">
+        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #scheduleInterviewPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="before">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">{{ scheduleinterviewtitle }}
+      </div>
+    </mat-card-title>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationsInprogress">
+    </mat-progress-bar>
+    <form [formGroup]="addScheduleInterviewForm" novalidate #scheduleFormDirective="ngForm"
+      (submit)="upsertCandidateScheduling(scheduleFormDirective)">
+      <div class="card-content p-05 mt-05" fxFlex="320px">
+
+        <mat-form-field class="full-width">
+          <input matInput formControlName="interviewDate" [matDatepicker]="inputpicker3" (click)="inputpicker3.open()"
+            readonly placeholder="{{ 'SCHEDULE.INTERVIEWDATE' | translate }}" class="date-picker" autocomplete="off"
+            required>
+          <mat-datepicker-toggle matSuffix [for]="inputpicker3"></mat-datepicker-toggle>
+          <mat-datepicker #inputpicker3></mat-datepicker>
+          <mat-error
+          *ngIf="addScheduleInterviewForm.get('interviewDate').hasError('required') && addScheduleInterviewForm.get('interviewDate').touched">
+          {{ 'SCHEDULE.INTERVIEWDATEREQUIRED' | translate }}
+        </mat-error>
+        </mat-form-field>
+        <mat-form-field class="full-width master-timepicker">
+          <input matInput formControlName="startDate" placeholder="{{ 'SCHEDULE.STARTTIME' | translate }}"
+            aria-label="24hr format" [ngxTimepicker]="startDate" [format]="24" readonly required />
+          <ngx-material-timepicker #startDate></ngx-material-timepicker>
+          <mat-error
+          *ngIf="addScheduleInterviewForm.get('startDate').hasError('required') && addScheduleInterviewForm.get('startDate').touched">
+          {{ 'SCHEDULE.STARTTIMEREQUIRED' | translate }}
+        </mat-error>
+        </mat-form-field>
+        <mat-form-field class="full-width master-timepicker">
+          <input matInput formControlName="endDate" placeholder="{{ 'SCHEDULE.ENDTIME' | translate }}"
+            aria-label="24hr format" [ngxTimepicker]="endDate" [format]="24" readonly required />
+          <ngx-material-timepicker #endDate></ngx-material-timepicker>
+          <mat-error
+          *ngIf="addScheduleInterviewForm.get('endDate').hasError('required') && addScheduleInterviewForm.get('endDate').touched">
+          {{ 'SCHEDULE.ENDTIMEREQUIRED' | translate }}
+        </mat-error>
+        </mat-form-field>
+
+        <form [formGroup]="selectAssignee">
+          <mat-form-field style="width: 100% !important;">
+            <mat-select formControlName="assignee" [compareWith]="compareSelectedAssigneeFn"
+              placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}" multiple required>
+              <mat-option #allAssigneeSelected (click)="toggleAllAssigneeSelected()" [value]="0">
+                Select All</mat-option>
+              <mat-option [value]="assignee.id" *ngFor="let assignee of jobAssignTo"
+                (click)="toggleAssigneePerOne(allAssigneeSelected.viewValue)">
+                <app-avatar class="employee_img" *ngIf="!assignee.profileImage"
+                  [name]="assignee.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                <img class="employee_img" *ngIf="assignee.profileImage"
+                  [src]="assignee.profileImage | fetchSizedAndCachedImage: '40':''">
+                {{assignee.fullName}}
+              </mat-option>
+            </mat-select>
+            <mat-error
+            *ngIf="selectAssignee.get('assignee').hasError('required') && selectAssignee.get('assignee').touched">
+            {{ 'SCHEDULE.ASSIGNEEREQUIRED' | translate }}
+          </mat-error>
+          </mat-form-field>
+        </form>
+
+        <mat-form-field class="full-width">
+          <textarea matInput formControlName="scheduleComments"
+            placeholder="{{ 'SCHEDULE.COMMENTS' | translate }}"></textarea>
+        </mat-form-field>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center mb-1 mt-05">
+          <button type="submit" mat-button mat-raised-button class="mr-05" color="primary"
+            [disabled]="!addScheduleInterviewForm.valid || anyOperationsInprogress || savingInProgress || !selectAssignee.valid">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SCHEDULE.SAVE' | translate }}
+          </button>
+          <button type="reset" mat-button mat-raised-button (click)="closeUpsertAddAppUrl(scheduleFormDirective)">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+          </button>
+        </div>
+      </div>
+    </form>
+  </mat-card>
+</sat-popover>
+<sat-popover #phonePopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+  <mat-card class="filter-data p-0" style="width:500px !important">
+    <button class="inline_edit_close btn m-2" color="warn" (click)="closePhonePopup()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05"> {{ 'INTERVIEWPROCESS.CALLCANDIDATE' | translate }}
+      </div>
+    </mat-card-title>
+    <div style="height: 300px; overflow: auto;" id="style-1">
+      <div class="unqiue-activity-tab comments-tabslist full-width" *ngIf="isShowcomments">
+        <snovasys-crm [receiverId]="candidateInterviewScheduleId" [canComment]="true"
+          [canCall]="selectedRow.isPhoneCalling" [canVideoCall]="selectedRow.isVideoCalling" [canCreateRoom]="false"
+          [canJoinRoomOnly]="false" [isVideoCallFromPopup]="true" [canPay]="false"
+          (paymentDetails)="paymentDetails($event)" [componentModel]="componentModel" [isMobileNuberOnly]="true"
+          [isPermissionExists]="true" [isCRM]="true" [mobileNumber]="moblieNumber"></snovasys-crm>
+      </div>
+      <div class="unqiue-activity-tab full-width" *ngIf="!isShowcomments">
+        <app-common-message-box
+          textToDisplay="{{ 'INTERVIEWPROCESS.PLEASESCHEDULEINTERVIEWTOINTERVIEWCANDIDATE' | translate }}">
+        </app-common-message-box>
+      </div>
+    </div>
+  </mat-card>
+</sat-popover>
+<sat-popover #feedbackPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="before">
+  <mat-card class="filter-data p-0" style="width:500px !important">
+    <button class="inline_edit_close btn m-2" color="warn" (click)="closeFeedback(feedbackFormDirective)">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05"> {{ 'INTERVIEWPROCESS.FEEDBACK' | translate }}
+      </div>
+    </mat-card-title>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationsInprogress">
+    </mat-progress-bar>
+    <form [formGroup]="feedForm" novalidate #feedbackFormDirective="ngForm" (submit)="upsertInterviewFeedback()">
+      <div class="card-content p-05 mt-05" fxLayout="row" fxLayoutAlign="space-around center">
+        <mat-form-field class="full-width ml-05" (click)="$event.stopPropagation();">
+          <mat-select formControlName="rate" required placeholder="{{ 'SCHEDULE.SELECTRATING' | translate }}"
+            (selectionChange)="changeRating($event.value)" [(ngModel)]="rateId">
+            <mat-option [value]="rate.interviewRatingId" *ngFor="let rate of Rating">
+              {{rate.interviewRatingName}}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="feedForm.get('rate').hasError('required') && feedForm.get('rate').touched">
+            {{ 'SCHEDULE.RATINGREQUIRED' | translate }}
+          </mat-error>
+        </mat-form-field>
+        <fa-icon matTooltip="{{'RATINGTYPES.CREATERATINGTYPETOOLTIP' | translate }}"
+          [satPopoverAnchorFor]="upsertRatingTypePopover" #upsertRatingTypePopUp="satPopoverAnchor"
+          (click)="createRatingType(upsertRatingTypePopUp);clearForm()" icon="plus"
+          class="filter mat-color-accent goal-cursor">
+        </fa-icon>
+        <span fxLayout="column" class="d-grid  ml-05">
+          <span fxFlex></span>
+          <span fxFlex>
+            <fa-icon icon="image" class="filter mat-color-accent goal-cursor" [satPopoverAnchorFor]="FileUploadPopover"
+              #FileUploadPopup="satPopoverAnchor" (click)="openFileUploadPopover(FileUploadPopup)">
+            </fa-icon>
+          </span>
+        </span>
+      </div>
+
+
+
+      <div style="height: 300px; overflow: auto;" id="style-1">
+        <div class="custom-hrm-dropzone">
+          <app-custom-field-component [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceId"
+            [referenceId]="referenceId" [isDeletePermission]="isrecruitment" [isEditFieldPermission]="isrecruitment"
+            [isAddPermission]="isrecruitment">
+          </app-custom-field-component>
+        </div>
+
+        <div class="unqiue-activity-tab comments-tabslist full-width" *ngIf="isShowcomments && selectedRow">
+          <snovasys-crm [receiverId]="candidateInterviewScheduleId" [canComment]="true"
+            [canCall]="selectedRow.isPhoneCalling" [canVideoCall]="selectedRow.isVideoCalling" [canCreateRoom]="false"
+            [canJoinRoomOnly]="false" [isVideoCallFromPopup]="true" [canPay]="false"
+            (paymentDetails)="paymentDetails($event)" [componentModel]="componentModel" [isMobileNuberOnly]="true"
+            [isPermissionExists]="true" [isCRM]="true" [mobileNumber]="moblieNumber"></snovasys-crm>
+        </div>
+        <div class="unqiue-activity-tab comments-tabslist full-width" *ngIf="!isShowcomments && selectedRow">
+          <snovasys-crm [receiverId]="candidateInterviewScheduleId" [canComment]="true"
+            [canCall]="selectedRow.isPhoneCalling" [canVideoCall]="selectedRow.isVideoCalling" [canCreateRoom]="false"
+            [canJoinRoomOnly]="false" [isVideoCallFromPopup]="true" [canPay]="false"
+            (paymentDetails)="paymentDetails($event)" [componentModel]="componentModel" [isMobileNuberOnly]="true"
+            [isPermissionExists]="true" [isCRM]="true" [mobileNumber]="moblieNumber"></snovasys-crm>
+        </div>
+      </div>
+    </form>
+  </mat-card>
+</sat-popover>
+
+<!--------dropzone dialog------>
+<sat-popover #FileUploadPopover hasBackdrop [interactiveClose]="false" scrollStrategy="reposition">
+  <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+    <mat-card-title>
+      <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex class="text-center">
+          {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center">
+          <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <div class="mobile-view-popover p-1" *ngIf="showUploader">
+      <app-dropzone [getFilesByReferenceId]="true" [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="selectedScheduleId"
+        [selectedParentFolderId]="selectedScheduleId" [selectedStoreId]="selectedStoreId" [isFromFeedback]="false"
+        [isButtonVisible]="true"></app-dropzone>
+    </div>
+    <div class="mobile-view-popover p-1" *ngIf="!showUploader">
+      <app-dropzone [getFilesByReferenceId]="true" [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="selectedScheduleId"
+        [selectedParentFolderId]="selectedScheduleId" [selectedStoreId]="selectedStoreId" [isFromFeedback]="false"
+        [isButtonVisible]="true"></app-dropzone>
+    </div>
+  </mat-card>
+</sat-popover>
+<!--------dropzone dialog------>
+
+<sat-popover #cancelSchedulePopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="before">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05"> {{ 'SCHEDULE.CANCELSCHEDULE' | translate }}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <mat-form-field class="full-width">
+        <textarea matInput [(ngModel)]="cancelComment" placeholder="{{ 'SCHEDULE.COMMENTS' | translate }}"></textarea>
+      </mat-form-field>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary"
+          (click)="cancelSchedule() ;">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeSchedulePopup();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #upsertRatingTypePopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ ratingTypeTitle }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="ratingTypeForm" #formDirective="ngForm" novalidate
+        (submit)="ratingTypeForm.valid && upsertRatingType(formDirective)">
+        <div>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="interviewRatingName"
+              placeholder="{{'RATINGTYPES.RATINGTYPENAME' | translate }}" required>
+            <mat-error *ngIf="ratingTypeForm.get('interviewRatingName').hasError('maxlength')">
+              {{ 'RATINGTYPES.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="ratingTypeForm.get('interviewRatingName').hasError('required') && ratingTypeForm.get('interviewRatingName').touched">
+              {{ 'RATINGTYPES.NAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="value" placeholder="{{'RATINGTYPES.VALUE' | translate }}" type="number"
+              min="0" required>
+            <mat-error *ngIf="ratingTypeForm.get('value').hasError('required') && ratingTypeForm.get('value').touched">
+              {{ 'LEAVEENCASHMENTSETTINGS.VALUEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!ratingTypeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertRatingTypePopUpPopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

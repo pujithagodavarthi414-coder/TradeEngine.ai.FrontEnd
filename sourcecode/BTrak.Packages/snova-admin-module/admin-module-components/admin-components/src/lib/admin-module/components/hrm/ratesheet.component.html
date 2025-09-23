@@ -1,0 +1,345 @@
+<div class="full-height">
+  <div *ngIf="(canAccess_feature_ManageRateSheet)">
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{'RATESHEET.RATESHEETTITLE' | translate | titlecase}}">{{'RATESHEET.RATESHEETTITLE' | translate | titlecase}}</span>
+          </div>
+          <div fxFlex fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                (change)="getArchiveAndUnarchived()"></mat-slide-toggle>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="full-width">
+                  <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                </mat-form-field>
+              </div>
+              <span class="shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <button mat-icon-button matTooltip="{{ 'RATESHEET.CREATETOOLTIP' | translate }}"
+                [satPopoverAnchorFor]="upsertRateSheetPopover" #upsertRateSheetPopUp="satPopoverAnchor"
+                (click)="createRateSheetPopupOpen(upsertRateSheetPopUp);clearForm()" *ngIf="!isArchived">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+              <div fxFlex="36px" *ngIf="isArchived"></div>
+            </div>
+          </div>
+        </div>
+      </mat-card-title>
+      <mat-divider></mat-divider>
+    </mat-card>
+    <div class="activity-data">
+      <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+        [rowHeight]="50" [rows]="rateSheetsFiltered" [loadingIndicator]="isAnyOperationIsInprogress" [limit]="page.size"
+        [externalPaging]="true" [offset]="page.pageNumber" [count]="totalCount" (page)='setPage($event)'
+        (sort)="onSort($event)" [sortType]="'single'" [sorts]="[{prop: 'name', dir: 'desc'}]"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{'RATESHEET.RATESHEETTITLE' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="rateSheetName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.rateSheetName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATESHEETFORNAME' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="rateSheetForName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.rateSheetForName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOUR' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHour">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHour }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURMON' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourMon">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourMon }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURTUE' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourTue">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourTue }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURWED' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourWed">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourWed }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURTHU' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourThu">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourThu }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURFRI' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourFri">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourFri }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURSAT' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourSat">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourSat }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATEPERHOURSUN' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="ratePerHourSun">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.ratePerHourSun }}
+          </ng-template>
+        </ngx-datatable-column>
+        <!-- <ngx-datatable-column name="{{ 'TESTMANAGEMENT.PRIORITY' | translate }}" [sortable]="true" prop="priority">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.priority }}">{{ row?.priority }}</span>
+          </ng-template>
+        </ngx-datatable-column> -->
+        <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{'RATESHEET.EDITRATESHEETTITLE' | translate}}" *ngIf="!isArchived"
+              mat-icon-button [satPopoverAnchorFor]="upsertRateSheetPopover" #upsertRateSheetPopUp="satPopoverAnchor"
+              (click)="editRateSheetPopupOpen(row, upsertRateSheetPopUp)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{'RATESHEET.ARCHIVERATESHEETTITLE' | translate}}" *ngIf="!isArchived"
+              mat-icon-button [satPopoverAnchorFor]="deleteRateSheetPopover" #deleteRateSheetPopUp="satPopoverAnchor"
+              (click)="deleteRateSheetPopUpOpen(row, deleteRateSheetPopUp)">
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{'RATESHEET.UNARCHIVERATESHEETTITLE' | translate}}" *ngIf="isArchived"
+              [satPopoverAnchorFor]="deleteRateSheetPopover" #deleteRateSheetPopUp="satPopoverAnchor"
+              (click)="deleteRateSheetPopUpOpen(row, deleteRateSheetPopUp)" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #upsertRateSheetPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+      horizontalAlign="center">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05 mb-1">{{rateSheetHeaderName}}
+          </div>
+        </mat-card-title>
+        <mat-card-content id="style-1" class="P-05 custom-height">
+          <form [formGroup]="rateSheetForm" #formDirective="ngForm" novalidate
+            (submit)="rateSheetForm.valid && upsertRateSheet(formDirective)">
+            <div class="create-ratesheet-component card-content p-05">
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width">
+                    <input matInput formControlName="rateSheetName"
+                      placeholder="{{'RATESHEET.RATESHEETTITLENAME' | translate}}" required>
+                    <mat-error *ngIf="rateSheetForm.get('rateSheetName').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('rateSheetName').hasError('required') && rateSheetForm.get('rateSheetName').touched">
+                      {{'RATESHEET.REQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <mat-select formControlName="rateSheetForId"
+                      placeholder="{{ 'RATESHEET.RATESHEETFORNAME' | translate }}" required>
+                      <mat-option value="option" *ngFor="let rateSheetFor of (rateSheetForNames)"
+                        [value]="rateSheetFor.rateSheetForId">
+                        {{ rateSheetFor.rateSheetForName }}</mat-option>
+                    </mat-select>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('rateSheetForId').hasError('required') && rateSheetForm.get('rateSheetForId').touched">
+                      {{ 'RATESHEET.PLEASESELECTRATESHEETFORNAME' | translate }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHour" placeholder="{{'RATESHEET.RATEPERHOUR' | translate}}"
+                      min="0" (keypress)="omitSpecialChar($event)" (change)="setValidator(false)" type="number"
+                      [required]="!isIndividual">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHour').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHour').hasError('required') && rateSheetForm.get('ratePerHour').touched">
+                      {{'RATESHEET.RATEPERHOURREQUIREDERROR' | translate}}
+                    </mat-error>
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHour').hasError('pattern')">
+                      {{'RATESHEET.RATEPERHOURCANNOTHAVEMORETHANTWODECIMAL' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourMon" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURMON' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourMon').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourMon').hasError('required') && rateSheetForm.get('ratePerHourMon').touched">
+                      {{'RATESHEET.RATEPERHOURMONREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourTue" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURTUE' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourTue').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourTue').hasError('required') && rateSheetForm.get('ratePerHourTue').touched">
+                      {{'RATESHEET.RATEPERHOURTUEREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourWed" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURWED' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourWed').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourWed').hasError('required') && rateSheetForm.get('ratePerHourWed').touched">
+                      {{'RATESHEET.RATEPERHOURWEDREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourThu" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURTHU' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourThu').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourThu').hasError('required') && rateSheetForm.get('ratePerHourThu').touched">
+                      {{'RATESHEET.RATEPERHOURTHUREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourFri" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURFRI' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourFri').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourFri').hasError('required') && rateSheetForm.get('ratePerHourFri').touched">
+                      {{'RATESHEET.RATEPERHOURFRIREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourSat" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURSAT' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourSat').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourSat').hasError('required') && rateSheetForm.get('ratePerHourSat').touched">
+                      {{'RATESHEET.RATEPERHOURSATREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                    <input matInput formControlName="ratePerHourSun" (change)="setValidator(true)" min="0"
+                      [required]="isIndividual" type="number" placeholder="{{'RATESHEET.RATEPERHOURSUN' | translate}}">
+                    <mat-error *ngIf="rateSheetForm.get('ratePerHourSun').hasError('maxlength')">
+                      {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+                    <mat-error
+                      *ngIf="rateSheetForm.get('ratePerHourSun').hasError('required') && rateSheetForm.get('ratePerHourSun').touched">
+                      {{'RATESHEET.RATEPERHOURSUNREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <!-- <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="priority" placeholder="Priority" type="number" required>
+                </mat-form-field>
+              </div> -->
+              </div>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              <div class="mt-1  text-center">
+                <button mat-raised-button type="submit" color="primary" class="mr-1"
+                  [disabled]="!rateSheetForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertRateSheetPopup(formDirective)" type="button">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #deleteRateSheetPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isArchived">
+            {{'RATESHEET.ARCHIVERATESHEETTITLE' | translate}}</div>
+          <div class="card-title-text mb-1" *ngIf="isArchived">
+            {{'RATESHEET.UNARCHIVERATESHEETTITLE' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="!isArchived">
+            {{'RATESHEET.ARCHIVERATESHEETTEXT' | translate}}
+          </div>
+          <div class="card-content mb-1" *ngIf="isArchived">
+            {{'RATESHEET.UNARCHIVERATESHEETTEXT' | translate}}
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center">
+            <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+              (click)="deleteRateSheet();" *ngIf="!isArchived">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+              (click)="deleteRateSheet();" *ngIf="isArchived">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeleteRateSheetDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+  </div>
+
+  <app-common-message-box *ngIf="!(canAccess_feature_ManageRateSheet)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+  </app-common-message-box>

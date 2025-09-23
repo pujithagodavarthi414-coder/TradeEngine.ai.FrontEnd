@@ -1,0 +1,129 @@
+<div fxLayout="row wrap">
+    <div fxFlex="15px" fxLayoutAlign="start" *ngIf="isChildsPresent">
+        <span>
+            <a class="caret-right-space" *ngIf="!treeStructure">
+                <fa-icon class="caret-size gray-icon" icon="caret-right" (click)="showTreeView()"></fa-icon>
+            </a>
+            <a class="mr-05" *ngIf="treeStructure">
+                <fa-icon class="caret-size  icon-primary" icon="caret-down" (click)="hideTreeView()"></fa-icon>
+            </a>
+        </span>
+    </div>
+    <div fxFlex class="mr-05 text-overflow-wrap" [ngStyle]="{ 'background-color': isSectionSelectedOrNot ? '#e1f0ff' : '',
+    'padding': isSectionSelectedOrNot ? '3px' : '',
+    'border-radius': isSectionSelectedOrNot ? '3px' : '' }" (click)="getTestCase()" #sectionName
+        (mouseover)="checkTitleTooltipStatus()">
+        <span>
+            <fa-icon class="mr-05 icon-primary" icon="folder" (click)="$event.stopPropagation();treeView()"></fa-icon>
+            <span [matTooltip]="showTitleTooltip ? sectionData.sectionName : ''" matTooltipShowDelay="300">
+                {{sectionData.sectionName}}
+            </span>
+        </span>
+    </div>
+    
+    <div fxFlex="18px" fxLayoutAlign="end" class="pr-02"
+        *ngIf="casesVisible && noOfCasesSelected >= 0 && !(noOfCasesSelected > 9)">
+        <b> ({{noOfCasesSelected}})</b>
+    </div>
+    <div fxFlex="26px" fxLayoutAlign="end" class="pr-02"
+        *ngIf="casesVisible && noOfCasesSelected > 9 && !(noOfCasesSelected > 99)">
+        <b> ({{noOfCasesSelected}})</b>
+    </div>
+    <div fxFlex="34px" fxLayoutAlign="end" class="pr-02"
+        *ngIf="casesVisible && noOfCasesSelected > 99 && !(noOfCasesSelected > 999)">
+        <b> ({{noOfCasesSelected}})</b>
+    </div>
+    <div fxFlex="43px" fxLayoutAlign="end" class="pr-02"
+        *ngIf="casesVisible && noOfCasesSelected > 999 && !(noOfCasesSelected > 9999)">
+        <b> ({{noOfCasesSelected}})</b>
+    </div>
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection) && !(sectionData.sectionLevel > 4)">
+        <a class="ml-05" matTooltip="{{'TESTMANAGEMENT.ADDSUBSECTION' | translate}}" [satPopoverAnchorFor]="addSection"
+            #addSectionPopover="satPopoverAnchor" (click)="openSectionPopOver(addSectionPopover)">
+            <fa-icon icon="plus"></fa-icon>
+        </a>
+    </div>
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection)">
+        <a class="ml-05" matTooltip="{{'TESTMANAGEMENT.EDITSECTION' | translate}}" [satPopoverAnchorFor]="addSection"
+            #editSectionPopover="satPopoverAnchor" (click)="editSection(editSectionPopover)">
+            <fa-icon icon="edit"></fa-icon>
+        </a>
+    </div>
+    <div fxFlex="25px" fxLayoutAlign="end" class="testsuite-section-operations"
+        *ngIf="(canAccess_entityType_feature_DeleteScenarioSection)">
+        <a class="ml-05" matTooltip="{{'TESTMANAGEMENT.DELETESECTION' | translate}}"
+            [satPopoverAnchorFor]="deleteSection" #deleteSectionPopover="satPopoverAnchor"
+            (click)="openDeleteSectionPopOver(deleteSectionPopover)">
+            <fa-icon icon="trash"></fa-icon>
+        </a>
+    </div>
+</div>
+
+<!--------add Section dialog------>
+<sat-popover #addSection hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div *ngIf="!editingSection" class="card-title-text p-05"> {{'TESTMANAGEMENT.ADDSECTION' | translate}}
+            </div>
+            <div *ngIf="editingSection" class="card-title-text p-05"> {{'TESTMANAGEMENT.EDITSECTION' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <testsuite-section-edit *ngIf="loadSection" (isSectionEdit)="getUpdatedSection($event)"
+                (editingSectionData)="getEditingSectionData($event)" [testSuiteId]="testSuiteId"
+                [sectionData]="sectionData" [editingSection]="sectionEdit" (closeSection)="closeSectionDialog()">
+            </testsuite-section-edit>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--------add Section dialog------>
+
+<!--Delete Section dialog-->
+<sat-popover #deleteSection hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.AREYOUSUREDELETETHESECTION' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-05" mat-button mat-raised-button [disabled]="disableSectionDelete" color="primary"
+                    (click)="mainDelete()" [satPopoverAnchorFor]="confirmDelete" #confirmDletePopover="satPopoverAnchor"
+                    (click)="openDeleteConfimationPopOver(confirmDletePopover)">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteSectionDialog()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete Section dialog-->
+<sat-popover #confirmDelete hasBackdrop backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <div class="card-content mb-1">
+                {{'TESTMANAGEMENT.TESTSUBGROUPTDIALOGUETEXT' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-05" mat-button mat-raised-button [disabled]="disableSectionDelete" color="primary"
+                    (click)="removeSection()">
+                    <!-- <fa-icon class="mr-05" icon="trash"></fa-icon> -->
+                    {{'TESTMANAGEMENT.CONTIUE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="confirmDelete.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

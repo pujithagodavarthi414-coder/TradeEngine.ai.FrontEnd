@@ -1,0 +1,197 @@
+<div class="full-height p-0 mat-card-fx-col" fxLayout="column">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div class ="mat-card-fx-col">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05 mat-card-fx-col" fxFlex fxLayoutAlign="start center"
+                matTooltip="Salary register">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{ 'PAYROLLREPORTS.SALARYWAGES' |  translate | titlecase }} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button (click)="exportToExcel(grid)"
+                    matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}">
+                    <fa-icon class="mat-color-accent cursor-pointer" icon="file-excel">
+                    </fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button (click)="exportToCSV()" matTooltip="{{ 'DOWNLOADCSV' | translate }}">
+                    <fa-icon class="mat-color-accent cursor-pointer" icon="file-csv">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="searchFilter">
+                    {{ 'PAYROLLREPORTS.SEARCH' |  translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="fromDateFilter">
+                    {{ 'PAYROLLREPORTS.DATE' |  translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="entityFilter">
+                    {{ 'PAYROLLREPORTS.ENTITY' |  translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="isActiveEmployeesOnlyFilter">
+                    {{ 'PAYROLLREPORTS.ISACTIVEEMPLOYEESONLY' |  translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="userFilter">
+                    {{ 'PAYROLLREPORTS.EMPLOYEES' |  translate }}</button>
+            </mat-menu>
+            <mat-menu #searchFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <div fxLayout="row">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{ 'PAYROLLREPORTS.SEARCH' |  translate }}" [(ngModel)]="searchText"
+                                    (input)="getSalaryWages(null)">
+                            </mat-form-field>
+                            <span class="close_icon mr-05">
+                                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+                                    (click)="$event.stopPropagation;closeSearch()" style="cursor:pointer">
+                                    close</mat-icon>
+                            </span>
+                        </div>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #fromDateFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker" placeholder="{{ 'PAYROLLREPORTS.CHOOSEAMONTH' |  translate }}" [formControl]="date"
+                                readonly='true'>
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker (monthSelected)="monthSelected($event)" startView="multi-year">
+                            </mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+
+            <mat-menu #entityFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}"
+                                [(ngModel)]="selectedEntity" (selectionChange)="entityValues($event.value,$event)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                                    {{entity.name}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #userFilter>
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate }}"
+                                [(ngModel)]="usersId" (selectionChange)="getEmployee($event.value,$event)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option *ngFor="let employee of employeeList" value="option" [value]="employee.id">
+                                    <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                                        [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" src="{{employee.profileImage}}"
+                                        *ngIf="employee.profileImage">
+                                    {{employee.fullName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #isActiveEmployeesOnlyFilter="matMenu">
+                <mat-card class="filter-data">
+                    <span class="mr-1">{{ 'PAYROLLREPORTS.ISACTIVEEMPLOYEESONLY' |  translate }}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isActiveEmployeesOnly"
+                        (change)="getSalaryWages(null)"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+        </div>
+    </div>
+    </mat-card-title>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInProgress">
+    </mat-progress-bar>
+    
+    <div class="no-drag" fxLayout="column">
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{ 'PAYROLLREPORTS.SEARCH' |  translate }}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="dateForFilter">
+                <b>{{ 'PAYROLLREPORTS.DATE' |  translate }}:&nbsp;</b>
+                {{ dateForFilter }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateFilter()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="employeeName">
+                <b>{{ 'PAYROLLREPORTS.EMPLOYEENAME' |  translate }}:&nbsp;</b>
+                {{ employeeName }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="getEmployee('0',null)">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="entityName">
+                <b>{{ 'PAYROLLREPORTS.ENTITYNAME' |  translate }}:&nbsp;</b>
+                {{ entityName }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="entityValues('0',null)">
+                </fa-icon>
+            </mat-chip>
+    
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="isActiveEmployeesOnly">
+                <b>{{ 'PAYROLLREPORTS.ISACTIVEEMPLOYEESONLY' |  translate }}:&nbsp;</b>
+                {{ isActiveEmployeesOnly }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeIsActive()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+        
+        <kendo-grid #grid [data]="gridData" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+            [scrollable]="true" [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column width="200" field="employeeName" title="{{ 'PAYROLLREPORTS.EMPLOYEENAME' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                  <div class="icon-button" fxLayout="row" (click)="goToUserProfile(dataItem)">
+                    <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != ''">
+                      <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div *ngIf="dataItem.profileImage == null || dataItem.profileImage == ''">
+                      <app-avatar [name]="dataItem.employeeName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                    </div>
+                    <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.employeeName}}" matTooltipShowDelay="400"
+                      fxFlex>
+                      {{ dataItem?.employeeName }}
+                    </span>
+                  </div>
+                </ng-template>
+              </kendo-grid-column>
+            <kendo-grid-column width="200" field="joinedDate" title="{{ 'PAYROLLREPORTS.DATEOFAPPOINTMENT' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="employeeSalary" title="{{ 'PAYROLLREPORTS.RATEOFWAGES' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="actualEmployeeSalary" title="{{ 'PAYROLLREPORTS.NORMALWAGESEARNED' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="actualDeduction" title="{{ 'PAYROLLREPORTS.DEDUCTIONIFANYANDREASONSTHEREOF' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="actualPaidAmount" title="{{ 'PAYROLLREPORTS.ACTUALWAGESPAID' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="200" field="dateOfPayment" title="{{ 'PAYROLLREPORTS.DATEOFPAYMENT' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-excel fileName="salary-wages.xlsx"></kendo-grid-excel>
+        </kendo-grid>
+    </div>
+</div>

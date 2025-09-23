@@ -1,0 +1,209 @@
+<div fxLayout="row" fxLayout.lt-md="column" class="allGoals-page splitter">
+  <div fxFlex="27px" class="ml-05 mt-03" *ngIf="!isTreeviewPinned">
+    <div class='custom-label veritcal-label'>
+      <div class='custom-label-content' (click)="pinTreeView()">
+        {{ 'APP.TAGS' | translate }} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': !isTreeviewPinned}">
+          </fa-icon>
+        </span>
+      </div>
+    </div>
+  </div>
+  <as-split direction="horizontal" gutterSize="5">
+
+    <as-split-area *ngIf="isTreeviewPinned" order="1" maxSize="40" minSize="20" size="{{ size }}">
+      <div fxLayout="row">
+        <mat-card fxFlex class="pl-0 pr-0 pt-0" [style.height]="fromRoute ? 'calc(100vh - 58px)' : null">
+          <span class="appstore-pin-close">
+            <mat-icon class="icon-button cursor-pointer mat-color-accent" (click)="pinTreeView()" aria-hidden="false">
+              push_pin</mat-icon>
+          </span>
+          <div fxLayout="column" *ngIf="!fetchInProgress">
+            <div fxLayout="row" fxFlexFill fxLayout.lt-lg="column" fxLayoutGap.lg="10px" fxFlex
+              fxLayoutAlign="center center" class="mr-05 search_goalinput flex-div-style" style="padding-left: 2px !important;padding-bottom: 5px !important;height: 50px;
+    margin-bottom: 5px;">
+              <mat-form-field fxLayoutAlign="start center">
+                <input name="search" class="search_goal" matInput placeholder="{{'APP.SEARCHBYTAGS' | translate}}"
+                  (input)="searchTags()" [(ngModel)]="tagsSearchText" autocomplete="off" trim>
+                <!-- <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet"></i> -->
+                <span class="linked-userstory-close">
+                  <span *ngIf="!tagsSearchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                  <mat-icon *ngIf="tagsSearchText" class="icon-button" aria-hidden="false" (click)="closeTagsSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+              </mat-form-field>
+              <div fxLayoutAlign="end center" *ngIf="(canAccess_feature_ManageCustomApps)"
+                style="padding-top: 5px !important;padding-left: 5px;">
+                <button type="button" mat-button mat-raised-button color="primary" disableRipple
+                  style="cursor: pointer; font-size: 14px;line-height: 30px !important;min-width: 50px;"
+                  matTooltip="{{ 'APP.ADDTAG' | translate }}" [satPopoverAnchorFor]="addTag"
+                  #addTagPopup="satPopoverAnchor" (click)="openAddTagPopup(addTagPopup)">
+                  {{ 'APP.ADD' | translate }}
+                </button>
+
+              </div>
+            </div>
+            <div>
+              <mat-card-content class="listof_roles tag-card" id="style-1"
+                [style.height]="canInstall ? 'calc(100vh - 373px)' : 'calc(100vh - 160px)'">
+                <mat-list class="compact-list">
+                  <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                    (click)="selectAll()" [ngClass]="{ active: selectAllTagsByDefault == true }">
+                    <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-between center"
+                      class="entity-role mat-color-accent">
+                      <mat-icon>select_all</mat-icon>
+                      <span fxFlex class="hide-content-overflow" matTooltipClass="tooltip-overflow">
+                        {{ 'APP.ALLTEXT' | translate }}</span>
+                    </div>
+                  </div>
+                  <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                    [ngClass]="{ active: isFavourite == true }" (click)="selectRecentOrFavouriteApps(true)">
+                    <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-between center"
+                      class="entity-role mat-color-accent">
+                      <i class="fa fa-star mat-accent-color" style="font-size: 20px; "></i>
+                      <span fxFlex class="hide-content-overflow" style="margin-left: 5px !important;"
+                        matTooltipClass="tooltip-overflow">
+                        {{ 'APP.FAVOURITESTEXT' | translate }}</span>
+                    </div>
+                  </div>
+                  <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                    [ngClass]="{ active: isRecent == true }" (click)="selectRecentOrFavouriteApps(false)">
+                    <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-between center"
+                      class="entity-role mat-color-accent">
+                      <!-- <mat-icon>history</mat-icon> -->
+                      <i class="fa fa-history mat-accent-color" style="font-size: 19px;"></i>
+                      <span fxFlex class="hide-content-overflow" style="margin-left: 5px !important;"
+                        matTooltipClass="tooltip-overflow">
+                        {{ 'APP.RECENTTEXT' | translate }}</span>
+                    </div>
+                  </div>
+                  <div [dragula]='"tags"' [dragulaModel]='tagsModel'>
+                    <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                      *ngFor="let tag of tags" [ngClass]="{ active: selectedTag == tag.tags }"
+                      [attr.data-tagid]="tag.tagId" (click)="selectTag(tag)">
+                      <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-between center" class="entity-role">
+                        <span fxFlex class="hide-content-overflow" matTooltipClass="tooltip-overflow">{{tag.tags
+                          }}</span>
+                        <fa-icon *ngIf="(canAccess_feature_ManageCustomApps)" fxFlex="10" icon="edit"
+                          class="mat-color-accent icons-visible cursor-pointer pull-right"
+                          [satPopoverAnchorFor]="addTag" #addTagPopup="satPopoverAnchor"
+                          matTooltip="{{'APP.UPDATETAG' | translate }}"
+                          (click)="openEditTagPopup(tag,addTagPopup);$event.stopPropagation()">
+                        </fa-icon>
+                        <mat-icon class="mat-color-accent icons-visible cursor-pointer"
+                          *ngIf="(canAccess_feature_ManageCustomApps)" [satPopoverAnchorFor]="deleteTag"
+                          #deleteTagPopover="satPopoverAnchor"
+                          (click)="openDeleteTagPopOver(tag, deleteTagPopover);$event.stopPropagation()"
+                          matTooltip="{{'PROJECT.DELETE' | translate }}">delete</mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                </mat-list>
+                <div *ngIf="!tags || !(tags.length > 0)" style="text-align: center;padding-top: 10px;">
+                  {{ 'APP.NOTAGSTEXT' | translate }}
+                </div>
+              </mat-card-content>
+            </div>
+          </div>
+          <hr class="p-02 m-0">
+          <div fxLayout="column" *ngIf="fetchInProgress">
+            <div>
+              <mat-card-content class="listof_roles roles-list tag-card" id="style-1"
+                [style.height]="canInstall ? 'calc(100vh - 373px) !important' : 'calc(100vh - 170px) !important'">
+                <mat-list class="compact-list">
+                  <div>
+                    <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                      *ngFor="let form of Array(num).fill(1)">
+                      <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="space-between center" class="entity-role">
+                        <span fxFlex class="mat-small empty-text p-05 loading-bg"></span>
+                      </div>
+                    </div>
+                  </div>
+                </mat-list>
+              </mat-card-content>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+    </as-split-area>
+    <as-split-area order="2" fxFlex minSize="60" size="{{ widgetSize }}">
+      <div>
+        <mat-card class="p-0">
+          <app-widgetslist (appsSelected)="appSelected($event)" [isRecent]="isRecent" [fromSearch]="canInstall"
+            (searchAppText)="searchTextstring($event)" [selectedTagId]="selectedTagId" [isFavourite]="isFavourite"
+            (loadWidgetTags)="loadTags()" (closeTagSearch)="closeTagSearch($event)">
+          </app-widgetslist>
+        </mat-card>
+      </div>
+    </as-split-area>
+  </as-split>
+</div>
+
+
+<sat-popover #addTag hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'APP.TAGS' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="addTagForm" #addTagDirective="ngForm" novalidate>
+        <mat-form-field class="full-width">
+          <input matInput formControlName="tagName" type="text" placeholder="{{'APP.ENTERTAGNAME' | translate }}"
+            required>
+          <mat-error>
+            <span *ngIf="addTagForm.get('tagName').hasError('required') && addTagForm.get('tagName').touched">
+              {{'APP.ENTERTAGNAME' | translate}} </span>
+            <span *ngIf="addTagForm.get('tagName').hasError('maxlength')">
+              {{'APP.TAGNAMECANNOTEXCEED50CHARACTERS' | translate}} </span>
+          </mat-error>
+        </mat-form-field>
+
+        <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px" class="pb-1">
+          <button type="button" mat-button mat-raised-button (click)="closeTagForm()">
+            {{'CANCEL' | translate}}
+          </button>
+          <div *ngIf="currentEditedTagId == null">
+            <button type="button" mat-button mat-raised-button color="primary"
+              [disabled]="!addTagForm.valid || isAnyOperationIsInprogress" (click)="addTagForMainTag($event)">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              {{ 'APP.ADDTAG' | translate }}
+            </button>
+          </div>
+          <div *ngIf="currentEditedTagId != null">
+            <button type="button" mat-button mat-raised-button color="primary"
+              [disabled]="!addTagForm.valid || isAnyOperationIsInprogress" (click)="updateTag($event)">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              {{ 'APP.UPDATETAG' | translate }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteTag hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  [interactiveClose]="false" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        {{ 'ASSETS.AREYOUSUREWANTTODELETE' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="accent" (click)="deleteTags()"> {{ 'ASSETS.DELETE' |
+          translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closePopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'TESTMANAGEMENT.CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

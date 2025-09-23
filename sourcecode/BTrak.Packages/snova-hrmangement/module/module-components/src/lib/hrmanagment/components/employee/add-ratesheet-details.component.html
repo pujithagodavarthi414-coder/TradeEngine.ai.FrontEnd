@@ -1,0 +1,398 @@
+<mat-card-title class="text-center">
+  <div class="card-title-text mat-bg-primary p-05" *ngIf="!employeeRateSheetId">
+    {{'RATESHEET.ADDRATESHEETTITLE' | translate}}</div>
+  <div class="card-title-text mat-bg-primary p-05" *ngIf="employeeRateSheetId">
+    {{'RATESHEET.EDITRATESHEETTITLE' | translate}}</div>
+</mat-card-title>
+<div class="mat-dialog-padding">
+  <form [formGroup]="employeeRateSheetForm" #rateSheetFormDirective="ngForm" novalidate
+    (submit)="employeeRateSheetForm.valid && saveEmployeeRateSheetDetails(false);onNoClick();"
+    *ngIf="employeeRateSheetId">
+    <div class="mobile-view-popover p-1">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="rateSheetForId" placeholder="{{ 'RATESHEET.RATESHEETFORNAME' | translate }}"
+              required (change)="getAllRateSheets()">
+              <mat-option value="option" *ngFor="let rateSheetFor of (rateSheetForList)"
+                [value]="rateSheetFor.rateSheetForId">
+                {{ rateSheetFor.rateSheetForName }}</mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('rateSheetForId').hasError('required') && employeeRateSheetForm.get('rateSheetForId').touched">
+              {{ 'RATESHEET.PLEASESELECTRATESHEETFORNAME' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width">
+            <input matInput formControlName="rateSheetName" placeholder="{{'RATESHEET.RATESHEETTITLENAME' | translate}}"
+              required>
+            <mat-error *ngIf="employeeRateSheetForm.get('rateSheetName').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('rateSheetName').hasError('required') && employeeRateSheetForm.get('rateSheetName').touched">
+              {{'RATESHEET.REQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width">
+            <input matInput formControlName="rateSheetStartDate" [matDatepicker]="picker1" (click)="picker1.open()"
+              placeholder="{{'RATESHEET.RATESTARTDATE' | translate}}" autocomplete="off">
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('rateSheetStartDate').hasError('required') && employeeRateSheetForm.get('rateSheetStartDate').touched">
+              {{'RATESHEET.PLEASEENTERSTARTDATE' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width">
+            <input matInput formControlName="rateSheetEndDate" [matDatepicker]="picker2" (click)="picker2.open()"
+              placeholder="{{'RATESHEET.RATEENDDATE' | translate}}" autocomplete="off">
+            <mat-datepicker-toggle matSuffix [for]="picker2"> </mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('rateSheetEndDate').hasError('required') && employeeRateSheetForm.get('rateSheetEndDate').touched">
+              {{'RATESHEET.PLEASEENTERENDDATE' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="rateSheetCurrencyId" disabled
+              placeholder="{{ 'RATESHEET.PLEASESELECTCURRENCY' | translate }}" required>
+              <mat-option value="option" *ngFor="let currency of (currencyList)" [value]="currency.currencyId">
+                {{ currency.currencyName }}</mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('rateSheetForId').hasError('required') && employeeRateSheetForm.get('rateSheetForId').touched">
+              {{ 'RATESHEET.PLEASESELECTCURRENCY' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHour" placeholder="{{'RATESHEET.RATEPERHOUR' | translate}}"
+              (change)="setValidator(false)" type="number" [required]="!isIndividual" min="0">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHour').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHour').hasError('required') && employeeRateSheetForm.get('ratePerHour').touched">
+              {{'RATESHEET.RATEPERHOURREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourMon" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURMON' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourMon').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourMon').hasError('required') && employeeRateSheetForm.get('ratePerHourMon').touched">
+              {{'RATESHEET.RATEPERHOURMONREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourTue" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURTUE' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourTue').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourTue').hasError('required') && employeeRateSheetForm.get('ratePerHourTue').touched">
+              {{'RATESHEET.RATEPERHOURTUEREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourWed" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURWED' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourWed').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourWed').hasError('required') && employeeRateSheetForm.get('ratePerHourWed').touched">
+              {{'RATESHEET.RATEPERHOURWEDREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourThu" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURTHU' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourThu').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourThu').hasError('required') && employeeRateSheetForm.get('ratePerHourThu').touched">
+              {{'RATESHEET.RATEPERHOURTHUREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourFri" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURFRI' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourFri').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourFri').hasError('required') && employeeRateSheetForm.get('ratePerHourFri').touched">
+              {{'RATESHEET.RATEPERHOURFRIREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourSat" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURSAT' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourSat').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourSat').hasError('required') && employeeRateSheetForm.get('ratePerHourSat').touched">
+              {{'RATESHEET.RATEPERHOURSATREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="ratePerHourSun" (change)="setValidator(false)" type="number" min="0"
+              [required]="isIndividual" placeholder="{{'RATESHEET.RATEPERHOURSUN' | translate}}">
+            <mat-error *ngIf="employeeRateSheetForm.get('ratePerHourSun').hasError('maxlength')">
+              {{'RATESHEET.MAXLENGTHERROR' | translate}}</mat-error>
+            <mat-error
+              *ngIf="employeeRateSheetForm.get('ratePerHourSun').hasError('required') && employeeRateSheetForm.get('ratePerHourSun').touched">
+              {{'RATESHEET.RATEPERHOURSUNREQUIREDERROR' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="mt-1  text-center">
+        <button mat-raised-button type="submit" color="primary" class="mr-1"
+          [disabled]="!employeeRateSheetForm.valid">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertEmployeeRateSheetDetailsInProgress$ | async">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closePopover();onNoClick();" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+  <form novalidate (submit)="saveEmployeeRateSheetDetails(true)" *ngIf="!employeeRateSheetId">
+    <div class="mobile-view-popover p-1">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width">
+            <input matInput [(ngModel)]="rateSheetInsertDetails.rateSheetStartDate" [matDatepicker]="picker1"
+              [ngModelOptions]="{standalone: true}" (click)="picker1.open()"
+              placeholder="{{'RATESHEET.RATESTARTDATE' | translate}}" autocomplete="off" required>
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width">
+            <input matInput [(ngModel)]="rateSheetInsertDetails.rateSheetEndDate" [matDatepicker]="picker2"
+              [min]="rateSheetInsertDetails.rateSheetStartDate" [ngModelOptions]="{standalone: true}"
+              (click)="picker2.open()" placeholder="{{'RATESHEET.RATEENDDATE' | translate}}" autocomplete="off"
+              required>
+            <mat-datepicker-toggle matSuffix [for]="picker2"> </mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div fxFlex="50" fxFlex.xs="100">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select [(ngModel)]="rateSheetInsertDetails.rateSheetCurrencyId" [ngModelOptions]="{standalone: true}"
+              placeholder="{{ 'RATESHEET.PLEASESELECTCURRENCY' | translate }}" required disabled>
+              <mat-option value="option" *ngFor="let currency of (currencyList)" [value]="currency.currencyId">
+                {{ currency.currencyName }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="!rateSheetInsertDetails.rateSheetCurrencyId">
+              {{ 'RATESHEET.PLEASESELECTRATESHEETFORNAME' | translate }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <ngx-datatable #table class='btrak' [columnMode]="'force'" [rowHeight]="'auto'" [headerHeight]="35"
+        [footerHeight]="35" [rows]="rateSheetInsertDetails.rateSheetDetails"
+        [loadingIndicator]="isAnyOperationIsInprogress" [limit]="page.size" [externalPaging]="true"
+        [offset]="page.pageNumber" [count]="totalCount" (page)='setPage($event)' 
+        [sortType]="'single'" [sorts]="[{prop: 'name', dir: 'desc'}]">
+        <!-- Other Columns -->
+        <ngx-datatable-column>
+          <ng-template ngx-datatable-cell-template let-row="row">
+            <mat-checkbox [(ngModel)]="row.isSelected" [checked]="row.isSelected" (change)="onCheckChange($event)"
+              [ngModelOptions]=" {standalone: true}">
+            </mat-checkbox>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'RATESHEET.RATESHEETTITLE' | translate}}" [sortable]="true" [flexGrow]="3"
+          prop="rateSheetName">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div> {{ row?.rateSheetName }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATESHEETFORNAMESHORT' | translate}}"
+          prop="rateSheetForId" >
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div>{{ row?.rateSheetForName }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURSHORT' | translate}}" prop="ratePerHour">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHour | currency : selectedCurrency.currencyCode }}</div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHour" [(ngModel)]="row.ratePerHour"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURMONSHORT' | translate}}"
+          prop="ratePerHourMon">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourMon | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourMon" [(ngModel)]="row.ratePerHourMon"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURTUESHORT' | translate}}"
+          prop="ratePerHourTue">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourTue | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourTue" [(ngModel)]="row.ratePerHourTue"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURWEDSHORT' | translate}}"
+          prop="ratePerHourWed">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourWed | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourWed" [(ngModel)]="row.ratePerHourWed"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURTHUSHORT' | translate}}"
+          prop="ratePerHourThu">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourThu | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourThu" [(ngModel)]="row.ratePerHourThu"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURFRISHORT' | translate}}"
+          prop="ratePerHourFri">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourFri | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourFri" [(ngModel)]="row.ratePerHourFri"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURSATSHORT' | translate}}"
+          prop="ratePerHourSat">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourSat | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourSat" [(ngModel)]="row.ratePerHourSat"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <ngx-datatable-column [flexGrow]="0.5" name="{{'RATESHEET.RATEPERHOURSUNSHORT' | translate}}"
+          prop="ratePerHourSun">
+          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+            <div [hidden]="isEditable[rowIndex]">{{ row?.ratePerHourSun | currency : selectedCurrency.currencyCode }}
+            </div>
+            <mat-form-field [hidden]="!isEditable[rowIndex]">
+              <input matInput [value]="row.ratePerHourSun" [(ngModel)]="row.ratePerHourSun"
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </ng-template>
+
+        </ngx-datatable-column>
+        <!-- Column: Editing Mode-->
+        <ngx-datatable-column [flexGrow]="2">
+          <ng-template let-value="value" let-row="row" let-rowIndex="rowIndex" ngx-datatable-cell-template>
+            <!-- Pencil icon -->
+            <!-- <i class="fa fa-pencil" title="Modify" *ngIf="!this.isEditable[rowIndex]"
+            (click)="this.isEditable[rowIndex]=!this.isEditable[rowIndex]"></i> -->
+
+            <!-- Save/Delete icons -->
+            <!-- <i class="fa fa-floppy-o" *ngIf="this.isEditable[rowIndex]" title="Save" (click)="save(row, rowIndex);"></i>
+          <i class="fa fa-trash-o" *ngIf="this.isEditable[rowIndex]" title="Delete"
+            (click)="delete(row,rowIndex)"></i> -->
+
+            <button class="text-center" matTooltip="{{'RATESHEET.EDITRATESHEET' | translate}}"
+              *ngIf="!this.isEditable[rowIndex]" (click)="this.isEditable[rowIndex]=!this.isEditable[rowIndex]"
+              mat-icon-button>
+              <fa-icon icon="pen" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" matTooltip="{{'RATESHEET.SAVERATESHEET' | translate}}"
+              *ngIf="this.isEditable[rowIndex]" (click)="save(row, rowIndex);" mat-icon-button>
+              <fa-icon icon="save" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" matTooltip="{{'RATESHEET.CANCELRATESHEET' | translate}}"
+              *ngIf="this.isEditable[rowIndex]" (click)="delete(row,rowIndex)" mat-icon-button>
+              <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+      <div class="mt-1  text-center">
+        <button mat-raised-button type="submit" color="primary" class="mr-1" [disabled]="(!(rateSheetInsertDetails.rateSheetCurrencyId && rateSheetInsertDetails.rateSheetEndDate &&
+           rateSheetInsertDetails.rateSheetStartDate) || 
+           (upsertEmployeeRateSheetDetailsInProgress$ | async)) && checked == 0">
+          <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="upsertEmployeeRateSheetDetailsInProgress$ | async">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closePopover();onNoClick();" type="button">
+          <fa-icon class="mr-05" icon="times"></fa-icon>
+          {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+
+</div>

@@ -1,0 +1,298 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$|async)">
+</mat-progress-bar>
+<mat-card class="p-0 unique-detail-height" id="style-1" [ngStyle]="{ 'height': isFromUrl ? 'height: calc(100vh - 58px)' : 'calc(100vh - 344px)' }"
+    *ngIf="userStory && !userStory.userStoryParkedDateTime && !userStory.userStoryArchivedDateTime && (canAccess_feature_MyAdhocWork)">
+    <div fxLayout="row wrap" fxLayout.xs="column" *ngIf="userStory.userStoryName">
+        <div fxFlex="74" fxFlex.lt-md="100" fxLayoutGap="15px">
+            <mat-card-content class="p-05" fxLayout="column">
+                <div fxLayout="row wrap">
+                    <h6 class="p-05 m-0 unique-details-link hide-content-overflow" *ngIf="userStory.userStoryName">
+                        <div class="unique-details-link mt-02">
+                            <a class="unique-numbers-cursor-text" (click)="$event.stopPropagation();">
+                                {{userStory.userStoryUniqueName}}
+                            </a>
+                        </div>
+                    </h6>
+                </div>
+                
+                <div fxLayout="row wrap" class="m-0 unique-details-text">
+                    <div fxFlex class="ml-05">
+                        <span *ngIf=" !isEditWIName && (canAccess_feature_AddOrUpdateAdhocWork) "
+                            (dblclick)="showMatFormField()" style="cursor: pointer;"
+                            class="unique-details-heading mr-05 mt-05">{{userStoryName}}</span>
+                        <span *ngIf="!(canAccess_feature_AddOrUpdateAdhocWork) " style="cursor: pointer;"
+                            class="unique-details-heading mr-05 mt-05">{{userStoryName}}</span>
+                        <mat-form-field class="full-width mb-0" *ngIf="isEditWIName">
+                            <input matInput
+                                placeholder="{{ 'USERSTORYUNIQUE.USERSTORYTITLE' | translate | softLabelsPipe : softLabels}}"
+                                [(ngModel)]="userStoryNameDuplicate" (blur)="updateUserStoryName()" />
+                        </mat-form-field>
+                        <mat-error *ngIf="userStoryNameDuplicate && (userStoryNameDuplicate.length > 800)">
+                            {{'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS'|translate | softLabelsPipe : softLabels}}
+                        </mat-error>
+                    </div>
+                    <button mat-icon-button [satPopoverAnchorFor]="editUserStoryMenuPopover"
+                        class="pull-right unique-details-heading mr-05"
+                        *ngIf="(canAccess_feature_ParkAdhocWork) || (canAccess_feature_ArchiveAdhocWork) || (canAccess_feature_MyAdhocWork)"
+                        (click)="editUserStoryMenuPopover.open(); $event.stopPropagation(); ">
+                        <fa-icon icon="ellipsis-h" class="goal-unique-menu"></fa-icon>
+                    </button>
+                </div>
+                <div fxFlex class="unique-details-bg p-05">
+                    <h5 class="unique-details-text">{{'USERSTORYUNIQUE.DESCRIPTION' | translate}}</h5>
+                    <div fxLayout="row wrap" fxFlex="100" class="word-break">
+                        <span *ngIf="description && !isEditorVisible" (click)="enableEditor()" style="cursor: pointer;"
+                            [innerHTML]=description>
+                        </span>
+                        <!-- <span *ngIf="descriptionSlug && !isEditorVisible">
+                        <b>&nbsp;{{'USERSTORYUNIQUE.CLICKHERETOADDDESCRIPTION' | translate}}</b>
+                      </span> -->
+                        <span *ngIf="!description  && !isEditorVisible" (click)="enableEditor()"
+                            style="cursor: pointer;">
+                            <b>{{'USERSTORYUNIQUE.THEREISNODESCRIPTIONCLICKHERETOADDDESCRIPTION' | translate}}</b>
+                        </span>
+                    </div>
+                    <div *ngIf="isEditorVisible">
+                        <div class="full-width custom-input">
+                            <editor class="dfree-header custom-logtime-comment"
+                                apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" menubar="false"
+                                [init]="initSettings" background="white" height="120" [(ngModel)]="description">
+                            </editor>
+                        </div>
+                        <div class="mt-05">
+                            <button mat-raised-button color="primary" class="mr-05" type="button"
+                                (click)="handleDescriptionEvent()" [disabled]="(descriptionLoading$ | async)">
+                                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'SAVE' | translate }}
+                            </button>
+                            <button mat-raised-button (click)="cancelDescription()" class="mr-05"
+                                [disabled]="(descriptionLoading$ | async)">
+                                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+                            </button>
+                            <button mat-raised-button color="primary" (click)="descriptionReset()"
+                                [disabled]="(descriptionLoading$ | async)">
+                                <fa-icon icon="undo" class="mr-05"></fa-icon> {{ 'ADVANCEDSEARCH.RESET' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-05 mb-05 p-05">
+                     <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                        [getFilesByReferenceId]="true" [referenceId]="userStory.userStoryId"
+                        [selectedParentFolderId]="userStory.userStoryId" [selectedStoreId]="selectedStoreId"
+                        [isButtonVisible]="isButtonVisible">
+                    </app-dropzone> 
+                </div>
+                <div fxFlex fxLayoutAlign="center center" *ngIf="userStory.referenceId && userStory.referenceTypeId != questionReferenceTypeId">
+                    <generic-type-status [referenceTypeId]="userStory.referenceTypeId" [userStoryId]="userStory.userStoryId"
+                     [referenceId]="userStory.referenceId"></generic-type-status>
+                    </div>
+                <div *ngIf="!gettingCustomApplicationFormInProgress && customApplicationByIdData">
+                    <formio #formio [form]="formSrc" [submission]="formData">
+                    </formio>
+                    <button mat-button mat-raised-button color="primary" (click)="onSubmit()" class="pull-right"
+                        [disabled]="customFormInProgress">
+                        <fa-icon icon="save" class="mr-05"></fa-icon> Save
+                    </button>
+                </div>
+                <div fxLayout="row wrap" class="mt-05 p-05">
+                    <div fxFlex="70px" fxLayoutAlign="start center">
+                        <span>
+                            <h6 class="unique-details-link custom-activity-margin">
+                                {{'USERSTORYUNIQUE.ACTIVITY' | translate}} </h6>
+                        </span>
+                    </div>
+                    <div fxFlex="150px">
+                        <ng-select [searchable]="false" [clearable]="false" (change)="selectchange($event)"
+                            [(ngModel)]="selectedTab">
+                            <ng-option [value]="dropdown.value" *ngFor="let dropdown of dropdowns">
+                                {{ dropdown.name | softLabelsPipe : softLabels}}</ng-option>
+                        </ng-select>
+                    </div>
+                </div>
+                <div class="unqiue-activity-tab">
+                    <div fxFlex *ngIf="selectedTab == 'Comment'">
+                        <snovasys-comments *ngIf="userStoryId" [receiverId]="userStoryId"
+                            [componentModel]="componentModel" [isPermissionExists]="true">
+                        </snovasys-comments>
+                    </div>
+                    <div fxFlex *ngIf="selectedTab == 'History'">
+                        <app-pm-component-userstory-history *ngIf="userStoryId" [userStoryId]="userStoryId"
+                            class="ml-05">
+                        </app-pm-component-userstory-history>
+                    </div>
+                    <div fxFlex *ngIf="selectedTab == 'Worklog'" class="ml-05">
+                        <app-pm-component-userstory-logtime [userStoryId]="userStoryId" [isFromAudits]=false>
+                        </app-pm-component-userstory-logtime>
+                    </div>
+                </div>
+            </mat-card-content>
+        </div>
+        <div fxFlex="25" fxFlex.lt-md="100" class="mt-1 pr-05 pl-05 ">
+            <label class="ml-05 mt-1 mb-0"><b class="f-15p">{{'USERSTORYUNIQUE.STATUS' | translate}}</b></label>
+            <ng-select [searchable]="false" class="status-template" [clearable]="false"
+                (change)="getUserStoryStatusChange($event)" [ngStyle]="{'background':userStoryStatusColor}"
+                placeholder="{{'ADVANCEDSEARCH.SELECTUSERSTORYSTATUS' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="userStoryStatusId">
+                <ng-option [value]="userStoryStatus.userStoryStatusId"
+                    *ngFor="let userStoryStatus of (workflowStatus$ | async)">
+                    {{ userStoryStatus.userStoryStatusName }}
+                </ng-option>
+            </ng-select>
+            <label class="ml-05 mt-1 mb-0"><b
+                    class="f-15p">{{'USERSTORYUNIQUE.WORKITEMTYPE' | translate | softLabelsPipe : softLabels}}</b></label>
+            <ng-select [searchable]="false" class="status-template" [clearable]="false"
+                (change)="changeUserStoryType($event)" [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                placeholder="{{'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="userStoryTypeId">
+                <ng-option [value]="type.userStoryTypeId" *ngFor="let type of (userStoryTypes)">
+                    {{ type.userStoryTypeName }}
+                </ng-option>
+            </ng-select>
+
+            <label class="ml-05 mb-0 mt-1"><b class="f-15p">{{'USERSTORYUNIQUE.ASSIGNEE' | translate}}</b></label>
+            <div fxLayout="row wrap" class="mt-05">
+                <div fxFlex>
+                    <ng-select [searchable]="true" class="custom-ng-select-template" [clearable]="true"
+                        [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                        placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}" (change)="changeAssignee($event)"
+                        [(ngModel)]="assignee">
+                        <ng-option *ngFor="let teamLead of (teamLeads$ | async)" [value]="teamLead.id">
+                            {{ teamLead.fullName}}
+                        </ng-option>
+                    </ng-select>
+                </div>
+            </div>
+            <label class="ml-05 mb-0 mt-1"><b
+                    class="f-15p">{{'USERSTORYUNIQUE.ESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}</b></label>
+            <p class="ml-05 mb-0">
+                <app-common-estimatedTime [estimatedTime]="estimatedTime"
+                    [isDisabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                    (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+                </app-common-estimatedTime>
+            </p>
+            <label class="ml-05 mb-0 mt-1"><b
+                    class="f-15p">{{'USERSTORYUNIQUE.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}</b></label>
+            <p class="ml-05 mb-0">
+                <mat-form-field class="full-width">
+
+                    <!-- <input matInput [(ngModel)]="deadlineDate" [min]="minDate" fxFlex="150px"
+                        [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                        [matDatetimepicker]="deadlineDatePicker" autocomplete="false"
+                        placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+                        (dateChange)="changeDeadline()" (click)="deadlineDatePicker.open()">
+                    <mat-datetimepicker-toggle [for]="deadlineDatePicker" matSuffix></mat-datetimepicker-toggle>
+                    <mat-datetimepicker #deadlineDatePicker type="datetime"></mat-datetimepicker> -->
+                    <input matInput  [(ngModel)]="deadlineDate"
+                        (dateTimeChange)="changeDeadline()" [owlDateTimeTrigger]="deadlineDatePicker"
+                        [owlDateTime]="deadlineDatePicker" [disabled]="!(canAccess_feature_AddOrUpdateAdhocWork)"
+                        placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+                    <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker"
+                        style="float:right;position:absolute;right:0"></fa-icon>
+                    <owl-date-time #deadlineDatePicker></owl-date-time>
+                </mat-form-field>
+            </p>
+            <label class="ml-05 mt-1 mb-0" *ngIf="userStoryInputTags.length > 0"><b>
+                    {{'USERSTORY.TAGS' | translate}}
+                </b></label><br />
+            <div class="tags-details-popup">
+                <div *ngFor="let tag of userStoryInputTags" class="tag-unque-display mt-08">
+                    <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag }}"
+                        matTooltipClass="tooltip-overflow">
+                        {{tag}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</mat-card>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editUserStoryMenuPopover
+    hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0" fxLayout="column">
+        <div fxFlex fxLayoutAlign="start center" 
+            *ngIf=" userStory && !userStory.userStoryParkedDateTime && canAccess_feature_ParkAdhocWork">
+            <button mat-menu-item [satPopoverAnchorFor]="archiveUserstoryPopover"
+                (click)="archiveUserstoryPopover.open();">
+                <mat-icon>archive</mat-icon>&nbsp;{{'USERSTORY.ARCHIVE' | translate}}
+            </button>
+        </div>
+        <div fxFlex fxLayoutAlign="start center"
+            *ngIf="userStory && !userStory.userStoryArchivedDateTime && canAccess_feature_ArchiveAdhocWork ">
+            <button mat-menu-item [satPopoverAnchorFor]="parkUserstoryPopover" (click)="parkUserstoryPopover.open();">
+                <mat-icon>local_parking</mat-icon>&nbsp;{{'USERSTORY.PARK' | translate}}
+            </button>
+        </div>
+
+        <div fxFlex fxLayoutAlign="start center">
+            <button mat-menu-item [satPopoverAnchorFor]="userstoryTagsPopover"
+                (click)="userstoryTagsPopover.open(); $event.stopPropagation();openTagsPopUp()">
+                <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<!-- archive userstory popover start -->
+<sat-popover #archiveUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data m-1">
+        <mat-card-title class="text-center">
+            <div *ngIf="userStory && userStory.userStoryArchivedDateTime">
+                <div class="card-title-text mb-1">
+                    {{ 'USERSTORY.UNARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}}</div>
+            </div>
+            <div *ngIf="userStory && !userStory.userStoryArchivedDateTime">
+                <div class="card-title-text mb-1">
+                    {{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}}</div>
+            </div>
+        </mat-card-title>
+        <adhoc-userstory-archive *ngIf="userStory" [userStoryData]="userStory" [isArchived]="isArchived"
+            [isUniquePage]=true [isEditFromProjects]="isEditFromProjects" (closePopup)="closeArchivePopUp($event);">
+        </adhoc-userstory-archive>
+    </mat-card>
+</sat-popover>
+<!-- archive userstory popover end -->
+
+<!-- park user story popover start -->
+<sat-popover #parkUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data m-1">
+        <mat-card-title class="text-center">
+            <div>
+                <div class="card-title-text mb-1">
+                    {{ 'USERSTORY.PARKUSERSTORY' | translate | softLabelsPipe : softLabels}}</div>
+            </div>
+        </mat-card-title>
+        <adhoc-userstory-park *ngIf="userStory" [userStoryId]="userStory.userStoryId" [isParked]="isParked"
+            [isUniquePage]=true [timeStamp]="userStory.timeStamp" [isEditFromProjects]="isEditFromProjects"
+            (closePopup)="closeParkPopUp($event);parkUserstoryPopover.close();">
+        </adhoc-userstory-park>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #userstoryTagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+    horizontalAlign="start" backdropClass="backdrop-color">
+
+    <mat-card class="filter-data p-0">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf=" (userStoryIsInProgress$|async)">
+        </mat-progress-bar>
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-1 mat-bg-primary">
+                    {{'USERSTORY.ADDTAGS' | translate}}
+                </div>
+            </mat-card-title>
+            <app-pm-component-adhoc-tags *ngIf="isTagsPopUp" [userStory]="userStory"
+                (closeTagsPopUp)="closeTagsDialog();userstoryTagsPopover.close()"></app-pm-component-adhoc-tags>
+        </div>
+    </mat-card>
+</sat-popover>
+
+
+<app-common-message-box *ngIf=" !(canAccess_feature_MyAdhocWork)"
+    textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box>

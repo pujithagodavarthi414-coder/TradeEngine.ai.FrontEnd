@@ -1,0 +1,167 @@
+<mat-progress-bar color="primary" mode="indeterminate"
+  *ngIf="(reOrderOperationInProgress$ | async) || (updateUserStoryGoalIsInProgress$|async)">
+</mat-progress-bar>
+<div class="default-board custom-box p-0 m-0 user-card">
+
+  <app-pm-component-superagile-board [goal]="goal" [showHeader]="showCheckBox" [isReportsPage]="isReportsPage"
+    [isCalenderView]="isCalenderView" [goalUniqueDetailPage]="goalUniqueDetailPage" [userStorySearchCriteria]="userStorySearchCriteria"
+    [allUserStorieSelected]="allUserStorieSelected" [isAllGoalsPage]="userStorySearchCriteria.isGoalsPage"
+    [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" [ownerUserId]=null
+    [isEmployeeTaskBoardPage]="isEmployeeTaskBoardPage" (eventClicked)="ClickAfterEvent($event)"
+    (goalReplanId)="goalReplanStarted($event)" (saveMultipleUserStories)="SaveMultipleUserStories($event)"
+    (saveTransitionForMultipleUserStories)="saveTransitionForMultipleUserStories($event)"
+    (selectedOwnerUserId)="filterUserStoriesByAssignee($event)" (showDeadlineOnHover)="displaydeadlines($event)"
+    (selectedBugPriorityIds)="filterUserStoriesByBugPriorities($event)"
+    (selectedUserStoryStatus)="filterUserStoriesBySelectedStatus($event)"
+    (selectedUserStoryTypeList)="filterUserStoriesBySelectedUserStoryType($event)"
+    (searchUserStoriesBasedOnUserStoryName)="searchUserStoriesBasedOnUserStoryName($event)"
+    (getChartDetails)="getChartDetails($event)" (selectedComponent)="filterUserStoriesBySelectedComponent($event)"
+    (searchUserStoriesBasedOnVersionName)="searchUserStoriesBasedOnVersionName($event)"
+    (getCalanderView)="getCalanderView($event)" (searchUserStoriesBasedOnTags)="searchUserStoriesBasedOnTags($event)"
+    (amendUserStoryDeadlineConfigurations)="amendUserStoryDeadlineEvent($event)"
+    (selectedSortByOption)="sortUserStories($event)" (getDocumentDetails)="getDocumentView($event)"
+    (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)" [highLightMenu]="superAgile">
+  </app-pm-component-superagile-board>
+
+
+  <app-common-message-box
+    *ngIf="(!userStorySearchCriteria.isGoalsPage && !(canAccess_entityType_feature_ViewWorkItem)) || ((userStorySearchCriteria.isGoalsPage && !isPermissionForViewStories) || (goalUniqueDetailPage && !isPermissionForViewStories))"
+    textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+
+  <mat-card-content class="p-0 goalstatus user-story mb-0" id="style-1" [ngStyle]="setHeights()"
+    [ngClass]="{ 'goalstatus-backlog': (selectedTab == 'backlog-goals' || selectedTab == 'replan-goals' || selectedTab == 'active-goals' || goal.goalId == '00000000-0000-0000-0000-000000000000'), 'goalstatus-height' : (selectedTab == 'backlog-goals' || selectedTab == 'replan-goals' || selectedTab == 'active-goals') && (isVisible),
+     'all-goals-height': goal.goalId == '00000000-0000-0000-0000-000000000000' && !userStoryName && !isFilterApplies,'all-goals-filter-height':goal.goalId == '00000000-0000-0000-0000-000000000000' && isFilterApplies}"
+    *ngIf="(!userStorySearchCriteria.isGoalsPage && canAccess_entityType_feature_ViewWorkItem) || ((userStorySearchCriteria.isGoalsPage && isPermissionForViewStories) || (goalUniqueDetailPage && isPermissionForViewStories))">
+    <mat-list class="compact-list p-0">
+      <div fxLayout="row wrap" class="full-width mt-05" *ngIf="(anyOperationInProgress$ | async)">
+        <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+          <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+            <div fxFlex="92" fxFlexOffset="10px">
+              <div fxLayout="row p-05">
+
+                <div fxFlex="39">
+                  <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                </div>
+                <div fxFlex="1" fxFlexOffset="28">
+                  <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+                </div>
+                <div fxFlex="3" fxFlexOffset="3">
+                  <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+                </div>
+                <div fxFlex="3" fxFlexOffset="3">
+                  <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                </div>
+                <div fxFlexOffset="6" fxFlex="13">
+                  <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="
+   !(anyOperationInProgress$ | async) &&
+   (userStories$ | async| userStoryNamefilter: searchText| searchSubTasksfilter :userStoryStatusList | userStoryfilter: 'ownerUserId':ownerUserList
+   | bugPriorityfilter:'bugPriorityId':bugPriorityIdList | componentFilter:'projectFeatureId': componentList  | versionnamefilter: versionNamesearchText
+   | userStorysubTasksTagsFilter: searchTags
+   | subTasksWorkItemTypesfilter: userStoryTypeId:userStoryTypeIds)
+      ?.length == 0
+  ">
+        <app-common-message-box *ngIf="!(loadingEntityFeaturesinProgress$|async)"
+          textToDisplay="{{ 'USERSTORY.USERSTORIESSNOTFOUND' | translate | softLabelsPipe : softLabels }}">
+        </app-common-message-box>
+      </div>
+      <!-- <div dragula="userStories" [(dragulaModel)]="userStories"> -->
+      <div dragula="userStories" [(dragulaModel)]="userStories"
+        [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+        <div class="user-story-list" *ngFor="let userStory of (userStories$ | async| userStoryNamefilter:searchText| searchSubTasksfilter: userStoryStatusList 
+          | userStoryfilter: 'ownerUserId':ownerUserList
+   | bugPriorityfilter:'bugPriorityId':bugPriorityIdList  | versionnamefilter: versionNamesearchText
+   | componentFilter:'projectFeatureId': componentList
+    | userStorysubTasksTagsFilter: searchTags
+    | subTasksWorkItemTypesfilter: userStoryTypeId:userStoryTypeIds
+    | sortByComponent:'order')" [attr.data-userStoryId]="userStory.userStoryId"
+          [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+
+          <div fxLayout="row wrap"
+            [ngStyle]="{ 'pointer-events': ((reOrderOperationInProgress$ | async)|| (updateUserStoryGoalIsInProgress$|async))  ? 'none' : '' }">
+            <div fxFlex="100"
+              [ngStyle]="{ 'pointer-events': ((reOrderOperationInProgress$ | async)|| (updateUserStoryGoalIsInProgress$|async)) ? 'none' : '' }">
+              <gc-userstory-summary class="full-width" [loggedUser]="loggedUser" [userStory]="userStory"
+                [userStoryChecked]="userStoryChecked" [isDeadlinedispaly]="isDeadlinedispaly"
+                [isAddUserStory]="(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                [isArchivedGoal]="isArchivedGoal" [allUserStorieSelected]="allUserStorieSelected"
+                [userStorySelected]="highLightSelectedUserStory(userStory.userStoryId)" [isSubTasksPage]=false
+                [isLoading]="(anyOperationInProgressForAutoLogging$|async)"
+                [isAllGoalsPage]="userStorySearchCriteria.isGoalsPage" [isUserStoriesPage]=true
+                [treeStructure]="checkisTreeStructureEnabled(userStory.userStoryId)" [goalReplanId]="goalReplanId"
+                (selectUserStory)="selectedUserStory($event)" (highLightUserStory)="highLightUserStory($event)"
+                (UserStorylist)="updateMultipleUserStories($event)"
+                (selectShiftButtonUserStorylist)="selectedShiftUserStoriesList($event)" [page]="true" [isShow]="true"
+                (selectedToggleEvent)="selectedEvent($event)" (updateAutoLog)="LogAction($event)"
+                (emitUserStoryCount)="getUserStoryCount()">
+              </gc-userstory-summary>
+            </div>
+            <div fxFlex fxFlexOffset="1.5%" [hidden]="!(userStory.userStoryId == userStoryId && showSubChilds)">
+              <div *ngIf="userStory.subUserStoriesList && userStory.subUserStoriesList.length > 0"
+                class="user-story-list">
+                <div dragula="userStories" [(dragulaModel)]="userStory.subUserStoriesList">
+                  <div *ngFor="let userStorySubTask of (userStory.subUserStoriesList | userStoryNamefilter: searchText| searchSubTasksfilter: userStoryStatusList 
+                | userStoryfilter: 'ownerUserId':ownerUserList
+         | bugPriorityfilter:'bugPriorityId':bugPriorityIdList  | versionnamefilter: versionNamesearchText
+         | componentFilter:'projectFeatureId': componentList
+          | userStorysubTasksTagsFilter: searchTags
+          | workItemTypesFilter:'userStoryTypeId': userStoryTypeIds
+          | sortByComponent:'order')"
+                    [attr.data-userStoryId]="userStorySubTask.userStoryId"
+                    [ngStyle]="{ 'pointer-events': ((reOrderOperationInProgress$ | async)|| (updateUserStoryGoalIsInProgress$|async))  ? 'none' : '' }">
+
+                    <gc-userstory-summary class="full-width" [loggedUser]="loggedUser" [userStory]="userStorySubTask"
+                      [userStoryChecked]="userStoryChecked" [isArchivedGoal]="isArchivedGoal"
+                      [allUserStorieSelected]="allUserStorieSelected" [isSubTasksPage]=false
+                      [isAddUserStory]="(canAccess_entityType_feature_AddOrUpdateWorkItem && canAccess_entityType_feature_ViewWorkItem)"
+                      [treeStructure]="checkisTreeStructureEnabled(userStorySubTask.userStoryId)"
+                      [userStorySelected]="highLightSelectedUserStory(userStorySubTask.userStoryId)"
+                      [isAllGoalsPage]="userStorySearchCriteria.isGoalsPage" [isUserStoriesPage]=true
+                      [isLoading]="(anyOperationInProgressForAutoLogging$|async)" [goalReplanId]="goalReplanId"
+                      [isDeadlinedispaly]="isDeadlinedispaly" (selectUserStory)="selectedUserStory($event)"
+                      (highLightUserStory)="highLightUserStory($event)"
+                      (UserStorylist)="updateMultipleUserStories($event)"
+                      (selectShiftButtonSubUserStorylist)="selectedShiftSubUserStoriesList($event)"
+                      (updateAutoLog)="LogAction($event)">
+                    </gc-userstory-summary>
+                  </div>
+                </div>
+
+              </div>
+              <div class="add-userstory"
+                *ngIf="goal.goalId != '00000000-0000-0000-0000-000000000000' && isAddUserStory && !isBugBoard && ((!isGoalsPage && ((canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem))) || (isGoalsPage && isPermissionForViewStories && isPermissionForAddUserStory))">
+                <app-pm-component-create-userstory [goalId]="userStorySearchCriteria.goalId"
+                  [goalStatusId]="goal.goalStatusId" [goalReplanId]="goalReplanId" [userStoryId]="userStory.userStoryId"
+                  [isBugBoard]="isBugBoard">
+                </app-pm-component-create-userstory>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div></div>
+    </mat-list>
+  </mat-card-content>
+
+  <mat-paginator
+    *ngIf="(userStoryCount > 50) && !(anyOperationInProgress$ | async) && goal.goalId == '00000000-0000-0000-0000-000000000000'"
+    [length]="userStoryCount" class="mr-8" [pageSize]="pageSize" [pageIndex]="pageIndex"
+    [pageSizeOptions]="pageSizeOptions" (page)="setPageEvent($event)">
+  </mat-paginator>
+
+  <div class="add-userstory"
+    *ngIf="goal.goalId != '00000000-0000-0000-0000-000000000000' && isAddUserStory && ((!userStorySearchCriteria.isGoalsPage && ((canAccess_entityType_feature_AddOrUpdateWorkItem) && (canAccess_entityType_feature_ViewWorkItem))) || (userStorySearchCriteria.isGoalsPage && isPermissionForViewStories && isPermissionForAddUserStory))">
+    <app-pm-component-create-userstory [goalId]="userStorySearchCriteria.goalId" [userStoryId]=null
+      [isBugBoard]="isBugBoard" [goalReplanId]="goalReplanId" [goalStatusId]="goal.goalStatusId"
+      (openNewUserStory)="openNewUserStory($event)">
+    </app-pm-component-create-userstory>
+  </div>
+</div>

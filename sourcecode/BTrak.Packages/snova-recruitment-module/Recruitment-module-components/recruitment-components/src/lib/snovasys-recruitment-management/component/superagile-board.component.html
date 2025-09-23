@@ -1,0 +1,484 @@
+<mat-card-title class="userstory_data superagile-userstory_title">
+  <div fxLayout="row wrap" fxLayoutGap="2px" class="userstory_top-title" *ngIf="job || skill">
+
+    <div fxFlex fxLayoutAlign="start center" class="goal-replan goal-title">
+      <div class="goalname-content ml-05" [ngClass]="[canAccess_feature_ViewCandidates ? '' : 'mt-1']"
+        matTooltip="{{ title }}" matTooltipClass="tooltip-overflow">
+        <span class="hide-content-overflow">{{ title }}</span>
+      </div>
+      <div fxFlex="33px" class="text-center"
+        *ngIf="title && canAccess_feature_AddCandidateDetails && !isInterviewerBoard && !isJobOpeningClosed && !isJobOpeningDraft"
+        [ngClass]="[canAccess_feature_ViewCandidates ? '' : 'mt-1']">
+        <mat-icon mat-icon-button matTooltip="{{ 'CANDIDATES.TITLE' | translate}}" class="ml-05 mr-1 goal-cursor"
+          matTooltip="Add candidate" [satPopoverAnchorFor]="addCandidate" #addCandidatePopover="satPopoverAnchor"
+          (click)="AddCandidatePopover(addCandidatePopover)">
+          add_circle</mat-icon>
+      </div>
+    </div>
+
+    <!---profile filter-->
+    <div fxFlex="146px" fxFlex.lt-lg="130px" fxShow.xs="false" class="mt-02 mr-1">
+      <div class="superagile-select selectuser_counthigh mr-1">
+        <span class="members_count" (click)="toggleUsers()"
+          *ngIf="(candidates | assigneeFilter: 'id':candidates)?.length >1 " [ngClass]="{'countActive': divActivate}">
+          <fa-icon icon="plus"></fa-icon>
+        </span>
+
+        <div class="project_member_unAssign" *ngIf="unAssignedUserList">
+          <div (click)="getSelectedMember('null','null','N/A');" matTooltip="N/A"
+            [ngClass]="{membershow: isUnassigned}">
+            <app-avatar [name]="defaultName" [src]='defaultProfilePicture' [isRound]="true" size="30"></app-avatar>
+          </div>
+        </div>
+
+
+        <div class="project_member"
+          *ngFor="let candidates of (candidates |assigneeFilter: 'id':candidates| slice:0:1 | sortByComponent:'assignedToManagerName'); let i=index">
+          <div (click)="getSelectedMember(candidates.assignedToManagerId,i,candidates.assignedToManagerName);"
+            [ngClass]="{memberhide: !isSelectedMembers[i], membershow: isSelectedMembers[i]}"
+            matTooltip="{{candidates.assignedToManagerName}}">
+            <app-avatar [name]="candidates.assignedToManagerName| removeSpecialCharacters"
+              [src]='candidates.profileImage' [isRound]="true" size="30">
+            </app-avatar>
+          </div>
+        </div>
+
+        <div class="projectmembers_list" *ngIf="showUsersList" id="style-1">
+          <div class="single_projectmember"
+            *ngFor="let candidates of (candidates |assigneeFilter: 'id':candidates|slice:1  | sortByComponent:'assignedToManagerName');let j=index"
+            [ngClass]="{membershow: isSelected[j]}">
+            <div fxLayout="row wrap" fxLayoutGap="5px">
+              <div fxFlex="10" class="mt-02">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="getAssigne(candidates.assignedToManagerId, isSelected[j],j,candidates.assignedToManagerName)">
+                </mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{candidates.assignedToManagerName}}"
+                  [name]="candidates.assignedToManagerName| removeSpecialCharacters" [src]='candidates.profileImage'
+                  [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="70">
+                <p class="m-0">{{candidates.assignedToManagerName}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--profile end -->
+
+
+    <div fxFlex="30px" fxLayoutAlign="end center" *ngIf="canAccess_feature_ViewCandidates">
+      <mat-slide-toggle class="mr-1 p-08 archive-switch mt-05" [(ngModel)]="isArchived" [checked]="isEmployee"
+        [matTooltip]="(isEmployee ==false) ? ('CANDIDATES.FILTERBYEMPLOYEE' | translate) : ('CANDIDATES.EMPLOYEELIST' | translate)"
+        (change)="searchEmployees()" [disabled]="(anyOperationInProgress$|async)">
+      </mat-slide-toggle>
+    </div>
+
+    <div fxFlex="9" class="ml-05 mt-02">
+      <div class="goal-replan search-userstory">
+        <mat-form-field class="full-width custom-searchbar">
+          <input class="search_goal" matInput placeholder="{{ 'SEARCH' | translate }}" [(ngModel)]="searchText" trim
+            (keyup)="searchCandidates()">
+        </mat-form-field>
+        <span class="close_icon">
+          <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">close</mat-icon>
+        </span>
+      </div>
+    </div>
+
+    <div class="hide_input mt-03 ml-05" fxFlex="9" *ngIf="isFiltersShow  && !isReportsPage && !isDocument">
+      <form [formGroup]="selectInterviewTypeFormList">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{'RECRUITMENTSCHEDULES.INTERVIEWTYPE' | translate}}"
+            formControlName="interviewTypeIds" panelClass="dropdown-custom-class" (click)="$event.stopPropagation();"
+            (selectionChange)="getInterviewTypeList()" multiple>
+            <mat-option [value]="0" #allCandidatesSelectedList (click)="toggleAllInterviewTypesList()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+            <mat-option [value]="interviewType.interviewTypeId"
+              (click)="getInterviewTypeList();toggleInterviewTypeOneList(allCandidatesSelectedList.viewValue)"
+              *ngFor="let interviewType of (interviewType)">
+              {{ interviewType.interviewTypeName}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <div class="hide_input mt-03 ml-05" fxFlex="9" *ngIf="isFiltersShow  && !isReportsPage && !isDocument">
+      <form [formGroup]="selectHiringStatusesForm">
+        <mat-form-field class="goal-replan full-width custom-select-matform">
+          <mat-select placeholder="{{'HIRINGSTATUS.HIRINGSTATUSTITLE' | translate}}" formControlName="hiringStatusId"
+            panelClass="dropdown-custom-class" (click)="$event.stopPropagation();"
+            (selectionChange)="getHiringStatusList()" multiple>
+            <mat-option [value]="0" #allCandidateTypesSelected (click)="toggleAllHiringStatusList()">
+              {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+            <mat-option [value]="job.hiringStatusId"
+              (click)="getHiringStatusList();toggleHiringStatusPerOneList(allCandidateTypesSelected.viewValue)"
+              *ngFor="let job of (hiringStatus$ | async)">
+              {{ job.status}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <fa-icon icon="filter" class="userstory_inputs mt-05 ml-05" [matMenuTriggerFor]="filterMenu"
+      *ngIf="!isReportsPage && !isDocument" matTooltip="{{'GOALS.CLICKHEREFORSEARCH' | translate}}">
+    </fa-icon>
+
+    <div fxFlex="30px" *ngIf="!isReportsPage  && !isDocument" fxLayoutAlign="center center"
+      class="text-center clear_filters mt-05" matTooltip="{{'GOALS.CLEARALLFILTERS' | translate}}"
+      style="font-size: 15px;">
+      <a (click)="clearCandidateFilters()">
+        <fa-icon class="filter_circle" icon="times-circle" style="top: 6px;"
+          [ngStyle]="{ 'bottom': isBacklogIssues == true ? '7px' : '10px' }"></fa-icon>
+      </a>
+    </div>
+    <mat-menu #filterMenu="matMenu" class="p-05" (click)="$event.stopPropagation();">
+      <div>
+
+        <div class="mt-08">
+          <form [formGroup]="selectInterviewTypeFormList">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select placeholder="{{'INTERVIEWTYPES.INTERVIEWTYPETITLE' | translate}}"
+                formControlName="interviewTypeIds" panelClass="dropdown-custom-class"
+                (click)="$event.stopPropagation();" (selectionChange)="getInterviewTypeList()" multiple>
+                <mat-option [value]="0" #allCandidatesSelectedList (click)="toggleAllInterviewTypesList()">
+                  {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                <mat-option [value]="interviewType.interviewTypeId"
+                  (click)="getInterviewTypeList();toggleInterviewTypeOneList(allCandidatesSelectedList.viewValue)"
+                  *ngFor="let interviewType of (interviewType)">
+                  {{ interviewType.interviewTypeName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+
+        <div class="mt-08">
+          <form [formGroup]="selectHiringStatusesForm">
+            <mat-form-field class="goal-replan full-width custom-select-matform">
+              <mat-select placeholder="{{'HIRINGSTATUS.HIRINGSTATUSTITLE' | translate}}"
+                formControlName="hiringStatusId" panelClass="dropdown-custom-class" (click)="$event.stopPropagation();"
+                (selectionChange)="getHiringStatusList()" multiple>
+                <mat-option [value]="0" #allCandidateTypesSelected (click)="toggleAllHiringStatusList()">
+                  {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                <mat-option [value]="job.hiringStatusId"
+                  (click)="getHiringStatusList();toggleHiringStatusPerOneList(allCandidateTypesSelected.viewValue)"
+                  *ngFor="let job of (hiringStatus$ | async)">
+                  {{ job.status}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
+        </div>
+      </div>
+
+    </mat-menu>
+
+    <div fxFlex="22px" *ngIf="!isReportsPage  && !isDocument" class="ml-05 mt-08 show-filters-recruitment">
+      <fa-icon icon="filter" (click)="showFilters()" matTooltip="{{'GOALS.SHOWFILTERS' | translate}}">
+      </fa-icon>
+    </div>
+  </div>
+</mat-card-title>
+
+
+<sat-popover #addCandidate hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="after">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'CANDIDATES.TITLE'| translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <form [formGroup]="createCandidateForm" novalidate #candidateDetailFormDirective="ngForm"
+        (submit)="createCandidateForm.valid && addCandidateDetail(candidateDetailFormDirective)">
+        <div class="card-content mobile-view-popover" style="margin-right: -7px !important;" id="style-1">
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="firstName" placeholder="{{'CANDIDATES.FirstName'| translate}}"
+                  required />
+                <mat-error *ngIf="createCandidateForm.get('firstName').hasError('maxlength')">
+                  {{ 'CANDIDATES.FIRSTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="createCandidateForm.get('firstName').hasError('required') && createCandidateForm.get('firstName').touched">
+                  {{ 'CANDIDATES.FIRSTNAMEREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="lastName" placeholder="{{'CANDIDATES.LastName'|translate}}" required />
+                <mat-error *ngIf="createCandidateForm.get('lastName').hasError('maxlength')">
+                  {{ 'CANDIDATES.LASTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="createCandidateForm.get('lastName').hasError('required') && createCandidateForm.get('lastName').touched">
+                  {{ 'CANDIDATES.LASTNAMEREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="fatherName" placeholder="{{'CANDIDATES.FATHERNAME'| translate}}" />
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="email" placeholder="{{'CANDIDATES.Email'|translate}}" required />
+                <mat-error
+                  *ngIf="createCandidateForm.get('email').hasError('required') && createCandidateForm.get('email').touched">
+                  {{ 'CANDIDATES.EMAILREQUIREDERROR' | translate }}
+                </mat-error>
+                <mat-error
+                  *ngIf="createCandidateForm.get('email').hasError('pattern') && createCandidateForm.get('email').touched">
+                  {{ 'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="secondaryEmail"
+                  placeholder="{{'CANDIDATES.SecondaryEmail'|translate}}" />
+                <mat-error
+                  *ngIf="createCandidateForm.get('secondaryEmail').hasError('pattern') && createCandidateForm.get('secondaryEmail').touched">
+                  {{ 'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="phone" (keypress)="numberOnly($event)"
+                  placeholder="{{'CANDIDATES.Phone' |translate}}" required />
+                <mat-error *ngIf="createCandidateForm.get('phone').hasError('maxlength')">
+                  {{ 'CANDIDATES.PHONEMAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="createCandidateForm.get('phone').hasError('required') && createCandidateForm.get('phone').touched">
+                  {{ 'CANDIDATES.PHONEREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="address1"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET1'|translate}}" />
+                <mat-error *ngIf="createCandidateForm.get('address1').hasError('maxlength')">
+                  {{ 'EMPLOYEECONTACTDETAILS.ADDRESS1' | translate }}</mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="address2"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET2'|translate}}" />
+                <mat-error *ngIf="createCandidateForm.get('address2').hasError('maxlength')">
+                  {{ 'EMPLOYEECONTACTDETAILS.ADDRESS2' | translate }}</mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="state" placeholder="{{'EMPLOYEECONTACTDETAILS.STATE'|translate}}" required>
+                  <mat-option [value]="state.stateId" *ngFor="let state of statesList">
+                    {{state?.stateName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="createCandidateForm.get('state').hasError('required') && createCandidateForm.get('state').touched">
+                  {{ 'EMPLOYEECONTACTDETAILS.SELECTSTATE' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="countryId" placeholder="{{'CANDIDATES.Country'|translate}}" required>
+                  <mat-option [value]="country.countryId" *ngFor="let country of countryList">
+                    {{country?.countryName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="createCandidateForm.get('countryId').hasError('required') && createCandidateForm.get('countryId').touched">
+                  {{ 'COUNTRY.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="zipcode"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ZIP/POSTALCODE'|translate}}"
+                  (keypress)="numberOnly($event);" />
+                <mat-error *ngIf="createCandidateForm.get('zipcode').hasError('maxlength')">
+                  {{ 'EMPLOYEECONTACTDETAILS.POSTALCODESHOULDNOTEXCEED20CHRACTERS' | translate }}</mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="currentSalary" placeholder="{{'CANDIDATES.CurrentSalary'|translate}}"
+                  (keypress)="floatOnly($event)" (keyup)="validateInput()" />
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="expectedSalary" placeholder="{{'CANDIDATES.Expectedsalary'|translate}}"
+                  (keypress)="floatOnly($event)" (keyup)="validateInput()" />
+              </mat-form-field>
+              <mat-error class="mat-error" style="font-size: 75%;margin-top: -1.33333em;color: #f44336;"
+                *ngIf="expectedSalaryError">
+                {{ 'CANDIDATES.EXPECTEDSALARYERROR' | translate }}</mat-error>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="experience" placeholder="{{'CANDIDATES.ExperienceInyears' |translate}}"
+                  (keypress)="floatOnly($event)" />
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field style="width: 100% !important;">
+                <input matInput formControlName="skypeId" placeholder="{{'CANDIDATES.SKYPEID'|translate}} " />
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="assignCandidateTo" placeholder="{{'CANDIDATES.Assigntomanager'|translate}}"
+                  (selectionChange)="getAssigneeValue($event.value)">
+                  <mat-select-trigger>{{selectedMember}}</mat-select-trigger>
+                  <mat-option *ngFor="let user of userList" [value]="user.id">
+                    <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                      [name]="user.fullName| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                    <img class="employee_img" *ngIf="user.profileImage"
+                      [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">
+                    {{user?.fullName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="currentDesignation"
+                  placeholder="{{'CANDIDATES.Currentdesignation'|translate}}">
+                  <mat-option [value]="designation.designationId" *ngFor="let designation of designationList">
+                    {{designation?.designationName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="SourceId" placeholder="{{'CANDIDATES.Source'|translate}}"
+                  (selectionChange)="sourceChanged($event.value)">
+                  <mat-option [value]="'0'">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                  <mat-option [value]="source.sourceId" *ngFor="let source of sources">
+                    {{source.name}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="ml-05 mr-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100" *ngIf="isSourcePersonRequired">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="SourcePersonId" placeholder="{{'CANDIDATES.Sourceperson'|translate}}"
+                  (selectionChange)="getSourcePerson($event.value)">
+                  <mat-select-trigger>{{selectedSourcePerson}}</mat-select-trigger>
+                  <mat-option *ngFor="let user of userList" [value]="user.id">
+                    <app-avatar class="employee_img" *ngIf="!user.profileImage"
+                      [name]="user.fullName| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                    <img class="employee_img" *ngIf="user.profileImage"
+                      [src]="user.profileImage | fetchSizedAndCachedImage: '40':''">
+                    {{user?.fullName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+          <span>{{'CANDIDATES.UPLOADRESUME'|translate}} :</span>
+          <div class="custom-hrm-dropzone" style="padding: 10px; width: 550px;" *ngIf="isDefault">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+              [getFilesByReferenceId]="true" [referenceId]="candidateDocumentReferenceId"
+              [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+              [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+              [isToUploadFiles]="isToUploadFiles">
+            </app-dropzone>
+          </div>
+          <div class="custom-hrm-dropzone" style="padding: 10px; width: 550px;" *ngIf="!isDefault">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+              [getFilesByReferenceId]="true" [referenceId]="candidateDocumentReferenceId"
+              [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+              [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+              [isToUploadFiles]="isToUploadFiles">
+            </app-dropzone>
+          </div>
+        </div>
+        <div class="text-center mt-05">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!createCandidateForm.valid || expectedSalaryError">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingInProgress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-raised-button (click)="closeCandidatePopover(candidateDetailFormDirective); (false)">
+            <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<mat-card class="p-0 m-0">
+  <mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{userNames}}" *ngIf="userNames">
+        <b>AssigneeToManager name:&nbsp;</b>
+        {{ userNames }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearAssigneeFilter()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedHiringType}}"
+        *ngIf="selectedHiringType">
+        <b>Hiring Status:&nbsp;</b>
+        {{ selectedHiringType }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearHiringType()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{selectedInterviewTypes}}"
+        *ngIf="selectedInterviewTypes">
+        <b>InterviewType name:&nbsp;</b>
+        {{ selectedInterviewTypes }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="clearInterviewType()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip matRipple class="mr-08 hide-content-overflow" matTooltip="{{searchText}}" *ngIf="searchText">
+        <b>Search:&nbsp;</b>
+        {{ searchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+        </fa-icon>
+      </mat-chip>
+
+    </div>
+  </mat-card-title>
+</mat-card>

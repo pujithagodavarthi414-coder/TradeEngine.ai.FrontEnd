@@ -1,0 +1,213 @@
+<div class="full-height p-0 m-0" *ngIf="isSprintsEnable">
+    <mat-card class="p-0 canteen-manage custom-box m-0 drag-handler">
+        <mat-card-title class="full-width data-table-header">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-05 full-width ml-05drag-handler" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow" matTooltip="{{'SPRINTS.SPRINTREPLANHISTORY' | translate | titlecase}}">
+                        {{'SPRINTS.SPRINTREPLANHISTORY' | translate | titlecase}}
+                    </span>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+    <!-- <div *ngIf="isAnyOperationIsInprogress$ | async"> -->
+    <div [ngClass]="{'no-drag': initialData}" *ngIf="initialData" id="widget-scroll-id">
+        <mat-card class="p-1 m-0" style="min-width: 900px;">
+            <div fxFlex="100" fxLayout="row wrap">
+                <div fxFlex="50" fxLayoutAlign="start start">
+                    <button mat-button mat-raised-button type="button" color="primary" (click)="previousReplan()"
+                        [disabled]="isPreviousDisable">
+                        <fa-icon icon="chevron-left"></fa-icon>&nbsp;{{'GOALREPLANHISTORY.PREVIOUS' | translate}}
+                    </button>
+                </div>
+                <div fxFlex="50" fxLayoutAlign="end end">
+                    <button mat-button mat-raised-button type="button" color="primary" (click)="nextReplan()"
+                        [disabled]="isNextDisable">
+                        {{'GOALREPLANHISTORY.NEXT' | translate}}&nbsp;<fa-icon icon="chevron-right"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="p-0 m-0" style="min-width: 900px;">
+            <mat-card-title>
+                <div *ngIf="data" class="p-1">
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayout.md="column" fxLayoutGap.xs="0px">
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'SPRINTS.SPRINTNAME' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54" class="hide-content-overflow">
+                                    <label matTooltip="{{data.sprintName}}">:&nbsp;{{data.sprintName}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'GOALREPLANHISTORY.REPLANREASON' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54" class="hide-content-overflow">
+                                    <label>:&nbsp;{{data.sprintReplanName}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'GOALREPLANHISTORY.DATEOFREPLAN' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54"  matTooltip="{{data.timeZoneName}}">
+                                    <label>:&nbsp;{{data.dateOfReplan | date: "dd-MMM-yyyy"}}</label>
+                                 
+                                <span class="timezone-name" *ngIf="(data.dateOfReplan | covertTimeIntoUtcTime) != Offset"
+                                >&nbsp;&nbsp;{{ data.timeZoneAbbreviation}}
+                                </span>     
+                            </div> 
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayout.md="column" fxLayoutGap.xs="0px">
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'GOALREPLANHISTORY.DELAYEDDAYS' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54">
+                                    <label>:&nbsp;{{data.sprintDelay}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'GOALREPLANHISTORY.REQUESTEDBY' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54">
+                                    <label>:&nbsp;{{data.requestedBy}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div fxFlex="33.3">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="45">
+                                    <label><b>{{'GOALREPLANHISTORY.APPROVEDBY' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="54">
+                                    <label>:&nbsp;{{data.approvedUser}}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxLayout.md="column" fxLayoutGap.xs="0px">
+                        <div fxFlex="100">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="15">
+                                    <label><b>{{'SPRINTS.SPRINTMEMBERS' | translate}}</b></label>
+                                </div>
+                                <div fxFlex="85" *ngIf="data.sprintMembers">
+                                    <label>:&nbsp;{{data.sprintMembers}}</label>
+                                </div>
+                                <div fxFlex="85" *ngIf="!data.sprintMembers">
+                                    <label>:&nbsp;{{'GOALREPLANHISTORY.NODATAAVAILABLE' | translate | softLabelsPipe : softLabels}}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <mat-divider></mat-divider>
+            </mat-card-title>            
+            <mat-card-content class="p-0 goal-replan" id="style-1" style="margin: 0 !important;">
+                <div *ngIf="(!loading) && (!message)">
+                    <div *ngFor="let history of description" class="history-tab p-1">
+                        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" class="pb-1">
+                            <div fxFlex="50">
+                                <b>{{'GOALREPLANHISTORY.USERSTORYNAME' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>{{history.userStoryName}}
+                            </div>
+                            <div fxFlex="50" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+                                <!-- <div fxFlex="45" *ngIf="history.userStoryDelay >= 0">
+                                    <b>{{'GOALREPLANHISTORY.OVERALLDELAY' | translate}}:&nbsp;</b>{{history.userStoryDelay}}
+                                    {{'GOALREPLANHISTORY.DAYS' | translate}}
+                                </div>
+                                <div fxFlex="45" *ngIf="history.userStoryDelay < 0">
+                                    <b>{{'GOALREPLANHISTORY.OVERALLDELAY' | translate}}:&nbsp;</b>0
+                                    {{'GOALREPLANHISTORY.DAYS' | translate}}
+                                </div> -->
+                                <div fxFlex="55" class="hide-content-overflow" fxLayoutAlign="end none"
+                                    fxLayoutAlign.xs="start">
+                                    <div class="hide-content-overflow">
+                                        <b>{{'GOALREPLANHISTORY.USERSTORYUNIQUENAME' | translate | softLabelsPipe : softLabels}}</b>
+                                    </div>
+                                    <b>:&nbsp;</b>{{history.userStoryUniqueName}}
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="history.description">
+                            <div *ngFor="let discription of history.description">
+                                <div fxFlex="100">
+                                    ●&nbsp;<span [innerHTML]="discription" class="assets-comments"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-1" *ngIf="message">
+                    <div>
+                        {{'GOALREPLANHISTORY.NOCHANGESDONEINTHISREPLAN' | translate | softLabelsPipe : softLabels}}
+                    </div>
+                </div>
+
+                <div *ngIf="loading">
+                    <div *ngFor="let item of [1,2,3]">
+                        <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+                            <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                                <div fxLayout="row" fxLayoutGap="5px">
+                                    <div fxFlex="85" fxFlex.gt-xs="80">
+                                        <div fxFlex="25">
+                                            <p class="mat-body-1 empty-text loading-bg"></p>
+                                        </div>
+                                        <div fxFlex="75" class="text-center"> </div>
+                                    </div>
+                                    <div fxFlex="15">
+                                        <p class="mat-body-1 empty-text loading-bg"></p>
+                                    </div>
+                                </div>
+                                <div fxLayout="row" fxLayoutGap="5px">
+                                    <div fxFlex="50">
+                                        <p class="mat-body-1 empty-text loading-bg"></p>
+                                    </div>
+                                    <div fxFlex="50" class="text-center"> </div>
+                                </div>
+                                <div fxLayout="row" fxLayoutGap="5px">
+                                    <div fxFlex="70">
+                                        <p class="mat-body-1 empty-text loading-bg"></p>
+                                    </div>
+                                    <div fxFlex="30" class="text-center"> </div>
+                                </div>
+                            </div>
+                        </div>
+                        <mat-divider></mat-divider>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    <div class="p-1" *ngIf="sprintId && !initialData">
+        {{'NODATATODISPLAY' | translate}}
+    </div>
+    <div class="p-1" *ngIf="!sprintId && !initialData">
+        <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+            <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+            {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+        </span>
+    </div>
+</div>
+
+
+<app-common-message-box *ngIf = "!isSprintsEnable"
+    textToDisplay="{{'PROJECTS.PLEASECONFIGURESPRINTSETTINGS'|translate}}">
+</app-common-message-box>
+
+<!-- </div> -->

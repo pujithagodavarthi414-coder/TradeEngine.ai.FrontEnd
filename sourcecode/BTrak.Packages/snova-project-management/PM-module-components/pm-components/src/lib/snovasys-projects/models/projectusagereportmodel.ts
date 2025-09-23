@@ -1,0 +1,37 @@
+export class ProjectUsageReportModel {
+    public userIds: string;
+    public dateFrom: Date;
+    public dateTo: Date;
+    public projectIds: string;
+    public userName: string;
+    public projectName: string;
+    public goalIds: string;
+    public goalName: string;
+    public futureHours: number;
+    public isChartData: boolean;
+    public utilizationPercentage: number;
+    public noOfHours: number;
+    public userId: string;
+    public goalId: string;
+    public projectId: string;
+    public goalAllocatedHours: number;
+    public goalUsedHours: number;
+    public goalEstimatedHours: number;
+    public goalNonAllocatedHours: number;
+    public goalNonUsedHours: number;
+    public projectAllocatedHours: number;
+    public projectUsedHours: number;
+    public projectEstimatedHours: number;
+    public projectNonAllocatedHours: number;
+    public projectNonUsedHours: number;
+    public startDate: Date;
+    public endDate: Date;
+    public goalAllocatedHoursPercentage : number;
+    public goalUsedHoursPercentage: number;
+    public goalNonAllocatedHoursPercentage : number;
+    public goalNonUsedHoursPercentage: number;
+    public projectAllocatedHoursPercentage: number;
+    public projectUsedHoursPercentage: number;
+    public projectNonAllocatedHoursPercentage: number;
+    public projectNonUsedHoursPercentage: number;
+}

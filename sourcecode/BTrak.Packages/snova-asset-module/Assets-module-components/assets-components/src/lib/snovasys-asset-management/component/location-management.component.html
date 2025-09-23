@@ -1,0 +1,255 @@
+<ng-container *ngIf="(canAccess_feature_ViewLocations)">
+  <div class="full-height">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <div fxFlex class="card-title-text p-05">{{'ASSETS.LOCATIONLIST' | translate}}
+          </div>
+          <div fxFlex="80px" fxLayoutAlign="end center">
+            <button mat-icon-button *ngIf="(canAccess_feature_AddOrUpdateLocation)"
+              (click)="addLocationDetail(addLocationPopover)" [satPopoverAnchorFor]="addLocationPopovers"
+              #addLocationPopover="satPopoverAnchor">
+              <fa-icon class="filter mat-color-accent" icon="map-marker"
+                matTooltip="{{'ASSETS.CLICKHERETOADDLOCATION' | translate}}"></fa-icon>
+            </button>
+            <button mat-icon-button (click)="resetAllFilters()">
+              <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}"></fa-icon>
+            </button>
+            <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu">
+              <fa-icon icon="user-cog" class="filter mat-color-accent"
+                matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+              </fa-icon>
+            </button>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+    <div class="activity-data foodorders-data filter-margin m-0 no-drag assets-pagination assets-count" id="style-1">
+      <ngx-datatable class="btrak" [rows]="locationList$ | async" [columnMode]="'force'" [headerHeight]="35"
+        [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [sorts]="[{prop: 'employeeName', dir: 'asc'}]" [offset]="page.pageNumber" [limit]="page.size"
+        [externalSorting]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+        [loadingIndicator]="locationGridSpinner$ | async" (sort)="onSort($event)" (page)='setPage($event)'>
+        <ngx-datatable-column name="{{'ASSETS.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}" sortable="true"
+          prop="employeeName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div class="icon-button" fxLayout="row" (click)="goToProfile(row.employeeId)">
+              <div *ngIf="row.employeeProfileImage != null && row.employeeProfileImage != ''">
+                <app-avatar [src]="row.employeeProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                  size="30">
+                </app-avatar>
+              </div>
+              <div *ngIf="row.employeeProfileImage == null || row.employeeProfileImage == ''">
+                <app-avatar [name]="row.employeeName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+              </div>
+              <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.employeeName}}"
+                matTooltipShowDelay="400" fxFlex>
+                {{ row?.employeeName }}
+              </span>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.SEATCODE' | translate}}" sortable="true" prop="seatCode">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div matTooltip="{{row?.seatCode}}">{{row?.seatCode}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.BRANCH' | translate}}" sortable="true" prop="branchName">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.DESCRIPTION' | translate}}" sortable="true" prop="description">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.COMMENT' | translate}}" sortable="true" prop="comment">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{value}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ASSETS.CREATEDON' | translate}}" sortable="true" prop="createdDateTime">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div *ngIf="row.createdDateTime != null">{{ row.createdDateTime | date: "dd-MMM-yyyy"  }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS' | translate}}" [sortable]="false" prop="actions"
+          *ngIf="(canAccess_feature_AddOrUpdateLocation)">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <button type="button" class="text-center" matTooltip="{{'ASSETS.EDITLOCATION' | translate}}" mat-icon-button
+              [satPopoverAnchorFor]="addLocationPopovers" #addLocationPopover="satPopoverAnchor"
+              (click)="$event.stopPropagation();editLocationPopupOpen(row,addLocationPopover)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button type="button" class="text-center" [satPopoverAnchorFor]="deleteLocation"
+              #locationPopover="satPopoverAnchor" (click)="$event.stopPropagation();getLocationId(row,locationPopover)"
+              matTooltip="{{'ASSETS.DELETELOCATION' | translate}}" mat-icon-button>
+              <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <sat-popover #deleteLocation [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+      [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text mat-bg-primary p-05">{{'ASSETS.DELETELOCATION' | translate}}</div>
+        </mat-card-title>
+        <div class="card-content p-1">
+          <div class="text-center mb-1">{{'ASSETS.AREYOUSUREWANTTODELETE' | translate}}
+          </div>
+          <div fxLayoutAlign="space-around center">
+            <button mat-button mat-raised-button class="mr-05" color="primary" class="mr-1"
+              (click)="deleteSeatLocation()"><i class="fa fa-check"></i> {{'ASSETS.YES' | translate}}</button>
+            <button mat-button mat-raised-button (click)="cancelDeleteLocation()"><i
+                class="fa fa-times"></i>{{'ASSETS.NO' | translate}}</button>
+          </div>
+        </div>
+      </mat-card>
+    </sat-popover>
+    <sat-popover #addLocationPopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05" *ngIf="!seatingId">{{'ASSETS.ADDNEWLOCATION' | translate}}
+          </div>
+          <div class="card-title-text  mat-bg-primary p-05" *ngIf="seatingId">{{'ASSETS.EDITLOCATION' | translate}}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="locationForm" novalidate #formDirective="ngForm"
+          (submit)="locationForm.valid && saveLocation()">
+          <div class="card-content p-05" fxLayout="column">
+            <div fxLayout="row wrap" fxLayoutGap.xs="0px" fxLayoutGap="5px" class="mb-05">
+              <div fxFlex fxFlex.gt-sm="49">
+                <mat-form-field class="full-width">
+                  <mat-select
+                    placeholder="{{'ASSETS.PLEASEENTEREMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                    formControlName="employeeId" (selectionChange)="getEmployeeName($event.value)">
+                    <mat-select-trigger>
+                      {{selectedEmployee}}
+                    </mat-select-trigger>
+                    <mat-option *ngFor="let emp of selectEmployeeDropDownListData$ | async" [value]="emp.id">
+                      <app-avatar class="employee_img" *ngIf="!emp.profileImage"
+                        [name]="emp.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                      <img class="employee_img" src="{{emp.profileImage}}" *ngIf="emp.profileImage">{{emp.fullName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div fxFlex fxFlex.gt-sm="49">
+                <mat-form-field class="full-width">
+                  <input matInput formControlName="seatCode" placeholder="{{'ASSETS.SEATCODE' | translate}}" required>
+                  <mat-error>
+                    <span
+                      *ngIf="locationForm.get('seatCode').hasError('required') && locationForm.get('seatCode').touched">
+                      {{'ASSETS.PLEASEENTERSEATCODE' | translate}}</span>
+                    <span
+                      *ngIf="locationForm.get('seatCode').hasError('maxlength')">&nbsp;{{'ASSETS.THATSHOULDNOTEXCEED50CHARACTERS' | translate}}
+                    </span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div>
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'ASSETS.BRANCH' | translate}}" formControlName="branchId"
+                  (selectionChange)="branchSelected($event.value)" required>
+                  <mat-option [value]="branch.branchId" *ngFor="let branch of (branchList$ | async)">
+                    {{ branch.branchName }}</mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="locationForm.get('branchId').hasError('required') && locationForm.get('branchId').touched">
+                    {{'ASSETS.PLEASESELECTBRANCH' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="mb-05">
+              <mat-form-field class="full-width">
+                <textarea matInput formControlName="description"
+                  placeholder="{{'ASSETS.DESCRIPTION' | translate}}"></textarea>
+                <mat-error>
+                  <span *ngIf="locationForm.get('description').hasError('maxlength')">
+                    {{'ASSETS.PLEASEENTERDESCRIPTIONTHATSHOULDNOTEXCEED800CHARACTERS' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div>
+              <mat-form-field class="full-width">
+                <textarea matInput formControlName="comment" placeholder="{{'ASSETS.COMMENT' | translate}}"></textarea>
+                <mat-error>
+                  <span
+                    *ngIf="locationForm.get('comment').hasError('maxlength')">{{'ASSETS.PLEASEENTERCOMMENTTHATSHOULDNOTEXCEED800CHARACTERS' | translate}}
+                  </span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="text-center mb-1">
+            <button type="submit" [disabled]="!locationForm.valid || (anyOperationInProgress$ | async)" mat-button
+              *ngIf="seatingId" mat-raised-button color="primary" class="mr-1" matTooltip="Update location details">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingLocationInProgress$ | async">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="pen"></fa-icon>{{'ASSETS.UPDATE' | translate}}
+            </button>
+            <button type="submit" [disabled]="!locationForm.valid || (anyOperationInProgress$ | async)" mat-button
+              *ngIf="!seatingId" mat-raised-button color="primary" class="mr-1"
+              matTooltip="{{'ASSETS.SAVELOCATION' | translate}}">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="savingLocationInProgress$ | async">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="save"></fa-icon>{{'ASSETS.SAVE' | translate}}
+            </button>
+            <button mat-button mat-raised-button type="reset" matTooltip="{{'ASSETS.CANCELLOCATION' | translate}}"
+              [disabled]="(savingLocationInProgress$ | async)" (click)="closeDialog()">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{'ASSETS.CANCEL' | translate}}
+            </button>
+          </div>
+        </form>
+      </mat-card>
+    </sat-popover>
+  </div>
+
+  <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+      <mat-form-field class="full-width">
+        <mat-label>{{'ASSETS.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}</mat-label>
+        <mat-select (selectionChange)="searchByName($event.value)" [(ngModel)]="selectedEmployeeId">
+          <mat-option value="all">All</mat-option>
+          <mat-option *ngFor="let emp of selectEmployeeDropDownListData$ | async" [value]="emp.id">
+            {{emp.fullName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <input matInput placeholder="{{'ASSETS.SEATCODE' | translate}}" [(ngModel)]="searchSeatCode"
+          (input)="searchBySeatCode()">
+        <span class="close_icon ml-05" style="top:5px !important">
+          <span *ngIf="!searchSeatCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <mat-icon *ngIf="searchSeatCode" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">
+            close</mat-icon>
+        </span>
+      </mat-form-field>
+      <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+        <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+          (selectionChange)="entityValues($event.value)">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+  </mat-menu>
+</ng-container>
+
+
+<ng-container *ngIf="!(canAccess_feature_ViewLocations) && !(roleFeaturesIsInProgress$|async)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

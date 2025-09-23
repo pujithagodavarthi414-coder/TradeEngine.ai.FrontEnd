@@ -1,0 +1,130 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+</mat-progress-bar>
+<mat-card *ngIf="isDetailsVisible == false" class="mt-1 p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+    <div fxLayout="row" fxFlex="100">
+        <div fxFlex="100" fxFlex.gt-xs="5" class="p-05">
+            <fa-icon icon="info-circle"></fa-icon>
+        </div>
+        <div fxFlex="100" fxFlex.gt-xs="95" class="p-05 ml-1">
+            <p class="m-0">
+                {{'TESTMANAGEMENT.NOHISTORYFOUND' | translate}}
+            </p>
+        </div>
+    </div>
+</mat-card>
+<div fxLayoutAlign="end center" class="mb-1" *ngIf="isDetailsVisible">
+    <span class="mr-05">{{'AUDIT.QUESTIONVIEWED' | translate | softLabelsPipe :softLabels}}</span>
+    <mat-slide-toggle [(ngModel)]="isQuestionViewed" [checked]="isQuestionViewed">
+    </mat-slide-toggle>
+</div>
+<div class="p-03 testsuite-history-scroll fit-content-testsuite-history-scroll"
+    *ngIf="!(anyOperationInProgress$ | async) && isDetailsVisible" id="style-1">
+    <div *ngFor="let queHistory of (questionHistory$ | async)">
+        <div fxLayout="row wrap" fxLayoutGap="10px"
+            *ngIf="!isQuestionViewed && queHistory.description != 'QuestionViewed'">
+            <div mat-card-avatar fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13">
+                <app-avatar matTooltip="{{ queHistory.performedByUserName }}"
+                    [name]="queHistory.performedByUserName | removeSpecialCharacters"
+                    [src]="queHistory.performedByUserProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                    size="20">
+                </app-avatar>
+            </div>
+            <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                <div fxLayout="row">
+                    <div fxFlex="65">
+                        <b>{{queHistory.performedByUserName}}</b>
+                    </div>
+                    <div fxFlex>
+                        <span class="pull-right">{{queHistory.createdDateTime | utcToLocalTime | timeago }}</span>
+                    </div>
+                </div>
+                <div fxLayout="row" *ngIf="queHistory?.conductName">
+                    <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                    <b class="mr-05">{{queHistory?.conductName}}</b> -
+                    {{queHistory?.conductCreatedDateTime | utcToLocalTime | date: 'medium'}}
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'QuestionConductCreated'">
+                    <span>
+                        {{'AUDIT.CREATEDTHISQUESTION' | translate | softLabelsPipe :softLabels}}
+                    </span>
+                </div>
+                <div class="mb-05 audit-description" fxLayout="row"
+                    *ngIf="queHistory.description == 'QuestionCommentUpdated'">
+                    <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                        {{ 'AUDIT.COMMENTCHANGEDTO' | translate }}
+                        <b><span [innerHtml]="queHistory.newValue"></span></b>
+                    </span>
+                    <span class="audit-description"
+                        *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                        {{ 'AUDIT.COMMENTCHANGEDFROM' | translate }}
+                        <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                        {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                        <b><span [innerHtml]="queHistory.newValue"></span></b>
+                        {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                    </span>
+                    <span
+                        *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                        {{ 'AUDIT.COMMENTREMOVED' | translate }}
+                    </span>
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'QuestionConductResultUpdated'">
+                    <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                        {{ 'AUDIT.RESULTCHANGEDTO' | translate }}
+                        <b>{{queHistory.newValue}}</b>
+                    </span>
+                    <span
+                        *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                        {{ 'AUDIT.RESULTCHANGEDFROM' | translate }}
+                        <b>{{queHistory.oldValue}}</b>
+                        {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                        <b>{{queHistory.newValue}}</b>
+                        {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                    </span>
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'ActionAdded'">
+                    <span>
+                        {{ 'IPADDRESSES.ACTION' | translate | softLabelsPipe :softLabels }} -
+                        <b>{{queHistory.newValue}}</b>
+                        {{'AUDIT.SMALLADDED' | translate}}
+                    </span>
+                </div>
+                <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'ActionRemoved'">
+                    <span>
+                        {{ 'AUDIT.ACTIONSREMOVED' | translate | softLabelsPipe :softLabels }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div fxLayout="row wrap" fxLayoutGap="10px"
+            [hidden]="!(isQuestionViewed && queHistory.description == 'QuestionViewed')">
+            <div mat-card-avatar fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13">
+                <app-avatar matTooltip="{{ queHistory.performedByUserName }}"
+                    [name]="queHistory.performedByUserName | removeSpecialCharacters"
+                    [src]="queHistory.performedByUserProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true"
+                    size="20">
+                </app-avatar>
+            </div>
+            <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                <div fxLayout="row">
+                    <div fxFlex="65">
+                        <b>{{queHistory.performedByUserName}}</b>
+                    </div>
+                    <div fxFlex>
+                        <!-- <span class="pull-right">{{queHistory.createdDateTime | utcToLocalTime | timeago: live }}</span> -->
+                        <span class="pull-right">{{queHistory.createdDateTime | utcToLocalTime | timeago }}</span>
+                    </div>
+                </div>
+                <div fxLayout="row" *ngIf="queHistory?.conductName">
+                    <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                    <b class="mr-05">{{queHistory?.conductName}}</b> -
+                    {{queHistory?.conductCreatedDateTime | utcToLocalTime | date: 'medium'}}
+                </div>
+                <div class="mb-05" fxLayout="row">
+                    <span>
+                        {{'AUDIT.HADSEENTHISQUESTION' | translate | softLabelsPipe :softLabels}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

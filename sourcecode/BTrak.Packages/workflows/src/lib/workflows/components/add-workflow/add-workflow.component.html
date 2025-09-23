@@ -1,0 +1,979 @@
+<div class="custom-dialog" style="position: absolute; right: 70px; float: right; margin-top: -25px; margin-right: 5px;">
+  <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<mat-card class="p-0 mr-0" fxFlex>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingEditedWorkflow">
+  </mat-progress-bar>
+  <mat-card-title class="text-center">
+    <div class="card-title-text  mat-bg-primary p-05 mb-1">Add Workflow
+    </div>
+  </mat-card-title>
+  <mat-card-content class="P-05">
+    <div>
+      <form [formGroup]="workflowForm" (ngSubmit)="submitForm()" novalidate (submit)="workflowForm.valid"
+        #formDirective="ngForm">
+        <div fxLayout="row wrap" class="p-05 ">
+
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex="30">
+                <div class="pt-1">Workflow Name *</div>
+              </div>
+              <mat-form-field class="full-width" fxFlex="70">
+                <input matInput formControlName="workflowName">
+                <mat-error>
+                  <span *ngIf="workflowForm.get('workflowName').hasError('required')">
+                    Workflow name is required</span>
+                </mat-error>
+              </mat-form-field>
+
+            </div>
+          </div>
+
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex="30">
+                <div class="pt-1">Form Name </div>
+              </div>
+              <mat-form-field class="full-width" fxFlex="70">
+                <mat-select formControlName="formtypeName" (selectionChange)="getSelectedFields($event)">
+                  <mat-option [value]="forms.id" *ngFor="let forms of formsDropDown | formFilter : customFormsIds ">
+                    {{ forms.formName }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex="30">
+                <div class="pt-1">Status</div>
+              </div>
+              <mat-checkbox formControlName="isStatus">Active
+              </mat-checkbox>
+            </div>
+          </div>
+
+          <div fxFlex="98">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex="30">
+                <div class="pt-1">Description *</div>
+              </div>
+              <mat-form-field class="full-width" fxFlex="70">
+                <input matInput formControlName="description">
+                <mat-error>
+                  <span *ngIf="workflowForm.get('description').hasError('required')">
+                    Description is required</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxFlex="98" class="workflowsubheader">
+            Trigger Process
+
+          </div>
+          <div fxFlex="98">
+            <mat-tab-group class="payroll-mat-tabs" [selectedIndex]="selectedTab"
+              (selectedTabChange)="selectedTabEvent($event)">
+              <mat-tab label="Execute based on action">
+                <div fxFlex="100">
+                  <mat-radio-group class="consider_radio" formControlName="action" (change)="onChange($event)">
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="None">
+                        <div fxFlex="98">None</div>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Create">
+                        <div fxFlex="98">Create</div>
+                        <mat-icon matTooltip="Executes the Workflow Rule when a new record is created." class="FS18">
+                          info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="User Entry">
+                        <div fxFlex="98">User Entry</div>
+                        <mat-icon matTooltip="Executes the workflow rule when status of new employee has become Active."
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="View">
+                        <div fxFlex="98">View</div>
+                        <mat-icon matTooltip="Executes the Workflow Rule when a existing record is viewed" class="FS18">
+                          info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Edit">
+                        <div fxFlex="98">Edit</div>
+                        <mat-icon matTooltip="Executes the Workflow Rule when an existing record is edited."
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Create or Edit">
+                        <div fxFlex="98">Create or Edit </div>
+                        <mat-icon
+                          matTooltip="Executes the Workflow Rule when a new record is created OR an existing record is edited"
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div class="list-group-item">
+                      <div fxLayout="row">
+                        <mat-radio-button value="Field Update">
+                          <div fxFlex="98">Field Update </div>
+                          <mat-icon matTooltip="Executes the Workflow Rule when a specific field is updated."
+                            class="FS18">info</mat-icon>
+                        </mat-radio-button>
+
+                      </div>
+                      <div fxLayout="row" fxLayoutGap="10px" *ngIf="workflowForm.value.action === 'Field Update'"
+                        class="p-05">
+                        <div fxFlex="50">
+                          <mat-form-field fxFlex class="full-width">
+                            <mat-select formControlName="fieldNames" placeholder="Select form keys to update" multiple
+                              [compareWith]="compareSelectedFormKeys">
+                              <mat-option [value]="forms.key" *ngFor="let forms of formFieldsDropDown">
+                                {{ forms.key }}
+                              </mat-option>
+                            </mat-select>
+                          </mat-form-field>
+                        </div>
+                        <div fxFlex="50">
+                          <mat-form-field fxFlex class="full-width">
+                            <mat-select formControlName="fieldUniqueId" placeholder="Select unique id to update">
+                              <mat-option [value]="forms.key" *ngFor="let forms of formFieldsDropDown">
+                                {{ forms.key }}
+                              </mat-option>
+                            </mat-select>
+                          </mat-form-field>
+                        </div>
+                      </div>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Approve">
+                        <div fxFlex="98">Approve</div>
+                        <mat-icon
+                          matTooltip="Executes the Workflow Rule when a new record is Approved OR an existing record is Approved"
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Reject">
+                        <div fxFlex="98">Reject</div>
+                        <mat-icon
+                          matTooltip="Executes the Workflow Rule when a new record is Rejected OR an existing record is Rejected"
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Delete">
+                        <div fxFlex="98">Delete</div>
+                        <mat-icon
+                          matTooltip="Executes the Workflow Rule when a new record is Deleted OR an existing record is Deleted"
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+
+                    </div>
+                    <div fxLayout="row" class="list-group-item">
+                      <mat-radio-button value="Is pdf generated">
+                        <div fxFlex="98">Generate Pdf</div>
+                        <mat-icon matTooltip="Executes the Workflow Rule when a  existing record is pdf generated"
+                          class="FS18">info</mat-icon>
+                      </mat-radio-button>
+
+                    </div>
+                  </mat-radio-group>
+                </div>
+              </mat-tab>
+              <mat-tab label="Execute based on date">
+                <!-- <div fxFlex="98">
+                  <div fxFlex fxLayout="row wrap">
+                    <div fxFlex="35">
+                      <div class="pt-1">Field Name</div>
+                    </div>
+                    <mat-form-field class="full-width" fxFlex="60">
+                      <mat-select formControlName="dateFieldName">
+                        <mat-option [value]="forms.key" *ngFor="let forms of formFieldsDateDropDown">
+                          {{ forms.key }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                  </div>
+                </div> -->
+                <!-- <div fxFlex="98">
+                  <div fxFlex fxLayout="row wrap">
+                    <div fxFlex="35">
+                      <div class="pt-1">Set Time</div>
+                    </div>
+                    <mat-radio-group class="date_radio" formControlName="cronRadio"
+                      (change)="onChangedateRadio($event)">
+                      <div fxLayout="row" fxFlex="80">
+                        <mat-radio-button value="Yes" class="
+                        MR20">
+                          Yes
+
+                        </mat-radio-button>
+                      </div>
+                      <div fxLayout="row" fxFlex="80">
+                        <mat-radio-button value="No">
+                          No</mat-radio-button>
+                      </div>
+                    </mat-radio-group>
+                  </div>
+                </div> -->
+
+                <div fxFlex="98">
+                  <div fxFlex fxLayout="row wrap">
+                    <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions">
+                    </cron-editor>
+                  </div>
+                </div>
+
+                <div fxFlex="98">
+                  <div fxFlex fxLayout="row wrap">
+                    <div fxFlex="35">
+                      <div class="pt-1">Time zone</div>
+                    </div>
+                    <mat-form-field class="full-width" fxFlex="60">
+                      <mat-select formControlName="timezone" (selectionChange)="getTimeZoneValue($event.value)">
+                        <mat-option [value]="time.timeZoneTitle" *ngFor="let time of timezoneDropDown">
+                          {{ time.timeZoneTitle }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-tab>
+            </mat-tab-group>
+          </div>
+          <div fxFlex="98" fxLayout="row" class="workflowsubheader">
+            Criteria</div>
+          <div fxFlex="98" class="dvCriteria">
+
+            <div fxLayout="row">
+              The workflow will be triggered when the following criteria requirements are satisfied.</div>
+            <!-- <div fxLayout="row" style="padding-left: 200px;">
+            <button type="submit" mat-button mat-raised-button color="primary" class="mr-1" (click)="getControlsLength()">Set criteria</button>
+          </div>   -->
+            <div class="mr-08 text-left workflowlink" fxflex="100" fxflex.gt-sm="100">
+              <a (click)="getControlsLength()" class="custom-link">+ Add Criteria</a>
+            </div>
+
+            <div>
+              <div *ngIf="stepsShow" fxFlex="100" fxFlex.gt-sm="100">
+                <div formArrayName="criteriaSteps"
+                  *ngFor="let item of workflowForm.get('criteriaSteps')['controls']; let i = index;">
+                  <mat-card-content class="Step-description mt-1" fxFlex="100" fxFlex.gt-sm="100">
+                    <div [formGroupName]="i" style="display: flex">
+                      <div class="align-center" fxFlex="30px" class="mr-05">
+                        <span class="test-case-step-count count-padding">{{i + 1}}</span>
+                      </div>
+                      <div fxFlex="100" fxFlex.gt-xs="22" fxFlex.xs="36" class="mr-05">
+                        <mat-form-field class="full-width">
+                          <mat-select formControlName="criteriaName" required autocomplete="off">
+                            <mat-option [value]="forms.key" *ngFor="let forms of formFieldsDropDown">
+                              {{ forms.key }}
+                            </mat-option>
+                          </mat-select>
+                          <mat-error>
+                            <span
+                              *ngIf="item.get('criteriaName').hasError('required') && item.get('criteriaName').touched">
+                              Field name required</span>
+                          </mat-error>
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="100" fxFlex.gt-xs="22" fxFlex.xs="36" class="mr-05">
+                        <mat-form-field class="full-width">
+                          <mat-select formControlName="criteriaCondition" required autocomplete="off">
+                            <mat-option *ngFor="let cn of condition" [value]="cn.id">
+                              {{cn.name}}</mat-option>
+                          </mat-select>
+                          <mat-error>
+                            <span
+                              *ngIf="item.get('criteriaCondition').hasError('required') && item.get('criteriaCondition').touched">
+                              condition required</span>
+                          </mat-error>
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="100" fxFlex.gt-xs="22" fxFlex.xs="36" class="mr-05">
+                        <mat-form-field class="full-width">
+                          <input matInput formControlName="criteriaValue" required autocomplete="off">
+                          <mat-error>
+                            <span
+                              *ngIf="item.get('criteriaValue').hasError('required') && item.get('criteriaValue').touched">
+                              value required</span></mat-error>
+                          <!-- <input matInput formControlName="criteriaValue" autocomplete="off"> -->
+
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="40px" fxLayout="column" fxLayoutAlign="space-around center" class="ml-05"
+                        fxLayoutGap="8px">
+                        <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                          <a class="icon-hover" matTooltip="Add" (click)="addItem(i)">
+                            <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                          </a>
+                          <a class="icon-hover" matTooltip="Delete" (click)="removeItem(i)">
+                            <fa-icon icon="minus" class="mat-color-accent"></fa-icon>
+                          </a>
+                        </div>
+
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div fxFlex="98" class="workflowsubheader">
+            Action</div>
+          <div fxFlex="98">
+            <div fxLayout="row">Select one or more processes to be automatically triggered when a certain action is
+              performed.</div>
+          </div>
+
+          <!-- Tasks code  starts  -->
+          <div fxFlex="98" class="workflowsubheader">
+            Tasks</div>
+          <div fxFlex="100">
+
+            <!-- Mail alerts code  starts  -->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Mail Alerts</div>
+                  <div class="btnRond MR10"> <a (click)="addMail()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="mailAlertSteps">
+              <div *ngFor="let m of workflowForm.get('mailAlertSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editMail(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('mailAlertSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeMail(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Mail alerts code  ends  -->
+            <!-- Field update event code  starts  -->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Field Updates</div>
+                  <div class="btnRond MR10"> <a (click)="addFieldUpdates()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="fieldUpdateSteps">
+              <div *ngFor="let m of workflowForm.get('fieldUpdateSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="0">
+                  <div fxFlex="25" (click)="editFieldUpdate(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('fieldUpdateSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeFieldUpdate(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Record insertion code starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Record Insertion</div>
+                  <div class="btnRond MR10"> <a (click)="addRecord()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="insertionSteps">
+              <div *ngFor="let m of workflowForm.get('insertionSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="0">
+                  <div fxFlex="25" (click)="editCreationStep(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('insertionSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeInsertionStep(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Record insertion code ends-->
+
+            <!-- Notification alert code starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Notification alert</div>
+                  <div class="btnRond MR10"> <a (click)="addNotification()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="notificationSteps">
+              <div *ngFor="let m of workflowForm.get('notificationSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="0">
+                  <div fxFlex="25" (click)="editNotificationStep(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('notificationSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeNotificationStep(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Notification alert code ends-->
+
+            <!-- checklists code starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Checklists</div>
+                  <div class="btnRond MR10"><a (click)="addChecklists()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="checkListSteps">
+              <div *ngFor="let m of workflowForm.get('checkListSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editcheckListSteps(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('checkListSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removecheckListSteps(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- checklists code ends-->
+            <!-- web hook code starts-->
+
+            <div fxLayout="row" class="list-group-item">
+              <div fxFlex="25">Webhooks</div>
+              <div class="btnRond MR10"><a (click)="addWebhooks()">+</a></div>
+            </div>
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">User Task</div>
+                  <div class="btnRond MR10"> <a (click)="addUserTask()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="userTaskSteps">
+              <div *ngFor="let m of workflowForm.get('userTaskSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editUserTask(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('userTaskSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeUserTask(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- web hook  code ends-->
+            <!-- Service task code starts-->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Service Task</div>
+                  <div class="btnRond MR10"> <a (click)="openServiceTask()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="serviceTaskSteps">
+              <div *ngFor="let m of workflowForm.get('serviceTaskSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editServiceTask(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('serviceTaskSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeServiceTask(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Service task code ends-->
+            <!-- Script task code starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Script Task</div>
+                  <div class="btnRond MR10"> <a (click)="openScriptTask()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="scriptTaskSteps">
+              <div *ngFor="let m of workflowForm.get('scriptTaskSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editScriptTask(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('scriptTaskSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeScriptTask(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Script task code ends-->
+            <!-- Receive task code  starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Receive Task</div>
+                  <div class="btnRond MR10"> <a (click)="openReceiveTask()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="receiveTaskSteps">
+              <div *ngFor="let m of workflowForm.get('receiveTaskSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editReceiveTask(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('receiveTaskSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeReceiveTask(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Receive task code ends-->
+          <!-- Tasks code  ends -->
+          <!-- Gateways  starts-->
+          <div fxFlex="98" class="workflowsubheader">
+            Gateways</div>
+          <div fxFlex="100">
+            <!-- XOR Gateway code starts -->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">XOR gateway</div>
+                  <div class="btnRond MR10"> <a (click)="openXORGateWay()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="xorGateWaySteps">
+              <div *ngFor="let m of workflowForm.get('xorGateWaySteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editXorGateWay(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('xorGateWaySteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeXorGateWay(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- XOR Gateway code ends-->
+
+            <!-- Parallel gateway code  starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Parallel gateway</div>
+                  <div class="btnRond MR10"> <a (click)="openAndGateWay()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="andGateWaySteps">
+              <div *ngFor="let m of workflowForm.get('andGateWaySteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editAndGateWay(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('andGateWaySteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeAndGateWay(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Parallel gateway code ends-->
+
+            <!-- Event gateway code  starts-->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Event gateway</div>
+                  <div class="btnRond MR10"> <a (click)="openEventGateWay()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="eventGateWaySteps">
+              <div *ngFor="let m of workflowForm.get('eventGateWaySteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editEventGateWay(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('eventGateWaySteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeEventGateWay(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Event gateway code ends -->
+
+          <!-- Gateways code  ends  -->
+          <!-- Events code  starts  -->
+          <div fxFlex="98" class="workflowsubheader">
+            Events</div>
+          <div fxFlex="100">
+            <!-- End event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">End event</div>
+                  <div class="btnRond MR10"> <a (click)="addEndEvent(endEventDialog)">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="endSteps">
+              <div *ngFor="let m of workflowForm.get('endSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editEndSteps(i, endEventDialog)" class="action-list cursor-pointer">
+                    {{workflowForm.get('endSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeEndSteps(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- End event code  ends  -->
+            <!-- Start event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Start event</div>
+                  <div class="btnRond MR10"> <a (click)="addStartEvent(startEventDialog)">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="startSteps">
+              <div *ngFor="let m of workflowForm.get('startSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editStartSteps(i, startEventDialog)" class="action-list cursor-pointer">
+                    {{workflowForm.get('startSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeStartSteps(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Start event code  ends  -->
+            <!-- Message event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Message Event</div>
+                  <div class="btnRond MR10"> <a (click)="openMessageEvent()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="messageEventSteps">
+              <div *ngFor="let m of workflowForm.get('messageEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editMessageEvent(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('messageEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeMessageEvent(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Message event code  ends  -->
+            <!-- Timer event code  starts  -->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Timer Event</div>
+                  <div class="btnRond MR10"> <a (click)="openTimerEvent()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="timerEventSteps">
+              <div *ngFor="let m of workflowForm.get('timerEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editTimerEvent(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('timerEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeTimerEvent(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Timer event code  ends  -->
+            <!-- Escalation event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Escalation Event</div>
+                  <div class="btnRond MR10"> <a (click)="openEscalationEvent()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="escalationEventSteps">
+              <div *ngFor="let m of workflowForm.get('escalationEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editEscalationEvent(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('escalationEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeEscalationEvent(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Escalation event code  ends  -->
+            <!-- Signal event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Signal Event</div>
+                  <div class="btnRond MR10"> <a (click)="openSignalEvent()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="signalEventSteps">
+              <div *ngFor="let m of workflowForm.get('signalEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editSignalEvent(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('signalEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeSignalEvent(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Signal event code  ends  -->
+            <!-- Error event code  starts  -->
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Error Event</div>
+                  <div class="btnRond MR10"> <a (click)="openErrorEvent()">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="errorEventSteps">
+              <div *ngFor="let m of workflowForm.get('errorEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editErrorEvent(i)" class="action-list cursor-pointer">
+                    {{workflowForm.get('errorEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeErrorEvent(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+            <!-- Error event code  ends  -->
+            <!-- Termination event code  starts  -->
+
+            <div class="list-group-item">
+              <div fxLayout="column">
+                <div fxLayout="row">
+                  <div fxFlex="25">Termination Event</div>
+                  <div class="btnRond MR10"> <a (click)="addTerminationEvent(terminationEventDialog)">+</a></div>
+                </div>
+              </div>
+            </div>
+            <div formArrayName="terminationEventSteps">
+              <div *ngFor="let m of workflowForm.get('terminationEventSteps')['controls']; let i=index">
+                <div [formGroupName]="i" fxLayout="row" fxLayoutGap="5">
+                  <div fxFlex="25" (click)="editTerminationSteps(i, terminationEventDialog)"
+                    class="action-list cursor-pointer">
+                    {{workflowForm.get('terminationEventSteps')['controls'][i].controls.name.value}}
+                  </div>
+                  <fa-icon icon="trash" class="cursor-pointer delIcon" (click)="removeTerminationSteps(i)"></fa-icon>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="mt-05">
+          <button class="pull-right mr-1" mat-raised-button (click)="openArrangeActionsDialog(orderActionsDialog)"
+            color="primary" [disabled]="!workflowForm.valid">
+            <fa-icon class="mr-05" icon="check"></fa-icon>
+            Continue
+          </button>
+          <button class="pull-right mr-1" mat-raised-button (click)="cancelworkflow()" [disabled]="!workflowForm.valid "
+            type="button">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+
+<ng-template #orderActionsDialog>
+  <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="closeOrderActionsDialog()">
+      <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+  </div>
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        Reorder actions</div>
+    </mat-card-title>
+    <!-- <div dragula="ACTIONS" [(dragulaModel)]="items">
+      <div *ngFor="let i of items" class="cursor-pointer list-group-item">
+        <div [innerText]="i.name"></div>
+      </div>
+    </div> -->
+    <div *ngIf="isEditTask == true" style="color: red" class="text-center">Task has updated,so please reoder the actions
+      again</div>
+    <kendo-treeview [nodes]="items" textField="name" kendoTreeViewHierarchyBinding childrenField="children"
+      kendoTreeViewDragAndDrop kendoTreeViewDragAndDropEditing (nodeDrop)="handleDrop($event)" kendoTreeViewExpandable
+      [expandBy]="'name'" [expandedKeys]="[1]">
+      <ng-template kendoTreeViewNodeTemplate let-dataItem>
+        {{ dataItem.name }}
+      </ng-template>
+    </kendo-treeview>
+    <div class="mt-05">
+      <button class="pull-right mr-1" mat-raised-button color="primary" (click)="saveXML()">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="check"></fa-icon>
+        Save
+      </button>
+      <button class="pull-right mr-1" mat-raised-button type="button" (click)="closeOrderActionsDialog()">
+        Cancel
+      </button>
+    </div>
+  </mat-card>
+</ng-template>
+
+<ng-template #endEventDialog>
+  <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="closeEndDialog()">
+      <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+  </div>
+
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        Add end event</div>
+    </mat-card-title>
+
+    <mat-card-content class="P-05">
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div fxFlex="30">
+            <div class="pt-1">Name</div>
+          </div>
+          <mat-form-field class="full-width" fxFlex="50">
+            <input matInput [(ngModel)]="endEventName">
+          </mat-form-field>
+          <input matInput [(ngModel)]="endStepId" hidden>
+        </div>
+      </div>
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div class="mt-05">
+            <button class="pull-right mr-1" mat-raised-button color="primary"
+              (click)="isEditEndEvent ? editEndEvent() : addNewEndStep()" [disabled]="!endEventName">
+              <fa-icon class="mr-05" icon="check"></fa-icon>
+              Save
+            </button>
+            <button class="pull-right mr-1" mat-raised-button type="button" (click)="closeEndDialog()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
+
+
+<ng-template #terminationEventDialog>
+  <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="closeTerminationDialog()">
+      <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+  </div>
+
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        Add Termination event</div>
+    </mat-card-title>
+
+    <mat-card-content class="P-05">
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div fxFlex="30">
+            <div class="pt-1">Name</div>
+          </div>
+          <mat-form-field class="full-width" fxFlex="50">
+            <input matInput [(ngModel)]="terminationEventName">
+          </mat-form-field>
+        </div>
+      </div>
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div class="mt-05">
+            <button class="pull-right mr-1" mat-raised-button color="primary"
+              (click)="isEditTerminationEvent ? editTerminationEvent() : addNewTerminationStep()"
+              [disabled]="!terminationEventName">
+              <fa-icon class="mr-05" icon="check"></fa-icon>
+              Save
+            </button>
+            <button class="pull-right mr-1" mat-raised-button type="button" (click)="closeTerminationDialog()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
+
+<ng-template #startEventDialog>
+  <div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="closeStartDialog()">
+      <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+  </div>
+
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        Add start event</div>
+    </mat-card-title>
+
+    <mat-card-content class="P-05">
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div fxFlex="30">
+            <div class="pt-1">Name</div>
+          </div>
+          <mat-form-field class="full-width" fxFlex="50">
+            <input matInput [(ngModel)]="startEventName">
+          </mat-form-field>
+          <input matInput [(ngModel)]="startStepId" hidden>
+        </div>
+      </div>
+      <div fxFlex="98">
+        <div fxFlex fxLayout="row wrap">
+          <div class="mt-05">
+            <button class="pull-right mr-1" mat-raised-button color="primary"
+              (click)="isEditStartEvent ? editStartEvent() : addNewStartStep()" [disabled]="!startEventName">
+              <fa-icon class="mr-05" icon="check"></fa-icon>
+              Save
+            </button>
+            <button class="pull-right mr-1" mat-raised-button type="button" (click)="closeStartDialog()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
+
+<ng-template #addServiceTaskDialog let-data>
+  <app-service-task [data]=[data]></app-service-task>
+</ng-template>
+
+<ng-template #addErrorEventDialog let-data>
+  <app-error-event [data]=[data]></app-error-event>
+</ng-template>
+
+<ng-template #addnewRecordDialog let-data>
+  <app-add-record [data]=[data]></app-add-record>
+</ng-template>
+
+<ng-template #addnewNotificationDialog let-data>
+  <app-add-notification [data]=[data]></app-add-notification>
+</ng-template>

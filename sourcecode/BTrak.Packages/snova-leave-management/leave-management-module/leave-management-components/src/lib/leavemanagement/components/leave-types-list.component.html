@@ -1,0 +1,202 @@
+<div *ngIf="(canAccess_feature_LeaveTypeConfiguration)">
+<div class="row">
+    <mat-card class="col-sm-12 mat-card" style="padding: 0px !important;">
+        <mat-card-title class="full-width mat-card-title">
+            <div class="col-sm-12" style="display: flex;">
+                <div class="col-sm-6" style="padding-top: 10px !important;">
+                    <h5>{{'LEAVETYPES.LEAVETYPES' | translate}}</h5>
+                </div>
+                <div class="col-sm-6" style="text-align: right;">
+                    <button class="topbar-button-right mat-icon-button" matTooltip="{{'Leaves'  | translate}}"
+                        *ngIf="(canAccess_feature_ApproveOrRejectLeave)"
+                        [routerLink]="['/leavemanagement/waitingforapproval']" style="line-height: 20px !important;">
+                        <span class="material-icons icon-button mat-color-accent">event</span>
+                    </button>
+
+                    <button class="topbar-button-right mat-icon-button"
+                        matTooltip="{{ 'LEAVESLIST.LEAVESDASHBOARD' | translate }}"
+                        *ngIf="(canAccess_feature_ViewLeaves)" [routerLink]="['/leavemanagement/leavesdashboard']"
+                        style="line-height: 20px !important;">
+                        <span class="material-icons icon-button mat-color-accent">dashboard</span>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+</div>
+<div *ngIf="( (canAccess_feature_LeaveTypeConfiguration) || (canAccess_feature_AddOrEditLeaveType) || (canAccess_feature_ManageLeaveType))"
+    fxLayout="row wrap" fxLayout.xs="column">
+    <div class="full-width">
+        <mat-card class="p-0" style="margin-top: 0px !important;">
+            <mat-card-title>
+                <div fxLayout="row">
+
+                    <div class="ml-1 mr-05 search_goalinput" fxFlex fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle [matTooltip]="(isArchived == false) ? ('LEAVETYPE.SEEARCHIVEDLEAVETYPES' | translate) : ('LEAVETYPE.SEEUNARCHIVEDLEAVETYPES' | translate)" class="mr-1 archive-switch"
+                            [(ngModel)]="isArchived" [checked]="isArchived" (change)="getLeaveTypesList()">
+                        </mat-slide-toggle>
+                        <!-- <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                [(ngModel)]="searchText" (input)="search()">
+                        </mat-form-field>
+                        <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" style="cursor:pointer"
+                                (click)="clearSearchText()">
+                                close</mat-icon>
+                        </span> -->
+
+                        <mat-form-field class="custom-searchbar" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <div class="mr-05" fxLayout="row"  style="margin-right: 2.5rem !important;">
+                                <div fxFlex class="m-0 p-0">
+                                    <input matInput [(ngModel)]="searchText" placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                        (input)="search()" />
+                                    <span class="filters-close assets-list-search mr-05 mt-02" style= "margin-top: -1.7rem !important;">
+                                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="clearSearchText()"
+                                            style="cursor:pointer">close</mat-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </mat-form-field>
+
+                        <button mat-icon-button color="primary" (click)="createleavetype()"
+                            *ngIf="(canAccess_feature_AddOrEditLeaveType) && !isArchived"
+                            matTooltip="{{'Click here to add a new leave type' | translate }}">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                    </div>
+                </div>
+            </mat-card-title>
+            <mat-divider></mat-divider>
+        </mat-card>
+
+        <div>
+            <div class="activity-data pagination-move-left">
+                <ngx-datatable class="btrak" [rows]="leaveTypes$ | async" [columnMode]="'force'" [headerHeight]="35"
+                    [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+                    [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" (sort)="onSort($event)"
+                    (page)='setPage($event)'
+                    [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+                    [loadingIndicator]="isLeaveTypesLoadingInProgress$ | async">
+                    <ngx-datatable-column name="{{'LEAVETYPES.LEAVETYPENAME' | translate}}" [flexGrow]="1"
+                        [sortable]="true" prop="leaveTypeName">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div class="hide-content-overflowx">
+                                {{ row?.leaveTypeName | translate }}
+                            </div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{'LEAVETYPES.LEAVETYPESHORTNAME' | translate}}" [flexGrow]="1"
+                        [sortable]="true" prop="leaveTypeShortName">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div class="hide-content-overflowx">
+                                {{ row?.leaveTypeShortName | translate}}
+                            </div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{'LEAVETYPES.FREQUENCIESCOUNT' | translate}}" [flexGrow]="1"
+                        [sortable]="true" prop="leaveFrequencyCount">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div class="hide-content-overflowx">
+                                {{ row?.leaveFrequencyCount }}
+                            </div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{'LEAVETYPES.NOOFLEAVES' | translate}}" [flexGrow]="1"
+                        [sortable]="true" prop="noOfLeaves">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            {{row?.noOfLeaves}}
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{'LEAVETYPE.LEAVETYPECOLOR' | translate}}" [flexGrow]="1"
+                        [sortable]="true" prop="leaveTypeColor">
+                        <!-- <ng-template let-row="row" ngx-datatable-cell-template>
+                        <div [ngStyle]="{'background': row.leaveTypeColor == null?$primary:row.leaveTypeColor}"
+                            style="width:100px;border-radius: 15px;">
+                        </div>
+                    </ng-template> -->
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div [ngStyle]="{'background':(row.leaveTypeColor == null)?'':row.leaveTypeColor}"
+                                style="width:100px;border-radius: 15px;">
+                                &nbsp;
+                            </div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false"
+                        *ngIf="( canAccess_feature_AddOrEditLeaveType)">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button class="text-center" title="{{ 'LEAVETYPE.EDITLEAVETYPE' | translate }}"
+                                *ngIf="!isArchived" (click)="onSelect(row)" mat-icon-button>
+                                <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                            </button>
+                            <button class="text-center" *ngIf="!isArchived"
+                                title="{{ 'LEAVETYPE.ARCHIVELEAVETYPETITLE' | translate }}"
+                                (click)="deleteLeaveTypePopUpOpen(row,deleteLeaveLeaveTypePopUp)"
+                                [satPopoverAnchorFor]="deleteLeaveTypePopover"
+                                #deleteLeaveLeaveTypePopUp="satPopoverAnchor" mat-icon-button>
+                                <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                            </button>
+                            <button class="text-center" *ngIf="isArchived"
+                                title="{{ 'LEAVETYPE.UNARCHIVELEAVETYPETITLE' | translate }}"
+                                (click)="deleteLeaveTypePopUpOpen(row,deleteLeaveLeaveTypePopUp)"
+                                [satPopoverAnchorFor]="deleteLeaveTypePopover"
+                                #deleteLeaveLeaveTypePopUp="satPopoverAnchor" mat-icon-button>
+                                <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                            </button>
+                        </ng-template>
+                    </ngx-datatable-column>
+                </ngx-datatable>
+            </div>
+        </div>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #deleteLeaveTypePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="!isArchived">
+                    {{ 'LEAVETYPE.ARCHIVELEAVETYPETITLE' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="isArchived">
+                    {{ 'LEAVETYPE.UNARCHIVELEAVETYPETITLE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{ 'LEAVETYPE.ARCHIVELEAVETYPETEXT' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{ 'LEAVETYPE.UNARCHIVELEAVETYPETEXT' | translate }}
+                </div>
+                <mat-error *ngIf="( validationMessage )">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+                        (click)="deleteLeaveType();">
+                        <mat-icon class="mr-05"  style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+                        (click)="deleteLeaveType();" [disabled]="( upsertLeaveTypeInProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="( upsertLeaveTypeInProgress$ | async )">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteLeaveTypeDialog();"
+                        [disabled]="( upsertLeaveTypeInProgress$ | async)">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<app-common-message-box
+    *ngIf="!((canAccess_feature_LeaveTypeConfiguration) || (canAccess_feature_AddOrEditLeaveType) || (canAccess_feature_ManageLeaveType))"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+</div>
+<app-common-message-box
+    *ngIf="!(canAccess_feature_LeaveTypeConfiguration)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

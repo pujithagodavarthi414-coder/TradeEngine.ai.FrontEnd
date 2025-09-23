@@ -1,0 +1,105 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageTimesheetStatus">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler p-0">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="50" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'TIMESHEETSUBMISSION.TIMESHEETSUBMISSIONSTATUS' |  translate | titlecase}}">{{ 'TIMESHEETSUBMISSION.TIMESHEETSUBMISSIONSTATUS' |  translate | titlecase}}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                      </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1 pr-05" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="status-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="activity-data no-drag pagination-move-left">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="50" [rows]="statusList" [loadingIndicator]="anyOperationInProgress"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{ 'TIMESHEETSUBMISSION.STATUSNAME' |  translate }}" [flexGrow]="1" [sortable]="true" prop="statusName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{  row?.statusName }}">
+                        {{ row?.statusName }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'TIMESHEETSUBMISSION.STATUSCOLOR' |  translate }}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div [ngStyle]="{ 'background' : row.statusColour }" style="width:100px;">
+                        &nbsp;
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'Actions' | translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'TIMESHEETSUBMISSION.EDITSTATUS' |  translate }}" *ngIf="!isArchived"
+                        [satPopoverAnchorFor]="createStatus" #createStatusPopover="satPopoverAnchor"
+                        (click)="editStatus(row, createStatusPopover)" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<sat-popover #createStatus backdropClass="backdrop-color" [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+    [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{ 'TIMESHEETSUBMISSION.EDITSTATUS' |  translate }}</div>
+        </mat-card-title>
+        <form [formGroup]="statusForm" novalidate #formDirective="ngForm"
+            (submit)="statusForm.valid && upsertStatus(formDirective)">
+            <div class="card-content p-05">
+                <mat-form-field class="full-width mb-05">
+                    <input matInput formControlName="statusName" placeholder="{{ 'TIMESHEETSUBMISSION.STATUSNAME' |  translate }}" required />
+                </mat-form-field>
+                <mat-form-field class="full-width status-color mb-05">
+                    <input formControlName="statusColour" matInput autocomplete="off" placeholder="{{ 'TIMESHEETSUBMISSION.STATUSCOLOR' |  translate }}"
+                        [(colorPicker)]="color" [cpPosition]="'bottom'" [style.background]="color" [value]="color"
+                        (colorPickerChange)="statusForm.get('statusColour').setValue($event)" required />
+                    <mat-error>
+                        <span *ngIf="statusForm.get('statusColour').hasError('required') &&
+                        statusForm.get('statusColour').touched">
+                            {{'USERSTORYSTATUS.COLORREQUIREDERROR' | translate }}</span>
+                        <span *ngIf="statusForm.get('statusColour').hasError('maxlength')">
+                            {{'USERSTORYSTATUS.COLORCANNOTEXCEED50CHARACTERS'|translate }}</span>
+                    </mat-error>
+                </mat-form-field>
+                <div class="text-center mb-1">
+                    <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!statusForm.valid || anyOperationInProgress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button type="button" mat-button mat-raised-button (click)="closeDialog(formDirective);false">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'PROCESSDASHBOARDSTATUS.CANCEL'|translate}}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageTimesheetStatus"
+  textToDisplay="{{ 'BUGPRIORITY.PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

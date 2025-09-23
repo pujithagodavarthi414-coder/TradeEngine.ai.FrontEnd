@@ -1,0 +1,278 @@
+<div class="p-1 invoice-preview-height" id="style-1">
+    <div class="invoice-container">
+        <div style="position: relative;">
+            <h6><b>{{ 'BILLINGMANAGEMENT.BILLTO' | translate }}</b></h6>
+            <div fxLayout="row wrap">
+                <div fxFlex="50" fxLayoutAlign="start center" class="d-block word-break">
+                    {{invoiceDetails.clientName}}
+                </div>
+                <div fxFlex="50" fxLayoutAlign="end start"
+                    *ngIf="invoiceDetails?.totalInvoiceAmount > 0 && !(invoiceDetails?.amountPaid > 0 && invoiceDetails?.dueAmount == 0)">
+                    <button style="position: absolute;top: 0px" mat-raised-button color="primary" type="button"
+                        [satPopoverAnchorFor]="paymentLog" #paymentLogPopover="satPopoverAnchor"
+                        (click)="$event.stopPropagation();logPayment(paymentLogPopover)">
+                        {{ 'BILLINGMANAGEMENT.ADDPAYMENT' | translate }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div>
+            <div fxLayout="row wrap">
+                <div fxFlex="50" fxLayoutAlign="start center" fxLayout="row wrap" class="mb-1">
+                    <div fxFlex="100" class="mt-02 invoice-page invoice-amount-price word-break">
+                        {{invoiceDetails?.title}}
+                    </div>
+                    <div fxFlex="100">
+                        <span><b>{{ 'BILLINGMANAGEMENT.INVOICE#' | translate }}: </b></span>
+                        {{invoiceDetails.invoiceNumber}}
+                    </div>
+                    <div fxFlex="100">
+                        <span><b>{{ 'BILLINGMANAGEMENT.PO#' | translate }}:</b> </span>
+                        {{invoiceDetails?.po}}
+                    </div>
+                    <div fxFlex="100">
+                        {{invoiceDetails?.issueDate | date: 'mediumDate' }}
+                    </div>
+                </div>
+                <div fxFlex="50" fxLayout="row wrap" fxLayoutAlign="end start">
+                    <div fxFlex="100" class="mt-02" fxLayoutAlign="end start">
+                        <span class="invoice-amount-price" style="text-align: right;">
+                            {{invoiceDetails.currencyCode}}{{invoiceDetails.symbol}}{{invoiceDetails.totalInvoiceAmount.toFixed(2) | number}}
+                        </span>
+                    </div>
+                    <div fxFlex="100" class="mt-02" fxLayoutAlign="end start" *ngIf="invoiceDetails.dueDate">
+                        <span><b>{{ 'BILLINGMANAGEMENT.DUE' | translate }}: </b></span>
+                        {{invoiceDetails?.dueDate | date: 'mediumDate'}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="invoice-container" *ngIf="invoiceDetails.invoiceTasks && invoiceDetails.invoiceTasks.length > 0">
+        <div class="table-responsive overflow-visible">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ 'BILLINGMANAGEMENT.TASK' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.RATE' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.HOURS' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let task of invoiceDetails.invoiceTasks;let i = index">
+                        <td>
+                            <div fxLayout="row" class="word-break">
+                                {{task?.taskName}}
+                            </div>
+                            <div fxLayout="row" class="mt-05 word-break">
+                                {{task?.taskDescription}}
+                            </div>
+                        </td>
+                        <td>
+                            {{task?.rate.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            {{task?.hours.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            <label>{{invoiceDetails.symbol}}{{calculateTaskTotal(task?.rate.toFixed(2),task?.hours.toFixed(2)) | number}}</label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="invoice-container" *ngIf="invoiceDetails.invoiceItems && invoiceDetails.invoiceItems.length > 0">
+        <div class="table-responsive overflow-visible">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ 'BILLINGMANAGEMENT.ITEM' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.PRICE' | translate }} </th>
+                        <th>{{ 'BILLINGMANAGEMENT.QTY' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of invoiceDetails.invoiceItems;let i = index">
+                        <td>
+                            <div fxLayout="row" class="word-break">
+                                {{item?.itemName}}
+                            </div>
+                            <div fxLayout="row" class="mt-05 word-break">
+                                {{item?.itemDescription}}
+                            </div>
+                        </td>
+                        <td>
+                            {{item?.price.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            {{item?.quantity.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            <label>{{invoiceDetails.symbol}}{{calculateItemTotal(item?.price.toFixed(2),item?.quantity.toFixed(2)) | number}}</label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div fxLayout="row" class="mt-1-05 invoice-container">
+        <div fxFlex="48">
+            <div *ngIf="invoiceDetails.terms">
+                <span class="mb-0">
+                    <b>{{ 'BILLINGMANAGEMENT.TERMS' | translate }}</b>
+                </span>
+                <div class="word-break">
+                    {{invoiceDetails?.terms}}
+                </div>
+            </div>
+            <div *ngIf="invoiceDetails.notes" class="mt-1">
+                <span class="mb-0">
+                    <b>{{ 'BILLINGMANAGEMENT.NOTES' | translate }}</b>
+                </span>
+                <div class="word-break">
+                    {{invoiceDetails?.notes}}
+                </div>
+            </div>
+        </div>
+        <div fxFlex>
+            <div fxLayout="row" class="mt-05 ml-1">
+                <div fxFlex="49" fxLayout="column">
+                    <span><b>{{ 'BILLINGMANAGEMENT.SUBTOTAL' | translate }}:</b></span>
+                    <span>{{ 'BILLINGMANAGEMENT.DISCOUNT' | translate }}: (
+                        {{invoiceDetails?.discount.toFixed(2)}}%)
+                    </span>
+                </div>
+                <div fxFlex="50" fxLayout="column">
+                    <span
+                        fxLayoutAlign="end center"><b>{{invoiceDetails.symbol}}{{invoiceDetails.subTotalInvoiceAmount.toFixed(2) | number}}</b></span>
+                    <span fxLayoutAlign="end center">
+                        ({{invoiceDetails.symbol}}{{invoiceDetails.invoiceDiscountAmount.toFixed(2) | number}})</span>
+                </div>
+            </div>
+            <hr class="ml-1">
+            <div fxLayout="row" class="mt-05  ml-1">
+                <div fxFlex="49" fxLayout="column">
+                    <span><b>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}:</b></span>
+                    <span>{{ 'BILLINGMANAGEMENT.PAID' | translate }}:</span>
+                </div>
+                <div fxFlex="50" fxLayout="column">
+                    <span
+                        fxLayoutAlign="end center"><b>{{invoiceDetails.symbol}}{{invoiceDetails.totalInvoiceAmount.toFixed(2) | number}}</b></span>
+                    <span fxLayoutAlign="end center">
+                        {{invoiceDetails.symbol}}{{invoiceDetails.amountPaid.toFixed(2) | number}}</span>
+                </div>
+            </div>
+            <hr class="ml-1">
+            <div fxLayout="row" class="mt-05 ml-1 mb-1">
+                <div fxFlex="49">
+                    <span><b>{{ 'BILLINGMANAGEMENT.AMOUNTDUE' | translate }}:</b></span>
+                </div>
+                <div fxFlex="50">
+                    <span
+                        fxLayoutAlign="end center"><b>{{invoiceDetails.symbol}}{{invoiceDetails.dueAmount.toFixed(2) | number}}</b></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log payment dialog -->
+<sat-popover #paymentLog hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'BILLINGMANAGEMENT.LOGPAYMENT' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+            <form [formGroup]="logPaymentForm" novalidate (submit)="logPaymentForm.valid && addLogPayment()">
+                <div fxLayout="row wrap">
+                    <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                        <!-- <textarea matInput placeholder="{{'BILLINGMANAGEMENT.TO' | translate}}"
+                            [(ngModel)]="to"></textarea> -->
+                        <mat-select formControlName="paidAccountToId"
+                            placeholder="{{'BILLINGMANAGEMENT.PAIDTOACCOUNT' | translate}}">
+                            <mat-option *ngFor="let account of accountTypeList" [value]="account.accountTypeId">
+                                {{account.accountTypeName}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="logPaymentForm.get('paidAccountToId').hasError('required')">
+                            {{ 'BILLINGMANAGEMENT.PAIDTOACCOUNTCANTBEEMPTY' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxLayout="row wrap">
+                    <div class="mr-05" fxFlex="100" fxFlex.gt-sm="48">
+                        <mat-form-field fxFlex="100">
+                            <input matInput placeholder="{{'BILLINGMANAGEMENT.AMOUNT' | translate}}"
+                                formControlName="amount" amountOnly>
+                        </mat-form-field>
+                        <div *ngIf="greaterThanZero" style="color: red;font-size: 11px;">
+                            {{ 'BILLINGMANAGEMENT.AMOUNTGREATERTHANZERO' | translate }}
+                        </div>
+                        <div *ngIf="equalOrLessThanDue" style="color: red;font-size: 11px;">
+                            {{ 'BILLINGMANAGEMENT.AMOUNTEQUAORLESSTHANDUE' | translate }}
+                        </div>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-sm="48">
+                        <mat-form-field fxFlex="100">
+                            <input matInput [matDatepicker]="picker"
+                                placeholder="{{'BILLINGMANAGEMENT.DATE' | translate}}" (click)="picker.open()"
+                                formControlName="date">
+                            <mat-datepicker #picker></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row wrap">
+                    <div class="mr-05" fxFlex="100" fxFlex.gt-sm="48">
+                        <mat-form-field fxFlex="100">
+                            <mat-select formControlName="paymentMethodId"
+                                placeholder="{{'BILLINGMANAGEMENT.PAYMENTMETHOD' | translate}}">
+                                <mat-option *ngFor="let payment of paymentTypeList" [value]="payment.paymentMethodId">
+                                    {{payment.paymentMethodName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="logPaymentForm.get('paymentMethodId').hasError('required')">
+                                {{ 'BILLINGMANAGEMENT.PAYMENTMETHODCANTBEEMPTY' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-sm="48">
+                        <mat-form-field fxFlex="100">
+                            <input matInput placeholder="{{'BILLINGMANAGEMENT.REFERENCE#' | translate}}"
+                                formControlName="referenceNumber" trim>
+                            <mat-error *ngIf="logPaymentForm.get('referenceNumber').hasError('maxlength')">
+                                {{ 'BILLINGMANAGEMENT.REFERENCENUMBEREXCEED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row wrap">
+                    <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                        <textarea matInput placeholder="{{'BILLINGMANAGEMENT.NOTES' | translate}}"
+                            formControlName="notes"></textarea>
+                        <mat-error *ngIf="logPaymentForm.get('notes').hasError('maxlength')">
+                            {{ 'BILLINGMANAGEMENT.NOTESEXCEED' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="anyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{'TESTMANAGEMENT.SAVE' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button (click)="closeLogPopover()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!-- Log payment dialog -->

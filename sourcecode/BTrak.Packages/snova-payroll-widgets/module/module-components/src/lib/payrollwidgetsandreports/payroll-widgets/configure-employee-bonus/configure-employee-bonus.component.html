@@ -1,0 +1,348 @@
+<div class="full-height" *ngIf="(canAccess_feature_ViewEmployeeBonus)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'EMPLOYEEBONUS.EMPLOYEEBONUS' | translate | softLabelsPipe : softLabels }}">{{'EMPLOYEEBONUS.EMPLOYEEBONUS' | translate  | softLabelsPipe : softLabels}}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == false) ? ('EMPLOYEEBONUS.SEEARCHIVEDITEMS' | translate) : ('EMPLOYEEBONUS.SEEUNARCHIVEDITEMS' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="filterSlabs()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+                  (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'EMPLOYEEBONUS.ADDEMPLOYEEBONUS' | translate }}"
+              [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+              (click)="createEmployeeBonusPopupOpen(upsertPayGradePopUp);clearForm()" *ngIf="!isArchived && (canAccess_feature_AddOrUpdateEmployeeBonus)">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchived || !(canAccess_feature_AddOrUpdateEmployeeBonus)"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [scrollbarH]="true" [rowHeight]="50" [limit]="100" [rows]="employeesBonus"
+      [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'PAYROLLREPORTS.EMPLOYEENUMBER' | translate | softLabelsPipe : softLabels}}" [sortable]="true"
+        prop="employeeNumber">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.employeeNumber }}">{{ row?.employeeNumber }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.EMPLOYEENAME' | translate | softLabelsPipe : softLabels }}" [sortable]="true"
+        prop="employeeName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span fxFlex="25px" style="display: inline-table;cursor: pointer;" (click)="goToProfile(row.userId)">
+            <app-avatar [name]="row?.employeeName | removeSpecialCharacters" [src]="row?.profileImage" [isRound]="true"
+              size="30">
+            </app-avatar>
+          </span>
+          <span matTooltip="{{ row?.employeeName }}">&nbsp;{{ row?.employeeName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'PAYROLLTEMPLATECONFIGURATION.AMOUNT' | translate }}" [sortable]="true"
+        prop="modifiedBonus">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedBonus }}">{{ row?.modifiedBonus }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.PERCENTAGE' | translate }}" [sortable]="true"
+        prop="percentage">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.percentage }}">{{ row?.percentage }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.ISCTCTYPE' | translate }}" [sortable]="true"
+        prop="isCtcType">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip='{{ row?.isCtcType? "Yes":"No" }}'>{{ row?.isCtcType? "Yes":"No" }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.PAYROLLCOMPONENTNAME' | translate }}" [sortable]="true"
+        prop="payRollComponentName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.payRollComponentName }}">{{ row?.payRollComponentName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'LEAVEENCASHMENTSETTINGS.GENERATEDDATE' | translate }}" [sortable]="true"
+        prop="generatedDate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span
+            matTooltip="{{ row?.generatedDate | date: 'dd-MMM-yyyy'}}">{{ row?.generatedDate  | date: "dd-MMM-yyyy" }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="employeebonus-icons" *ngIf="(canAccess_feature_AddOrUpdateEmployeeBonus)">
+            <button class="text-center" title="{{'EMPLOYEEBONUS.EDITEMPLOYEEBONUS' | translate }}" *ngIf="!isArchived && row.isPaid != true"
+              mat-icon-button [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+              (click)="editEmployeeBonusPopupOpen(row,upsertPayGradePopUp)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEEBONUS.DELETEEMPLOYEEBONUS' | translate}}"
+              *ngIf="!isArchived && row.isPaid != true" mat-icon-button [satPopoverAnchorFor]="deletePayGradeePopover"
+              #deletePayGradePopUp="satPopoverAnchor" (click)="deleteEmployeeBonusPopUpOpen(row,deletePayGradePopUp)">
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEEBONUS.UNARCHIVEEMPLOYEEBONUS' | translate}}"
+              *ngIf="isArchived && row.isPaid != true" [satPopoverAnchorFor]="deletePayGradeePopover" #deletePayGradePopUp="satPopoverAnchor"
+              (click)="deleteEmployeeBonusPopUpOpen(row,deletePayGradePopUp)" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+            <!-- <button class="text-center" title="{{'EMPLOYEEBONUS.APPROVE' | translate }}"
+              *ngIf="!isArchived && !row.isApproved && row.isPaid != true" mat-icon-button [satPopoverAnchorFor]="approveBonusPopover"
+              #approveBonusPopUp="satPopoverAnchor" (click)="approveBonusPopUpOpen(row,approveBonusPopUp)">
+              <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEEBONUS.ISAPPROVEED' | translate }}"
+              *ngIf="!isArchived && row.isApproved && row.isPaid != true" mat-icon-button>
+
+              <fa-icon icon="check" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEEBONUS.UNAPPROVE' | translate }}"
+              *ngIf="!isArchived && row.isApproved && row.isPaid != true" mat-icon-button [satPopoverAnchorFor]="approveBonusPopover"
+              #approveBonusPopUp="satPopoverAnchor" (click)="approveBonusPopUpOpen(row,approveBonusPopUp)">
+              <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button> -->
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertPayGradePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex="500px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ payGradeEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="payGradeForm" #formDirective="ngForm" novalidate
+          (submit)="payGradeForm.valid && upsertEmployeeBonus(formDirective)">
+          <div fxLayout="row wrap" fxLayoutGap="10px">
+            <div fxFlex="47" *ngIf="isNew && (disableEmployeeBonusDropDown == false)">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                <mat-select formControlName="employeeIds" multiple
+                  [disabled]="disableEmployeeBonusDropDown"
+                  placeholder="{{'EMPLOYEEBONUS.EMPLOYEE' | translate }}" (selectionChange)="getSelectedEmployees()">
+                  <mat-select-trigger>
+                    {{selectedEmployees}}
+                  </mat-select-trigger>
+                  <mat-option #allEmployeeSelected (click)="toggleAllEmployeesSelected();" [value]="0">
+                    {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                  <mat-option #allEmployeeSelected  (click)="toggleEmployeePerOne();" value="option"
+                    *ngFor="let emp of  employeesDropDown" [value]="emp.employeeId">
+                    <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                      <div fxFlex="35px">
+                        <app-avatar [name]="emp.nickName | removeSpecialCharacters" [src]="emp.profileImage"
+                          [isRound]="true" size="30">
+                        </app-avatar>
+                      </div>
+                      <div>
+                        <p class="mat-body-2">
+                          {{emp.nickName}}
+                        </p>
+                      </div>
+                    </div>
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47" *ngIf="!isNew && (disableEmployeeBonusDropDown == false)">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                <mat-select formControlName="employeeId" placeholder="{{'EMPLOYEEBONUS.EMPLOYEE' | translate }}"
+                  (selectionChange)="getSelectedEmployee()"
+                  [disabled]="disableEmployeeBonusDropDown">
+                  <mat-select-trigger>
+                    {{selectedEmployee}}
+                  </mat-select-trigger>
+                  <mat-option #allEmployeeSelected value="option" *ngFor="let emp of  employeesDropDown"
+                    [value]="emp.employeeId">
+                    <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                      <div fxFlex="35px">
+                        <app-avatar [name]="emp.nickName | removeSpecialCharacters" [src]="emp.profileImage"
+                          [isRound]="true" size="30">
+                        </app-avatar>
+                      </div>
+                      <div>
+                        <p class="mat-body-2">
+                          {{emp.nickName}}
+                        </p>
+                      </div>
+                    </div>
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="type"
+                  placeholder="{{'PAYROLLTEMPLATECONFIGURATION.SELECTTYPE'| translate }}" required
+                  (selectionChange)="changeType($event.value)">
+                  <mat-option [value]="0">
+                    {{ 'PAYROLLTEMPLATECONFIGURATION.AMOUNT' | translate }}
+                  </mat-option>
+                  <mat-option [value]="1">
+                    {{ 'PAYROLLTEMPLATECONFIGURATION.PERCENTAGE' | translate }}
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="payGradeForm.get('type').hasError('required') && payGradeForm.get('type').touched">
+                  {{ 'LEAVEENCASHMENTSETTINGS.TYPEISREQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47">
+              <mat-form-field class="mr-1 full-width">
+                <input type="number" matInput formControlName="value"
+                  placeholder="{{'PAYROLLTEMPLATECONFIGURATION.VALUE'| translate }}" required>
+                <mat-error *ngIf="payGradeForm.get('value').hasError('required') && payGradeForm.get('value').touched">
+                  {{ 'EMPLOYEEBONUS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47" *ngIf="payGradeForm.get('type').value == 1">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'EMPLOYEEBONUS.SELECTAMOUNTTYPE' | translate }}" formControlName="amountType"
+                  (selectionChange)="changeAmountType($event.value)">
+                  <mat-option [value]="0">
+                    {{ 'LEAVEENCASHMENTSETTINGS.PAYROLLCOMPONENTNAME' | translate }}
+                  </mat-option>
+                  <mat-option [value]="1">
+                    {{ 'LEAVEENCASHMENTSETTINGS.ISCTCTYPE' | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47" *ngIf="payGradeForm.get('amountType').value == 0 && payGradeForm.get('type').value == 1">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="payRollComponentId"
+                  placeholder="{{'TAXALLOWANCE.PAYROLLCOMPONENTNAME' | translate}}">
+                  <mat-option [value]="payrollcomponent.payRollComponentId"
+                    *ngFor="let payrollcomponent of payRollComponents">
+                    {{payrollcomponent.componentName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="47">
+              <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="generatedDate"
+                  placeholder="{{'LEAVEENCASHMENTSETTINGS.GENERATEDDATE' | translate}}" autocomplete="off"
+                  [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 text-center mb-05">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!payGradeForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertEmployeeBonussPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <!--Delete PayGrade dialog-->
+  <sat-popover backdropClass="backdrop-color" #deletePayGradeePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{'EMPLOYEEBONUS.DELETEEMPLOYEEBONUS' | translate}}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">{{'EMPLOYEEBONUS.UNARCHIVEEMPLOYEEBONUS' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{'EMPLOYEEBONUS.ARCHIVEEMPLOYEEBONUSTEXT' | translate}}
+
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{'EMPLOYEEBONUS.UNARCHIVEEMPLOYEEBONUSTEXT' | translate}}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center mb-05">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteEmployeeBonus();" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteEmployeeBonus();" *ngIf="isArchived">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteEmployeeBonusDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete PayGrade dialog-->
+
+  <sat-popover backdropClass="backdrop-color" #approveBonusPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isApproved"> {{'EMPLOYEEBONUS.APPROVAL' | translate}}</div>
+        <div class="card-title-text mb-1" *ngIf="isApproved"> {{'EMPLOYEEBONUS.UNAPPROVAL' | translate}}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isApproved">
+          {{'EMPLOYEEBONUS.APPROVEBONUS' | translate}}
+        </div>
+        <div class="card-content mb-1" *ngIf="isApproved">
+          {{'EMPLOYEEBONUS.UNAPPROVEBONUS' | translate}}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center mb-05">
+
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteEmployeeBonus();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteApproveBonusDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_ViewEmployeeBonus)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

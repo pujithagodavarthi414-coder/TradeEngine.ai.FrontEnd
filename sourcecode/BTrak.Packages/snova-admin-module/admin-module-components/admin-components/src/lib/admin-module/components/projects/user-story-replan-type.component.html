@@ -1,0 +1,169 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageWorkItemReplanType">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip=" {{'USERSTORYREPLANTYPE.USERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels | titlecase}}">
+            {{'USERSTORYREPLANTYPE.USERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels | titlecase}}</span>
+        </div>
+        <div fxFlex="280px" class="search_goalinput ml-1 mr-1" fxLayoutAlign="end center">
+          <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-form-field class="full-width">
+              <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="filterByName($event)">
+            </mat-form-field>
+          </div>
+          <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+            style="right: 0px !important">
+            <span *ngIf="!searchText"></span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div *ngIf="canAccess_feature_ManageWorkItemReplanType">
+
+    <div class="activity-data no-drag">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+        [limit]="100" [rows]="userstoryReplanTypes" [loadingIndicator]="isAnyOperationIsInprogress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        
+        <ngx-datatable-column minWidth="150"
+          name="{{'USERSTORYREPLANTYPE.REPLANTYPENAMETITLE' | translate | softLabelsPipe : softLabels}}" [flexGrow]="1"
+          [sortable]="true" prop="replanTypeName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.replanTypeName }}
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column minWidth="150" name="{{'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center"
+              title="{{'USERSTORYREPLANTYPE.EDITUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}"
+              *ngIf="!isArchivedTypes" [satPopoverAnchorFor]="upsertUserStoryReplanTypePopover"
+              #upsertUserStoryReplanTypePopUp="satPopoverAnchor"
+              (click)="editUserStoryReplanType(row,upsertUserStoryReplanTypePopUp)" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+
+            <!-- <button class="text-center" title="{{'USERSTORYREPLANTYPE.ARCHIVEUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}"
+            *ngIf="!isArchivedTypes" [satPopoverAnchorFor]="deleteUserStoryReplanTypePopover"
+            #deleteUserStoryReplanTypePopUp="satPopoverAnchor"
+            (click)="deleteUserStoryReplanTypePopUpOpen(row,deleteUserStoryReplanTypePopUp)" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{'USERSTORYREPLANTYPE.UNARCHIVEUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}"
+            *ngIf="isArchivedTypes" [satPopoverAnchorFor]="deleteUserStoryReplanTypePopover"
+            #deleteUserStoryReplanTypePopUp="satPopoverAnchor"
+            (click)="deleteUserStoryReplanTypePopUpOpen(row,deleteUserStoryReplanTypePopUp)" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button> -->
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <!-- <div class="floating-right-fab-button" *ngIf="!isArchivedTypes">
+    <div class="handle">
+      <button mat-fab color="accent" matTooltip="{{'USERSTORYREPLANTYPE.CREATEUSERSTORYREPLANTYPETOOLTIP' | translate | softLabelsPipe : softLabels}}"
+        [satPopoverAnchorFor]="upsertUserStoryReplanTypePopover" #upsertUserStoryReplanTypePopUp="satPopoverAnchor"
+        (click)="createGoalReplanType(upsertUserStoryReplanTypePopUp);clearForm()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div> -->
+
+    <!--Edit Goal ReplanType dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertUserStoryReplanTypePopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div *ngIf="!isEdit" class="card-title-text  mat-bg-primary p-05 mb-1">
+            {{'USERSTORYREPLANTYPE.ADDOREDITUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}</div>
+          <div *ngIf="isEdit" class="card-title-text  mat-bg-primary p-05 mb-1">
+            {{'USERSTORYREPLANTYPE.EDITUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}</div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+          <form [formGroup]="userStoryReplanTypeForm" novalidate #formDirective="ngForm"
+            (submit)="userStoryReplanTypeForm.valid && upsertUserStoryReplanType(formDirective)">
+            <div>
+              <mat-form-field class="full-width">
+                <input matInput formControlName="replanTypeName"
+                  placeholder="{{'USERSTORYREPLANTYPE.USERSTORYREPLANTYPEPLACEHOLDER' | translate | softLabelsPipe : softLabels}}"
+                  required>
+                <mat-error *ngIf="userStoryReplanTypeForm.get('replanTypeName').hasError('maxlength')">
+                  {{'USERSTORYREPLANTYPE.MAXLENGTHERROR' | translate | softLabelsPipe : softLabels}}</mat-error>
+                <mat-error
+                  *ngIf="userStoryReplanTypeForm.get('replanTypeName').hasError('required') && userStoryReplanTypeForm.get('replanTypeName').touched">
+                  {{'USERSTORYREPLANTYPE.NAMEREQUIREDERROR' | translate | softLabelsPipe : softLabels}}
+                </mat-error>
+              </mat-form-field>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage | softLabelsPipe : softLabels}}</mat-error>
+            </div>
+            <div class="mt-1">
+              <button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!userStoryReplanTypeForm.valid||isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertUserStoryReplanTypePopup(formDirective)"
+                type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Edit Goal ReplanType dialog-->
+
+    <!--Delete Goal ReplanType dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteUserStoryReplanTypePopover hasBackdrop
+      backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+            {{'USERSTORYREPLANTYPE.ARCHIVEUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}</div>
+          <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+            {{'USERSTORYREPLANTYPE.UNARCHIVEUSERSTORYREPLANTYPETITLE' | translate | softLabelsPipe : softLabels}}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+            {{'USERSTORYREPLANTYPE.ARCHIVEUSERSTORYREPLANTYPETEXT' | translate | softLabelsPipe : softLabels}}
+          </div>
+          <div class="card-content mb-1" *ngIf="isArchivedTypes">
+            {{'USERSTORYREPLANTYPE.UNARCHIVEUSERSTORYREPLANTYPETEXT' | translate | softLabelsPipe : softLabels}}
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center">
+            <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteUserStoryReplanType();">
+              <mat-icon  style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteUserStoryReplanType();">
+              <mat-icon   style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeleteUserStoryReplanTypeDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete Goal ReplanType dialog-->
+  </div>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_ManageWorkItemReplanType"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

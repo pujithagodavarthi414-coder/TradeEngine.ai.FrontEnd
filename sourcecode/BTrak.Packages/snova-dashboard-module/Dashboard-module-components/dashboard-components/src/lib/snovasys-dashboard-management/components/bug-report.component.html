@@ -1,0 +1,279 @@
+<app-common-message-box *ngIf="!(canAccess_feature_BugReport) && isBugBoardEnable"
+  textToDisplay="{{ 'PRODUCTIVITYDASHBOARD.PERMISSION' | translate }}">
+</app-common-message-box>
+<div *ngIf="(canAccess_feature_BugReport) && isBugBoardEnable" class="full-height">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow"> {{ 'PRODUCTIVITYDASHBOARD.BUGREPORT' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu">
+            <fa-icon matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}" icon="user-cog"
+              class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="assigneeId" (selectionChange)="getBugReportByEmployee($event.value)">
+                <mat-option *ngFor="let employee of employeeList" value="option" [value]="employee.id">
+                  <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                    [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" src="{{employee.profileImage}}" *ngIf="employee.profileImage">
+                  {{employee.fullName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select
+                placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTPROJECT' | translate | softLabelsPipe : softLabels }}"
+                (selectionChange)="getBugReportByProject($event.value)" [(ngModel)]="projectId">
+                <mat-option *ngFor="let project of projectsList" value="option" [value]="project.projectId">
+                  {{project.projectName}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateValue" (click)="picker.open()"
+                placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTDATE' | translate }}" (dateChange)="getDateChange($event)">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input type="text" placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTFEAUTURE' | translate }}" matInput
+                [formControl]="myControl" [matAutocomplete]="auto" (keyup)="sample()">
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+                <mat-option *ngFor="let feature of filteredItems"
+                  value="{{feature.projectFeatureName}}({{feature.projectName}})"
+                  (onSelectionChange)="featureSelectionChange(feature)">
+                  {{feature.projectFeatureName}}({{feature.projectName}})
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <div fxLayoutAlign="start">
+              <mat-checkbox class="checkbox-text" [(ngModel)]="showGoalDetails"
+                (change)="getBugReport(showGoalDetails)">
+                {{ 'PRODUCTIVITYDASHBOARD.SHOWBYPROJECT' | translate | softLabelsPipe : softLabels }}</mat-checkbox>
+            </div>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+    <mat-card fxLayout.gt-md="row" class="p-05 m-0">
+      <div fxLayout="row wrap" fxFlex fxLayoutAlign="end center" fxLayoutAlign.lt-md="start center">
+        <span class="mr-05">
+          <fa-icon icon="square" class="bugreport-left-color mr-05"></fa-icon>Left
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" class="bugreport-fixed-color mr-05"></fa-icon>Fixed
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" class="bugreport-added-color mr-05"></fa-icon>Added
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" class="bugreport-approved-color mr-05"></fa-icon>Approved
+        </span>
+        <span class="mr-05">
+          <fa-icon icon="square" class="bug-report-unassigned-color mr-05"></fa-icon>Unassigned
+        </span>
+      </div>
+    </mat-card>
+  </mat-card>
+
+  <div class="activity-data filter-margin m-0 app-height-report-2 no-drag pagination-move-left" id="style-1">
+    <ngx-datatable class="btrak bugreport-table" [scrollbarH]="true" [columnMode]="'flex'" [headerHeight]="55" [footerHeight]="35"
+      [rowHeight]="35" [limit]="20" [rows]="bugReport" [count]="totalCount" [externalPaging]="true"
+      [virtualization]="false" [offset]="pageNumber" (sort)="sortChange($event)"
+      [loadingIndicator]="anyOperationInProgress" (page)='onPageChange($event)' 
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="200" name="{{ 'PRODUCTIVITYDASHBOARD.BUGBOARDTITLE' | translate }}" [flexGrow]="1 "
+        prop="ParameterName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{  row.parameterName}}"> {{ row.parameterName }} </span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="200" prop="P0Left" [cellClass]="'custom-cell'" [headerClass]="'bugreport-left-cell'"
+        [flexGrow]="1" [resizeable]="false" [draggable]="false">
+        <ng-template let-column="column" ngx-datatable-header-template>
+          <table>
+            <thead>
+              <tr>
+                <th colspan="4" class="bugreport-left-color text-center">Left</th>
+              </tr>
+              <tr>
+                <th class="pr-3" style="width: 50px;">P0</th>
+                <th class="pr-3" style="width: 50px;">P1</th>
+                <th class="pr-3" style="width: 50px;">P2</th>
+                <th class="pr-3" style="width: 50px;">P3</th>
+              </tr>
+            </thead>
+          </table>
+        </ng-template>
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <table>
+            <tbody>
+              <tr>
+                <td style="width: 50px;">{{ row?.p0Left }}</td>
+                <td style="width: 50px;">{{ row?.p1Left }}</td>
+                <td style="width: 50px;">{{ row?.p2Left }}</td>
+                <td style="width: 50px;">{{ row?.p3Left }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="200" [cellClass]="'custom-cell'" [headerClass]="'bugreport-left-cell'" [flexGrow]="1"
+        [resizeable]="false" [draggable]="false">
+        <ng-template let-column="column" ngx-datatable-header-template>
+          <table>
+            <thead>
+              <tr>
+                <th colspan="4" class="bugreport-fixed-color text-center">Fixed</th>
+              </tr>
+              <tr>
+                <th class="pr-3" style="width: 50px;">P0</th>
+                <th class="pr-3" style="width: 50px;">P1</th>
+                <th class="pr-3" style="width: 50px;">P2</th>
+                <th class="pr-3" style="width: 50px;">P3</th>
+              </tr>
+            </thead>
+          </table>
+        </ng-template>
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <table>
+            <tbody>
+              <tr>
+                <td style="width: 50px;">{{ row?.p0Fixed }}</td>
+                <td style="width: 50px;">{{ row?.p1Fixed }}</td>
+                <td style="width: 50px;">{{ row?.p2Fixed }}</td>
+                <td style="width: 50px;">{{ row?.p3Fixed }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="200" [cellClass]="'custom-cell'" [headerClass]="'bugreport-left-cell'" [flexGrow]="1"
+        [resizeable]="false" [draggable]="false">
+        <ng-template let-column="column" ngx-datatable-header-template>
+          <table>
+            <thead>
+              <tr>
+                <th colspan="5" class="bugreport-added-color text-center">Added</th>
+              </tr>
+              <tr>
+                <th class="pr-3" style="width: 50px;">P0</th>
+                <th class="pr-3" style="width: 50px;">P1</th>
+                <th class="pr-3" style="width: 50px;">P2</th>
+                <th class="pr-3" style="width: 50px;">P3</th>
+                <th class="pr-3" style="width: 50px;">N/A</th>
+              </tr>
+            </thead>
+          </table>
+        </ng-template>
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <table>
+            <tbody>
+              <tr>
+                <td style="width: 50px;">{{ row?.p0Added }}</td>
+                <td style="width: 50px;">{{ row?.p1Added }}</td>
+                <td  style="width: 50px;">{{ row?.p2Added }}</td>
+                <td  style="width: 50px;">{{ row?.p3Added }}</td>
+                <td  style="width: 50px;">{{ row?.noPriorityAdded }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="200" [cellClass]="'custom-cell'" [headerClass]="'bugreport-left-cell'" [flexGrow]="1"
+        [resizeable]="false" [draggable]="false">
+        <ng-template let-column="column" ngx-datatable-header-template>
+          <table>
+            <thead>
+              <tr>
+                <th colspan="4" class="bugreport-approved-color text-center">Approved</th>
+              </tr>
+              <tr>
+                <th class="pr-3" style="width: 50px;">P0</th>
+                <th class="pr-3" style="width: 50px;">P1</th>
+                <th class="pr-3" style="width: 50px;">P2</th>
+                <th class="pr-3" style="width: 50px;">P3</th>
+              </tr>
+            </thead>
+          </table>
+        </ng-template>
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <table>
+            <tbody>
+              <tr>
+                <td  style="width: 50px;">{{ row?.p0Approved }}&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p1Approved }}&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p2Approved }}&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p3Approved }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngx-datatable-column>
+
+
+      <ngx-datatable-column minWidth="200" [cellClass]="'custom-cell'" [headerClass]="'bugreport-left-cell'" [flexGrow]="1"
+        [resizeable]="false" [draggable]="false">
+        <ng-template let-column="column" ngx-datatable-header-template>
+          <table>
+            <thead>
+              <tr>
+                <th colspan="5" class="bug-report-unassigned-color">Unassigned</th>
+              </tr>
+              <tr>
+                <th class="pr-3" style="width: 50px;">P0</th>
+                <th class="pr-3" style="width: 50px;">P1</th>
+                <th class="pr-3" style="width: 50px;">P2</th>
+                <th class="pr-3" style="width: 50px;">P3</th>
+                <th class="pr-3" style="width: 50px;">N/A</th>
+              </tr>
+            </thead>
+          </table>
+        </ng-template>
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <table>
+            <tbody>
+              <tr>
+                <td  style="width: 50px;">{{ row?.p0UnAssigned }}&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p1UnAssigned }}&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p2UnAssigned }}&nbsp;&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.p3UnAssigned }}&nbsp;&nbsp;</td>
+                <td  style="width: 50px;">{{ row?.noPriority }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngx-datatable-column>
+
+    </ngx-datatable>
+  </div>
+</div>
+
+<app-common-message-box *ngIf="!isBugBoardEnable"
+  textToDisplay="{{ 'PROJECTS.PLEASECONFIGUREBUGSETTINGS' | translate }}">
+</app-common-message-box>

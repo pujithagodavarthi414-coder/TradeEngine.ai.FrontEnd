@@ -1,0 +1,158 @@
+<div class="full-height" *ngIf="canAccess_feature_ManageHiringStatus">
+
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'HIRINGSTATUS.HIRINGSTATUSTITLE' | translate}}">{{'HIRINGSTATUS.HIRINGSTATUSTITLE' |
+            translate}}</span>
+        </div>
+        <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+              style="right: 0px !important;">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag accessible-ip-height">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="10" [rows]="hiringStatus" [loadingIndicator]="isAnyOperationIsInprogress"
+      [ngClass]="isFromRoute ? 'full-height' : ''" [scrollbarH]="true" [virtualization]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'HIRINGSTATUS.HIRINGSTATUSNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="status">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.status }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'HIRINGSTATUS.ORDER' | translate }}" [flexGrow]="1" [sortable]="true" prop="order">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.order }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'HIRINGSTATUS.COLOR' | translate }}" [flexGrow]="1" [sortable]="true" prop="color">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div [ngStyle]="{ 'background' : row.color }" style="width:100px;">
+            &nbsp;
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!--Edit SOURCES dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertHiringStatusPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ hiringStatusTitle }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="hiringStatusForm" #formDirective="ngForm" novalidate
+          (submit)="hiringStatusForm.valid && upsertHiringStatus(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="status" placeholder="{{'HIRINGSTATUS.HIRINGSTATUSNAME' | translate }}"
+                required>
+              <mat-error *ngIf="hiringStatusForm.get('status').hasError('maxlength')">
+                {{ 'HIRINGSTATUS.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="hiringStatusForm.get('status').hasError('required') && hiringStatusForm.get('status').touched">
+                {{ 'HIRINGSTATUS.NAMEREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width status-color mb-05">
+              <input formControlName="color" matInput autocomplete="off"
+                placeholder="{{'HIRINGSTATUS.COLOR' | translate }}" [(colorPicker)]="color" [cpPosition]="'bottom'"
+                [style.background]="color" [value]="color"
+                (colorPickerChange)="hiringStatusForm.get('color').setValue($event)" required />
+              <mat-error touched *ngIf="hiringStatusForm.get('color') .hasError('maxlength')">
+                {{ 'HIRINGSTATUS.COLORMAXLENGTHERROR' | translate }}
+              </mat-error>
+              <mat-error
+                *ngIf="hiringStatusForm.get('color').hasError('required') && hiringStatusForm.get('color').touched">
+                {{ 'TESTCASESTATUS.COLORREQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="order" placeholder="{{'HIRINGSTATUS.ORDER' | translate }}" required>
+              <mat-error
+                *ngIf="hiringStatusForm.get('order').hasError('required') && hiringStatusForm.get('order').touched">
+                {{ 'HIRINGSTATUS.ORDERMAXLENGTHERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!hiringStatusForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertHiringStatusPopUpPopup(formDirective)"
+              type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit SOURCES dialog-->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteHiringStatusPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'HIRINGSTATUS.ARCHIVEHIRINGSTATUS' | translate }}
+        </div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'HIRINGSTATUS.UNARCHIVEHIRINGSTATUS' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'HIRINGSTATUS.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'HIRINGSTATUS.DESIGNU' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHiringStatus() ;">
+            <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHiringStatus();">
+            <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteHiringStatusPopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageHiringStatus"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

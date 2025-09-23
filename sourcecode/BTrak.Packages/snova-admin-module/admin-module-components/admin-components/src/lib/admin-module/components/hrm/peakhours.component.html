@@ -1,0 +1,237 @@
+<div class="full-height">
+  <div *ngIf="(canAccess_feature_ManagePeakHour)">
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{'PEAKHOUR.PEAKHOURTITLE' | translate | titlecase}}">{{'PEAKHOUR.PEAKHOURTITLE' | translate | titlecase}}</span>
+          </div>
+          <div fxFlex fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                (change)="getArchiveAndUnarchived()"></mat-slide-toggle>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="full-width">
+                  <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                </mat-form-field>
+              </div>
+              <span class="shift-timing-close mr-lg-n4" fxLayoutAlign="end center"
+                fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-2" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <button mat-icon-button matTooltip="{{ 'PEAKHOUR.CREATETOOLTIP' | translate }}"
+                [satPopoverAnchorFor]="upsertPeakHourPopover" #upsertPeakHourPopUp="satPopoverAnchor"
+                (click)="createPeakHourPopupOpen(upsertPeakHourPopUp);clearForm()" *ngIf="!isArchived">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+              <div fxFlex="36px" *ngIf="isArchived"></div>
+            </div>
+          </div>
+        </div>
+      </mat-card-title>
+      <mat-divider></mat-divider>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+      <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+        [rowHeight]="50" [rows]="peakHours" [loadingIndicator]="isAnyOperationIsInprogress" [limit]="page.size"
+        [externalPaging]="true" [offset]="page.pageNumber" [count]="totalCount" (page)='setPage($event)'
+        (sort)="onSort($event)" [sortType]="'single'" [sorts]="[{prop: 'name', dir: 'desc'}]"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{'PEAKHOUR.PEAKHOURON' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="peakHourOn">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.peakHourOn }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'PEAKHOUR.PEAKHOURFROM' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="peakHourFrom">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.peakHourFrom}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'PEAKHOUR.PEAKHOURTO' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="peakHourTo">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.peakHourTo}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'PEAKHOUR.ISPEAKHOUR' | translate}}" [flexGrow]="1" [sortable]="true"
+          prop="isPeakHour">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.isPeakHour ? "Yes": "No"}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{'PEAKHOUR.EDITPEAKHOURTITLE' | translate}}" *ngIf="!isArchived"
+              mat-icon-button [satPopoverAnchorFor]="upsertPeakHourPopover" #upsertPeakHourPopUp="satPopoverAnchor"
+              (click)="editPeakHourPopupOpen(row, upsertPeakHourPopUp)">
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+
+            <button class="text-center" title="{{'PEAKHOUR.ARCHIVEPEAKHOURTITLE' | translate}}" *ngIf="!isArchived"
+              mat-icon-button [satPopoverAnchorFor]="deletePeakHourPopover" #deletePeakHourPopUp="satPopoverAnchor"
+              (click)="deletePeakHourPopUpOpen(row, deletePeakHourPopUp)">
+              <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+            </button>
+
+            <button class="text-center" title="{{'PEAKHOUR.UNARCHIVEPEAKHOURTITLE' | translate}}" *ngIf="isArchived"
+              [satPopoverAnchorFor]="deletePeakHourPopover" #deletePeakHourPopUp="satPopoverAnchor"
+              (click)="deletePeakHourPopUpOpen(row, deletePeakHourPopUp)" mat-icon-button>
+              <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #upsertPeakHourPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05 mb-1">{{peakHourHeaderName}}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+          <form [formGroup]="peakHourForm" #formDirective="ngForm" novalidate
+            (submit)="peakHourForm.valid && upsertPeakHour(formDirective)">
+            <div class="create-peakhour-component card-content p-05">
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="98" fxLayout="row wrap" class="mr-1">
+                  <mat-checkbox *ngFor="let weekday of weekDays; let i=index" name="options-{{i}}"
+                    [checked]="weekday.isChecked" class="pb-1 mr-1 check-space" (change)="setValidator(weekday)">
+                    {{weekday.weekDayName}}
+                  </mat-checkbox>
+                  <mat-error *ngIf="weekDaysValidation">{{ weekDaysValidationMessage }}</mat-error>
+                </div>
+              </div>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width">
+                    <input formControlName="peakHourOn" matInput [matDatepicker]="picker" (click)="picker.open()"
+                      placeholder="{{ 'PEAKHOUR.PEAKHOURON' | translate }}" [required]="isWeekRequired" />
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-error
+                      *ngIf="peakHourForm.get('peakHourOn').hasError('required') && peakHourForm.get('peakHourOn').touched">
+                      {{'PEAKHOUR.REQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mt-1">
+                  <mat-checkbox name="ispeak" formControlName="isPeakHour">
+                    {{'PEAKHOUR.ISPEAKHOUR' | translate}}
+                  </mat-checkbox>
+                </div>
+              </div>
+              <div fxLayout="row wrap" class="mb-1">
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                  <mat-form-field class="full-width master-timepicker">
+                    <input matInput formControlName="peakHourFrom" placeholder="{{'PEAKHOUR.PEAKHOURFROM' | translate}}"
+                      aria-label="24hr format" [ngxTimepicker]="peakHourFrom" [format]="24" readonly required />
+                    <ngx-material-timepicker #peakHourFrom [cancelBtnTmpl]="breakstartcancelBtn"
+                      [confirmBtnTmpl]="confirmBtn"></ngx-material-timepicker>
+                    <mat-error
+                      *ngIf="peakHourForm.get('peakHourFrom').hasError('required') && peakHourForm.get('peakHourFrom').touched">
+                      {{'PEAKHOUR.PEAKHOURFROMREQUIREDERROR' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                  <ng-template #breakstartcancelBtn>
+                    <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;">
+                      {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+                  </ng-template>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                  <mat-form-field class="full-width master-timepicker">
+                    <input matInput formControlName="peakHourTo" placeholder="{{'PEAKHOUR.PEAKHOURTO' | translate}}"
+                      aria-label="24hr format" [ngxTimepicker]="peakHourTo" [format]="24" readonly required />
+                    <ngx-material-timepicker #peakHourTo [cancelBtnTmpl]="breakendcancelBtn"
+                      [confirmBtnTmpl]="confirmBtn"></ngx-material-timepicker>
+                    <mat-error
+                      *ngIf="peakHourForm.get('peakHourTo').hasError('required') && peakHourForm.get('peakHourTo').touched">
+                      {{'PEAKHOUR.PEAKHOURTOREQUIREDERROR' | translate}}
+                    </mat-error>
+                    <mat-error
+                      *ngIf="peakHourForm.get('peakHourTo').value < peakHourForm.get('peakHourFrom').value && peakHourForm.get('peakHourTo').touched">
+                      {{'PEAKHOUR.PEAKHOURTOLESSTHANFROM' | translate}}
+                    </mat-error>
+                  </mat-form-field>
+                  <ng-template #breakendcancelBtn>
+                    <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;">
+                      {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+                  </ng-template>
+                </div>
+                <ng-template #confirmBtn>
+                  <p class="feedtimesheet-datepicker-button">{{'FEEDTIMESHEET.OK' | translate}}</p>
+                </ng-template>
+              </div>
+              <div class="mt-1  text-center">
+                <button mat-raised-button type="submit" color="primary" class="mr-1"
+                  [disabled]="!peakHourForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertPeakHourPopup(formDirective)" type="button">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #deletePeakHourPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isArchived">
+            {{'PEAKHOUR.ARCHIVEPEAKHOURTITLE' | translate}}</div>
+          <div class="card-title-text mb-1" *ngIf="isArchived">
+            {{'PEAKHOUR.UNARCHIVEPEAKHOURTITLE' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="!isArchived">
+            {{'PEAKHOUR.ARCHIVEPEAKHOURTEXT' | translate}}
+          </div>
+          <div class="card-content mb-1" *ngIf="isArchived">
+            {{'PEAKHOUR.UNARCHIVEPEAKHOURTEXT' | translate}}
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center">
+            <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+              (click)="deletePeakHour();" *ngIf="!isArchived">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+              (click)="deletePeakHour();" *ngIf="isArchived">
+              <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePeakHourDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+  </div>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManagePeakHour)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

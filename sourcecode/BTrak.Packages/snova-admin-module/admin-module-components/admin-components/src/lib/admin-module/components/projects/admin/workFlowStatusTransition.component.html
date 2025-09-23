@@ -1,0 +1,218 @@
+<mat-card class="p-0 canteen-manage m-0  mt-05">
+  <mat-card-title class="full-width data-table-header">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+      <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+        <span fxFlex="100" class="hide-content-overflow">
+          {{ 'WORKFLOWTRANSITION.WORKFLOWSTATUS' | translate | titlecase }} </span>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center">
+        <button mat-icon-button matTooltip="{{ 'WORKFLOWTRANSITION.ADDNEWTRANSITION' | translate }}"
+          [satPopoverAnchorFor]="addNewTransitionPopover" (click)="addNewTransitionPopover.open();clearForm()">
+          <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+        </button>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+</mat-card>
+<div>
+  <mat-card-content class="p-0">
+    <div class="activity-data workflow-pagination">
+      <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+        [limit]="20" [loadingIndicator]="workflowStatusTransition" [rows]="workFlowStatusTransitionTableData"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'WORKFLOWTRANSITION.FROMTRANSITION' | translate }}" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{row?.fromWorkflowUserStoryStatus}}"> {{ row?.fromWorkflowUserStoryStatus }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'WORKFLOWTRANSITION.TOTRANSITION' | translate }}" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.toWorkflowUserStoryStatus }}">{{ row?.toWorkflowUserStoryStatus }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'WORKFLOWTRANSITION.UPDATE' | translate }}" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <fa-icon icon="edit" matTooltip="{{'WORKFLOWTRANSITION.UPDATETRASITION' | translate }}"
+              class="icon-button mat-color-accent" [satPopoverAnchorFor]="deleteTransition"
+              #deleteTransitionPopover="satPopoverAnchor" (click)="DeleteTransitionById(row, deleteTransitionPopover)">
+            </fa-icon>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </mat-card-content>
+</div>
+
+<sat-popover #addNewTransitionPopover verticalAlign="below" hasBackdrop [autoFocus]="false" horizontalAlign="start"
+  backdropClass="backdrop-color" (click)="clearForm()">
+  <mat-card class="filter-data p-0 addNew-transition">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <div (click)="$event.stopPropagation()">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{'WORKFLOWTRANSITION.ADDNEWTRANSITION' | translate }}</div>
+      </mat-card-title>
+      <form [formGroup]="selectWorkFlows" #formDirective="ngForm" novalidate
+        (submit)="selectWorkFlows.valid && upsertTransitions(workflowId)">
+        <div class="card-content p-05">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="fromWorkflowUserStoryStatusId"
+              (selectionChange)="getWorkflowStatusId($event.value)"
+              placeholder="{{'WORKFLOWTRANSITION.SELECTTRANSITION' | translate }}">
+              <mat-option [value]="fromtransition.userStoryStatusId" *ngFor="let fromtransition of workFlowStatuses">
+                {{ fromtransition.userStoryStatusName }}
+              </mat-option>
+            </mat-select>
+            <mat-error>
+              <span *ngIf="!selectWorkFlows.get('fromWorkflowUserStoryStatusId').valid &&
+              selectWorkFlows.get('fromWorkflowUserStoryStatusId').touched">
+                {{'WORKFLOWTRANSITION.PLEASESELECTTRANSITION' | translate }}
+              </span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="toWorkflowUserStoryStatusId"
+              placeholder="{{'WORKFLOWTRANSITION.SELECTTOTRANSITION' | translate }}">
+              <mat-option [value]="totransition.userStoryStatusId"
+                *ngFor="let totransition of workFlowStatuses | workflowStatusFilter: 'id':workflowStatusId">
+                {{ totransition.userStoryStatusName }}
+              </mat-option>
+            </mat-select>
+            <mat-error>
+              <span *ngIf="!selectWorkFlows.get('toWorkflowUserStoryStatusId').valid &&
+              selectWorkFlows.get('toWorkflowUserStoryStatusId').touched">
+                {{'WORKFLOWTRANSITION.PLEASESELECTTRANSITION' | translate }}
+              </span>
+            </mat-error>
+          </mat-form-field>
+
+          <!-- <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+          <mat-select formControlName="transitionDeadlineId" placeholder="{{'WORKFLOWTRANSITION.DEADLINES' | translate }}">
+            <mat-option value="0">{{'WORKFLOWTRANSITION.SELECTNONE' | translate }}</mat-option>
+            <mat-option [value]="deadline.transitionDeadlineId" *ngFor="let deadline of deadlineDropDown">
+              {{ deadline.deadline }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field> -->
+          <mat-error>
+            <span *ngIf="isThereAnError">
+              {{validationmessage }}</span>
+          </mat-error>
+          <div class="text-center mt-05">
+            <button mat-raised-button color="primary" type="submit" [disabled]="!selectWorkFlows.valid || showSpinner "
+              class="mr-05">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner">
+              </mat-progress-bar>
+              <fa-icon icon="plus" class="mr-05"></fa-icon> {{'WORKFLOWTRANSITION.ADD' | translate }} &nbsp;
+            </button>
+            <button type="button" mat-raised-button (click)="closeDialog()">
+              <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #editTransition verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+  [interactiveClose]="false" scrollStrategy="reposition" [restoreFocus]="false" [autoFocus]="false">
+  <mat-card class="edit-transition filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <div (click)="$event.stopPropagation()">
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-05 mat-bg-primary">{{'WORKFLOWTRANSITION.EDITTRANSITION' | translate }}</div>
+      </mat-card-title>
+      <form [formGroup]="updateTransition" novalidate (submit)="updateTransition.valid && UpdateTransitions()">
+        <div class="card-content p-05">
+
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="WorkFlowName"
+              placeholder="{{'WORKFLOWTRANSITION.WORKFLOW' | translate }}" />
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="fromWorkflowUserStoryStatus"
+              placeholder="{{ 'WORKFLOWTRANSITION.FROMTRANSITION' | translate }}" />
+          </mat-form-field>
+
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <input matInput formControlName="toWorkflowUserStoryStatus"
+              placeholder="{{ 'WORKFLOWTRANSITION.TOTRANSITION' | translate }}" />
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="transitionDeadlineId"
+              placeholder="{{ 'WORKFLOWTRANSITION.DEADLINES' | translate }}">
+              <mat-option value="0">{{'WORKFLOWTRANSITION.SELECTNONE' | translate }}</mat-option>
+              <mat-option [value]="deadline.transitionDeadlineId" *ngFor="let deadline of deadlineDropDown">
+                {{ deadline.deadline }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="text-center">
+            <button type="submit" class="mr-05" mat-raised-button color="primary" [disabled]="showSpinner">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner">
+              </mat-progress-bar>
+              <fa-icon icon="sync" class="mr-05"></fa-icon>{{ 'WORKFLOWTRANSITION.UPDATE' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeEditDialog(); (false)">
+              <fa-icon icon="times" class="mr-05"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteTransition verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+  scrollStrategy="reposition" [restoreFocus]="false" [autoFocus]="false">
+  <mat-card class="filter-data p-0 delete-transition">
+    <div (click)="$event.stopPropagation()">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">{{'WORKFLOWTRANSITION.UPDATETRASITION' | translate }}</div>
+      </mat-card-title>
+      <form [formGroup]="deleteEligibleTransition" novalidate (submit)="
+                deleteEligibleTransition.valid && SavedeleteEligibleTransition()
+              ">
+        <div class="card-content p-05">
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <!-- <input matInput formControlName="{{ 'WORKFLOWTRANSITION.FROMTRANSITION' | translate }}"
+              placeholder="From transition" /> -->
+            <mat-select formControlName="fromWorkflowUserStoryStatusId"
+              placeholder="{{'WORKFLOWTRANSITION.FROMTRANSITION' | translate }}">
+              <mat-option value="option" [value]="fromTransition.userStoryStatusId"
+                *ngFor="let fromTransition of workFlowStatuses">{{ fromTransition.userStoryStatusName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+            <mat-select formControlName="toWorkflowUserStoryStatusId"
+              placeholder="{{'WORKFLOWTRANSITION.SELECTTOTRANSITION' | translate }}">
+              <mat-option value="option" [value]="totransition.userStoryStatusId"
+                *ngFor="let totransition of workFlowStatuses">{{ totransition.userStoryStatusName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <b>{{ 'WORKFLOWTRANSITION.NOTE' | translate }}
+          </b> {{ 'WORKFLOWTRANSITION.PLEASESELECTSTATUS' | translate }}
+
+          <div class="text-center mt-1">
+            <button type="submit" [disabled]="!deleteEligibleTransition.valid || showSpinner " mat-raised-button
+              color="primary" class="mr-05">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner"></mat-progress-bar>
+              <fa-icon icon="edit" class="mr-05"></fa-icon>{{'WORKFLOWTRANSITION.UPDATE' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeDeleteDialog();false">
+              <fa-icon icon="times" class="mr-05"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-card>
+</sat-popover>

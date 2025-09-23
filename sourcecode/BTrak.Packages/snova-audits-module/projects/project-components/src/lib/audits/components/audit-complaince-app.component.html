@@ -1,0 +1,109 @@
+<div class="full-height" *ngIf="canAccess_feature_CanViewAuditComplainceReport">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow p-05">
+                        {{'AUDIT.AUDITCOMPLAINCE' | translate | softLabelsPipe :softLabels}}
+                    </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                    <button type="button" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent"
+                            matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="no-drag" fxLayout="column">
+        <div>
+            <kendo-grid [data]="auditsList" [pageSize]="state.take" [skip]="state.skip" [sort]="sort"
+                [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                (pageChange)="pageChange($event)" [selectable]="true" [loading]="isAnyOperationIsInprogress"
+                (cellClick)="selectedRow($event)" [scrollable]="true" [style]="{'width': 'max-content'}"
+                (sortChange)="sortChange($event)">
+                <kendo-grid-messages pagerOf="{{ 'TESTMANAGEMENT.OF' | translate }}"
+                        pagerItems="{{ 'TESTMANAGEMENT.ITEMS' | translate }}"
+                        noRecords="{{ 'TESTMANAGEMENT.NODATATODISPLAY' | translate }}">
+                </kendo-grid-messages>
+                <kendo-grid-column width="200" field="questionName" title="{{'AUDIT.QUESTIONNAME' | translate | softLabelsPipe :softLabels }}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">
+                            {{ dataItem.questionName }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="200" field="complaincePercentage" title="{{'AUDIT.COMPLAINCEPERCENTAGE' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">{{ dataItem.complaincePercentage }}%
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="200" field="nonCompalincePercentage"
+                    title="{{'AUDIT.NONCOMPLAINCEPERCENTAGE' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">{{ dataItem.nonCompalincePercentage }}%
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </div>
+</div>
+
+<app-common-message-box
+    *ngIf="!canAccess_feature_CanViewAuditComplainceReport"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>
+
+<mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+        <form [formGroup]="filterForm">
+            <div class="full-width mt-1">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="auditId" (selectionChange)="getNonComplainceAudits()"
+                        placeholder="{{'AUDIT.AUDITTITLE' | translate}}">
+                        <mat-option [value]="audit.auditId" *ngFor="let audit of auditList$ | async">
+                            {{audit.auditName}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div class="full-width mt-1">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="branchId" (selectionChange)="getNonComplainceAudits()"
+                        placeholder="{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}">
+                        <mat-option [value]="branch.branchId" *ngFor="let branch of branchList">
+                            {{branch.branchName}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div class="full-width mt-1">
+                <mat-form-field class="full-width">
+                    <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="fromDate"
+                        placeholder="{{'HISTORICALREPORT.FROMDATE' | translate}}" required autocomplete="off"
+                        [readonly]="true" (dateChange)="dateFromChanged($event)" [max]="maxfromDate">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+            </div>
+            <div class="full-width mt-1">
+                <mat-form-field class="full-width">
+                    <input matInput [matDatepicker]="picker2" (click)="picker2.open()" formControlName="toDate"
+                        placeholder="{{'HISTORICALREPORT.TODATE' | translate}}" required autocomplete="off"
+                        [readonly]="true" (dateChange)="dateToChanged($event)" [min]="minToDate">
+                    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                    <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+            </div>
+        </form>
+    </mat-card>
+</mat-menu>
+
+
+<ng-template #DrillDownDialog let-data>
+    <app-fm-component-non-complaint-audit-preview [data]=[data]></app-fm-component-non-complaint-audit-preview>
+  </ng-template>

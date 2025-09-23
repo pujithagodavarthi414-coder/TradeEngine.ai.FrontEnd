@@ -1,0 +1,180 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div class="full-height">
+    <mat-card class="m-0 p-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0" fxLayoutAlign="end center">
+                <div fxFlex fxLayoutAlign="start center" class="p-05 drag-handler">
+                    <span fxFlex="100"
+                        class="hide-content-overflow">{{'WORKLOGGING.WORKLOGGINGREPORT' | translate | titlecase}}</span>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+    </mat-progress-bar>
+    <div class="no-drag tracker-data-height" id="style-1">
+        <kendo-grid [data]="gridSettings.gridData" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+            [reorderable]="true" [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+            [scrollable]="true" [columnMenu]="true" (dataStateChange)="dataStateChange($event)" [resizable]="true"
+            (columnReorder)="onReorder($event)" (columnVisibilityChange)="onVisibilityChange($event)">
+            <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+                pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}" pagerOf="{{'OF' | translate}}">
+            </kendo-grid-messages>
+            <ng-container *ngFor=" let col of gridSettings.columnsConfig">
+                <kendo-grid-column [field]="col.field" [title]="col.title | translate | softLabelsPipe : softLabels"
+                    [hidden]="col.hidden" [width]="150" [sortable]="true">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="col.field == 'date' && dataItem.date != null">
+                            {{ dataItem.date | utcToLocalTime | date: "dd-MMM-yyyy"}}
+                        </div>
+                        <div *ngIf="col.field == 'projectName'">
+                            <span class="userstory-hover text-underline hide-content-overflow"
+                                (click)="navigateToProjectDetailsPage(dataItem); $event.stopPropagation();">
+                                <a matTooltip="{{ dataItem.projectName }}">
+                                    {{dataItem.projectName}}
+                                </a>
+                            </span>
+                        </div>
+                        <div *ngIf="col.field == 'goalName'">
+                            <span class="userstory-hover text-underline hide-content-overflow"
+                                (click)="navigateToGoalDetailsPage(dataItem); $event.stopPropagation();">
+                                <a matTooltip="{{ dataItem.goalName }}">
+                                    {{ dataItem.goalName }}
+                                </a>
+                            </span>
+                        </div>
+                        <div *ngIf="col.field == 'developerName'"
+                            (click)="goToProfile(dataItem.userId); $event.stopPropagation();">
+                            {{ dataItem?.developerName}}
+                        </div>
+                        <div *ngIf="col.field == 'loggedUserName'"
+                            (click)="goToProfile(dataItem.loggedUserId); $event.stopPropagation();">
+                            {{ dataItem?.loggedUserName}}
+                        </div>
+                        <div *ngIf="col.field == 'boardType'">
+                            {{ dataItem?.boardType }}
+                        </div>
+
+                        <div *ngIf="col.field == 'userStoryName'">
+                            {{ dataItem?.userStoryName }}
+                        </div>
+
+                        <div *ngIf="col.field == 'userStoryUniqueName'">
+                            {{ dataItem?.userStoryUniqueName }}
+                        </div>
+
+                        <div *ngIf="col.field == 'originalEstimate' && dataItem.originalEstimate != null">
+                            {{ dataItem?.originalEstimate }}h
+                        </div>
+                        <div *ngIf="col.field == 'totalSpentTimeSoFar' && dataItem.totalSpentTimeSoFar != null">
+                            {{ dataItem?.totalSpentTimeSoFar }}h
+                        </div>
+                        <div *ngIf="col.field == 'spentToday' && dataItem.spentToday != null">
+                            {{ dataItem?.spentToday }}h
+                        </div>
+                        <div *ngIf="col.field == 'remainingTime' && dataItem.remainingTime != null">
+                            {{ dataItem?.remainingTime }}h
+                        </div>
+                        <div *ngIf="col.field == 'comments'">
+                            <button class="text-center" title="{{'WORKLOGGING.DESCRIPTION' | translate}}"
+                                mat-icon-button [satPopoverAnchorFor]="commentPopover" #commentPopUp="satPopoverAnchor"
+                                (click)="commentView(dataItem,commentPopUp)">
+                                <fa-icon icon="tasks" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                            </button>
+                        </div>
+                        <div *ngIf="col.field == 'commits'">
+                            <button class="text-center" title="{{'REPOSITORYCOMMITS.REPOCOMMITS' | translate}}"
+                                mat-icon-button [satPopoverAnchorFor]="commitPopover" #commitPopUp="satPopoverAnchor"
+                                (click)="SearchRepositoryCommits(dataItem,commitPopUp)">
+                                <mat-icon class="mat-color-accent cursor-pointer" aria-hidden="false">
+                                    wysiwyg</mat-icon>
+                            </button>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </ng-container>
+            <kendo-grid-command-column title="Screenshots" [width]="100">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" title="screenshots" mat-icon-button
+                        (click)="openScreenShotsDialog(dataItem)">
+                        <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+
+    </div>
+    <sat-popover backdropClass="backdrop-color" #commentPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div fxLayout="row">
+                    <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+                        {{'WORKLOGGING.DESCRIPTION' | translate}}
+                    </div>
+                    <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary p-05" (click)="closePopOver()">
+                        <fa-icon class="icon-button" icon="times"></fa-icon>
+                    </div>
+                </div>
+            </mat-card-title>
+            <mat-card-content class="p-05" fxFlex.md="400px" fxFlex.sm="250px" fxFlex.lg="500px" fxFlex.gt-lg="600px">
+                <div class="mobile-view-popover">
+                    <div *ngIf="comments != ''">
+                        <div *ngFor="let discription of comments" class="history-tab">
+                            <span [innerHTML]="discription"></span>
+                        </div>
+                    </div>
+                    <div class="p-1" *ngIf="comments == ''">
+                        {{'WORKLOGGING.NOCOMMENTSTODISPLAY' | translate}}
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #commitPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center">
+                <div fxLayout="row">
+                    <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+                        {{'REPOSITORYCOMMITS.REPOCOMMITS' | translate}}
+                    </div>
+                    <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary p-05"
+                        (click)="closeCommitPopOver()">
+                        <fa-icon class="icon-button" icon="times"></fa-icon>
+                    </div>
+                </div>
+            </mat-card-title>
+            <mat-card-content id="style-1" class="mobile-view-popover p-0 no-drag" style="max-height: 320px;"
+                fxFlex.md="400px" fxFlex.sm="250px" fxFlex.lg="500px" fxFlex.gt-lg="600px">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingIndicator">
+                </mat-progress-bar>
+                <div *ngIf="!loadingIndicator">
+                    <div *ngIf="commits.length > 0">
+                        <div *ngFor="let commit of commits" class="history-tab">
+                            <div (click)="openInNewTab(commit)" class="ml-1 mb-05 mt-05 cursor-pointer"
+                                matTooltip="{{ 'REPOSITORYCOMMITS.CLICKTONAVIGATE' | translate }}">
+                                <span><b>{{ commit.createdDateTime | utcToLocalTime | date: 'dd MMM yyyy HH:mm' }}</b></span>
+                                -
+                                <span>{{ commit.commitMessage }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-1" *ngIf="commits.length == 0">
+                        {{'REPOSITORYCOMMITS.NOCOMMITSTODISPLAY' | translate}}
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<ng-template #screenShotComponent let-data>
+    <app-ts-component-trackerscreenshots [data]=[data]></app-ts-component-trackerscreenshots>
+</ng-template>

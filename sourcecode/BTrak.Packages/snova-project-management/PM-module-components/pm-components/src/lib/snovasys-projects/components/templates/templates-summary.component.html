@@ -1,0 +1,115 @@
+<mat-accordion class="goal-summary templates-expansion-panel">
+    <mat-expansion-panel hideToggle="true" [expanded]="panelOpenState">
+        <mat-expansion-panel-header class="p-05" [collapsedHeight]="'45px'" [expandedHeight]="'45px'"
+            class="project-card goal-card goal-summary-card "
+            [ngStyle]="{ 'background-color': templateSelected == true ? '#e6f5ff' : '' }"
+            [ngClass]="{'selected-goal': templateSelected == true}" (contextmenu)="openContextMenu($event)">
+            <div fxFlex="88" fxFlex.sm="94">
+                <p class="mat-body-2 selected-goal-text ml-05" matTooltip="{{templateModel.templateName }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{ templateModel.templateName}}</p>
+            </div>
+            <div fxFlex="8" fxFlex.sm="4" class="goals_summary_member ml-02">
+                <app-chip [matTooltip]="templateModel.templateResponsiblePersonName"
+                    class="pull-right avatar-image goal-summary-image" [isNameRequired]="false"
+                    [name]="templateModel.templateResponsiblePersonName | removeSpecialCharacters "
+                    [src]="templateModel.templateResponsibleProfileImage | fetchSizedAndCachedImage: '20':''" size="20">
+                </app-chip>
+            </div>
+            <span>
+            </span>
+            <mat-icon class="more_vert card-control" matTooltip="{{ 'MENU' | translate }}"
+                [matMenuTriggerFor]="projectTemplate" (click)="$event.stopPropagation();"
+                [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+            </mat-icon>
+        </mat-expansion-panel-header>
+    </mat-expansion-panel>
+</mat-accordion>
+
+<mat-menu class="goal-options" #projectTemplate="matMenu" (click)="$event.stopPropagation()">
+    <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="templatePopover"
+        (click)="templatePopover.open(); $event.stopPropagation();">
+        <mat-icon>save</mat-icon><span>{{ 'GOALS.SAVEASGOAL' | translate | softLabelsPipe : softLabels}} </span>
+    </button>
+    <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="editTemplatePopover"
+        (click)="editTemplatePopover.open(); $event.stopPropagation(); openEditTemplate()">
+        <mat-icon>edit</mat-icon><span>{{ 'GOALS.EDITTEMPLATE' | translate }} </span>
+    </button>
+    <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="deleteTemplatePopover"
+        (click)="deleteTemplatePopover.open(); $event.stopPropagation();">
+        <mat-icon>delete</mat-icon><span>{{ 'GOALS.DELETETEMPLATE' | translate }} </span>
+    </button>
+</mat-menu>
+
+<sat-popover #templatePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-05">
+                {{'GOALS.SAVEASGOAL'|translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-05">
+              {{ 'GOALS.AREYOUSUREWANTTOSAVETHISTEMPLATEASGOAL' | translate | softLabelsPipe : softLabels  }}   
+            </div>
+        <div class="text-center">
+            <button mat-raised-button type="button" color="primary" class="mr-05"
+                (click)="makeTemplateGoal(); $event.stopPropagation()"
+                [disabled]="(templateOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(templateOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-raised-button type="button" (click)="closeTemplatePopup()"
+                [disabled]="(templateOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+            </button>
+        </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #editTemplatePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <div>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-05 mat-bg-primary">
+                    {{'GOALS.EDITTEMPLATE'|translate}}
+                </div>
+            </mat-card-title>
+            <app-pm-component-project-template *ngIf="isEdit" [projectId]="templateModel.projectId"
+                [clearCreateForm]="clearCreateForm" [template]="templateModel" (closePopup)="closeTemplateDialog()">
+            </app-pm-component-project-template>
+        </div>
+    </mat-card>
+</sat-popover>
+
+
+<sat-popover #deleteTemplatePopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-05">
+            {{'GOALS.DELETETEMPLATE'|translate}}
+          </div>
+        </mat-card-title>
+        <mat-card-content>
+           <div class="card-content mb-05">
+             {{ 'GOALS.AREYOUSUREWANTTODELETETHISTEMPLATE' | translate }}
+           </div>
+           <div class="text-center">
+            <button mat-raised-button type="button" color="primary" class="mr-05"
+                (click)="deleteTemplate(); $event.stopPropagation()"
+                [disabled]="(templateArchiveOperationInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(templateArchiveOperationInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-raised-button type="button" (click)="closeArchivePopup()"
+                [disabled]="(templateArchiveOperationInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'NO' | translate }}
+            </button>
+           </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

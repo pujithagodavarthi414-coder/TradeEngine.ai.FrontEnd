@@ -1,0 +1,178 @@
+<div class="full-height"  *ngIf="(canAccess_feature_TdsSettings)">
+
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+
+        <div fxLayout="row wrap" fxLayout.xs="column">
+
+            <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+              <span matTooltip="{{ 'TDSSETTINGS.TDSSETTINGSTITLE' | translate | titlecase }}">{{ 'TDSSETTINGS.TDSSETTINGSTITLE' | translate | titlecase }}</span>
+            </div>
+
+            <div fxFlex="40px" fxLayoutAlign="end center" fxLayoutAlign.xs="25px" class="mr-05 ml-15">
+              <mat-slide-toggle [matTooltip]="(isArchivedTypes == false) ? ('TDSSETTINGS.SEEARCHIVEDITEMS' | translate) : ('TDSSETTINGS.SEEUNARCHIVEDITEMS' | translate)" class="mr-1 archive-switch"
+                [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes" (change)="getAllTdsSettings()"></mat-slide-toggle>
+            </div>
+
+            <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap" fxLayoutAlign.xs="start center">              
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>              
+              <div fxFlex="20px">
+                <span class="close_icon" style="right: 0px !important;">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+              </div>
+            </div>
+
+            <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+              <button mat-icon-button matTooltip="{{ 'TDSSETTINGS.CREATETDSSETTINGSTOOLTIP' | translate }}"
+                [satPopoverAnchorFor]="upsertTdsSettingsPopover" #upsertTdsSettingsPopUp="satPopoverAnchor"
+                (click)="createTdsSettingsPopupOpen(upsertTdsSettingsPopUp);clearForm()" *ngIf="!isArchivedTypes">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>              
+            </div>          
+
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+  
+    <div class="activity-data no-drag">
+      <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="50" [rows]="company" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'TDSSETTINGS.BRANCHNAME' | translate }}" [sortable]="true" prop="branchName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.branchName }}">{{ row?.branchName }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'TDSSETTINGS.ISTDSREQUIRED' | translate }}" [sortable]="true" prop="isTdsRequired">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span [matTooltip]="(row?.isTdsRequired ? 'Yes' : 'No')">{{row?.isTdsRequired ? "Yes" : "No"}}</span>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'TDSSETTINGS.EDITTDSSETTINGS' | translate }}"
+              [satPopoverAnchorFor]="upsertTdsSettingsPopover" #upsertTdsSettingsPopUp="satPopoverAnchor"
+              (click)="editTdsSettingsPopupOpen(row,upsertTdsSettingsPopUp)" *ngIf="!isArchivedTypes && row.isVisible != false"
+              mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{ 'TDSSETTINGS.ARCHIVETDSSETTINGS' | translate }}"
+              [satPopoverAnchorFor]="deleteTdsSettingsPopover" #deleteTdsSettingsPopUp="satPopoverAnchor"
+              (click)="deleteTdsSettingsPopUpOpen(row, deleteTdsSettingsPopUp)" *ngIf="!isArchivedTypes && row.isVisible != false"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{ 'TDSSETTINGS.UNARCHIVETDSSETTINGS' | translate }}"
+              [satPopoverAnchorFor]="deleteTdsSettingsPopover" #deleteTdsSettingsPopUp="satPopoverAnchor"
+              (click)="deleteTdsSettingsPopUpOpen(row, deleteTdsSettingsPopUp)" *ngIf="isArchivedTypes"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  
+    <!--Edit TDSSETTINGS dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertTdsSettingsPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="start">
+      <mat-card class="p-0 mr-0" fxFlex="500px">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ tdsSettings | translate }}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+          <form [formGroup]="tdsSettingsForm" #formDirective="ngForm" novalidate
+            (submit)="tdsSettingsForm.valid && upsertTdsSettings(formDirective)">
+            <div>
+              <div fxLayout="row wrap"  class="p-05">
+                <div fxFlex="98">
+                    <mat-form-field class="full-width">
+                      <mat-select placeholder="{{'PAYROLLBRANCHCONFIGURATION.BRANCHNAME' | translate}}"
+                        formControlName="branchId" required>
+                        <mat-option *ngFor="let branch of (branchList$ | async)" [value]="branch.branchId">
+                          {{ branch.branchName }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error class="P-06"
+                        *ngIf="tdsSettingsForm.get('branchId').hasError('required') && tdsSettingsForm.get('branchId').touched">
+                        {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                <div fxFlex="98" class="mt-05">
+                    <mat-checkbox formControlName="isTdsRequired">{{'TDSSETTINGS.ISTDSREQUIRED' | translate}} 
+                    </mat-checkbox>
+                </div>
+              </div>
+              <div>
+              </div>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              <div class="mt-05 mb-05 text-center">
+                <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                  [disabled]="!tdsSettingsForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertTdsSettingsPopup(formDirective)"
+                  type="button">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Edit COMAPN dialog-->
+  
+    <!--Delete TDSSETTINGS dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteTdsSettingsPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="isTdsSettingsArchived">
+            {{ 'TDSSETTINGS.ARCHIVETDSSETTINGSTITLE' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="!isTdsSettingsArchived">
+            {{ 'TDSSETTINGS.UNARCHIVETDSSETTINGSTITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="isTdsSettingsArchived">
+            {{ 'TDSSETTINGS.ARCHIVETDSSETTINGSTEXT' | translate }}
+          </div>
+          <div class="card-content mb-1" *ngIf="!isTdsSettingsArchived">
+            {{ 'TDSSETTINGS.UNARCHIVETDSSETTINGSTEXT' | translate }}
+          </div>
+          <div class="text-center">
+            <button class="mr-1" *ngIf="isTdsSettingsArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteTdsSettings();">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="!isTdsSettingsArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deleteTdsSettings();">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeleteTdsSettingsDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete TDSSETTINGS dialog-->
+  </div>
+  <app-common-message-box *ngIf="!(canAccess_feature_TdsSettings)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+  </app-common-message-box>

@@ -1,0 +1,95 @@
+<mat-card-title *ngIf="dashboardFilters" class="full-width data-table-header drag-handler"
+    style="margin-bottom: 0.5rem !important;">
+    <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+            <span class="assets-comments">
+                {{'AUDIT.AUDITREPORTS' | translate | softLabelsPipe : softLabels}}
+            </span>
+            <span class="ml-05 badge-item testsuites-count count-padding"
+                *ngIf="!isFromDashboard && (activeAuditReportsCount$ | async) > 0"
+                style="line-height: 14px;">{{ activeAuditReportsCount$ | async }}</span>
+        </div>
+    </div>
+</mat-card-title>
+<div class="reports-tab" [ngClass]="{'p-02': isFromDashboard}" fxLayout="row wrap" fxLayout.lt-sm="column"
+    fxLayoutGap="5px"
+    *ngIf="canAccess_entityType_feature_ViewAuditReports && ((activeAuditReportsCount$ | async) > 0 || (archivedAuditReportsCount$ | async) > 0) && !isFromDashboard"
+    (window:resize)="onResize()">
+    <div fxFlex="25px" fxHide.xs>
+        <div class='custom-label veritcal-label'>
+            <div class='custom-label-content' (click)="isReport = !isReport">
+                {{'AUDIT.AUDITREPORTS' | translate | softLabelsPipe : softLabels}}
+                <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isReport}">
+                    </fa-icon>
+                </span></div>
+        </div>
+    </div>
+
+    <div fxFlex="15" fxFlex.lg="20" fxFlex.md="25" fxFlex.sm="80" fxFlex.lt-sm="100" [hidden]="isReport">
+        <mat-card class="custom-box mb-0 p-0 mt-0">
+            <audit-reports-list (loadReport)="getLoadReportById($event)" (selectedReport)="getReportData($event)">
+            </audit-reports-list>
+        </mat-card>
+    </div>
+    <div fxFlex fxFlex.lt-sm="100">
+        <as-split direction="horizontal" unit="percent" gutterSize="5">
+            <as-split-area size="*" minSize="45">
+                <mat-card class="custom-box mb-0 p-0 mt-0">
+                    <detailed-audit-report-view (questionStatusPreviewDetails)="getQuestionStatusPreviewDetails($event)"
+                        [loadReport]="loadReport" [selectedReport]="selectedReport"
+                        [selectedQuestion]="selectedQuestionFromPreview"></detailed-audit-report-view>
+                </mat-card>
+            </as-split-area>
+            <as-split-area size="37" minSize="36" maxSize="54"
+                *ngIf="(showQuestionStatusPreview) && (screenWidth > 959)">
+                <div fxFlex="100" *ngIf="showQuestionStatusPreview">
+                    <report-question-details [caseDetails]="showQuestionStatusPreview" [projectId]="projectId"
+                        (closePreview)="closePreviewDialog()">
+                    </report-question-details>
+                </div>
+            </as-split-area>
+        </as-split>
+    </div>
+    <div fxFlex="100" *ngIf="showQuestionStatusPreview && !(screenWidth > 959)">
+        <report-question-details [caseDetails]="showQuestionStatusPreview" [projectId]="projectId"
+            (closePreview)="closePreviewDialog()">
+        </report-question-details>
+    </div>
+</div>
+<div class="p-1" *ngIf="dashboardFilters && isFromDashboard">
+    <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+        <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+        {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+    </span>
+</div>
+
+<app-common-message-box
+    *ngIf="!isFromDashboard && canAccess_entityType_feature_AddOrUpdateAuditReports && ((activeAuditReportsCount$ | async) == 0 && (archivedAuditReportsCount$ | async) == 0)"
+    textToDisplay="{{'AUDIT.YOUDONTHAVEANYREPORTS' | translate | softLabelsPipe : softLabels}}">
+    <ng-template ng-message-tmp>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="canAccess_entityType_feature_AddOrUpdateAuditReports" [satPopoverAnchorFor]="addReport"
+            #addReportPopover="satPopoverAnchor" (click)="openReportDialog(addReportPopover)">
+            <fa-icon class="mr-05" icon="plus"></fa-icon>
+            {{'AUDIT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+        </button>
+    </ng-template>
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!isFromDashboard && !canAccess_entityType_feature_AddOrUpdateAuditReports"
+    textToDisplay="{{'AUDIT.NOYOUDONTHAVEANYREPORTS' | translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>
+
+<sat-popover backdropClass="backdrop-color" #addReport verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <add-audit-report *ngIf="loadAddReport" (closeReport)="closeReportDialog()">
+        </add-audit-report>
+    </mat-card>
+</sat-popover>

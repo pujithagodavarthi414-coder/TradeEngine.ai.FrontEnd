@@ -1,0 +1,55 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text  mat-bg-primary p-05">{{'CANTEEN.CREDITAMOUNT' | translate}}
+    </div>
+</mat-card-title>
+
+<form [formGroup]="addCanteenCreditForm" #formDirective="ngForm" novalidate (submit)="addCanteenCreditForm.valid && upsertCanteenCredit(formDirective)">
+    <div class="card-content p-05">
+        <div fxLayout="column" fxLayoutGap="5px">
+            <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="amount" min="1" onkeydown="return event.keyCode !== 69"
+                    placeholder="{{'CANTEEN.CREDITAMOUNT' | translate}}" required>
+                <mat-error>
+                    <span
+                        *ngIf="addCanteenCreditForm.get('amount').hasError('required') && addCanteenCreditForm.get('amount').touched">{{'CANTEEN.PLEASEENTERAMOUNTTOBECREDITED' | translate }}</span>
+                    <span
+                        *ngIf="addCanteenCreditForm.get('amount').hasError('min')">{{'CANTEEN.CANTEENCREDITMINIMUMAMOUNTTOBECREDITED' | translate}}</span>
+                    <span
+                        *ngIf="addCanteenCreditForm.get('amount').hasError('max')">{{'CANTEEN.ORDERAMOUNTMAXVALIDATIONMESSAGE' | translate}}</span>
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="full-width mb-05">
+                <mat-select formControlName="userIds" placeholder="{{'CANTEEN.ASSIGNEDTO' | translate}}" multiple
+                    required>
+                    <mat-select-trigger>
+                        {{selectedUsersList}}
+                      </mat-select-trigger>
+                    <mat-option #allSelected (click)="toggleAllUsersSelected()" [value]="0">{{'CANTEEN.SELECTALL' | translate}}</mat-option>
+                    <mat-option [value]="person.id" *ngFor="let person of userDropDownListData$ | async" (click)="getUserslistByUserId();toggleUserPerOne()">
+                        <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                            [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                        <img class="employee_img" src="{{person.profileImage}}"
+                            *ngIf="person.profileImage">{{person.fullName}}
+                    </mat-option>
+                </mat-select>
+                <mat-error>
+                    <span
+                        *ngIf="addCanteenCreditForm.get('userIds').hasError('required') && addCanteenCreditForm.get('userIds').touched">{{'CANTEEN.ATLEASTONEMEMBERSHOULDBESELECTED' | translate}}</span>
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <div class="text-center mb-05">
+            <button mat-button mat-raised-button type="submit" color="primary" class="mr-1"
+                [disabled]="!addCanteenCreditForm.valid || (upsertCanteenCreditInProgress$ | async)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertCanteenCreditInProgress$ | async">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="money-bill-alt"></fa-icon>{{'CANTEEN.CREDIT' | translate}}
+            </button>
+            <button mat-button mat-raised-button
+                [disabled]="upsertCanteenCreditInProgress$ | async" (click)="closeAddCanteenCreditForm();false">
+                <fa-icon class="mr-05" icon="times"></fa-icon>{{'CANTEEN.CANCEL' | translate}}
+            </button>
+        </div>
+    </div>
+</form>

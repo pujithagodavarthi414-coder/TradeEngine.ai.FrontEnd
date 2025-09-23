@@ -1,0 +1,273 @@
+<div *ngIf="canAccess_feature_ViewPermissions" class="full-height">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow">{{'PERMISSIONSSREGISTER.TITLE' | translate | titlecase}}</span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button class="text-center" (click)="reset();" mat-icon-button>
+            <fa-icon class="filter mat-color-accent" icon="undo"
+              matTooltip="{{ 'PERMISSIONHISTORY.RESET' | translate}}"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}"
+              class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <mat-form-field class="full-width">
+              <input type="text"
+                placeholder="{{ 'PERMISSIONSSREGISTER.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                matInput [(ngModel)]="searchEmployee" (input)="searchByEmployee()" [matAutocomplete]="auto"
+                autocomplete="off" trim>
+              <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="employeeLoading"></i>
+              <span class="close_icon mt-n1 mr-n1" *ngIf="searchEmployee && !employeeLoading">
+                <span *ngIf="!searchEmployee">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchEmployee" class="icon-button custom-auto-close-timesheet" aria-hidden="false"
+                  (click)="closeSearchEmployee()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                (optionSelected)="onChangeEmployee($event.option.value)">
+                <mat-option *ngFor="let person of  employeesDropDown" [value]="person.teamMemberId">
+                  <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.teamMemberName}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{ 'PERMISSIONSSREGISTER.FROMDATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker1" [max]="maxDate" autocomplete="off" (click)="picker1.open()"
+                [max]="maxDate" (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom"
+                [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{ 'PERMISSIONSSREGISTER.TODATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="minDate" (click)="picker2.open()"
+                [max]="maxDate" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo"
+                [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+
+        <!-- <mat-menu #filterMenu="matMenu"   class="filter-panel" (click)="$event.stopPropagation()">
+            <button mat-menu-item [matMenuTriggerFor]="employeeSearch">
+              {{ 'PERMISSIONSSREGISTER.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+            <button mat-menu-item
+              [matMenuTriggerFor]="fromDateSearch">{{ 'PERMISSIONSSREGISTER.FROMDATE' | translate }}</button>
+            <button mat-menu-item
+              [matMenuTriggerFor]="toDateSearch">{{ 'PERMISSIONSSREGISTER.TODATE' | translate }}</button>
+          </mat-menu>
+          <mat-menu #employeeSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <div fxFlex="180px" class="ml-05 mr-05">
+                <mat-form-field class="full-width">
+                  <input type="text" placeholder="{{ 'PERMISSIONSSREGISTER.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}" matInput
+                    [(ngModel)]="searchEmployee" (input)="searchByEmployee()" [matAutocomplete]="auto" autocomplete="off"
+                    trim>
+                  <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="(employeeLoading$ | async)"></i>
+                  <span class="close_icon" *ngIf="searchEmployee && !(employeeLoading$ | async)">
+                    <span *ngIf="!searchEmployee">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <mat-icon *ngIf="searchEmployee" class="icon-button custom-auto-close-timesheet" aria-hidden="false"
+                      (click)="closeSearchEmployee()" style="cursor:pointer">
+                      close</mat-icon>
+                  </span>
+                  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                    (optionSelected)="onChangeEmployee($event.option.value)">
+                    <mat-option *ngFor="let person of  employeeList$|async" [value]="person.id">
+                      <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                        [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                      <img class="employee_img" *ngIf="person.profileImage"
+                        [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.fullName}}
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+            </mat-card>
+          </mat-menu>
+          <mat-menu #fromDateSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <div fxFlex="180px" class="ml-05 mr-05">
+                <mat-form-field class="full-width">
+                  <mat-label>{{ 'PERMISSIONSSREGISTER.FROMDATE' | translate }}</mat-label>
+                  <input matInput [matDatepicker]="picker1" [max]="maxDate" autocomplete="off" (click)="picker1.open()"
+                    [max]="maxDate" (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom"
+                    [readonly]="true">
+                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </mat-card>
+          </mat-menu>
+          <mat-menu #toDateSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <div fxFlex="180px" class="ml-05 mr-05">
+                <mat-form-field class="full-width">
+                  <mat-label>{{ 'PERMISSIONSSREGISTER.TODATE' | translate }}</mat-label>
+                  <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="minDate" (click)="picker2.open()"
+                    [max]="maxDate" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo"
+                    [readonly]="true">
+                  <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                  <mat-datepicker #picker2></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </mat-card>
+          </mat-menu> -->
+
+
+        <!-- <sat-popover #filtersPopover [autoFocus]="false" [restoreFocus]="false" verticalAlign="below"
+          [interactiveClose]="false" scrollStrategy="reposition">
+          <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+              <div fxLayout="row">
+                <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+                  Configure {{'PERMISSIONSSREGISTER.TITLE' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary p-05"
+                  (click)="filtersPopover.close()">
+                  <fa-icon class="icon-button white-icon" icon="times"></fa-icon>
+                </div>
+              </div>
+            </mat-card-title>
+            <div class="card-content p-05" fxFlex="300px">
+              <mat-form-field class="full-width">
+                <input type="text" placeholder="{{ 'PERMISSIONSSREGISTER.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}" matInput
+                  [(ngModel)]="searchEmployee" (input)="searchByEmployee()" [matAutocomplete]="auto" autocomplete="off"
+                  trim>
+                <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="(employeeLoading$ | async)"></i>
+                <span class="close_icon mt-n1 mr-n1" *ngIf="searchEmployee && !(employeeLoading$ | async)">
+                  <span *ngIf="!searchEmployee">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                  <mat-icon *ngIf="searchEmployee" class="icon-button custom-auto-close-timesheet" aria-hidden="false"
+                    (click)="closeSearchEmployee()" style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+                <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                  (optionSelected)="onChangeEmployee($event.option.value)">
+                  <mat-option *ngFor="let person of  employeeList$|async" [value]="person.id">
+                    <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                      [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                    <img class="employee_img" *ngIf="person.profileImage"
+                      [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.fullName}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'PERMISSIONSSREGISTER.FROMDATE' | translate }}</mat-label>
+                <input matInput [matDatepicker]="picker1" [max]="maxDate" autocomplete="off" (click)="picker1.open()"
+                  [max]="maxDate" (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom"
+                  [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'PERMISSIONSSREGISTER.TODATE' | translate }}</mat-label>
+                <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="minDate" (click)="picker2.open()"
+                  [max]="maxDate" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo"
+                  [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </mat-card>
+        </sat-popover> -->
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <mat-card-content>
+    <div class="activity-data p-0 no-drag">
+      <ngx-datatable class="btrak" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="50"
+        [externalSorting]="true" [offset]="page.pageNumber" [externalPaging]="true" [scrollbarH]="true"[scrollbarH]="scrollbarH"
+        [count]="page.totalElements" (page)='setPage($event)' (sort)="viewPermissionsBySorting($event)" [rowHeight]="50"
+        [limit]="page.size"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+        [rows]="permissionList" [loadingIndicator]="isAnyOperationIsInprogress">
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.DATE' | translate }}" sortable="true" prop="date"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span matTooltip="{{row?.date | date: 'dd/MM/yyyy'}}">{{ row?.date | date: "dd-MMM-yyyy"  }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+          sortable="true" prop="employeeName" [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div class="icon-button" fxLayout="row" (click)="goToProfile(row.userId)">
+              <!-- <app-profile-avatar [name]="row.employeeName | removeSpecialCharacters"
+                [src]="row.userProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-profile-avatar> -->
+              <div *ngIf="row.userProfileImage != null && row.userProfileImage != ''">
+                <app-profile-avatar [src]="row.userProfileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                  size="30">
+                </app-profile-avatar>
+              </div>
+              <div *ngIf="row.userProfileImage == null || row.userProfileImage == ''">
+                <app-profile-avatar [name]="row.employeeName | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-profile-avatar>
+              </div>
+              <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{row.employeeName}}"
+                matTooltipShowDelay="400" fxFlex>
+                {{ row?.employeeName }}
+              </span>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.DATEOFPERMISSION' | translate }}" sortable="true"
+          prop="dateOfPermission" [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span
+              matTooltip="{{row?.dateOfPermission | date: 'dd/MM/yyyy'}}">{{ row?.dateOfPermission | date: "dd-MMM-yyyy"  }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.DURATION' | translate }}" sortable="true" prop="duration"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span
+              matTooltip="{{row?.duration | slice:0:2}}h {{row?.duration | slice:3:5}}m">{{row?.duration | slice:0:2}}h:{{row?.duration | slice:3:5}}m</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.STATUSOFLATE' | translate }}" sortable="true"
+          prop="permissionReason" [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span matTooltip="{{row?.permissionReason}}">{{value}}</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+
+        <ngx-datatable-column name="{{ 'PERMISSIONSSREGISTER.REVIEW' | translate }}" sortable="true" prop="review"
+          [flexGrow]="1">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <span matTooltip="{{row?.review}}">{{value}}</span>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+
+    </div>
+  </mat-card-content>
+  <!-- </mat-card> -->
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_ViewPermissions"
+  textToDisplay="{{ 'PERMISSIONSSREGISTER.ALERTMESSAGE' | translate }}">
+</app-common-message-box>

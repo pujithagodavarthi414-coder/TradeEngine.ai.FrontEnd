@@ -1,0 +1,89 @@
+<mat-progress-bar color="primary" mode="indeterminate"
+  *ngIf="(anyOperationInProgress$ | async)||(logTimeOptionsLoading$|async)">
+</mat-progress-bar>
+<div class="fit-content-conduct-log-height" [attr.id]="isFromAudits ? 'style-1' : ''"
+  [ngStyle]="{ 'height': isFromAudits ? 'calc(100vh - 210px)' : '' }">
+  <form *ngIf="notFromAuditReports" [formGroup]="userStoryLogTimeForm" #formDirective="ngForm" novalidate
+    (submit)="userStoryLogTimeForm.valid && SaveUserStoryLogTime()">
+
+    <app-common-userstorySpentTime [spentTime]="spentTime" (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+    </app-common-userstorySpentTime>
+
+    <div fxLayout="row" fxLayout.sm="column" fxLayoutGap="5px" class="mt-05">
+      <div fxFlex="50">
+        <mat-form-field class="full-width">
+          <input matInput formControlName="dateFrom" [matDatepicker]="picker" (click)="picker.open()"
+            (dateChange)="changeDateFrom($event.value)" [min]="minDate" [max]="maxDate"
+            placeholder="{{'USERDETAIL.FROMDATE'| translate}}" required />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error>
+            <span *ngIf="
+            !userStoryLogTimeForm.get('dateFrom').valid &&
+            userStoryLogTimeForm.get('dateFrom').touched
+          ">{{'USERDETAIL.PLEASESELECTFROMDATE'| translate}}</span>
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div fxFlex="50">
+        <mat-form-field class="full-width">
+          <input matInput formControlName="dateTo" [matDatepicker]="picker1" (click)="picker1.open()"
+            placeholder="{{'USERDETAIL.TODATE'| translate}}" [min]="minDate" [max]="maxDate" required />
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+          <mat-error>
+            <span *ngIf="
+            !userStoryLogTimeForm.get('dateTo').valid &&
+            userStoryLogTimeForm.get('dateTo').touched
+          ">{{'USERDETAIL.PLEASESELECTTODATE'| translate}}</span>
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+
+
+    <span class="full-width pull-right mb-05 font-bold">{{ 'USERDETAIL.REMAININGESTIMATE' | translate }}*</span>
+    <mat-radio-group class="mb-1" formControlName="logTimeOptionId" [disabled]="disabled">
+      <mat-radio-button *ngFor="let option of (logTimeOptions$ | async)" (change)="logTimeOptionChange($event.value)"
+        matTooltip={{option.logTimeOptionToolTip|translate}} matTooltipClass="tooltip-overflow"
+        [style.marginBottom]="'.5rem'" [value]="option.logTimeOptionId" class="mr-1">{{ option.logTimeOption }}
+      </mat-radio-button>
+    </mat-radio-group>
+    <mat-error>
+      <span *ngIf="
+    userStoryLogTimeForm.get('logTimeOptionId').hasError('required')  &&
+    userStoryLogTimeForm.get('logTimeOptionId').touched
+      ">{{ 'USERDETAIL.PLEASESELECTLOGTIMEOPTION' | translate }}</span>
+    </mat-error>
+    <span *ngIf="showSetto">
+      <app-common-userstoryRemainingTime [spentTime]="spentTime"
+        (totalEstimatedTimeInHours)="changeEstimatedTime($event)"
+        (totalEstimatedSpentTimeInHours)="changeEstimatedSpentTime($event)"></app-common-userstoryRemainingTime>
+    </span>
+    <div>
+      <span class="mb-05 font-bold">{{ 'USERDETAIL.WORKDESCRIPTION' | translate }}*</span>
+      <editor formControlName="comment" class="dfree-header custom-logtime-comment"
+        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Comments" menubar="false"
+        [init]="initSettings" background="white" [(ngModel)]="commentText"></editor>
+      <mat-error>
+        <span *ngIf="
+          userStoryLogTimeForm.get('comment').hasError('required') &&
+          userStoryLogTimeForm.get('comment').touched">{{ 'USERDETAIL.PLEASEENTERWORKDESCRIPTION' | translate }}</span>
+      </mat-error>
+    </div>
+    <div class="text-right mt-1 mb-1">
+      <button mat-raised-button color="primary" class="mr-05" type="submit"
+        [disabled]="!userStoryLogTimeForm.valid || (anyOperationInProgress$|async) || isButtonDisabled">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$|async)">
+        </mat-progress-bar>
+        <fa-icon icon="check" class="mr-05"></fa-icon>{{ 'MYPROFILE.SUBMIT' | translate }} &nbsp;
+      </button>
+      <button mat-raised-button (click)="cancelLogTime()" [disabled]="(anyOperationInProgress$|async)">
+        <fa-icon icon="times" class="mr-05"></fa-icon> {{ 'CANCEL' | translate }}
+      </button>
+    </div>
+  </form>
+  <app-pm-component-userstory-logtime-history [userStoryId]="userStoryData" [notFromAuditReports]="notFromAuditReports">
+  </app-pm-component-userstory-logtime-history>
+</div>

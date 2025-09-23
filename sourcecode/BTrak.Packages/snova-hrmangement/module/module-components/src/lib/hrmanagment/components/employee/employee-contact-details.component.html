@@ -1,0 +1,225 @@
+<mat-card class="p-0 m-0 edit_employee full-height"
+  *ngIf="((canAccess_feature_ViewEmployeeContactDetails) || (canAccess_feature_CanEditOtherEmployeeDetails ))">
+  <mat-card-title class="drag-handler" *ngIf="isForm && selectedEmployeeContactDetailsData">
+    <div class="p-1"><b>{{'EMPLOYEECONTACTDETAILS.EDITCONTACTDETAILS' | translate  | titlecase}}</b></div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+
+  <mat-card-title class="drag-handler" *ngIf="isForm && !selectedEmployeeContactDetailsData">
+    <div class="p-1"><b>{{'EMPLOYEECONTACTDETAILS.ADDCONTACTDETAILS' | translate  | titlecase}}</b></div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+
+  <mat-card-title class="data-table-header drag-handler" *ngIf="isView">
+    <div class="p-1" fxLayout="row wrap">
+      <div fxFlex>
+        {{'EMPLOYEECONTACTDETAILS.VIEWCONTACTDETAILS' | translate  | titlecase }}
+      </div>
+      <div fxFlex="20px" fxLayoutAlign="end center"
+        *ngIf="(((canAccess_feature_AddOrUpdateEmployeeContactDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )) && !(operationInProgress$ | async)">
+        <span *ngIf="!selectedEmployeeContactDetailsData" (click)="enableDisableForm()"
+          class="mat-color-accent accordion-handle"
+          matTooltip="{{'EMPLOYEECONTACTDETAILS.ADDCONTACTDETAILS' | translate }}">
+          <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+        </span>
+        <span *ngIf="selectedEmployeeContactDetailsData" (click)="enableDisableForm()"
+          class="mat-color-accent accordion-handle"
+          matTooltip="{{'EMPLOYEECONTACTDETAILS.EDITCONTACTDETAILS' | translate }}">
+          <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+        </span>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+
+  <mat-card-content class="p-1 no-drag">
+    <ng-container *ngIf="isView && !isData">
+      <app-hr-component-view-employee-contact-details [employeeId]="employeeId"
+        [selectedEmployeeContactDetailsData]="selectedEmployeeContactDetailsData">
+      </app-hr-component-view-employee-contact-details>
+    </ng-container>
+    <div *ngIf="isData && isView" class="p-1">
+      <span>{{'NODATATODISPLAY' | translate }}</span>
+    </div>
+    <div class="p-0 m-0" id="contact-details-form">
+      <form [formGroup]="employeeContactDetailsForm" novalidate #formDirective="ngForm" *ngIf="isForm"
+        (submit)="employeeContactDetailsForm.valid && saveEmployeeContactDetails()">
+        <div fxLayout="column">
+          <div class="masonry-with-columns" fxLayoutAlign="space-between none">
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="address1"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET1' | translate }}">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('address1').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.ADDRESS1' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="address2"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ADDRESSSTREET2' | translate }}">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('address2').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.ADDRESS2' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="stateId" placeholder="{{'EMPLOYEECONTACTDETAILS.STATE' | translate }}"
+                  required (selectionChange)="searchByState($event.value)">
+                  <mat-option *ngFor="let state of selectStatesListData$ | async" [value]="state.stateId">
+                    {{state.stateName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="!employeeContactDetailsForm.get('stateId').valid && employeeContactDetailsForm.get('stateId').touched">
+                    {{'EMPLOYEECONTACTDETAILS.SELECTSTATE' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="postalCode"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.ZIP/POSTALCODE' | translate }}" autocomplete="off">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('postalCode').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.POSTALCODESHOULDNOTEXCEED20CHRACTERS' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="countryId" placeholder="{{'EMPLOYEECONTACTDETAILS.COUNTRY' | translate }}"
+                  (selectionChange)="searchByCountry($event.value)" required>
+                  <mat-option *ngFor="let country of selectCountryListData$ | async" [value]="country.countryId">
+                    {{country.countryName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="!employeeContactDetailsForm.get('countryId').valid && employeeContactDetailsForm.get('countryId').touched">
+                    {{'EMPLOYEECONTACTDETAILS.SELECTCOUNTRY' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+
+            </div>
+          </div>
+          <div class="mb-1">
+            <mat-divider></mat-divider>
+          </div>
+          <div fxLayout="row" class="masonry-with-columns">
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" fxLayoutAlign="start none">
+              <mat-form-field class="full-width mr-05">
+                <input matInput formControlName="homeTelephone"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.HOMETELEPHONES' | translate }}" mobileNumber
+                  autocomplete="off">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('homeTelephone').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.HOMETELEPHONE' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="35" fxFlex="24" fxLayout="row" fxLayoutAlign="start none">
+              <div fxFlex="30">
+                <mat-form-field class="mr-05" style="width: 85%;">
+                  <input matInput readonly="true" value={{countryCode}}></mat-form-field>
+              </div>
+              <div fxFlex="69">
+                <mat-form-field class="full-width mr-05">
+                  <input matInput formControlName="mobile"
+                    placeholder="{{'EMPLOYEECONTACTDETAILS.MOBILES' | translate }}" mobileNumber autocomplete="off">
+                  <mat-error>
+                    <span *ngIf="employeeContactDetailsForm.get('mobile').hasError('maxlength')">
+                      {{'EMPLOYEECONTACTDETAILS.MOBILE' | translate }}</span>
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="ml-08" fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="30" fxFlex="24" fxLayoutAlign="start none">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="workTelephone"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.WORKTELEPHONENUMBER' | translate }}" mobileNumber
+                  autocomplete="off">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('workTelephone').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.WORKTELEPHONE' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="mr-05" fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="workEmail"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.WORKEMAILS' | translate }}">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('workEmail').hasError('pattern')">
+                    {{'EMPLOYEECONTACTDETAILS.VALIDEMAIL' | translate }}</span>
+                  <span
+                    *ngIf="employeeContactDetailsForm.get('workEmail').hasError('pattern') && employeeContactDetailsForm.get('workEmail').hasError('maxlength')">,</span>
+                  <span *ngIf="employeeContactDetailsForm.get('workEmail').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.WORKEMAIL' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="otherEmail"
+                  placeholder="{{'EMPLOYEECONTACTDETAILS.OTHEREMAILS' | translate }}">
+                <mat-error>
+                  <span *ngIf="employeeContactDetailsForm.get('otherEmail').hasError('pattern')">
+                    {{'EMPLOYEECONTACTDETAILS.VALIDEMAIL' | translate }}</span>
+                  <span
+                    *ngIf="employeeContactDetailsForm.get('otherEmail').hasError('pattern') && employeeContactDetailsForm.get('otherEmail').hasError('maxlength')">,</span>
+                  <span *ngIf="employeeContactDetailsForm.get('otherEmail').hasError('maxlength')">
+                    {{'EMPLOYEECONTACTDETAILS.OTHEREMAIL' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+
+            </div>
+          </div>
+        </div>
+        <div class="text-center" style="margin-bottom: 15px;">
+          <button mat-button mat-raised-button type="submit" color="primary" class="mr-1"
+            [disabled]="!employeeContactDetailsForm.valid || (upsertEmployeeContactDetailsInProgress$ | async)">
+            <mat-progress-bar color="primary" mode="indeterminate"
+              *ngIf="upsertEmployeeContactDetailsInProgress$ | async">
+            </mat-progress-bar>
+            <span *ngIf="!selectedEmployeeContactDetailsData">
+              <fa-icon class="mr-05" icon="save"></fa-icon>{{'SAVE' | translate }}
+            </span>
+            <span *ngIf="selectedEmployeeContactDetailsData">
+              <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+            </span>
+          </button>
+          <button mat-button mat-raised-button type="button" (click)="close()"
+            [disabled]="upsertEmployeeContactDetailsInProgress$ | async">
+            <fa-icon class="mr-05" icon="undo"></fa-icon> {{'RESET' | translate}}
+          </button>
+        </div>
+      </form>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="p-0 m-0 edit_employee full-height"
+  *ngIf="!((canAccess_feature_ViewEmployeeContactDetails) || (canAccess_feature_CanEditOtherEmployeeDetails ))">
+  <mat-card-title class="data-table-header drag-handler" *ngIf="isView">
+    <div class="p-1" fxLayout="row wrap">
+      <div fxFlex>
+        {{'EMPLOYEECONTACTDETAILS.VIEWCONTACTDETAILS' | translate }}
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+  <mat-card-content>
+    <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+    </app-common-message-box>
+  </mat-card-content>
+</mat-card>

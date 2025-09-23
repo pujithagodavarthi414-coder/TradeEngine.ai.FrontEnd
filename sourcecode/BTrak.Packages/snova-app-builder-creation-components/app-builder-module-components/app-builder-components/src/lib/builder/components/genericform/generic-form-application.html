@@ -1,0 +1,295 @@
+<mat-card class="p-0" *ngIf="(canAccess_feature_ViewApplications)">
+    <mat-card-title>
+        <div class="card-title-text p-05" style="padding: 0px !important;">
+            <div class="m-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="0">
+                <div fxFlex="50" class="mt-05 ml-05" fxLayoutAlign="start center">
+                    {{ customApplicationName | titlecase }}
+                </div>
+                <div fxFlex="50" class="ml-05" fxLayout="row" fxLayoutAlign="end">
+                    <button mat-icon-button type="button" style="margin-right: 0px !important;">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="uploadProfileImageInProgress">
+                        </mat-progress-bar>
+                        <fa-icon class="mat-color-accent icon-button" matTooltip="{{'APP.IMPORTFROMEXCEL' | translate}}"
+                            icon="upload" (click)="uploader.click()">
+                            <input hidden class="mt-1 mb-1" #uploader type="file" id="file1" mat-button
+                                mat-raised-button (click)="uploader.value = null" value="" accept=".xlsx"
+                                (change)="uploadEventHandler($event)">
+                        </fa-icon>
+                    </button>
+                    <button class="topbar-button-right mat-icon-button" matTooltip="Custom applications"
+                        *ngIf="(canAccess_feature_ViewApplications)"
+                        [routerLink]="['/applications/custom-applications']" style="line-height: 10px !important;">
+                        <span class="material-icons icon-button mat-color-accent">receipt</span>
+                    </button>
+                    <!-- <div class="topbar-button-right mat-icon-button">
+                        <fa-icon icon="filter" matTooltip="filter" [satPopoverAnchorFor]="userFilter"
+                            #userFilterPopover="satPopoverAnchor" (click)="openFilterPopover(userFilterPopover)"
+                            class="mat-color-accent cursor-pointer">
+                        </fa-icon>
+                    </div> -->
+
+                </div>
+            </div>
+        </div>
+    </mat-card-title>
+</mat-card>
+
+<div *ngIf="(canAccess_feature_ViewApplications)">
+    <div fxLayout="row wrap" class="p-03" *ngIf="!isFormLoading">
+        <div fxFlex="100" fxFlex.gt-sm="100" fxFlex.gt-md="calc(100% - 300px)" class="my-profiletabs" fxLayout="column">
+            <div class="my-profiletabs widget-tab-static-label">
+                <div fxFlex="100">
+                    <mat-tab-group class="custom-tab-overflow" style="height: 42px;" [selectedIndex]="selected.value"
+                        (selectedTabChange)="selectedMatTab($event.index)">
+                        <mat-tab *ngFor="let workspace of applicationForms; let index = index">
+                            <div *ngIf="workspace.viewForm" style="width: 250px !important">
+                                <ng-template mat-tab-label>
+                                    <div fxLayout="row wrap" style="max-width: 210px;">
+                                        <div matTooltip="{{workspace.formName}}" fxFlex class="hide-content-overflow"
+                                            style="text-overflow: ellipsis;white-space: nowrap;width: 160px;">
+                                            {{workspace.formName}} </div>
+                                    </div>
+                                </ng-template>
+                            </div>
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+            </div>
+            <mat-card class="p-0 m-0" style="height: calc(100vh - 148px)" id="style-1">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+                </mat-progress-bar>
+                <mat-card-content>
+                    <div fxLayout="row" class="m-1">
+                        <div></div>
+                        <div fxFlex fxLayoutAlign="end center">
+                            <span *ngIf="showArchivedRecords" style="color:#002060;" class="pr-2">(Archived)</span>
+                    
+                            <div class="topbar-button-right mat-icon-button  mat-color-accent cursor-pointer ">
+                                <!-- <span *ngIf ="showArchivedRecords" class="pr-2">(Archived)</span> -->
+                                <fa-icon *ngIf="!showArchivedRecords" icon="toggle-off" matTooltip="click here to see archived records"
+                                    class="mat-color-accent cursor-pointer" (click)="toggleArchivedRecords(true)">
+                                </fa-icon>
+                                <fa-icon *ngIf="showArchivedRecords" icon="toggle-on" matTooltip="click here to see unarchived records"
+                                    class="mat-color-accent cursor-pointer" (click)="toggleArchivedRecords(false)">
+                                </fa-icon>
+                            </div>
+                    
+                            <div *ngIf="showArchivedRecords && deleteRecordValues && deleteRecordValues.length>0"
+                                class="topbar-button-right mat-icon-button  mat-color-accent cursor-pointer ">
+                                <fa-icon icon="trash-restore" matTooltip="unarchive" (click)="unArchiveMultipleRecords()"
+                                    class="mat-color-accent cursor-pointer">
+                                </fa-icon>
+                            </div>
+                    
+                            <div *ngIf="!showArchivedRecords && deleteRecordValues && deleteRecordValues.length>0"
+                                class="topbar-button-right mat-icon-button  mat-color-accent cursor-pointer ">
+                                <fa-icon icon="trash" matTooltip="Delete or archive" [satPopoverAnchorFor]="deleteMultipleRecordsPopover"
+                                    #deleteMultiplePopUp="satPopoverAnchor" (click)="deleteMultipleRecordsPopUpOpen()"
+                                    class="mat-color-accent cursor-pointer">
+                                </fa-icon>
+                            </div>
+                    
+                            <div class="topbar-button-right mat-icon-button  mat-color-accent cursor-pointer mr-1">
+                                <fa-icon icon="filter" matTooltip="Filter" [satPopoverAnchorFor]="userFilter"
+                                    #userFilterPopover="satPopoverAnchor" (click)="openFilterPopover(userFilterPopover)"
+                                    class="mat-color-accent cursor-pointer">
+                                </fa-icon>
+                            </div>
+                            <fa-icon class=" mat-color-accent cursor-pointer mr-1" style="font-size:25px" icon="file-excel"
+                                matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}" (click)="exportToExcel(grid,selectedform)">
+                            </fa-icon>
+                            <button mat-button mat-raised-button color="primary" class=" cursor-pointer"
+                                matTooltip="Click here to share new form" style="margin-left: 7px !important;" *ngIf="isRedirectToEmails"
+                                [satPopoverAnchorFor]="shareForm" #shareFormPopover="satPopoverAnchor"
+                                (click)="openSharePopUp(shareFormPopover)">
+                                <fa-icon icon="share-alt" class="mr-05"></fa-icon> Share
+                            </button>
+                            <button mat-button mat-raised-button color="primary" class=" pr-1" style="margin-left: 9px !important;"
+                                *ngIf="!showArchivedRecords && (canAccess_feature_ConductForm)"
+                                (click)="createANewform(selectedform.customApplicationId,'',selectedform, true, true)"
+                                matTooltip="{{ 'GENERICFORM.CLICKHERETOCREATEANEWFORM' | translate }}">
+                                <fa-icon icon="plus" class="mr-05"></fa-icon> Add
+                            </button>
+                    
+                        </div>
+                    </div>
+                    <div *ngIf="loadTable || refreshExcel">
+                        <app-custom-application-table [applicationId]="applicationId" [recordLevelPermissionFieldName]="recordLevelPermissionFieldName" [isRecordLevelPermissionEnabled]="isRecordLevelPermissionEnabled" [applicationForm]="selectedform"
+                            [loadRecords]="loadRecords" [isApproveNeeded]="isApproveNeeded" [isExcel]="excelDownload" [dateFilters]="dateFilters" [showArchivedRecords] ="showArchivedRecords" [conditionalEnum]="conditionalEnum"
+                            [isRefresh]="refreshExcel" [allowAnnonymous]="allowAnnonymous" (excelDownloadCompleted)="excelDownloadCompleted($event)"
+                            (refreshCompleted)="refreshEvent($event)" (deleteMultipleRecordsValues) ="deleteMultipleRecordsValuesChange($event)"></app-custom-application-table>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewApplications)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<ng-template #genericFormImportDialogComponent let-data>
+    <genericform-import-dialog [data]=[data]></genericform-import-dialog>
+</ng-template>
+
+<ng-template #genericApplicationComponent let-data>
+    <generic-application-form-popup [data]=[data] (submitFinished)="submitFinished()"></generic-application-form-popup>
+</ng-template>
+<sat-popover backdropClass="backdrop-color" #deleteTemplatePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="!isArchived">Archive
+            </div>
+            <div class="card-title-text mb-1" *ngIf="isArchived">Unarchive
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="!isArchived">
+                Are you sure want to archive?
+            </div>
+            <div class="card-content mb-1" *ngIf="isArchived">
+                Are you sure want to unarchive?
+            </div>
+            <div class="text-center">
+                <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteRecord();" *ngIf="!isArchived">
+                    <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                </button>
+                <!-- <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteTradeTemplate();" *ngIf="isArchived">
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button> -->
+                <button mat-button mat-raised-button (click)="closeDeletetemplateDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #userFilter hasBackdrop verticalAlign="below" [interactiveClose]="true" backdropClass="backdrop-color">
+    <mat-card class="p-0">
+        <mat-card-content class="pl-05 custom-app-filter-key" style="width: 250px;">
+            <div fxFlex>
+                <!-- <mat-radio-group aria-label="Select an option" [(ngModel)]="dateType" (change)="onDateTypeChange()">
+                    <mat-radio-button value="date" class="pr-05">Date</mat-radio-button>
+                    <mat-radio-button value="dateRange">Date range</mat-radio-button>
+                </mat-radio-group>
+                <div *ngIf="dateType == 'date'">
+                    <mat-form-field class="full-width">
+                        <input matInput [matDatepicker]="picker3" (click)="picker3.open()" placeholder="Date"
+                            required autocomplete="off" [(ngModel)]="singleDate" (dateChange)="dateChanged()">
+                        <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                        <mat-datepicker #picker3></mat-datepicker>
+                    </mat-form-field>
+                </div> -->
+                <div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker" (click)="picker.open()" placeholder="Date from"
+                                required autocomplete="off" [(ngModel)]="dateFrom"
+                                (dateChange)="dateChanged();startDate()" (input)="startDate()" [max]="maxDate"
+                                [min]="minDate" [disabled]="isFiltersApplied">
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker1" (click)="picker1.open()" placeholder="Date to"
+                                required autocomplete="off" [(ngModel)]="dateTo" (dateChange)="dateChanged()"
+                                [min]="minDateForEndDate" disabled={{endDateBool}} [readonly]="true" autocomplete="off"
+                                [disabled]="isFiltersApplied">
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                        </mat-form-field>
+                        <button mat-button mat-raised-button color="primary" (click)="addFilter()" matTooltip="Find">
+                            Find
+                        </button>
+                    </div>
+                    <span *ngIf="dateFrom && dateTo && isFiltersApplied" class="custom-filter-chips">
+                        <b>Date </b> :
+                        <span *ngIf="dateFrom && dateTo">
+                            {{dateFrom | date: "dd-MMM-yyyy"}} to
+                            {{dateTo | date: "dd-MMM-yyyy"}}
+                        </span>
+                        <fa-icon icon="times" class="ml-05 mr-05 mat-color-accent cursor-pointer"
+                            (click)="removedynamicfilter()">
+                        </fa-icon>
+                    </span>
+                    <!-- <mat-radio-group aria-label="Select an option" [(ngModel)]="dateValue" (change)="onChange()">
+                        <mat-radio-button value="lastWeek" class="pr-05">{{ 'TESTMANAGEMENT.LASTWEEK' | translate}}
+                        </mat-radio-button>
+                        <mat-radio-button value="nextWeek">{{ 'TESTMANAGEMENT.NEXTWEEK' | translate}}
+                        </mat-radio-button>
+                        <mat-radio-button value="thisMonth" class="pr-05">
+                            {{ 'TESTMANAGEMENT.THISMONTH' | translate}}</mat-radio-button>
+                        <mat-radio-button value="lastMonth">{{ 'TESTMANAGEMENT.LASTMONTH' | translate}}
+                        </mat-radio-button>
+                    </mat-radio-group> -->
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #shareForm hasBackdrop verticalAlign="below" [interactiveClose]="true" backdropClass="backdrop-color">
+    <app-share-custom-application [applicationId]="applicationId" [dataSourceId]="dataSourceId"
+        [workflowIds]="workflowIds" (sharePopUps)="closePopUp()"></app-share-custom-application>
+</sat-popover>
+<sat-popover backdropClass="backdrop-color" #deleteMultipleRecordsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" >Delete permanently
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" >
+                Are you sure you want to delete records permanently?
+            </div>
+            <div class="text-center">
+                <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteMultipleRecords(false);">
+                    <mat-icon style="cursor: pointer;">delete</mat-icon> Delete
+                </button>
+                <!-- <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteTradeTemplate();" *ngIf="isArchived">
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button> -->
+                <button mat-button mat-raised-button (click)="closeDeleteMutipleDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> Cancel
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<ng-template #deleteMultipleRecordsPopUp >
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" >Delete
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" >
+                <p>Select "Delete" to delete the records permanently, or "Archive" to restore them later</p>
+            </div>
+            <div class="text-center" style="display:flex;gap:12px ;justify-content: center;">
+                
+                <button mat-button mat-raised-button (click)="closeDeleteMultipleRecordsPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> Cancel
+                </button>
+                <button mat-button mat-raised-button (click)="deleteMultipleRecords(true);">
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> Archive
+                </button>
+                <button class="mr-1 glossy-button-button" mat-button mat-raised-button color="primary"
+                [satPopoverAnchorFor]="deleteMultipleRecordsPopover" #deleteMultiplePopUp="satPopoverAnchor"
+                (click)="deletePopUpOpen(deleteMultiplePopUp);$event.stopPropagation()"
+                    [disabled]="isAnyOperationIsInprogress" >
+                    <mat-icon style="cursor: pointer;">delete</mat-icon> Delete
+                </button>
+                
+            </div>
+        </mat-card-content>
+    </mat-card>  
+</ng-template>

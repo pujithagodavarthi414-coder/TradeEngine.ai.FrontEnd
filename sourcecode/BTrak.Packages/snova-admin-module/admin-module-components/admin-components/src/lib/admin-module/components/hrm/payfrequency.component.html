@@ -1,0 +1,159 @@
+<div class="full-height" *ngIf="canAccess_feature_ManagePayFrequency">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'PAYFREQUENCY.PAYFREQUENCY' | translate | titlecase }}">{{ 'PAYFREQUENCY.PAYFREQUENCY' |
+            translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getPayFrequency()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{ 'PAYFREQUENCY.CLICKHERETOCREATEAPAYFREQUENCYTYPE' | translate }}"
+              [satPopoverAnchorFor]="payfrequencyPopover" #payfrequencyPopup="satPopoverAnchor"
+              (click)="createPayfrequency(payfrequencyPopup);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchived"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+      [limit]="100" [rows]="payfrequency" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'PAYFREQUENCY.PAYFREQUENCYNAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="payFrequencyName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.payFrequencyName }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'PAYFREQUENCY.EDITPAYFREQUENCY' | translate }}"
+            [satPopoverAnchorFor]="payfrequencyPopover" #payfrequencyPopup="satPopoverAnchor"
+            (click)="editPayfrequency(row,payfrequencyPopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'PAYFREQUENCY.ARCHIVEPAYFREQUENCY' | translate }}"
+            [satPopoverAnchorFor]="deletepayfrequencyPopover" #deletepayfrequencyPopup="satPopoverAnchor"
+            (click)="deletePayfrequencyPopUpOpen(row,deletepayfrequencyPopup)" *ngIf="!isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+          </button>
+
+          <button class="text-center" title="{{ 'PAYFREQUENCY.UNARCHIVEPAYFREQUENCY' | translate }}"
+            [satPopoverAnchorFor]="deletepayfrequencyPopover" #deletepayfrequencyPopup="satPopoverAnchor"
+            (click)="deletePayfrequencyPopUpOpen(row,deletepayfrequencyPopup)" *ngIf="isArchived" mat-icon-button>
+            <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- editpopover -->
+  <sat-popover backdropClass="backdrop-color" #payfrequencyPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ payfrequencyEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="payfrequencyForm" #formDirective="ngForm" novalidate
+          (submit)="payfrequencyForm.valid && upsertPayFrequency(formDirective)">
+          <div>
+            <mat-form-field>
+              <input matInput formControlName="payFrequencyName"
+                placeholder="{{ 'PAYFREQUENCY.PAYFREQUENCYNAME' | translate }}" required>
+              <mat-error *ngIf="payfrequencyForm.get('payFrequencyName').hasError('maxlength')">
+                {{ 'PAYFREQUENCY.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="payfrequencyForm.get('payFrequencyName').hasError('required') && payfrequencyForm.get('payFrequencyName').touched">
+                {{ 'PAYFREQUENCY.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!payfrequencyForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertPayfrequencyPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <!-- deletepopover -->
+  <sat-popover backdropClass="backdrop-color" #deletepayfrequencyPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isPayfrequencyArchived">
+          {{ 'PAYFREQUENCY.ARCHIVEPAYFREQUENCY' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isPayfrequencyArchived">
+          {{ 'PAYFREQUENCY.UNARCHIVEPAYFREQUENCY' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isPayfrequencyArchived">
+          {{ 'PAYFREQUENCY.PAYFREQUENCYARCHIVETEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isPayfrequencyArchived">
+          {{ 'PAYFREQUENCY.PAYFREQUENCYUNARCHIVETEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isPayfrequencyArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)=" deletePayfrequency();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isPayfrequencyArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)=" deletePayfrequency();">
+            <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeletePayfrequencyPopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+<app-common-message-box *ngIf="!canAccess_feature_ManagePayFrequency"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

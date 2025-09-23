@@ -1,0 +1,181 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageBankAccountComponents">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'BANKACCOUNT.MANAGEBANK' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+                <div fxFlex="50px">
+                    <button mat-icon-button matTooltip="{{ 'BANKACCOUNT.ADDNEWBANK' | translate }}"
+                        [satPopoverAnchorFor]="addBankPopOver" #addBankPopUp="satPopoverAnchor"
+                        (click)="openBankPopUp(addBankPopUp)" class="mt-02">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" *ngIf="bankAccountsModel.length > 0">
+        <kendo-grid [data]="bankAccountModel" [pageSize]="state.take" [skip]="state.skip" [pageable]="true" [sortable]="true"
+            [sort]="state.sort" [filterable]="false" [loading]="isLoading" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="bankAccountName" title="{{'BANKACCOUNT.NAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.bankAccountName }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="beneficiaire" title="{{'BANKACCOUNT.BENEFICIARE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.beneficiaire }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="iban" title="{{'BANKACCOUNT.IBAN' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.iban }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="banque" title="{{'BANKACCOUNT.BANQUE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.banque }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="addBankPopOver" #addBankPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'BANKACCOUNT.EDITBANK' | translate}}" (click)="editBankPopUp(dataItem,addBankPopUp)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" [satPopoverAnchorFor]="archiveBankPopOver"
+                        #archiveBankPopUp="satPopoverAnchor" matTooltip="{{ 'BANKACCOUNT.ARCHIVEBANK' | translate}}"
+                        (click)="deleteBankPopUp(dataItem,archiveBankPopUp)" icon="trash">
+                    </fa-icon>
+                   
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+    <app-common-message-box class="no-drag" *ngIf="!isLoading && bankAccountsModel.length === 0"
+        textToDisplay="{{'BANKACCOUNT.EMPTYBANKS' | translate}}">
+        <ng-template ng-message-tmp>
+            <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+                [satPopoverAnchorFor]="addBankPopOver" #addBankPopUp="satPopoverAnchor"
+                (click)="openBankPopUp(addBankPopUp)">
+                <fa-icon class="mr-05" icon="plus"></fa-icon>{{'BANKACCOUNT.ADDNEWBANK' | translate}}
+            </button>
+        </ng-template>
+    </app-common-message-box>
+
+
+    <sat-popover #addBankPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+                <div class="card-title-text mb-1" *ngIf="!bankAccountId">{{ 'BANKACCOUNT.CREATEBANK' | translate }}
+                </div>
+                <div class="card-title-text mb-1" *ngIf="bankAccountId">{{ 'BANKACCOUNT.UPDATEBANK' | translate }}
+                </div>
+            </div>
+            <div class="card-content p-05">
+                <form [formGroup]="bankAccountForm" novalidate #formDirective="ngForm" (submit)="upsertBankAccount()">
+                    <mat-form-field class="full-width">
+                        <input formControlName="bankAccountName" matInput required placeholder="{{'BANKACCOUNT.NAME' | translate}}">
+                        <mat-error>
+                            <span
+                                *ngIf="bankAccountForm.get('bankAccountName').hasError('required') && bankAccountForm.get('bankAccountName').touched">{{'BANKACCOUNT.PLEASEENTERNAME'
+                                | translate}}
+                            </span>
+                            <span
+                                *ngIf="bankAccountForm.get('bankAccountName').hasError('maxlength')">{{'BANKACCOUNT.NAMECANNOTEXCEED50CHARACTERS'
+                                | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input formControlName="beneficiaire" matInput required placeholder="{{'BANKACCOUNT.BENEFICIARE' | translate}}">
+                        <mat-error>
+                            <span
+                            *ngIf="bankAccountForm.get('beneficiaire').hasError('required') && bankAccountForm.get('beneficiaire').touched">{{'BANKACCOUNT.PLEASEENTERBENEFICIARE'
+                            | translate}}
+                        </span>
+                        <span
+                            *ngIf="bankAccountForm.get('beneficiaire').hasError('maxlength')">{{'BANKACCOUNT.BENEFICIARECANNOTEXCEED50CHARACTERS'
+                            | translate}}
+                        </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input formControlName="iban" matInput required placeholder="{{'BANKACCOUNT.IBAN' | translate}}">
+                        <mat-error>
+                            <span
+                            *ngIf="bankAccountForm.get('iban').hasError('required') && bankAccountForm.get('iban').touched">{{'BANKACCOUNT.PLEASEENTERIBAN'
+                            | translate}}
+                        </span>
+                        <span
+                            *ngIf="bankAccountForm.get('iban').hasError('maxlength')">{{'BANKACCOUNT.IBANCANNOTEXCEED50CHARACTERS'
+                            | translate}}
+                        </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input formControlName="banque" matInput required placeholder="{{'BANKACCOUNT.BANQUE' | translate}}">
+                        <mat-error>
+                            <span
+                            *ngIf="bankAccountForm.get('iban').hasError('required') && bankAccountForm.get('iban').touched">{{'BANKACCOUNT.PLEASEENTERBANQUE'
+                            | translate}}
+                        </span>
+                        <span
+                            *ngIf="bankAccountForm.get('iban').hasError('maxlength')">{{'BANKACCOUNT.BANQUECANNOTEXCEED50CHARACTERS'
+                            | translate}}
+                        </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <div class="mt-1 text-center">
+                        <button mat-raised-button type="submit" color="primary" class="mr-1"
+                            [disabled]="!bankAccountForm.valid||isAddIsInProgress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAddIsInProgress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #archiveBankPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="p-1">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mb-1">{{ 'BANKACCOUNT.AREYOUSUREWANTTODELETEBANK' | translate }}
+                </div>
+            </mat-card-title>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveBank();">
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+</div>
+
+
+<app-common-message-box  *ngIf="!canAccess_feature_ManageBankAccountComponents"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

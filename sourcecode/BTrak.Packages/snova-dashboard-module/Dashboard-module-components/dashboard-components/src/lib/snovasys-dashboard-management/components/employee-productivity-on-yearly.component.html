@@ -1,0 +1,95 @@
+<mat-card class="m-0 p-0" *ngIf="canAccess_feature_EmployeeIndex">
+  <mat-card-title class="full-width data-table-header">
+    <div fxLayout="row wrap" fxLayoutGap="0">
+      <div fxFlex fxLayoutAlign="start center" class="p-05 drag-handler">
+        <span fxFlex="100" class="hide-content-overflow">{{'PRODUCTIVITYREPORT' | translate | titlecase}}</span>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center">
+        <button mat-icon-button (click)="resetAllFilters()">
+          <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+        </button>
+      </div>
+      <div fxFlex="40px" fxLayoutAlign="end center">
+        <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+          [matMenuTriggerFor]="filterMenu">
+          <fa-icon icon="filter" class="filter mat-color-accent"
+            matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+          </fa-icon>
+        </button>
+      </div>
+      <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+        <button mat-menu-item [ngClass]="{ 'active': selectEmployeeFilterIsActive }" [matMenuTriggerFor]="employee">
+          {{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+        <button mat-menu-item [ngClass]="{ 'active': dateFilterIsActive }" [matMenuTriggerFor]="date">
+          {{'LOGTIMEREPORT.DATE' | translate}}</button>
+      </mat-menu>
+      <mat-menu #employee="matMenu">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+          <div fxFlex="180px" class="ml-05 mr-05">
+            <mat-form-field>
+              <mat-select placeholder="{{'WORKLOGGING.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                [(ngModel)]="selectedEmployeeId" (selectionChange)="selectedEmployeesId($event.value)">
+                <mat-option *ngFor="let employee of employeeList" [value]="employee.teamMemberId">
+                  <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                    [name]="employee.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="employee.profileImage"
+                    src="{{employee.profileImage}}">{{employee.teamMemberName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </mat-card>
+      </mat-menu>
+      <mat-menu #date="matMenu">
+        <mat-card class="filter-data" (click)="$event.stopPropagation()">
+          <div fxFlex="180px" fxLayoutAlign="center center" class="ml-05 mr-05">
+            <div>
+              <fa-icon (click)="getProductivityIndexBasedOnDate('left')" icon="chevron-left"></fa-icon>
+              <b>&nbsp;{{selectedDate | date: "yyyy"}}&nbsp;</b><span
+                *ngIf="weekNumber"><b>W{{weekNumber}}&nbsp;</b></span>
+              <fa-icon (click)="getProductivityIndexBasedOnDate('right')" icon="chevron-right"></fa-icon>
+            </div>
+
+          </div>
+        </mat-card>
+      </mat-menu>
+    </div>
+  </mat-card-title>
+</mat-card>
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+</mat-progress-bar>
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeIndex)"
+  textToDisplay="{{ 'PRODUCTIVITYDASHBOARD.PERMISSION' | translate }}">
+</app-common-message-box>
+<div class="full-height no-drag">
+  <div id="productivityChart"></div>
+  <div id="productivityToolTip"></div>
+</div>
+<style>
+  .svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 0px;
+    vertical-align: top;
+    overflow: hidden;
+  }
+
+  .svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 0;
+  }
+
+  .toolTip {
+    position: absolute;
+    display: none;
+    min-width: 80px;
+    height: auto;
+    background: none repeat scroll 0 0 #ffffff;
+    border: 1px solid black;
+    padding: 14px;
+    text-align: center;
+  }
+</style>

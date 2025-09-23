@@ -1,0 +1,31 @@
+export class CreateForm {
+    Id: string;
+    FormTypeId: string;
+    DataSourceId: string;
+    FormType: string;
+    formTypeName: string;
+    formName: string;
+    workflowTrigger: string;
+    formJson: string;
+    createdDateTime: Date;
+    CreatedByUserId: string;
+    UpdatedDateTime: Date;
+    UpdatedByUserId: string;
+    IsArchived: boolean;
+    ArchivedDateTime: Date;
+    ArchivedByUserId: string;
+    IsDeleted: boolean;
+    TimeStamp: any;
+    roleIds : string;
+    formKeys: string;
+    profileImage: string;
+    fullName: string;
+    statusReportingConfigurationId: string;
+    isSubmitted: boolean;
+    statusReportingConfigurationOptionId: string;
+    isAbleToLogin: boolean;
+    customApplicationNames: string[];
+    dataSourceId: string;
+    companyModuleId: string;
+    dataSourceTypeNumber: number;
+}

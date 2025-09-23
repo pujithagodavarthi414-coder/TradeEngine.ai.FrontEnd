@@ -1,0 +1,303 @@
+<div *ngIf="(canAccess_feature_ViewFoodOrders)" class="full-height">
+  <!-- <mat-card class="p-0 m-0">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayoutGap="5px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+        <div fxFlex class="card-title-text p-05 ml-05"  fxLayoutAlign="start center">{{'HRMANAGAMENT.FOODORDERS' | translate}}</div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="SearchFoodOrderList()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 5px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" *ngIf = "entities?.length > 1">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf = "entities?.length > 1">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" class="mr-05 ml-02 mt-02"
+          *ngIf="(canAccess_feature_AddFoodOrder)">
+          <mat-icon mat-icon-button class="custom-widget-icon mr-05 mt-n2"
+            matTooltip="{{'HRMANAGAMENT.PLACEANORDER' | translate}}" [satPopoverAnchorFor]="placeAnOrderPopover"
+            (click)="openPlaceOrderPopover();placeAnOrderPopover.open()">
+            restaurant_menu
+          </mat-icon>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card> -->
+
+  <mat-card class="p-0 m-0 canteen-manage">
+    <mat-card-title class="data-table-header drag-handler">
+      <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+        <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+          {{'HRMANAGAMENT.FOODORDERS' | translate | titlecase}}
+        </div>
+        <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxFlex.xs="10" fxLayoutAlign.xs="center center"
+          fxLayoutAlign="end center">
+          <mat-form-field ngClass.xs="full-width" style="width:30% !important">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="SearchFoodOrderList()">
+          </mat-form-field>
+          <span class="user-management-close food-order-close">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+          <button class="mt-05" type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu" *ngIf="entities?.length > 1">
+            <fa-icon icon="user-cog" matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}"
+              class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+          <button *ngIf="(canAccess_feature_AddFoodOrder)" mat-icon-button
+            matTooltip="{{'HRMANAGAMENT.PLACEANORDER' | translate}}" [satPopoverAnchorFor]="placeAnOrderPopover"
+            (click)="openPlaceOrderPopover();placeAnOrderPopover.open()">
+            <mat-icon class="custom-widget-icon">restaurant_menu</mat-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+      <mat-form-field (click)="$event.stopPropagation()">
+        <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+          (selectionChange)="entityValues($event.value)">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+  </mat-menu>
+  <mat-card-content class="p-0 full-height">
+    <div class="activity-data foodorders-data filter-margin m-0 no-drag">
+      <ngx-datatable class="btrak" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+        [scrollbarH]="true" [virtualization]="false"
+        [externalPaging]="true" [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size"
+        [externalSorting]="true" [loadingIndicator]="foodOrderListGridSpinner$ | async" (sort)="onSort($event)"
+        (page)='setPage($event)' [rows]="foodOrderList$ | async" [scrollbarH]="isScrollable" [virtualization]="false"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.ORDEREDITEMS' | translate}}" sortable="true" prop="foodItemName"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="hide-content-overflow"><span matTooltip="{{ row?.foodItemName }}"
+                matTooltipClass="tooltip-overflow">{{ row?.foodItemName }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.CLAIMDATE' | translate}}" sortable="true" prop="orderedDateTime"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div *ngIf="row?.orderedDateTime !=null"> <span
+                matTooltip="{{ row?.orderedDateTime }}">{{ row?.orderedDateTime | utcToLocalTime |date: "dd-MMM-yyyy"  }}
+              </span> </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.MEMBERSCOUNT' | translate}}" sortable="true" prop="employeesCount"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span> {{ row?.employeesCount }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.MEMBERS' | translate}}" sortable="true" prop="employeesName"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="hide-content-overflow"><span matTooltip="{{ row?.employeesName }}"
+                matTooltipClass="tooltip-overflow"> {{ row?.employeesName }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.AMOUNT' | translate}}" sortable="true" prop="amount" [flexGrow]="1"
+          type="number">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span> {{row?.symbol}}{{ row?.amount }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.CLIAMEDBY' | translate}}" sortable="true" prop="claimedByUserName"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span matTooltip=" {{ row?.claimedByUserName }}"> {{ row?.claimedByUserName }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.CLAIMSTATUSSETBY' | translate}}" sortable="true"
+          prop="statusSetByUserName" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span matTooltip=" {{ row?.statusSetByUserName }}"> {{ row?.statusSetByUserName }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.CLAIMSTATUS' | translate}}" sortable="true" prop="status"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span matTooltip="{{ row?.status }}">{{ row?.status }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.REASON' | translate}}" sortable="true" prop="reason" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="hide-content-overflow"><span matTooltip="{{row?.reason }}">{{ row?.reason }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" name="{{'HRMANAGAMENT.ACTION' | translate}}" [flexGrow]="1" [sortable]="false"
+          *ngIf="(canAccess_feature_UpdateFoodOrder)">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div [ngStyle]="{ 'display': row?.status == 'Pending' ? 'inline' : 'none' }">
+              <button class="text-center" title="{{'HRMANAGAMENT.APPROVEFOODORDERTITLE' | translate}}"
+                [satPopoverAnchorFor]="approveFoodOrderPopOver" #approveFoodOrderPopUp="satPopoverAnchor"
+                (click)="approveFoodOrderPopupOpen(row,approveFoodOrderPopUp)" mat-icon-button>
+                <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+              <button class="text-center" title="{{'HRMANAGAMENT.REJECTFOODORDER' | translate}}"
+                [satPopoverAnchorFor]="rejectFoodOrderPopOver" #rejectFoodOrderPopUp="satPopoverAnchor"
+                (click)="rejectFoodOrderPopupOpen(row,rejectFoodOrderPopUp)" mat-icon-button>
+                <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+            </div>
+            <button class="text-center" [disabled] title="{{'HRMANAGAMENT.APPROVEDTITLE' | translate}}"
+              [ngStyle]="{ 'display': row?.status == 'Approved' ? 'inline' : 'none' }" (click)="getFoodOrderData(row)"
+              mat-icon-button>
+              <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" [disabled] title="{{'HRMANAGAMENT.REJECTEDTITLE' | translate}}"
+              [ngStyle]="{ 'display': row?.status == 'Rejected' ? 'inline' : 'none' }" (click)="getFoodOrderData(row)"
+              mat-icon-button>
+              <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column [minWidth]="150" [resizeable]="false" name="{{'HRMANAGAMENT.RECEIPTS' | translate}}" [flexGrow]="1"
+          [sortable]="false">
+          <ng-template let-row="row" let-expanded="expanded" ngx-datatable-cell-template>
+            <button class="text-center" matTooltip="{{'HRMANAGAMENT.VIEWRECEIPTS' | translate}}"
+              *ngIf="row.receipts?.length > 0" (click)="showReceiptsPopupOpen(row,showReceiptsPopUp)"
+              [satPopoverAnchorFor]="showReceiptsPopover" #showReceiptsPopUp="satPopoverAnchor" mat-icon-button>
+              <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </mat-card-content>
+</div>
+
+<!--------place order dialog------>
+<sat-popover #placeAnOrderPopover backdropClass="backdrop-color" [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <app-hr-component-addfoodorder (closePopup)="closeDialog()" [foodOrderDetails]="foodOrderDetails" *ngIf="isPlaceOrder"
+    [foodOrderManagementApiInputModel]="foodOrderManagementApiInputModel">
+  </app-hr-component-addfoodorder>
+</sat-popover>
+<!--------place order dialog------>
+
+
+<sat-popover backdropClass="backdrop-color" #approveFoodOrderPopOver hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">
+        {{'HRMANAGAMENT.APPROVEFOODORDERTITLE' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1 mt-05 ">
+        {{'HRMANAGAMENT.APPROVEFOODORDERTEXT' | translate}}
+      </div>
+      <div fxLayout="row" fxLayoutGap="15px" fxLayout.xs="column" fxLayoutAlign.xs="center center">
+        <div fxFlex.gt-sm="49" fxFlex.xs="100">
+          <button mat-button mat-raised-button type="button" (click)="approveFoodOrder()" color="primary">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.APPROVE' | translate}}
+          </button>
+        </div>
+        <div fxFlex.gt-sm="49" fxFlex.xs="100">
+          <button mat-button mat-raised-button type="button" (click)="closeApproveFoodOrderPopup()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #showReceiptsPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+  <mat-card class="p-0 receipts-width">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+      <div fxFlex class="text-center">
+        {{'HRMANAGAMENT.RECEIPTS' | translate}}
+      </div>
+      <div fxFlex="20px" fxLayoutAlign="end center">
+        <span class="inline_edit_close_btn" (click)="closeReceiptsPopup()">
+          <fa-icon icon="times"></fa-icon>
+        </span>
+      </div>
+    </div>
+    <mat-card-content class="p-05 mobile-view-popover">
+      <div *ngIf="galleryImages && galleryImages.length > 0">
+        <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+      </div>
+      <div fxLayout="column" fxLayoutGap="0">
+        <div fxLayout="row wrap" fxLayoutGap="5px" *ngFor="let file of receiptsPdfForAnOrder">
+          <span fxFlex="15px">
+            <fa-icon icon="file" class="icon-button mat-color-accent" (click)="downloadFile(file.filePath)"></fa-icon>
+          </span>
+          <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button"
+            [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+            (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #rejectFoodOrderPopOver hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">
+        {{'HRMANAGAMENT.REJECTFOODORDER' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <mat-form-field class="full-width mt-05">
+        <input [formControl]="reason" matInput placeholder="{{'HRMANAGAMENT.REASONFORREJECTION' | translate}}"
+          (click)="$event.stopPropagation();" required>
+        <mat-error *ngIf="reason.hasError('maxlength')">
+          {{'HRMANAGAMENT.REASONVALIDATIONTEXT' | translate}}
+        </mat-error>
+      </mat-form-field>
+      <div fxLayout="row" fxLayoutGap="15px" fxLayout.xs="column" fxLayoutAlign.xs="center center">
+        <div fxFlex.gt-sm="49" fxFlex.xs="100">
+          <button mat-button mat-raised-button type="submit" [disabled]="!reason.valid" (click)="rejectFoodOrder()"
+            color="primary">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{'HRMANAGAMENT.REJECT' | translate}}
+          </button>
+        </div>
+        <div fxFlex.gt-sm="49" fxFlex.xs="100">
+          <button mat-button mat-raised-button type="button" (click)="closeRejectFoodOrderPopup()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewFoodOrders)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

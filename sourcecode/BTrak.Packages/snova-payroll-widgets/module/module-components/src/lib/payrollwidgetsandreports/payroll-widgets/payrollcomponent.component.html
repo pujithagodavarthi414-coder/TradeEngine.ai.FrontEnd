@@ -1,0 +1,234 @@
+<div class="full-height"  *ngIf="canAccess_feature_ManagePayrollComponent">
+    <mat-card class="p-0 canteen-manage m-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{ 'PAYROLLCOMPONENT.PAYROLLCOMPONENTTITLE' | translate | titlecase }}">{{ 'PAYROLLCOMPONENT.PAYROLLCOMPONENTTITLE' | translate | titlecase }}</span>
+          </div>
+          <div fxFlex fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-slide-toggle [matTooltip]="(isArchivedTypes == false) ? ('PAYROLLCOMPONENT.SEEARCHIVEDITEMS' | translate) : ('PAYROLLCOMPONENT.SEEUNARCHIVEDITEMS' | translate)" class="mr-1 archive-switch"
+                [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes" (change)="getAllPayRollComponents()"></mat-slide-toggle>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="full-width">
+                  <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                </mat-form-field>
+              </div>
+              <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <button mat-icon-button matTooltip="{{ 'PAYROLLCOMPONENT.CREATEPAYROLLCOMPONENTTOOLTIP' | translate }}"
+                [satPopoverAnchorFor]="upsertPayRollComponentPopover" #upsertPayRollComponentPopUp="satPopoverAnchor"
+                (click)="createPayRollComponentPopupOpen(upsertPayRollComponentPopUp);clearForm()" *ngIf="!isArchivedTypes">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+              <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+  
+    <div class="activity-data no-drag">
+      <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="50" [rows]="company" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.COMPONENTNAME' | translate }}" [sortable]="true" prop="componentName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.componentName }}">{{ row?.componentName }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.ISDEDUCTION' | translate }}" [sortable]="true" prop="isDeduction">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ 'PAYROLLCOMPONENT.YES' | translate }}" *ngIf="(row?.isDeduction)">
+              {{ 'PAYROLLCOMPONENT.YES' | translate }}
+            </span>
+            <span matTooltip="{{ 'PAYROLLCOMPONENT.NO' | translate }}" *ngIf="!(row?.isDeduction)">
+              {{ 'PAYROLLCOMPONENT.NO' | translate }}
+            </span>
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.REALTEDTOCONTRIBUTIONPERCENTAGE' | translate }}" [sortable]="true" prop="relatedToContributionPercentage">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ 'PAYROLLCOMPONENT.YES' | translate }}" *ngIf="(row?.relatedToContributionPercentage)">
+              {{ 'PAYROLLCOMPONENT.YES' | translate }}
+            </span>
+            <span matTooltip="{{ 'PAYROLLCOMPONENT.NO' | translate }}" *ngIf="!(row?.relatedToContributionPercentage)">
+              {{ 'PAYROLLCOMPONENT.NO' | translate }}
+            </span>
+            </ng-template>
+        </ngx-datatable-column>
+        <!-- <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.ISVARIABLEPAY' | translate }}" [sortable]="true" prop="isVariablePay">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row?.isVariablePay ? "Yes" : "No"}}
+          </ng-template>
+        </ngx-datatable-column> -->
+          <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.EMPLOYEECONTRIBUTIONPERCENTAGE' | translate }}" [sortable]="true"
+          prop="employeeContributionPercentage">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.employeeContributionPercentage }}">{{ row?.employeeContributionPercentage }}</span>
+          </ng-template>
+         </ngx-datatable-column>
+        <ngx-datatable-column name="{{ 'PAYROLLCOMPONENT.EMPLOYERCONTRIBUTIONPERCENTAGE' | translate }}" [sortable]="true"
+          prop="employerContributionPercentage">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span matTooltip="{{ row?.employerContributionPercentage }}">{{ row?.employerContributionPercentage }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'PAYROLLCOMPONENT.EDITPAYROLLCOMPONENT' | translate }}"
+              [satPopoverAnchorFor]="upsertPayRollComponentPopover" #upsertPayRollComponentPopUp="satPopoverAnchor"
+              (click)="editPayRollComponentPopupOpen(row,upsertPayRollComponentPopUp)" *ngIf="!isArchivedTypes && row.isVisible != false"
+              mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{ 'PAYROLLCOMPONENT.ARCHIVEPAYROLLCOMPONENT' | translate }}"
+              [satPopoverAnchorFor]="deletePayRollComponentPopover" #deletePayRollComponentPopUp="satPopoverAnchor"
+              (click)="deletePayRollComponentPopUpOpen(row, deletePayRollComponentPopUp)" *ngIf="!isArchivedTypes && row.isVisible != false"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{ 'PAYROLLCOMPONENT.UNARCHIVEPAYROLLCOMPONENT' | translate }}"
+              [satPopoverAnchorFor]="deletePayRollComponentPopover" #deletePayRollComponentPopUp="satPopoverAnchor"
+              (click)="deletePayRollComponentPopUpOpen(row, deletePayRollComponentPopUp)" *ngIf="isArchivedTypes"
+              mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  
+    <!--Edit PAYROLLCOMPONENT dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertPayRollComponentPopover [autoFocus]="false" hasBackdrop
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="start">
+      <mat-card class="p-0 mr-0" fxFlex="500px">
+        <mat-card-title class="text-center">
+          <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ payRollComponent | translate }}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+          <form [formGroup]="payRollComponentForm" #formDirective="ngForm" novalidate
+            (submit)="payRollComponentForm.valid && upsertPayRollComponent(formDirective)">
+            <div>
+              <div fxLayout="row wrap"  class="p-05">
+                <div fxFlex="98">
+                  <mat-form-field class="full-width">
+                    <input matInput formControlName="componentName" placeholder="{{ 'PAYROLLCOMPONENT.COMPONENTNAME' | translate }}" required>
+                    <mat-error class="P-06" *ngIf="payRollComponentForm.get('componentName').hasError('maxlength')">
+                      {{ 'PAYROLLCOMPONENT.MAXLENGTHERROR' | translate }}</mat-error>
+                    <mat-error class="P-06"
+                      *ngIf="payRollComponentForm.get('componentName').hasError('required') && payRollComponentForm.get('componentName').touched">
+                      {{ 'PAYROLLCOMPONENT.REQUIREDERROR' | translate }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <div fxFlex="45" class="mt-05">
+                    <mat-checkbox formControlName="isDeduction">{{'PAYROLLCOMPONENT.ISDEDUCTION' | translate}} 
+                    </mat-checkbox>
+                </div>
+                <!-- <div fxFlex="20" class="mt-1">
+                      <mat-checkbox formControlName="isVariablePay">{{'PAYROLLCOMPONENT.ISVARIABLEPAY' | translate}}
+                      </mat-checkbox>
+                  </div> -->
+                <div fxFlex="45" class="mt-05">
+                    <mat-checkbox formControlName="relatedToContributionPercentage" (click)="chanageContributionPercetageRequired()">{{ 'PAYROLLCOMPONENT.REALTEDTOCONTRIBUTIONPERCENTAGE' | translate }}</mat-checkbox>
+                </div>
+                <div fxFlex="98" *ngIf="payRollComponentForm.get('relatedToContributionPercentage').value == true">
+                    <mat-form-field class="full-width" >
+                      <input type='number' max="100" matInput formControlName="employeeContributionPercentage"
+                        placeholder="{{ 'PAYROLLCOMPONENT.EMPLOYEECONTRIBUTIONPERCENTAGE' | translate }}" required>
+                        <mat-error class="P-06"
+                        *ngIf="payRollComponentForm.get('employeeContributionPercentage').hasError('required') 
+                        && payRollComponentForm.get('employeeContributionPercentage').touched && 
+                        payRollComponentForm.get('relatedToContributionPercentage').value == true">
+                        {{'PAYROLLCOMPONENT.EMPLOYEECONTRIBUTIONPERCENTAGE' | translate}} 
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div fxFlex="98" *ngIf="payRollComponentForm.get('relatedToContributionPercentage').value == true">
+                    <mat-form-field class="full-width" >
+                      <input type='number' max="100" matInput formControlName="employerContributionPercentage"
+                        placeholder="{{ 'PAYROLLCOMPONENT.EMPLOYERCONTRIBUTIONPERCENTAGE' | translate }}" required>
+                        <mat-error class="P-06"
+                      *ngIf="payRollComponentForm.get('employerContributionPercentage').hasError('required') 
+                      && payRollComponentForm.get('employerContributionPercentage').touched && 
+                      payRollComponentForm.get('relatedToContributionPercentage').value == true">
+                      {{'PAYROLLCOMPONENT.EMPLOYERCONTRIBUTIONPERCENTAGE' | translate}} 
+                    </mat-error>
+                    </mat-form-field>
+                  </div>
+              </div>
+              <div>
+              </div>
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+              <div class="mt-05 mb-05 text-center">
+                <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                  [disabled]="!payRollComponentForm.valid||isAnyOperationIsInprogress">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                  </mat-progress-bar>
+                  <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUpsertPayRollComponentPopup(formDirective)"
+                  type="button">
+                  <fa-icon class="mr-05" icon="times"></fa-icon>
+                  {{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Edit COMAPN dialog-->
+  
+    <!--Delete PAYROLLCOMPONENT dialog-->
+    <sat-popover backdropClass="backdrop-color" #deletePayRollComponentPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="isPayRollComponentArchived">
+            {{ 'PAYROLLCOMPONENT.ARCHIVEPAYROLLCOMPONENTTITLE' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="!isPayRollComponentArchived">
+            {{ 'PAYROLLCOMPONENT.UNARCHIVEPAYROLLCOMPONENTTITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="isPayRollComponentArchived">
+            {{ 'PAYROLLCOMPONENT.ARCHIVEPAYROLLCOMPONENTTEXT' | translate }}
+          </div>
+          <div class="card-content mb-1" *ngIf="!isPayRollComponentArchived">
+            {{ 'PAYROLLCOMPONENT.UNARCHIVEPAYROLLCOMPONENTTEXT' | translate }}
+          </div>
+          <div class="text-center">
+            <button class="mr-1" *ngIf="isPayRollComponentArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deletePayRollComponent();">
+              <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button class="mr-1" *ngIf="!isPayRollComponentArchived" mat-button mat-raised-button color="primary"
+              [disabled]="isAnyOperationIsInprogress" (click)="deletePayRollComponent();">
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePayRollComponentDialog();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>  
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+    <!--Delete PAYROLLCOMPONENT dialog-->
+  </div>
+  <app-common-message-box *ngIf="!(canAccess_feature_ManagePayrollComponent)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+  </app-common-message-box>

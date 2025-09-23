@@ -1,0 +1,199 @@
+<div *ngIf="(canAccess_feature_ViewRecentlyActiveClients)" class="activity-data filter-margin mt-0 client-table-height" style="margin-left: 9px !important">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <kendo-grid [data]="clientListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+        [pageSize]="state.take" [sort]="state.sort" [sortable]="true" [pageable]="true"
+        (cellClick)="selectedRow($event)" (pageChange)="dataStateChange($event)" (sortChange)="sortChange($event)">
+        <kendo-grid-column title="Sr. No" [width]="60">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Sr. No" class="headers-color">Sr. No</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-rowIndex="rowIndex">
+                {{rowIndex+1}}
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="Primary Contact" field="name">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Primary Contact" class="headers-color">Primary
+                    Contact</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div>
+                    {{ dataItem?.firstName }}
+                    {{ dataItem?.lastName }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="Organization" field="kpiName">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Organization"
+                    class="headers-color">Organization</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                {{dataItem.companyName}}
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="Country" field="country">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Country" class="headers-color">Country</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                {{ dataItem.countryName }}
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="Role" field="roleNames" [width]="350" [sort] ="false">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Role" class="headers-color">Role</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                {{dataItem.roleNames}}
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="KYC Status" field="kycCompleted">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="KYC Status" class="headers-color">KYC
+                    Status</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                    style="width:80px !important" [style.backgroundColor]="dataItem?.statusColor"
+                    *ngIf="dataItem.kycStatusName">
+                    {{ dataItem.kycStatusName }}
+                </mat-chip>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column title="Actions" [sort] ="false">
+            <ng-template kendoGridHeaderTemplate let-column="col">
+                <span matTooltipClass="tooltipClass-mat" matTooltip="Actions" class="headers-color">Actions</span>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <button mat-icon-button [matMenuTriggerFor]="menu" #menuTrigger="matMenuTrigger"
+                    (click)="openOptionsMenu(dataItem);$event.stopPropagation();">
+                    <fa-icon icon="ellipsis-v" class="action-icon-color" style="font-size: 18px !important;">
+                    </fa-icon>
+                </button>
+            </ng-template>
+        </kendo-grid-column>
+    </kendo-grid>
+
+</div>
+
+<mat-menu #menu="matMenu" xPosition="before" yPosition="above">
+    <button class="text-center" mat-menu-item (click)="counterPartySettings();closePopup();$event.stopPropagation();"
+        *ngIf="!isArchived">
+        <span>Settings</span>
+    </button>
+    <button class="text-center" mat-menu-item [satPopoverAnchorFor]="archiveclient"
+        #archiveClientPopUp="satPopoverAnchor"
+        (click)="archivePopUpOpen(archiveClientPopUp);closePopup();$event.stopPropagation();">
+        <span *ngIf="!isArchived">Archive Client</span>
+        <span *ngIf="isArchived">Unarchive Client</span>
+    </button>
+</mat-menu>
+
+
+
+<sat-popover #archiveclient verticalAlign="start" hasBackdrop horizontalAlign="before">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05" *ngIf="!isArchived">
+                Archive client</div>
+            <div class="card-title-text mat-bg-primary p-05" *ngIf="isArchived">
+                Unarchive client</div>
+        </mat-card-title>
+        <p class="p-05 m-0" *ngIf="!isArchived">Are you sure want to archive this client
+        </p>
+        <p class="p-05 m-0" *ngIf="isArchived">
+            Are you sure want to unarchive this client</p>
+        <div class="text-center p-05">
+            <button mat-raised-button class="mr-1" (click)="closeArchivePopUp()" [disabled]="anyOperationInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon> No
+            </button>
+            <button type="button" mat-raised-button color="primary" class="mr-1 glossy-button-button"
+                (click)="archiveAll()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isArchiveLoading">
+                </mat-progress-bar>
+                <fa-icon icon="check" class="mr-05"></fa-icon> Yes
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+<sat-popover #updateClientKyc verticalAlign="start" hasBackdrop horizontalAlign="before">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                Verify KYC Form</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                Are you sure want to verify kyc form?
+            </div>
+            <div class="text-center">
+                <button type="button" mat-raised-button color="primary" class="mr-1 glossy-button-button"
+                    (click)="updateClient()" [disabled]="kycLoadingForm">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="kycLoadingForm">
+                    </mat-progress-bar>
+                    <fa-icon icon="check" class="mr-05"></fa-icon> {{'YES' | translate}}
+                </button>
+                <button mat-raised-button class="mr-1" (click)="closeKycPopup()" [disabled]="kycLoadingForm">
+                    <fa-icon icon="times" class="mr-05"></fa-icon> {{'PERMISSIONHISTORY.NO' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<mat-menu #leadDrop="matMenu">
+    <mat-card class="filter-data p-0" (click)="$event.stopPropagation()">
+        <div fxFlex="180px" class="ml-05 mr-05">
+            <mat-form-field class="full-width">
+                <mat-select placeholder="Select lead template" [(ngModel)]="selectedLeadTemplateId"
+                    (selectionChange)="upsertClient($event.value)">
+                    <mat-option *ngFor="let template of templatesList" [value]="template.templateId">
+                        {{template.formName}}
+                        <!-- <fa-icon class="mat-color-accent cursor-pointer mr-1 pull-right" icon="eye"
+                             matTooltipClass="tooltipClass-mat" matTooltip="{{ 'PROBATION.PREVIEWFORM' | translate}}" *ngIf="selectedLeadTemplateId == template.templateId"
+                            (click)="openDialog(selectedLeadTemplateId)"></fa-icon> -->
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </mat-card>
+</mat-menu>
+
+<sat-popover backdropClass="backdrop-color" #upsertContractPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isTemplatesLoading">
+        </mat-progress-bar>
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">Create contract
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <div>
+                <!-- <mat-form-field class="full-width">
+                    <mat-select placeholder="Contract templates" (selectionChange)="contractSelection($event.value)"
+                        [(ngModel)]="selectedTemplateId">
+                        <mat-option value="option" *ngFor="let contractTemplate of contractTemplatesList"
+                            [value]="contractTemplate.contractTemplateId" [bgColor]="color">
+                            {{contractTemplate.contractTemplateName}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field> -->
+            </div>
+            <div class="mt-1 text-center">
+                <button mat-raised-button color="primary" class="mr-1 glossy-button-button"
+                    [disabled]="isAnyOperationIsInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> Open
+                </button>
+                <button mat-button mat-raised-button (click)="closePopUp()" type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

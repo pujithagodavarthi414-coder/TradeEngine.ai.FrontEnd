@@ -1,0 +1,175 @@
+<div class="default full-height" class="p-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip=" {{'HISTORICALREPORT.EMPLOYEELOGTIMEDETAILS' | translate | titlecase}}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{'HISTORICALREPORT.EMPLOYEELOGTIMEDETAILS' | translate | titlecase}} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="userSearch">
+                    {{'ACTIVITYTRACKER.USER' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="projectSearch">
+                    {{'ADVANCEDSEARCH.PROJECT' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="boardSearch">
+                    {{'GOALS.BOARDTYPE' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="comments">
+                    {{ 'HISTORICALREPORT.SHOWCOMMENTS' | translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="dateFilter">
+                    {{ 'WORKLOGGING.DATE' | translate}}</button>
+            </mat-menu>
+            <mat-menu #userSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'PROJECTS.PLEASESELECTUSER'|translate}}"
+                                [(ngModel)]="selectedUser" (selectionChange)="selectUser($event.value)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="user.id" *ngFor="let user of UsersList">
+                                    <div fxLayout="row wrap" fxLayoutGap="5px">
+                                        <div fxFlex="35px">
+                                            <app-avatar [name]="user.fullName | removeSpecialCharacters"
+                                                [src]="user.profileImage" [isRound]="true" size="30">
+                                            </app-avatar>
+                                        </div>
+                                        <div fxFlex>
+                                            <p class="mat-body-2">
+                                                {{ user.fullName }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #projectSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'PRODUCTIVITYDASHBOARD.SELECTPROJECT'|translate}}"
+                                [(ngModel)]="projectId" (selectionChange)="selectedProjectId($event.value)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="proj.projectId" *ngFor="let proj of projectsList">
+                                    {{proj.projectName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #boardSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'BOARDTYPEWORKFLOW.PLEASESELECTBOARDTYPE'|translate}}"
+                                [(ngModel)]="boardTypeId" (selectionChange)="selectedBoardTypeId($event.value)">
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="boardType.boardTypeId"
+                                    *ngFor="let boardType of (boardTypes$|async)">
+                                    {{ boardType.boardTypeName }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #comments="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <span>{{ 'HISTORICALREPORT.SHOWCOMMENTS' | translate }}</span>
+                        <mat-slide-toggle class="archive-switch" [(ngModel)]="showComments" [checked]="showComments"
+                            (change)="getEmployeeLogTimeDetailsReport()">
+                        </mat-slide-toggle>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #dateFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <span fxFlex fxLayoutAlign="center center">
+                            <fa-icon (click)="getWeekBasedOnDate('left')" class="icon-button" icon="chevron-left">
+                            </fa-icon>
+                            <b>&nbsp;{{selectedWeek | date: "MMM-yyyy"}}&nbsp;</b><span
+                                *ngIf="weekNumber"><b>W{{weekNumber}}&nbsp;</b></span>
+                            <fa-icon (click)="getWeekBasedOnDate('right')" class="icon-button" icon="chevron-right">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </mat-card>
+            </mat-menu>
+        </div>
+    </mat-card-title>
+</div>
+<div class="activity-data histotical-work-report no-drag">
+    <mat-card-content class="p-0 m-0">
+        <div class="activity-data">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <kendo-grid [data]="employeeLogTimeDetails" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                [scrollable]="true" [filter]="state.filter" [sortable]="true" [pageable]="pageable"
+                [filterable]="false" (dataStateChange)="dataStateChange($event)">
+                <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+                    pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+                </kendo-grid-messages>
+
+                <kendo-grid-column *ngFor="let column of FieldsList" field="{{column.fieldname}}"
+                    title="{{column.title | translate | softLabelsPipe : softLabels}}" width="{{column.fieldname == 'userStoryName'? 500 : 200}}">
+                   
+                    <ng-template *ngIf="column.fieldname == 'projectName'" kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline hide-content-overflow"
+                            (click)="navigateToProjectDetailsPage(dataItem); $event.stopPropagation();">
+                            <a matTooltip="{{ dataItem.projectName }}">
+                                {{dataItem.projectName}}
+                            </a>
+                        </span>
+                    </ng-template>
+                    <ng-template *ngIf="column.fieldname == 'goalName'" kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline hide-content-overflow"
+                            (click)="navigateToGoalDetailsPage(dataItem); $event.stopPropagation();">
+                            <a matTooltip="{{ dataItem.goalName }}">
+                                {{ dataItem.goalName }}
+                            </a>
+                        </span>
+                    </ng-template>
+                    <ng-template *ngIf="column.fieldname == 'sprintName'" kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline hide-content-overflow"  (click)="navigateToSprintDetailsPage(dataItem);$event.stopPropagation();">
+                            {{ dataItem.sprintName }}
+                        </span>
+                    </ng-template>
+                    <ng-template *ngIf="column.fieldname == 'userStoryName'" kendoGridCellTemplate let-dataItem>
+                        <span class="userstory-hover text-underline hide-content-overflow"
+                            (click)="navigateToUserStoriesPage(dataItem);$event.stopPropagation();">
+                            <a matTooltip="{{ dataItem.userStoryName }}">
+                                {{ dataItem.userStoryName }}
+                            </a>
+                        </span>
+                    </ng-template>
+                    <ng-template *ngIf="column.fieldname.includes('-')" kendoGridCellTemplate let-dataItem>
+                        <span matTooltip="{{dataItem[column.fieldname]}}" [innerHTML]="dataItem[column.fieldname]">
+                        </span>
+                    </ng-template>
+
+                </kendo-grid-column>
+
+            </kendo-grid>
+        </div>
+    </mat-card-content>
+</div>
+
+<ng-template #uniqueUserstoryDialoglogTime let-data>
+    <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+  </ng-template>

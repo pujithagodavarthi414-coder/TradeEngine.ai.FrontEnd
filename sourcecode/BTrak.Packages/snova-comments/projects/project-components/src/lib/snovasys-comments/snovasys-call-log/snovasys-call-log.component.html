@@ -1,0 +1,109 @@
+<div id="snovasys-callog">
+  <div class="pull-right">
+    <button mat-button mat-raised-button class="mr-1" color="primary" (click)="makeCall();"
+      [satPopoverAnchorFor]="callingPopOver">
+      <fa-icon class="mr-05" icon="phone"></fa-icon> {{ 'COMMENTS.MAKECALL' | translate }}
+    </button>
+    <button mat-button mat-raised-button class="mr-1" (click)="logCall(false);" [satPopoverAnchorFor]="callLogPopOver">
+      <fa-icon icon="comment" class="mr-05"> </fa-icon> {{ 'COMMENTS.LOGCALL' | translate }} &nbsp;
+    </button>
+
+    <!-- <button mat-button mat-raised-button color="primary" [satPopoverAnchorFor]="callingPopOver">
+      <fa-icon class="mr-05" icon="phone"></fa-icon> {{ 'COMMENTS.REMAINDER' | translate }}
+    </button> -->
+  </div>
+  <div class="autoOverflow">
+
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+    </mat-progress-bar>
+    <div *ngFor="let call of callLogs" class="comment-area p-05">
+      <mat-card-title>
+        <fa-icon class="mr-05" icon="user"></fa-icon> <b *ngIf="call.callLogTypeName == 'Offline Call'"> {{ 'COMMENTS.OFFLINECALL' | translate }}</b>
+        <b *ngIf="call.callLogTypeName == 'Online Call'"> {{ 'COMMENTS.ONLINECALL' | translate }}</b>
+      </mat-card-title>
+      <mat-card-content class="user-comment p-0 ml-5">
+        <div class="ml-15">
+          <div fxLayout="row" fxLayoutGap="5px" class="mt-02">
+            <span fxFlexOffset="40px" class="mat-body-2" [innerHTML]="call.callDescription | sanitizeHtml">
+            </span>
+          </div>
+          <div fxLayout="row" fxLayoutGap="5px">
+            <div class="mr-5">
+              <mat-form-field>
+                <mat-label>{{ 'COMMENTS.OUTCOME' | translate }}</mat-label>
+                <input matInput [(ngModel)]="call.callOutcomeName" disabled>
+              </mat-form-field>
+            </div>
+            <div *ngIf='call.callDuration'>
+              <mat-form-field>
+                <mat-label>{{ 'COMMENTS.DURATION' | translate }}</mat-label>
+                <input matInput [(ngModel)]="call.callDuration" disabled>
+              </mat-form-field>
+            </div>
+            <div *ngIf="call.callRecordingLink">
+              <!-- {{call.callRecordingLink}}
+            <fa-icon class="mr-05" icon="play" (click)="onAudioPlay(call.callRecordingLink)"></fa-icon>
+            <fa-icon class="mr-05" icon="pause"></fa-icon> -->
+
+              <audio controls (onplaying)="onAudioPlay()" controlsList="nodownload">
+                <source src={{call.callRecordingLink}} type="audio/mp3">
+                {{ 'COMMENTS.YOURBROWSERDOESNOTSUPPORTVIDEOTAG' | translate }}
+              </audio>
+            </div>
+          </div>
+          <div fxLayout="row" fxLayoutGap="5px">
+            <div fxFlex fxLayoutAlign="start center" (click)="goToProfile(call.callFeedbackByUser.id)"
+              style="cursor: pointer;">
+              <app-avatar *ngIf="!call.callFeedbackByUser.profileImage" [name]="call.callFeedbackByUser.name"
+                [isRound]="true" size="30">
+              </app-avatar>
+              <img class="employee_img" *ngIf="call.callFeedbackByUser.profileImage"
+                src="{{call.callFeedbackByUser.profileImage}}">
+              &nbsp;&nbsp; {{ call.callFeedbackByUser.name }}
+            </div>
+            <div fxFlex fxLayoutAlign="end center">
+              <span class="pull-right"
+                matTooltip="{{call.createdDateTime | date:'dd-MM-yyyy, h:mm a' }}">{{call.createdDateTime | timeago: 'live'}}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </div>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #callLogPopOver verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title>
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          <fa-icon class="mr-05" icon="user"></fa-icon> <b> {{ 'COMMENTS.LOGCALL' | translate }}</b>
+        </div>
+        <a class="detail_close mt-05" color="warn" (click)="closeLogPopUp(false)">
+          <fa-icon icon="times"></fa-icon>
+        </a>
+      </mat-card-title>
+      <snovasys-log-call [isPermissionExists]="isPermissionExistsOnClick" (closePopup)="closeLogPopUp($event)"
+        [callResource]="callResource" [componentModel]="componentModel" *ngIf="activateCallLog"
+        [isMobileNuberOnly]="isMobileNuberOnly" [mobileNumber]="mobileNumber" [receiverId]="receiverId">
+      </snovasys-log-call>
+    </mat-card>
+  </sat-popover>
+
+
+  <sat-popover backdropClass="backdrop-color" #callingPopOver verticalAlign="center" hasBackdrop
+    horizontalAlign="center" [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+      <mat-card-title>
+        <div class="card-title-text mat-bg-primary p-05 mb-1">
+          <fa-icon class="mr-05" icon="user"></fa-icon> <b> {{ 'COMMENTS.CALLS' | translate }}</b>
+        </div>
+      </mat-card-title>
+      <a class="detail_close mt-05" color="warn" (click)="closeCallPopUp(callResource)">
+        <fa-icon icon="times"></fa-icon>
+      </a>
+      <snovasys-make-call (closePopup)="closeCallPopUp($event)" (getCallResource)="getCallResource($event)"
+        *ngIf="activateCall" [componentModel]="componentModel" [receiverId]="receiverId"
+        [isMobileNuberOnly]="isMobileNuberOnly" [mobileNumber]="mobileNumber"></snovasys-make-call>
+    </mat-card>
+  </sat-popover>
+</div>

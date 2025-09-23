@@ -1,0 +1,563 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageActivityConfig)">
+  <mat-card class="p-0 canteen-manage m-0" id="app-1">
+    <mat-card-title class="full-width data-table-header mt-05 tracker-helper-icon">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          {{'ACTIVITYAPPS.ACTIVITY' | translate | titlecase}}
+          <span>
+            <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-03 pl-05"
+              matTooltip="It will display enable or disable tracking options."></fa-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" id="app-22">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllSettings()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <mat-progress-bar mode="indeterminate"
+        *ngIf="loading || stateloading || roleloading || screenUpsertLoading || upsertRolesLoading"></mat-progress-bar>
+    </mat-card-title>
+  </mat-card>
+
+  <mat-card class="m-0 p-0 admin-activity-app-height" id="style-1">
+    <div class="m-1" fxLayout="row wrap" fxLayout.xs="column" fxFlex.xs="100" fxFlex.sm="100">
+      <div fxFlex="30" fxFlex.xs="50" fxFlex.md="25" fxFlex.sm="35">
+        <span>{{ 'ACTIVITYTRACKER.ENABLEBASICTRACKING' | translate }}</span>
+      </div>
+      <div fxFlex class="pl-05">
+        <mat-slide-toggle (change)="enableBasicTracking($event.checked);" [checked]="isBasicTracking">
+        </mat-slide-toggle>
+      </div>
+    </div>
+
+    <div *ngIf="isBasicTracking">
+      <!--ideal time-->
+      <div *ngIf="isBasicTracking" fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+        <div fxFlex="30" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+          <span class="size">{{ 'ACTIVITYTRACKER.ENABLEIDLETIMETRACKING' | translate }}</span>
+        </div>
+        <div fxFlex class="pl-05">
+          <mat-slide-toggle [(ngModel)]="isIdleTime"
+            (change)="upsertActivityTrackerConfigurationState();getAllRemaingRoles();">
+          </mat-slide-toggle>
+        </div>
+      </div>
+      <div class="ml-1 mr-1" *ngIf="isBasicTracking && isIdleTime" fxLayout="row wrap" style="display: contents;">
+        <div fxFlex>
+          <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div fxFlex="30" fxFlex.md="30" fxFlex.sm="50" fxFlex.xs="50">
+              <span class="size">{{ 'ACTIVITYTRACKER.PLEASESELECTTHEROLESTOTRACKIDEALTIME' | translate }}</span>
+            </div>
+            <div fxFlex>
+              <label class="mt-1 full-width activity-selection" fxFlex.xs="100">
+                <ng-select [searchable]="true" [clearable]="true" (blur)="upsertIdealTime()" [multiple]="true"
+                  [(ngModel)]="idealRoleId">
+                  <ng-option [value]="role.roleId" *ngFor="let role of idealTimerole"> {{role.roleName}}
+                  </ng-option>
+                </ng-select>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ml-1 mr-1" *ngIf="isBasicTracking && isIdleTime" fxLayout="row wrap" fxLayoutAlign="start center">
+        <form class="full-width" [formGroup]="idealForm" #formDirective="ngForm" fxFlex novalidate>
+          <div class="mt-1" fxFlex="100" fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center"
+            *ngIf="isIdleTime && isVisibleFalse">
+            <div fxFlex="30" fxFlex.md="60" fxFlex.xs="100">
+              <p class="mt-1"> {{'ACTIVITYAPPS.CAPTURESCREENSHOT' | translate}} </p>
+            </div>
+            <div fxFlex="25" fxFlex.md="44" fxFlex.xs="100">
+              <mat-form-field><input matInput formControlName="IdealTime" (blur)="idealForm.valid &&  upsertIdealTime()"
+                  [(ngModel)]="idleScreenShotCaptureTime" matInput type="number" min="0"
+                  (keypress)="omitSpecialChar($event)" (paste)="omitSpecialChar($event)" />
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3" *ngIf="idealForm.get('IdealTime').hasError('max')">
+                  {{'ACTIVITYAPPS.IDEALMAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3"
+                  *ngIf="idealForm.get('IdealTime').hasError('required') && idealForm.get('IdealTime').touched">
+                  {{'ACTIVITYAPPS.IDEALREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="27" fxFlex.md="100" fxFlex.xs="100">
+              <p class="mt-1 ml-lg-2"> {{'ACTIVITYAPPS.MINUTETIMEPERIOD' | translate}} </p>
+            </div>
+          </div>
+          <div class="mt-1" fxFlex="100" fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center"
+            *ngIf="isIdleTime && isVisibleFalse">
+            <div fxFlex="23" fxFlex.md="50" fxFlex.xs="100">
+              <p class="mt-1 mr-1">{{'ACTIVITYAPPS.SHOWNOTIFY' | translate}}</p>
+            </div>
+            <div fxFlex="25" fxFlex.md="50" fxFlex.xs="100">
+              <mat-form-field><input formControlName="AlertTime" matInput (blur)="idealForm.valid && upsertIdealTime()"
+                  [(ngModel)]="idleAlertTime" matInput type="number" min="0" (keypress)="omitSpecialChar($event)"
+                  (paste)="omitSpecialChar($event)" />
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3" *ngIf="idealForm.get('AlertTime').hasError('max')">
+                  {{'ACTIVITYAPPS.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3"
+                  *ngIf="idealForm.get('AlertTime').hasError('required') && idealForm.get('AlertTime').touched">
+                  {{'ACTIVITYAPPS.REQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="25" fxFlex.md="100" fxFlex.xs="100">
+              <p class="mt-1 ml-lg-2">{{'ACTIVITYAPPS.MINUTETIMEPERIOD' | translate}}</p>
+            </div>
+          </div>
+          <div fxFlex="100" fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+            <div fxFlex="30" fxFlex.md="50" fxFlex.xs="100">
+              {{ 'ACTIVITYTRACKER.SPECIFYMINIMUMIDEALTIME' | translate }}
+            </div>
+            <div class="ml-01" fxFlex="68" fxFlex.md="50" fxFlex.xs="100" fxLayoutAlign="start center">
+              <mat-form-field><input formControlName="MinIdealTime" matInput
+                  (blur)="idealForm.valid && upsertIdealTime()" [(ngModel)]="minimumIdelTime" matInput type="number"
+                  min="0" (keypress)="omitSpecialChar($event)" (paste)="omitSpecialChar($event)" />
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3"
+                  *ngIf="idealForm.get('MinIdealTime').hasError('max')">
+                  {{'ACTIVITYAPPS.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error class="p-1  mt-lg-n3 mr-lg-n3 ml-xl-n3"
+                  *ngIf="idealForm.get('MinIdealTime').hasError('required') && idealForm.get('MinIdealTime').touched">
+                  {{'ACTIVITYAPPS.REQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!--ideal time-->
+    </div>
+    <div *ngIf="isBasicTracking" fxLayout="row wrap" fxLayout.xs="column" fxFlex.xs="100" fxFlex.sm="100"
+      fxLayoutAlign.xs="center center" fxLayoutGap="50px">
+
+      <mat-divider></mat-divider>
+      <div fxFlex class="m-1" *ngIf="trailVersion">
+        <span>{{'ACTIVITYTRACKER.ENABLEADVANCEDTRACKING' | translate }}</span>&nbsp;<button mat-button mat-raised-button
+          class="mr-05" color="primary" (click)="navigateToPayments()">{{'ACTIVITYTRACKER.ENABLEADVANCEDTRACKINGPAYMENT'
+          | translate}}</button>
+      </div>
+      <div fxFlex class="m-1" *ngIf="paidVersion">
+        <div>{{'ACTIVITYTRACKER.ENABLEADVANCEDTRACKINGINFO' | translate }}</div>
+      </div>
+    </div>
+    <div *ngIf="isBasicTracking && paidVersion" class="mb-1" fxLayout="row wrap" fxLayout.xs="column" fxFlex.xs="100"
+      fxFlex.sm="100" fxLayoutAlign.xs="center center" fxLayoutGap="50px">
+      <div class="m-0" fxFlex="25" fxLayoutAlign="center center" fxFlex.xs="50" fxFlex.lt-lg="35px" fxFlex.md="25"
+        fxFlex.sm="50">
+        <mat-checkbox
+          (change)="getActTrackeUrls();getActTrackerRoleConfigurationRoles();upsertActivityTrackerConfigurationState();"
+          [(ngModel)]="appsTrack">
+          {{ 'ACTIVITYAPPS.APPSANDURLS' | translate }}
+        </mat-checkbox>
+      </div>
+      <div class="m-0" fxFlex="25" fxLayoutAlign="center center" fxFlex.xs="50" fxFlex.lt-lg="35px" fxFlex.md="25"
+        fxFlex.sm="50">
+        <mat-checkbox (change)="getActScreenshotfrequency();upsertActivityTrackerConfigurationState();"
+          [(ngModel)]="screenShotsFrequency">{{ 'ACTIVITYTRACKER.SCREENSHOTS' | translate }}
+        </mat-checkbox>
+      </div>
+      <div class="m-0" fxFlex="25" fxLayoutAlign="center center" fxFlex.xs="50" fxFlex.lt-lg="35px" fxFlex.md="25"
+        fxFlex.sm="50">
+        <mat-checkbox (change)="setDetailedTrack($event);upsertActivityTrackerConfigurationState()"
+          [checked]="getDetailedTrack()">{{ 'ACTIVITYTRACKER.DETAILEDTRACKING' | translate }}
+        </mat-checkbox>
+      </div>
+      <div class="m-0" fxFlex="25" fxLayoutAlign="center center" fxFlex.xs="50" fxFlex.lt-lg="35px" fxFlex.md="25"
+        fxFlex.sm="50">
+        <mat-checkbox (change)="getAllRemaingRoles();upsertActivityTrackerConfigurationState()"
+          [(ngModel)]="isOffileTracking">{{'ACTIVITYAPPS.OFFLINETRACKING' | translate}}
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div id="app-2">
+      <mat-accordion class="activity-tracker-panel" *ngIf="appsTrack && paidVersion">
+        <mat-expansion-panel hideToggle>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ 'ACTIVITYAPPS.APPSANDURLS' | translate }}
+              <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-01 pl-05"
+                matTooltip="It will display enable or disable tracking of apps and url's options."></fa-icon>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <!--track-->
+
+          <!-- <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.DISABLEURLSTRACKMESSAGE' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <mat-slide-toggle (change)="upsertActivityTrackerConfigurationState()" [(ngModel)]="disableUrls">
+                </mat-slide-toggle>
+              </div>
+            </div> -->
+          <!-- <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.DOYOUWANTCONSIDERPUNCHCARD' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <mat-slide-toggle (change)="upsertActTrackerAppUrlType()" [(ngModel)]="considerPunchCard">
+                </mat-slide-toggle>
+              </div>
+            </div> -->
+          <div class="mat-card-fx-col">
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1 mt-2">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.APPSANDURLSTRACKINGKIND' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <nav>
+                  <mat-button-toggle-group [(ngModel)]="appsUrlToggle"
+                    class="custom-button-group1 custom-button mat-button-item" style='border-radius:20px'>
+                    <!-- <mat-button-toggle (click)="onClickTrackAlloff();upsertActTrackerAppUrlType()" value="off">
+                      {{'ACTIVITYAPPS.OFF' | translate}}
+                    </mat-button-toggle> -->
+                    <mat-button-toggle (click)="onClickTrackAllApps();upsertActTrackerAppUrlType(true,'App')"
+                      value="App">
+                      {{'ACTIVITYAPPS.APPS' | translate}}
+                    </mat-button-toggle>
+                    <mat-button-toggle (click)="onClickTrackUrls();upsertActTrackerAppUrlType(true,'Url')" value="Url">
+                      {{'ACTIVITYAPPS.URL' | translate}}
+                    </mat-button-toggle>
+                    <mat-button-toggle (click)="onClickTrackAllAppsUrls();upsertActTrackerAppUrlType(true,'AppandUrl')"
+                      value="AppandUrl">
+                      {{'ACTIVITYAPPS.APPURL' | translate}}
+                    </mat-button-toggle>
+                    <mat-button-toggle
+                      (click)="onClickTrackAllAppsUrlsDetailed();upsertActTrackerAppUrlType(true,'AppandUrlDetailed')"
+                      value="AppandUrlDetailed">{{'ACTIVITYAPPS.APPURLDETAILED' | translate}}
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                </nav>
+              </div>
+            </div>
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1 mt-2">
+              <div fxFlex>
+                <span class="text-size">{{ 'ACTIVITYTRACKER.APPLYURLTRACKINGKINDFORDIFFERENTROLES' | translate }}</span>
+              </div>
+            </div>
+            <div class="m-1" fxLayout="row" fxLayout.xs="column" fxFlex="100">
+              <form class="full-width mat-card-fx-col" [formGroup]="activitytrackerForm">
+                <div formArrayName="activityForm" fxFlex="100"
+                  *ngFor="let item of activitytrackerForm.get('activityForm')['controls']; let i = index;">
+                  <div [formGroupName]="i">
+                    <div fxLayout="row wrap" fxLayout.xs="column" fxFlex="100">
+                      <div fxFlex="30" class="mr-1" fxFlex.lg="30" fxFlex.md="30" fxFlex.sm="50"
+                        fxLayoutAlign.xs="center center">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                          <mat-select placeholder="{{'ACTIVITYAPPS.SELECTROLES' | translate}}" multiple required
+                            formControlName="selectedUsers" [compareWith]="compareSelectedTeamMembersFn">
+                            <mat-option #allSelected (click)="toggleAllRolesSelected($event, i)" [value]="0">
+                              {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                            <mat-option [value]="role.roleId" *ngFor="let role of Roles "
+                              (click)="getSelectedRoles(role.roleId,i)">
+                              {{ role.roleName }}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="40" fxFlex.lg="40" fxFlex.md="40" fxFlex.sm="50" fxLayoutAlign="start center">
+                        <nav>
+                          <mat-button-toggle-group class="custom-button-group1 custom-button mat-button-item"
+                            #group="matButtonToggleGroup" style='border-radius:20px' formControlName="selectedAppUrl">
+                            <mat-button-toggle (click)="upsertIndividualAppUrlType(i,'Off')" value="Off">
+                              {{'ACTIVITYAPPS.OFF' | translate}}
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="upsertIndividualAppUrlType(i,'App')" value="App">
+                              {{'ACTIVITYAPPS.APPS' | translate}}
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="upsertIndividualAppUrlType(i,'Url')" value="Url">
+                              {{'ACTIVITYAPPS.URL' | translate}}
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="upsertIndividualAppUrlType(i,'AppandUrl')" value="AppandUrl">
+                              {{'ACTIVITYAPPS.APPURL' | translate}}
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="upsertIndividualAppUrlType(i,'AppandUrlDetailed')"
+                              value="AppandUrlDetailed">
+                              {{'ACTIVITYAPPS.APPURLDETAILED' | translate}}
+                            </mat-button-toggle>
+                          </mat-button-toggle-group>
+                        </nav>
+                      </div>
+                      <div fxFlex="20" fxLayoutAlign="start center">
+                        <mat-icon fxFlex="20px"
+                          *ngIf="(activitytrackerForm.get('activityForm')['controls'].length - 1 ) == i && roleLength > trackRoles.length "
+                          aria-hidden="false" aria-label="true" class="mat-bg-primary plus_icon m-0 mr-1"
+                          (click)="addItem()">
+                          add
+                        </mat-icon>
+                        <mat-icon fxFlex="20px" *ngIf="activitytrackerForm.get('activityForm')['controls'].length > 1"
+                          aria-hidden="false" aria-label="true" class="mat-bg-primary plus_icon m-0"
+                          (click)="removeActivityTrackerIndex(i)"> clear
+                        </mat-icon>
+                      </div>
+                    </div>
+                    <!-- <div fxLayout="row wrap" fxLayoutAlign="start center" class="mt-1">
+                      <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                        <span class="size">{{ 'ACTIVITYTRACKER.DOYOUWANTCONSIDERPUNCHCARD' | translate }}</span>
+                      </div>
+                      <div fxFlex>
+                        <mat-slide-toggle (change)="upsertIndividualAppUrlType(i)"
+                          formControlName="considerPunchCardInFrequency">
+                        </mat-slide-toggle>
+                      </div>
+                    </div> -->
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!--track-->
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+
+    <div id="app-3">
+      <mat-accordion class="activity-tracker-panel" *ngIf="screenShotsFrequency && paidVersion">
+        <mat-expansion-panel hideToggle>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ 'ACTIVITYTRACKER.SCREENSHOTS' | translate }}
+              <span>
+                <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-01 pl-05"
+                  matTooltip="It will display capturing of scrrenshot and number of screenshot options."></fa-icon>
+              </span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <!--screen shot frequency-->
+          <div class="mat-card-fx-col">
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.DOYOUWANTTOCAPTURERANDOMSCREENSHOTS' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <mat-slide-toggle (change)="upsertScreenShotFrequency()" [(ngModel)]="randomScreenshot">
+                </mat-slide-toggle>
+              </div>
+            </div>
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.SPECIFYSCREENSHOTSPERMINUTE' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <input style='width:60px' [(ngModel)]="screenshotTime" type="number" min="0"
+                  (keypress)="omitSpecialChar($event)" (paste)="omitSpecialChar($event)"
+                  (blur)="upsertScreenShotFrequency()" />
+              </div>
+            </div>
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1 mt-2">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.SELECTSCREENSHOTFREQUENCY' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <nav>
+                  <mat-button-toggle-group [(ngModel)]="active"
+                    class="custom-url-button-group custom-button  mat-button-item" style='border-radius:20px'>
+                    <!-- <mat-button-toggle (click)="onChangeScreenShotFrequency(0)" value="0">none</mat-button-toggle> -->
+                    <mat-button-toggle (click)="onChangeScreenShotFrequency(1)" value="1">1x </mat-button-toggle>
+                    <mat-button-toggle (click)="onChangeScreenShotFrequency(2)" value="2">2x</mat-button-toggle>
+                    <mat-button-toggle (click)="onChangeScreenShotFrequency(3)" value="3">3x</mat-button-toggle>
+                  </mat-button-toggle-group>
+                </nav>
+              </div>
+            </div>
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1 mt-2">
+              <div fxFlex>
+                <span class="text-size">{{ 'ACTIVITYTRACKER.APPLYSCREENSHOTFREQUENCYFORDIFFERENTROLES' | translate
+                  }}</span>
+              </div>
+            </div>
+            <div class="m-1" fxLayout="row" fxLayout.xs="column" fxFlex="100">
+              <form class="full-width mat-card-fx-col" [formGroup]="ScreenshotForm">
+                <div formArrayName="screenForm" fxFlex="100"
+                  *ngFor="let item of ScreenshotForm.get('screenForm')['controls']; let j = index;">
+                  <div [formGroupName]="j">
+                    <div fxLayout="row" fxLayout.xs="column" fxFlex="100">
+                      <div fxFlex="30" class="mr-1" fxFlex.lg="30" fxFlex.md="30" fxFlex.sm="50"
+                        fxLayoutAlign.xs="center center">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                          <mat-select formControlName="selectedUsers" placeholder="{{'ACTIVITYAPPS.ROLES' | translate}}"
+                            multiple>
+                            <mat-option #allScreenSelected (click)="toggleAllRolesSelectedScreenShot($event, j)"
+                              [value]="0">
+                              {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                            <mat-option [value]="role.roleId" *ngFor="let role of screenShotList"
+                              (click)="getScreenshotSelectedRoles(role.roleId,j)">
+                              {{role.roleName}}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="30" class="mr-1" fxFlex.lg="30" fxFlex.md="30" fxFlex.sm="50"
+                        fxLayoutAlign.xs="center center">
+                        <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                          <mat-select formControlName="Users" placeholder="{{'ACTIVITYAPPS.USERS' | translate}}"
+                            multiple>
+                            <mat-option #allScreenSelectedUser (click)="toggleAllUsersSelectedScreenShot($event, j)"
+                              [value]="0">
+                              {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                            <mat-option [value]="employee.userId"
+                              *ngFor="let employee of (employeesDropDown | activityEmployeeRoleFilter : screenForm.at(j).get('selectedUsers').value)"
+                              (click)="getScreenshotSelectedUsers(employee.userId,j)">
+                              {{employee.name}}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div fxFlex="20" fxFlex.lg="20" fxFlex.md="30" fxFlex.sm="50" fxLayoutAlign="start center">
+                        <nav>
+                          <mat-button-toggle-group formControlName="multiplier" #group="matButtonToggleGroup"
+                            class="custom-button-group custom-button mat-button-item" style='border-radius:20px'>
+                            <mat-button-toggle (click)="onChangeIndividualScreenShotFrequency(0,j)" value="0">none
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="onChangeIndividualScreenShotFrequency(1,j)" value="1"> 1x
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="onChangeIndividualScreenShotFrequency(2,j)" value="2">2x
+                            </mat-button-toggle>
+                            <mat-button-toggle (click)="onChangeIndividualScreenShotFrequency(3,j)" value="3">3x
+                            </mat-button-toggle>
+                          </mat-button-toggle-group>
+                        </nav>
+                      </div>
+                      <div fxFlex fxFlex.sm="50" fxLayout="row wrap" fxLayout="row" fxLayoutAlign="start center"
+                        fxLayoutGap="5px">
+                        <mat-icon fxFlex="20px"
+                          *ngIf="(ScreenshotForm.get('screenForm')['controls'].length - 1 ) == j && roleLength > screenshotRoles.length"
+                          aria-hidden="false" aria-label="true" class="mat-bg-primary plus_icon m-0 mr-1"
+                          (click)="addscreenshot()">
+                          add
+                        </mat-icon>
+                        <mat-icon fxFlex="20px" *ngIf="ScreenshotForm.get('screenForm')['controls'].length > 1"
+                          aria-hidden="false" aria-label="true" class="mat-bg-primary plus_icon m-0"
+                          (click)="removeScreenshotIndex(j)">clear
+                        </mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <!--screen shot frequency-->
+
+            <!-- delete screenshots -->
+            <div fxLayout="row wrap" fxLayoutAlign="start center" class="m-1">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.DOYOUWANTTOPERMITUSERSTODELTESCREENSHOTS' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <mat-slide-toggle (change)="getAllRemaingRoles();upsertActivityTrackerConfigurationState()"
+                  [(ngModel)]="isDeleteScreenshots">
+                </mat-slide-toggle>
+              </div>
+            </div>
+            <div class="ml-1 mr-1" *ngIf="isDeleteScreenshots" fxLayout="row wrap" style="display: contents;">
+              <div fxFlex>
+                <div fxLayout="row wrap" fxLayoutAlign="start center">
+                  <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                    <span class="size">{{ 'ACTIVITYTRACKER.PLEASESELECTTHEROLESTOGIVEPERMISSION' | translate }}</span>
+                  </div>
+                  <div fxFlex>
+                    <label class="mt-1 full-width activity-selection" fxFlex.xs="100">
+                      <ng-select [searchable]="true" [clearable]="true" [multiple]="true"
+                        (blur)="upsertDeleteScreenshot()" [(ngModel)]="deleteRoleId">
+                        <ng-option [value]="role.roleId" *ngFor="let role of deleterole"> {{role.roleName}}
+                        </ng-option>
+                      </ng-select>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- delete screenshots -->
+
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+
+    <div id="app-4">
+      <mat-accordion class="activity-tracker-panel" *ngIf="(isRecordActivity || isMouse) && paidVersion">
+        <mat-expansion-panel hideToggle>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ 'ACTIVITYTRACKER.DETAILEDTRACKING' | translate }}
+              <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-03 pl-05"
+                matTooltip="It will display slecting roles for tracking of keystrokes and mouse clicks."></fa-icon>
+            </mat-panel-title>
+
+          </mat-expansion-panel-header>
+          <!--keyboard tracking-->
+          <div class="mat-card-fx-col">
+            <div class="ml-1 mr-1" fxLayout="row wrap" fxLayoutAlign="start center">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.PLEASESELECTTHEROLESTOTRACKKEYSTROKES' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <label class="full-width activity-selection" *ngIf="isRecordActivity" fxFlex.xs="100">
+                  <ng-select [searchable]="true" [clearable]="true" [multiple]="true" (blur)="upsertRecordActivity()"
+                    [(ngModel)]="recordRoleId">
+                    <ng-option [value]="role.roleId" *ngFor="let role of recordrole"> {{role.roleName}}
+                    </ng-option>
+                  </ng-select>
+                </label>
+              </div>
+            </div>
+            <!--keyboard tracking-->
+            <!--mouse tracking-->
+            <div class="ml-1 mr-1" fxLayout="row wrap" fxLayoutAlign="start center">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.PLEASESELECTTHEROLESTOTRACKMOUSECLICKS' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <label class="full-width activity-selection" *ngIf="isMouse" fxFlex.xs="100">
+                  <ng-select [searchable]="true" [clearable]="true" [multiple]="true" (blur)="upsertMouseActivity()"
+                    [(ngModel)]="mouseRoleId">
+                    <ng-option [value]="role.roleId" *ngFor="let role of mouseActivityRoleId"> {{role.roleName}}
+                    </ng-option>
+                  </ng-select>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!--mouse tracking-->
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+    <div id="app-5">
+      <mat-accordion class="activity-tracker-panel" *ngIf="isOffileTracking && paidVersion">
+        <mat-expansion-panel hideToggle>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{'ACTIVITYAPPS.OFFLINETRACKING' | translate}}
+              <fa-icon icon="eye" aria-hidden="true" class="goal-cursor mat-color-accent tracker-helper mt-03 pl-05"
+                matTooltip="Offline Tracking"></fa-icon>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <!-- Offline tracking -->
+          <div class="mat-card-fx-col">
+            <div class="ml-1 mr-1" fxLayout="row wrap" fxLayoutAlign="start center">
+              <div fxFlex="35" fxFlex.md="35" fxFlex.sm="50" fxFlex.xs="50">
+                <span class="size">{{ 'ACTIVITYTRACKER.PLEASESELECTTHEROLESTOTRACKOFFLINETRACKING' | translate }}</span>
+              </div>
+              <div fxFlex>
+                <label class="full-width activity-selection" *ngIf="isOffileTracking" fxFlex.xs="100">
+                  <ng-select [searchable]="true" [clearable]="true" [multiple]="true" (blur)="upsertOfflineTracking()"
+                    [(ngModel)]="offlineRoleId">
+                    <ng-option [value]="role.roleId" *ngFor="let role of offlineRole"> {{role.roleName}}
+                    </ng-option>
+                  </ng-select>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!-- Offline tracking -->
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </mat-card>
+</div>
+
+<app-common-message-box *ngIf="!( canAccess_feature_ManageActivityConfig )"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

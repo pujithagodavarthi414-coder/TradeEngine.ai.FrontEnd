@@ -1,0 +1,51 @@
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { HttpClient } from '@angular/common/http';
+import { TranslateHttpLoader } from "@ngx-translate/http-loader";
+import { FlexLayoutModule } from "@angular/flex-layout";
+import { RouterModule } from '@angular/router';
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { HttpClientModule } from '@angular/common/http';
+import { CookieService } from 'ngx-cookie-service';
+import { SnovasysCommentsModule } from 'projects/project-components/src/public-api';
+
+export function HttpLoaderFactory(httpClient: HttpClient) {
+  return new TranslateHttpLoader(httpClient, 'https://btrak498-development.snovasys.com/assets/i18n/', '.json');
+}
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    RouterModule.forRoot([]),
+    BrowserModule,
+    BrowserAnimationsModule,
+    StoreModule.forRoot({}),
+    EffectsModule.forRoot([]),
+    FlexLayoutModule,
+    HttpClientModule,
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient],
+      },
+    }),
+    ToastrModule.forRoot({
+      timeOut: 5000
+    }),
+    SnovasysCommentsModule
+  ],
+  providers: [
+    CookieService],
+  bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+})
+export class AppModule { }

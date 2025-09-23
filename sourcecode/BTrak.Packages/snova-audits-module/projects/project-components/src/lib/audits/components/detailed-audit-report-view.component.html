@@ -1,0 +1,118 @@
+<div class="p-0">
+    <div id="style-1" class="p-0 m-0 detailed-report fit-content-detailed-report">
+        <div class="p-0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <div *ngIf="loadReports">
+                <div class="report-cases" *ngIf="!(anyOperationInProgress$ | async)">
+                    <div fxLayout="row wrap" class="data-table-header p-02">
+                        <div class="ml-05 mt-05 report-description" fxLayout="row" *ngIf="detailedReport" fxFlex="73"
+                            fxFlex.lg="67" fxFlex.lt-lg="100">
+                            <span>
+                                <b>
+                                    <span class="word-break user-select-text"
+                                        matTooltip="{{'TESTMANAGEMENT.REPORTNAME' | translate | softLabelsPipe :softLabels}}">{{selectedReport.auditReportName}}
+                                    </span>
+                                </b>
+                                <span class="ml-02 word-break user-select-text section-description"
+                                    *ngIf="!(selectedReport.auditReportDescription == undefined) && selectedReport.auditReportDescription != null && selectedReport.auditReportDescription.length > 0"
+                                    matTooltip="{{'TESTMANAGEMENT.REPORTDESCRIPTION' | translate | softLabelsPipe :softLabels}}">({{selectedReport.auditReportDescription}})
+                                </span>
+                            </span>
+                        </div>
+                        <div class="ml-05 mt-05" fxLayout="row" *ngIf="detailedReport" fxFlex="24" fxFlex.lg="29"
+                            fxFlex.lt-lg="100">
+                            <div class="mr-05" fxFlex>
+                                <span class="section-description">{{'TESTMANAGEMENT.CREATEDBY' | translate}}
+                                    <b>{{selectedReport.createdByUserName}}</b> -
+                                    {{selectedReport.createdDateTime | utcToLocalTime | date:'medium'}}
+                                </span>
+                                <br>
+                                <span *ngIf="selectedReport && selectedReport.auditRatingName"
+                                    class="section-description">
+                                    <b>{{'AUDIT.RATING' | translate}}</b> -
+                                    {{selectedReport.auditRatingName}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="style-1" class="fit-content-report-questions-height"
+                        style="max-height: calc(100vh - 174px);">
+                        <div *ngIf="detailedReport">
+                            <div class="report-runs-results" fxLayout="row">
+                                <b>{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}</b>
+                            </div>
+                            <div class="ml-1 mt-1" fxLayout="row">
+                                <b class="report-testrun custom-link" matTooltip="{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}"
+                                    (click)="goToConducts()">{{detailedReport.conductName}}
+                                </b>
+                            </div>
+                        </div>
+                        <!-- <div *ngIf="detailedReport && detailedReport.questions != null">
+                            <mat-list class="compact-list mb-1 mt-1">
+                                <mat-divider class="mat-divider-position">
+                                </mat-divider>
+                                <mat-list-item *ngFor="let question of canViewFilter(detailedReport.questions)">
+                                    <ng-container *ngIf="question.canView">
+                                        <report-question class="full-width" (click)="handleClick(question)"
+                                            (questionStatusPreviewDetails)="getQuestionStatusPreviewDetails($event)"
+                                            [caseSelected]="question.questionId === selectedCaseId"
+                                            [caseDetails]="question">
+                                        </report-question>
+                                    </ng-container>
+                                </mat-list-item>
+                            </mat-list>
+                        </div> -->
+                        <div class="report-runs-results mt-1" fxLayout="row"
+                            *ngIf="detailedReport && detailedReport.hierarchyTree && detailedReport.hierarchyTree.length > 0">
+                            <b>{{'AUDIT.CONDUCTINREPORT' | translate | softLabelsPipe :softLabels}}</b>
+                        </div>
+                        <div
+                            *ngIf="detailedReport && detailedReport.hierarchyTree && detailedReport.hierarchyTree.length > 0">
+                            <div *ngFor="let report of detailedReport.hierarchyTree">
+                                <div class="ml-1 mb-05 mt-1" fxLayout="row">
+                                    <b class="word-break user-select-text"
+                                        matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{report.auditCategoryName}}</b>
+                                    <span matTooltip="{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}"
+                                        class="ml-05 badge-item test-case-count-number">{{report.conductQuestionsCount}}</span>
+                                </div>
+                                <div class="ml-1 mb-05"
+                                    *ngIf="report.auditCategoryDescription != null && report.auditCategoryDescription.length > 0">
+                                    <span class="section-description word-break user-select-text"
+                                        [innerHTML]="report.auditCategoryDescription">
+                                    </span>
+                                </div>
+                                <mat-card-content class="p-0" *ngIf="report.questions && report.questions.length > 0">
+                                    <mat-list class="compact-list mb-1">
+                                        <mat-divider class="mat-divider-position">
+                                        </mat-divider>
+                                        <mat-list-item *ngFor="let question of canViewFilter(report.questions)">
+                                            <report-question class="full-width" (click)="handleClick(question)"
+                                                (questionStatusPreviewDetails)="getQuestionStatusPreviewDetails($event)"
+                                                [caseSelected]="question.questionId === selectedCaseId"
+                                                [caseDetails]="question">
+                                            </report-question>
+                                        </mat-list-item>
+                                    </mat-list>
+                                </mat-card-content>
+                                <div class="ml-08 mb-05 hierarchical-subsection-border"
+                                    *ngIf="report.subAuditCategories && report.subAuditCategories.length > 0">
+                                    <div class="ml-05" *ngFor="let subSection of report.subAuditCategories">
+                                        <audit-report-hierarchy-questions
+                                            (questionStatusPreviewDetails)="getQuestionStatusPreviewDetails($event)"
+                                            [subSection]="subSection" [selectedQuestion]="questionFromPreview">
+                                        </audit-report-hierarchy-questions>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="report-runs-results" fxLayout="row"
+                                *ngIf="selectedReport.questionsCount && selectedReport.questionsCount > 150">
+                                <b>{{'AUDIT.REPORTHIERARCHYCASESLIMITEXCEED' | translate | softLabelsPipe :softLabels}}</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

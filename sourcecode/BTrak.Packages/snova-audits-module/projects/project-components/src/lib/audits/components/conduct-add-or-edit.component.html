@@ -1,0 +1,234 @@
+<mat-card-content class="testrun-add-width m-0 mb-05" style="max-width:65vw !important">
+    <mat-horizontal-stepper [linear]="isLinear" #stepper>
+        <mat-step [stepControl]="firstFormGroup">
+            <form [formGroup]="firstFormGroup">
+                <ng-template matStepLabel>{{'AUDIT.CONDUCT' | translate | softLabelsPipe : softLabels}}</ng-template>
+                <form [formGroup]="addConductForm" novalidate (submit)="addConductForm.valid && addNewConduct()">
+                    <div fxLayout="row wrap" id="style-1" style="max-height: 400px;">
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"
+                            class="full-width">
+                            <div fxFlex="50" fxFlex.xs="100">
+                                <mat-form-field fxFlex="100" fxFlex.gt-sm="100">
+                                    <input matInput placeholder="{{'TESTMANAGEMENT.NAME' | translate}}" required
+                                        formControlName="auditConductName">
+                                    <mat-hint>
+                                        {{'AUDIT.EITHERREUSETHEAUIDTNAME' | translate | softLabelsPipe : softLabels}}
+                                    </mat-hint>
+                                    <mat-error
+                                        *ngIf="addConductForm.get('auditConductName').hasError('required') && addConductForm.get('auditConductName').touched">
+                                        {{'AUDIT.PLEASEENTERCONDUCTNAME' | translate | softLabelsPipe :softLabels}}
+                                    </mat-error>
+                                    <mat-error *ngIf="addConductForm.get('auditConductName').hasError('maxlength')">
+                                        {{'AUDIT.CONDUCTNAMEEXCEED150CHARACTERS' | translate | softLabelsPipe : softLabels}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" fxFlex.xs="100" fxLayoutAlign="end end">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{ 'AUDIT.CONDUCTASSIGNEE' | translate | softLabelsPipe :softLabels }}" required
+                                        formControlName="responsibleUserId"
+                                        (selectionChange)="getAssigneeValue($event.value)">
+                                        <mat-option [value]="user.projectMember.id" *ngFor="let user of userList">
+                                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                                <div fxFlex="35px">
+                                                    <app-avatar
+                                                        [name]="user.projectMember.name | removeSpecialCharacters"
+                                                        [src]="user.projectMember.profileImage" [isRound]="true"
+                                                        size="30">
+                                                    </app-avatar>
+                                                </div>
+                                                <div fxFlex="75">
+                                                    <p class="mat-body-2">
+                                                        {{ user.projectMember.name }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div fxLayout="row" class="full-width">
+                            <div fxFlex="50" class="mb-05 mt-05 pt-1">
+                                <ng-container
+                                    *ngIf="(addConductForm.get('viewAuditConductDescription').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="addConductForm.get('viewAuditConductDescription').setValue(!addConductForm.get('viewAuditConductDescription').value)">
+                                        <b>{{'AUDIT.ENTERCONDUCTDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+                                    </a>
+                                </ng-container>
+                                <ng-container
+                                    *ngIf="!(addConductForm.get('viewAuditConductDescription').value == false)">
+                                    <a class="add-test-case"
+                                        (click)="addConductForm.get('viewAuditConductDescription').setValue(!addConductForm.get('viewAuditConductDescription').value)">
+                                        <b>{{'AUDIT.HIDECONDUCTDESCRIPTION' | translate | softLabelsPipe :softLabels}}</b>
+                                    </a>
+                                </ng-container>
+                            </div>
+                            <div fxFlex="50" fxLayoutAlign="end end">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <input matInput [matDatepicker]="picker" [min]="minDate"
+                                        placeholder="{{'AUDIT.PLEASECHOOSECONDUCTDEADLINEDATE' | translate | softLabelsPipe :softLabels}}"
+                                        (click)="picker.open()" formControlName="deadlineDate">
+                                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker></mat-datepicker>
+                                    <mat-error>
+                                        <span
+                                            *ngIf="!addConductForm.get('deadlineDate').valid && addConductForm.get('deadlineDate').touched">
+                                            {{'AUDIT.PLEASECHOOSECONDUCTDEADLINEDATE' | translate | softLabelsPipe :softLabels}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div fxLayout="row wrap" fxFlex="100"
+                            [hidden]="addConductForm.get('viewAuditConductDescription').value == false">
+                            <editor class="full-width mb-1 dfree-header custom-logtime-comment"
+                                apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="Add comment"
+                                menubar="false" [init]="initSettings" background="white" height="100"
+                                formControlName="auditConductDescription" (onKeyUp)="checkValidation($event)">
+                            </editor>
+                            <mat-error *ngIf="addConductForm.get('auditConductDescription').hasError('maxlength')">
+                                {{'AUDIT.CONDUCTDESCRIPTIONEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}
+                            </mat-error>
+                        </div>
+                        <mat-radio-group class="radio-group mt-05" formControlName="isIncludeAllQuestions">
+                            <div fxLayout="row wrap">
+                                <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+                                    <mat-radio-button value="true"
+                                        [checked]="addConductForm.value.isIncludeAllQuestions === true"
+                                        (change)="isCompleted=false;selectAllQuestions()">
+                                        <b>{{'AUDIT.INCLUDEALLQUESTIONS' | translate | softLabelsPipe :softLabels}}</b>
+                                        <p class="wrap-mat-radio-label m-0">
+                                            {{'AUDIT.SELECTTHISOPTIONTOINCLUDEALLQUESTIONS' | translate | softLabelsPipe : softLabels}}
+                                        </p>
+                                    </mat-radio-button>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap">
+                                    <mat-radio-button class="mb-05" fxFlex="100" fxFlex.gt-sm="100" value="false"
+                                        [checked]="addConductForm.value.isIncludeAllQuestions === false"
+                                        (change)="unSelectAllQuestions()">
+                                        <b>{{'AUDIT.SELECTSPECIFICQUESTIONS' | translate | softLabelsPipe :softLabels}}</b>
+                                        <span *ngIf="specificQuestionsIncluded">
+                                            <b> ( <span class="add-test-case">{{specificQuestionsSelected}}</span></b>
+                                            <b class="ml-05">{{'AUDIT.QUESTIONSINCLUDED' | translate | softLabelsPipe :softLabels}} )</b>
+                                        </span>
+                                        <p class="wrap-mat-radio-label m-0">
+                                            {{'AUDIT.YOUCANALTERNATIVELYSELCTQUESTION' | translate | softLabelsPipe : softLabels}}
+                                        </p>
+                                    </mat-radio-button>
+                                </div>
+                            </div>
+                        </mat-radio-group>
+                        <!-- <div fxFlex="100">
+                            <mat-checkbox formControlName="isCompleted"><b>
+                                    {{'TESTMANAGEMENT.COMPLETED' | translate}}</b>
+                            </mat-checkbox>
+                        </div> -->
+                        <button class="mb-05" *ngIf="!editConduct" mat-button mat-raised-button type="submit" color="primary"
+                            [disabled]="disableConduct">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="(anyOperationInProgress$ | async)">
+                            </mat-progress-bar>
+                            <fa-icon icon="edit" class="mr-05"></fa-icon>
+                            {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe : softLabels}}
+                        </button>
+                        <button class="mb-05" *ngIf="editConduct" mat-button mat-raised-button type="submit" color="primary"
+                            [disabled]="disableConduct">
+                            <mat-progress-bar color="primary" mode="indeterminate"
+                                *ngIf="(anyOperationInProgress$ | async)">
+                            </mat-progress-bar>
+                            <fa-icon icon="save" class="mr-05"></fa-icon>
+                            {{'AUDIT.SAVECONDUCT' | translate | softLabelsPipe : softLabels}}
+                        </button>
+                        <button mat-button mat-raised-button class="ml-05 mr-05 mb-05" type="button"
+                            (click)="cancelConduct()">
+                            <fa-icon icon="times" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.CANCEL' | translate}}
+                        </button>
+                        <button class="mb-05" mat-raised-button mat-button color="primary" type="button" [disabled]="!isCompleted"
+                            matStepperNext>
+                            <fa-icon icon="arrow-right" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.NEXT' | translate}}
+                        </button>
+                    </div>
+                </form>
+            </form>
+        </mat-step>
+        <mat-step [stepControl]="secondFormGroup" *ngIf="isCompleted">
+            <form [formGroup]="secondFormGroup">
+                <ng-template matStepLabel>{{'AUDIT.SELECTQUESTIONS' | translate | softLabelsPipe :softLabels}}</ng-template>
+                <div class="mb-05" *ngIf="showSelectAllNone">
+                    <b>{{'AUDIT.QUESTIONS' | translate | softLabelsPipe :softLabels}} - {{'TESTMANAGEMENT.SELECT' | translate}}
+                        <a class="cases-select-all-none"
+                            (click)="selectingAll()">{{'TESTMANAGEMENT.ALL' | translate}}</a> |
+                        <a class="cases-select-all-none"
+                            (click)="selectingNone()">{{'TESTMANAGEMENT.NONE' | translate}}</a>
+                    </b>
+                    <a *ngIf="!expandAll" class="add-test-case ml-05"
+                        matTooltip="{{'AUDIT.EXPANDCATEGORIES' | translate}}" (click)="expandAll = !expandAll">
+                        <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+                            icon="caret-square-right"></fa-icon>
+                    </a>
+                    <a *ngIf="expandAll" class="add-test-case ml-05"
+                        matTooltip="{{'AUDIT.COLLAPSECATEGORIES' | translate}}" (click)="expandAll = !expandAll">
+                        <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+                            icon="caret-square-down"></fa-icon>
+                    </a>
+                </div>
+                <div class="testsuite-tab" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="5px">
+                    <div fxFlex="25" fxFlex.xs="100">
+                        <mat-card class="p-0 m-0">
+                            <conduct-questions-list (categoriesSelected)="getCategoriesSelected($event)"
+                                (questionsSelected)="getQuestionsSelected($event)"
+                                (selectedCategories)="getSelectedCategoryId($event)"
+                                (selectedCategoryData)="getSelectedCategoryData($event)"
+                                (categoryQuestionsCount)="getCategoryQuestionsCount($event)"
+                                (categoriesData)="getCategoriesData($event)" [categorySelected]="categorySelected"
+                                [conductId]="conductId" [auditId]="auditId" [unSelectCategoryId]="unselectCategoryId"
+                                [categoryToCheck]="categoryToCheck" [selectAllNone]="selectAllNone"
+                                [categoryCollapse]="expandAll" [checkFilterQuestions]="filteredQuestionsData">
+                            </conduct-questions-list>
+                        </mat-card>
+                    </div>
+                    <div fxFlex>
+                        <mat-card class="p-0 mt-0">
+                            <conduct-select-question-view (checkCategory)="getCategoryTocheck($event)"
+                                (unselectCategory)="getUnselectedCategory($event)"
+                                (selectedQuestionDetails)="getListOfQuestions($event)"
+                                (selectedQuestionDetailsAllNone)="getListOfQuestionsAllNone($event)"
+                                (categoryQuestionsData)="getCategoryQuestionsData($event)" [conductId]="conductId"
+                                [selectedCategory]="selectedCategoryIdData" [selectedCategoryData]="categoryData"
+                                [selectAllNone]="selectAllNone" [auditsId]="auditId"
+                                [checkFilterQuestions]="filteredQuestionsData">
+                            </conduct-select-question-view>
+                        </mat-card>
+                    </div>
+                </div>
+                <div class="mt-05">
+                    <button *ngIf="!editConduct" mat-button mat-raised-button type="submit" color="primary"
+                        (click)="addNewConduct()" [disabled]="!addConductForm.valid || disableConduct">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(anyOperationInProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="edit" class="mr-05"></fa-icon>
+                        {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe : softLabels}}
+                    </button>
+                    <button *ngIf="editConduct" mat-button mat-raised-button type="submit" color="primary"
+                        (click)="addNewConduct()" [disabled]="!addConductForm.valid || disableConduct">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="(anyOperationInProgress$ | async)">
+                        </mat-progress-bar>
+                        <fa-icon icon="save" class="mr-05"></fa-icon>
+                        {{'AUDIT.SAVECONDUCT' | translate | softLabelsPipe : softLabels}}
+                    </button>
+                    <button mat-button mat-raised-button class="ml-05 mr-05" type="button" (click)="cancelConduct()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.CANCEL' | translate}}
+                    </button>
+                    <button mat-raised-button mat-button color="primary" type="button" matStepperPrevious
+                        (click)="checkSpecificQuestionsSelected()">
+                        <fa-icon icon="arrow-left" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.BACK' | translate}}
+                    </button>
+                </div>
+            </form>
+        </mat-step>
+    </mat-horizontal-stepper>
+</mat-card-content>

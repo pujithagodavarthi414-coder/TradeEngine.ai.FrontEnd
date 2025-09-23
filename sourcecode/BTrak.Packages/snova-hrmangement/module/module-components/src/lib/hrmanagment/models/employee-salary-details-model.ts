@@ -1,0 +1,34 @@
+export class EmployeeSalaryDetailsModel {
+    employeeSalaryDetailId: string;
+    employeeId: string;
+    payGradeId: string;
+    salaryComponent: string;
+    payFrequencyId: string;
+    currencyId: string;
+    amount: number;
+    netPayAmount: number;
+    startDate: Date;
+    endDate: Date;
+    paymentMethodId: string;
+    salaryParticularsFileId: string;
+    comments: string;
+    isDirectDeposit: boolean;
+    isArchived: boolean;
+    operationsPerformedBy: string;
+    isPermanent: boolean;
+    firstName: string;
+    surName: string;
+    userName: string;
+    email: string;
+    payGradeName: string;
+    payFrequencyName: string;
+    currencyName: string;
+    isAddedDepositDetails: string;
+    activeFrom: Date;
+    activeTo: Date;
+    paymentMethodName: string;
+    fileName: string;
+    timeStamp: string;
+    totalCount: number;
+    payrollName: string;
+}

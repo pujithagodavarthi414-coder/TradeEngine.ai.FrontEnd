@@ -1,0 +1,101 @@
+<div class="p-0 m-0 full-height" *ngIf="(canAccess_feature_AllFoodOrders)">
+  <mat-card-title class="data-table-header drag-handler">
+    <div fxLayout="row" fxLayoutGap="5px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+      <div fxFlex class="p-1" class="card-title-text p-05 ml-05" fxLayoutAlign="start center">
+        {{'HRMANAGAMENT.ALLFOODORDERS' | translate | titlecase}}
+      </div>
+      <div class="ml-1 mr-05 search_goalinput" fxLayout="row wrap">
+        <div fxFlex fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="SearchFoodOrderList()">
+          </mat-form-field>
+        </div>
+        <div fxFlex="20px">
+          <span class="close_icon  custom-search-close" style="right: 100px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" *ngIf = "entities?.length > 1">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" *ngIf = "entities?.length > 1">
+          <button type="submit" mat-icon-button class="pull-right" 
+            [matMenuTriggerFor]="filterMenu" matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="user-cog" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card-title>
+
+  <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+      <mat-form-field (click)="$event.stopPropagation()">
+        <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+          (selectionChange)="entityValues($event.value)">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+  </mat-menu>
+
+  <mat-card-content id="style-1" class="p-0 app-height-search-2">
+    <div class="activity-data m-0 food-order-header">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50" [rowHeight]="50"
+        [externalPaging]="true" [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size"
+        [externalSorting]="true" [loadingIndicator]="foodOrderListGridSpinner$ | async" (sort)="onSort($event)"
+        (page)='setPage($event)' [rows]="foodOrderList$ | async" [scrollbarH]="isScrollable" [virtualization]="false"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.EMPLOYEECOUNT' | translate | softLabelsPipe : softLabels}}"
+          sortable="true" prop="employeesCount" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div>{{ row?.employeesCount }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.ORDEREDDATE' | translate}}" sortable="true" prop="orderedDateTime"
+          [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span
+                matTooltip="{{ row?.orderedDateTime }}">{{ row?.orderedDateTime | utcToLocalTime | date: "dd-MMM-yyyy"}}</span>
+            </div>
+
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.AMOUNT' | translate}}" sortable="true" prop="amount" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div>{{row?.symbol}}{{ row?.amount }}</div>
+
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.STATUSSETDATETIME' | translate}}" sortable="true"
+          prop="statusSetDateTime" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span
+                matTooltip="{{ row?.statusSetDateTime }}">{{ row?.statusSetDateTime | utcToLocalTime | date: "dd-MMM-yyyy h:m" }}</span>
+            </div>
+
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{'HRMANAGAMENT.STATUS' | translate}}" sortable="true" prop="status" [flexGrow]="1">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div><span matTooltip="{{ row?.status }}">{{ row?.status }}</span></div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </mat-card-content>
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_AllFoodOrders)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

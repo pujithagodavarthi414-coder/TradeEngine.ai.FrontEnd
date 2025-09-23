@@ -1,0 +1,36 @@
+import { SearchCriteriaInputModelBase } from "./searchCriteriaInputModelBase";
+export class LeadContractModel extends SearchCriteriaInputModelBase {
+    id: string;
+    uniqueLeadId: string;
+    salesPersonId: string;
+    contractId: string;
+    productId: string;
+    gradeId: string;
+    paymentTypeId: string;
+    statusId: string;
+    countryOriginId: string;
+    leadDate: any;
+    shipmentMonth: string;
+    shipToAddress: string;
+    quantityInMT: any;
+    vehicleNumberOfTransporter: string;
+    mobileNumberOfTruckDriver: string;
+    portId: string;
+    termsOfDelivery: string;
+    drums: string;
+    bLNumber: string;
+    customPoint: string;
+    isArchived: boolean;
+    isClosed: any;
+    timeStamp: any;
+    clientId: string;
+    invoiceNumber: string;
+    performaInvoiceNumber: string;
+    deliveryNote: string;
+    suppliersRef: string;
+    exceptionApprovalRequired: any;
+    rateGst: any;
+    rateGST: any;
+    remaningQuantity: number;
+    blNumber: any;
+}

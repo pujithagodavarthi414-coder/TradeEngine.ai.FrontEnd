@@ -1,0 +1,309 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+</mat-progress-bar>
+<div>
+  <mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05">
+      {{ titleText | softLabelsPipe : softLabels}}
+    </div>
+  </mat-card-title>
+  <form [formGroup]="KanbanUserStoryForm" #formDirective="ngForm" novalidate
+    (submit)="KanbanUserStoryForm.valid && SaveUserStory()">
+    <div class="card-content p-05" fxLayout='column'>
+      <div id="style-1" class="goal-create-height">
+        <div fxLayout="row wrap">
+          <div *ngIf="KanbanForm" fxFlex="100">
+            <mat-form-field class="full-width">
+              <textarea formControlName="userStoryName" matInput
+                placeholder="{{ 'USERSTORY.USERSTORY' | translate | softLabelsPipe : softLabels}}" trim
+                required></textarea>
+              <mat-error>
+                <span *ngIf="
+                    KanbanUserStoryForm.get('userStoryName').hasError(
+                      'required'
+                    ) &&
+                    KanbanUserStoryForm.get('userStoryName').touched
+                  ">{{ 'USERSTORY.PLEASEENTERUSERSTORYNAME' | translate | softLabelsPipe : softLabels}}</span>
+                <span
+                  *ngIf="
+                    KanbanUserStoryForm.get('userStoryName').hasError(
+                      'maxlength'
+                    )
+                  ">{{ 'USERSTORY.USERSTORYNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <input matInput formControlName="userStoryId" hidden />
+          <input matInput formControlName="userStoryStatusId" hidden />
+          <div fxFlex="100" fxFlex.gt-sm="100" fxLayout="column wrap" *ngIf="!KanbanForm">
+            <mat-form-field class="full-width">
+              <textarea formControlName="userStoryName" matInput
+                placeholder="{{ 'USERSTORY.BUG' | translate | softLabelsPipe : softLabels}}" trim required></textarea>
+              <mat-error>
+                <span *ngIf="
+                    KanbanUserStoryForm.get('userStoryName').hasError('required') &&
+                    KanbanUserStoryForm.get('userStoryName').touched
+                  ">{{ 'USERSTORY.PLEASEENTERBUGNAME' | translate | softLabelsPipe : softLabels}}</span>
+                <span
+                  *ngIf="
+                    KanbanUserStoryForm.get('userStoryName').hasError(
+                      'maxlength')">{{ 'USERSTORY.BUGNAMECANNOTEXCEED800CHARACTERS' | translate | softLabelsPipe : softLabels}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" class="mr-05">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="ownerUserId" placeholder="{{ 'USERSTORY.SELECTOWNER' | translate }}"
+                (selectionChange)="getAssigneeValue($event.value)">
+                <mat-select-trigger>
+                  {{selectedMember}}
+                </mat-select-trigger>
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option [value]="user.projectMember.id" *ngFor="let user of (projectMembers$ | async)">
+                  <app-avatar class="employee_img" *ngIf="!user.projectMember.profileImage"
+                    [name]="user.projectMember.name| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="user.projectMember.profileImage"
+                    [src]="user.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.projectMember.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap">
+            <mat-form-field class="full-width custom-selectbox" (click)="$event.stopPropagation()">
+              <mat-select placeholder="{{ 'USERDETAIL.USERSTORYTYPE'|translate | softLabelsPipe : softLabels}}"
+                formControlName="userStoryTypeId" required>
+                <mat-option *ngFor="let userStoryType of (userStoryTypes$ | async)"
+                  [value]="userStoryType.userStoryTypeId">
+                  {{ userStoryType.userStoryTypeName | softLabelsPipe : softLabels}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span
+                  *ngIf="!KanbanUserStoryForm.get('userStoryTypeId').valid && KanbanUserStoryForm.get('userStoryTypeId').touched">
+                  {{ 'USERSTORY.PLEASESELECTUSERSTORYTYPE' | translate | softLabelsPipe : softLabels}}
+                </span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-05">
+          <div fxFlex="100" *ngIf="(!KanbanForm && !isFromSprint) || (!KanbanForm && isFromSprint)" fxFlex.gt-sm="48"
+            fxLayout="column wrap" class="mr-05">
+            <mat-form-field class="full-width" *ngIf="(!KanbanForm && !isFromSprint) || (!KanbanForm && isFromSprint)">
+              <mat-select formControlName="bugPriorityId" placeholder="{{ 'USERSTORY.SELECTBUGPRIORITY' | translate }}"
+                (selectionChange)="changePriority($event.value)">
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option value="option" [value]="priority.bugPriorityId"
+                  *ngFor="let priority of (bugPriorities$ | async)">
+                  <fa-icon icon="{{priority.icon}}" [ngStyle]="
+                  setColorForBugPriorityTypes(priority.color)
+                "></fa-icon> {{ priority.priorityName }}&nbsp;-&nbsp;{{ priority.description }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" *ngIf="(KanbanForm && isFromSprint)" fxFlex.gt-sm="48" fxLayout="column wrap" class="mr-05">
+            <mat-form-field class="full-width" *ngIf="(KanbanForm && isFromSprint)">
+              <mat-select formControlName="bugPriorityId" placeholder="{{ 'GOALS.PRIORITY' | translate }}"
+                (selectionChange)="changePriority($event.value)">
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option value="option" [value]="priority.bugPriorityId"
+                  *ngFor="let priority of (bugPriorities$ | async)">
+                  <fa-icon icon="{{priority.icon}}" [ngStyle]="setColorForBugPriorityTypes(priority.color)"></fa-icon>
+                  {{ priority.description }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap">
+            <mat-form-field class="full-width" *ngIf="!KanbanForm">
+              <input formControlName="versionName" matInput trim
+                placeholder="{{ 'USERSTORY.VERSIONNAME' | translate }}" />
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="KanbanForm && isFromSprint">
+              <mat-select formControlName="dependencyUserId" placeholder="{{'USERDETAIL.DEPENDENCY'|translate}}"
+                (selectionChange)="changeDependancy($event.value)">
+                <mat-select-trigger>
+                  {{selectedDependencyPerson}}
+                </mat-select-trigger>
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option [value]="user.projectMember.id"
+                  *ngFor="let user of (projectMembers$ | async | dependencyFilter: 'id':assignee)">
+                  <app-avatar class="employee_img" *ngIf="!user.projectMember.profileImage"
+                    [name]="user.projectMember.name| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="user.projectMember.profileImage"
+                    [src]="user.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.projectMember.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div *ngIf="!KanbanForm" fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" class="mr-05">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="bugCausedUserId" placeholder="{{ 'USERSTORY.SELECTCAUSEDBY' | translate }}"
+                (selectionChange)="getBugCausedUser($event.value)">
+                <mat-select-trigger>
+                  {{selectedBugCausedUser}}
+                </mat-select-trigger>
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option [value]="user.projectMember.id" *ngFor="let user of (projectMembers$ | async)">
+                  <app-avatar class="employee_img" *ngIf="!user.projectMember.profileImage"
+                    [name]="user.projectMember.name| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="user.projectMember.profileImage"
+                    [src]="user.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.projectMember.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" *ngIf="!KanbanForm">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="projectFeatureId" placeholder="{{ 'USERSTORY.SELECTCOMPONENT' | translate }}"
+                (selectionChange)="updateProjectFeature($event.value)">
+                <mat-option value="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option value="option" [value]="feature.projectFeatureId"
+                  *ngFor="let feature of (projectFeatures$ | async)">
+                  {{ feature.projectFeatureName }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" fxLayoutGap="10px" class="mb-05">
+          <div fxFlex="100" fxFlex.gt-sm="48" class="mr-05">
+            <mat-form-field class="full-width" *ngIf="isDateTimeConfiguration && !isFromSprint">
+              <input matInput [min]="onBoardProcessDate" formControlName="startDate"
+                [owlDateTimeTrigger]="startDatePicker" [owlDateTime]="startDatePicker" (dateTimeChange)="changeStartDate()"
+                placeholder="{{ 'GOALS.STARTDATE' | translate | softLabelsPipe : softLabels}}">
+              <fa-icon icon="calendar" [owlDateTimeTrigger]="startDatePicker"
+                style="float:right;position:absolute;right:0">
+              </fa-icon>
+              <owl-date-time #startDatePicker></owl-date-time>
+            </mat-form-field>
+
+            <mat-form-field class="full-width" *ngIf="!isDateTimeConfiguration && !isFromSprint">
+              <input formControlName="startDate" [min]="onBoardProcessDate" matInput [matDatepicker]="startDatePicker1"
+                (click)="startDatePicker1.open()"
+                (dateChange)="changeStartDate()"
+                placeholder="{{ 'GOALS.STARTDATE' | translate | softLabelsPipe : softLabels}}" />
+              <mat-datepicker-toggle matSuffix [for]="startDatePicker1"></mat-datepicker-toggle>
+              <mat-datepicker #startDatePicker1></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="48">
+            <mat-form-field class="full-width" *ngIf="isDateTimeConfiguration && !isFromSprint">
+              <input matInput [min]="KanbanUserStoryForm.get('startDate').value" formControlName="deadLineDate"
+                [owlDateTimeTrigger]="deadlineDatePicker" [owlDateTime]="deadlineDatePicker"
+                (dateTimeChange)="changeEndDate()"
+                placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+              <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker"
+                style="float:right;position:absolute;right:0">
+              </fa-icon>
+              <owl-date-time #deadlineDatePicker></owl-date-time>
+            </mat-form-field>
+
+            <mat-form-field class="full-width" *ngIf="!isDateTimeConfiguration && !isFromSprint">
+              <input formControlName="deadLineDate" [min]="KanbanUserStoryForm.get('startDate').value" matInput
+                [matDatepicker]="picker" (click)="picker.open()"
+                (dateChange)="changeEndDate()"
+                placeholder="{{ 'USERSTORY.DEADLINE' | translate | softLabelsPipe : softLabels}}" />
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+       
+        <div fxLayout="row wrap"
+          *ngIf="KanbanForm && showSectionsDropDown && (canAccess_entityType_feature_AddOrUpdateScenarioSection)">
+          <div fxFlex="94">
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'TESTMANAGEMENT.SECTION' | translate}}" formControlName="testSuiteSectionId"
+                (selectionChange)="changeSection($event.value)">
+                <mat-option [value]="0">Select None</mat-option>
+                <mat-option *ngFor="let section of (sectionsList$ | async)" [value]="section.id">
+                  {{section.value}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div fxFlex="22px" fxLayoutAlign="end center">
+            <a *ngIf="(canAccess_entityType_feature_AddOrUpdateScenarioSection)" class="add-test-suite-section"
+              matTooltip="{{'TESTMANAGEMENT.ADDSECTION' | translate}}" [satPopoverAnchorFor]="addSection"
+              #addSectionPopover="satPopoverAnchor" (click)="openSectionPopover(addSectionPopover)">
+              <fa-icon class="add-section-square" icon="plus-square"></fa-icon>
+            </a>
+          </div>
+        </div>
+        <div fxLayout="row wrap" >
+          <div fxFlex="100" fxFlex.gt-sm="48" class="mr-05">
+            <mat-form-field class="full-width" *ngIf="isFromSprint">
+              <input matInput formControlName="sprintEstimatedTime" (input)="saveSprintEstimatedTime($event.target.value)"
+                placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}" amountOnly>
+            </mat-form-field>
+            <mat-error *ngIf="isValidation">
+              {{ 'USERSTORY.ESTIMATEDTIMEINSPCANNOTGREATERTHAN99HOURS' | translate }}
+            </mat-error>
+            <app-common-estimatedTime [estimatedTime]="estimatedTime"
+              (totalEstimatedTimeInHours)="changeEstimatedTime($event)"></app-common-estimatedTime>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="48" fxLayout="column wrap" *ngIf="(KanbanForm && !isFromSprint)">
+            <mat-form-field class="full-width">
+              <mat-select formControlName="dependencyUserId" placeholder="{{'USERDETAIL.DEPENDENCY'|translate}}"
+                (selectionChange)="changeDependancy($event.value)">
+                <mat-select-trigger>
+                  {{selectedDependencyPerson}}
+                </mat-select-trigger>
+                <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option [value]="user.projectMember.id"
+                  *ngFor="let user of (projectMembers$ | async | dependencyFilter: 'id':assignee)">
+                  <app-avatar class="employee_img" *ngIf="!user.projectMember.profileImage"
+                    [name]="user.projectMember.name| removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="user.projectMember.profileImage"
+                    [src]="user.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ user.projectMember.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+       <div  fxFlex="100">
+        <app-pm-component-tags [userStoryId]="userStoryId" [isFromUserStory]= true (setUserStoryTags)="saveUserStoryTags($event)"></app-pm-component-tags>
+       </div>
+      
+      <div class="text-center mt-05">
+        <button mat-raised-button color="primary" class="mr-05" type="submit"
+          [disabled]="!KanbanUserStoryForm.valid || (anyOperationInProgress$|async) || isButtonDisabled || startDateValidate || endDateValidate">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$|async)">
+          </mat-progress-bar>
+          <fa-icon icon="{{buttonIcon}}" class="mr-05"></fa-icon>{{ buttonText }}
+        </button>
+        <button mat-raised-button (click)="closeUserStoryDialog(); (false)"
+          [disabled]="(anyOperationInProgress$|async)">
+          <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'DISMISS' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!--------add Section dialog------>
+<sat-popover #addSection hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05"> {{'TESTMANAGEMENT.ADDSECTION' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <!-- <testsuite-section-edit *ngIf="loadSection" [testSuiteId]="testSuiteId" [editingSection]="sectionEdit"
+        (closeSection)="closeSectionPopover()">
+      </testsuite-section-edit> -->
+      <ndc-dynamic *ngIf="loadSection" [ndcDynamicFactory]="testSuitSectionEdit.component"
+        [ndcDynamicComponent]="testSuitSectionEdit.component" [ndcDynamicInjector]="injector"
+        [ndcDynamicInputs]="testSuitSectionEdit.inputs" [ndcDynamicOutputs]="testSuitSectionEdit.outputs">
+      </ndc-dynamic>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--------add Section dialog------>

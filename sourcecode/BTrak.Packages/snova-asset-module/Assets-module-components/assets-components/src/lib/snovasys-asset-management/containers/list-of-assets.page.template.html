@@ -1,0 +1,275 @@
+<ng-container
+  *ngIf="(canAccess_feature_ViewListOfAssets) || (canAccess_feature_ViewAssetsWithAdvancedSearch) || (canAccess_feature_AddOrUpdateAsset)">
+  <mat-card class="p-0  mat-card-fx-col">
+    <mat-card-title class="data-table-header">
+      <div fxLayout="row" fxLayout.xs="column">
+        <div fxLayout="row" fxFlex>
+          <div class="card-title-text p-03 ml-02" fxFlex fxLayoutAlign="start center">
+            {{'MYPROFILE.ASSETS' | translate}}
+          </div>
+          <!-- <div fxFlex="188px" fxLayoutAlign="end center" class="asset-search-height mr-5"> -->
+            <!-- <mat-form-field>
+              <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]="searchText"
+                [autocomplete]="'off'" (keydown)="search($event)">
+            </mat-form-field>
+            <span class="close_icon">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span> -->
+            <!-- <mat-form-field class="custom-searchbar">
+              <div class="m-0 p-0" fxLayout="row">
+                <div fxFlex class="m-0 p-0">
+                  <input matInput [(ngModel)]="searchText" [autocomplete]="'off'" placeholder="{{'ASSETS.SEARCH' | translate}}"
+                    (keydown)="search($event)" />
+                  <span class="filters-close assets-list-search mr-05 mt-02">
+                    <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                      style="cursor:pointer">close</mat-icon>
+                  </span>
+                </div>
+              </div>
+            </mat-form-field> -->
+            <div class="ml-05 mr-05 search_goalinput" fxFlex="180px">
+              <mat-form-field fxLayoutAlign="end center">
+                <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="search($event)">
+              </mat-form-field>
+              <span class="close_icon" style="right: 10px !important">
+                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </div>
+          <!-- </div> -->
+        </div>
+        <div fxFlex.xs fxLayoutAlign.xs="space-around center">
+          <ng-container *ngIf="(canAccess_feature_ViewAssetsWithAdvancedSearch)">
+            <button mat-icon-button (click)="resetAllFilters()">
+              <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}"></fa-icon>
+            </button>
+            <button mat-icon-button [satPopoverAnchorFor]="filters" (click)="filters.toggle()" id="assets-3">
+              <fa-icon icon="filter" matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}" class="mat-color-accent">
+              </fa-icon>
+            </button>
+          </ng-container>
+          <button mat-icon-button color="accent" *ngIf="(canAccess_feature_AddOrUpdateAsset)"
+            matTooltip="{{'ASSETS.CLICKHERETOADDANASSET' | translate}}" 
+            (click)="gotoAddAsset();$event.stopPropagation()">
+            <mat-icon>add</mat-icon>
+          </button>
+          <button mat-icon-button color="accent"
+            *ngIf="customFieldsLength == 0 && canAccess_feature_AddOrEditCustomFieldsForAssets"
+            (click)="openCustomForm();$event.stopPropagation()">
+            <fa-icon matTooltip="{{'GENERICFORM.CUSTOMFIELDS'|translate}}" class="filter mat-color-accent" icon="plus">
+            </fa-icon>
+          </button>
+          <button mat-icon-button color="accent"
+            *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForAssets"
+            (click)="editCustomForm();$event.stopPropagation()">
+            <fa-icon matTooltip="{{'GENERICFORM.EDITCUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+              icon="edit">
+            </fa-icon>
+          </button>
+          <button mat-icon-button color="accent"
+            *ngIf="customFieldsLength > 0 && canAccess_feature_AddOrEditCustomFieldsForAssets"
+            (click)="deleteCustomForm();$event.stopPropagation()">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+            </mat-progress-bar>
+            <fa-icon matTooltip="{{'GENERICFORM.DELETECUSTOMFIELD'|translate}}" class="filter mat-color-accent"
+              icon="trash">
+            </fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="displaySearchText">
+        <b>{{'SEARCH' | translate}}:&nbsp;</b>
+        {{ displaySearchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="displayAssetCode">
+        <b>{{'ASSETS.ASSETCODE' | translate}}:&nbsp;</b>
+        {{ displayAssetCode }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearchByAsset()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="assigneeNames">
+        <b>{{'ASSETS.ASSIGNEE' | translate}}:&nbsp;</b>
+        {{ assigneeNames }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByAssignee('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="productName">
+        <b>{{'ASSETS.PRODUCTNAME' | translate}}:&nbsp;</b>
+        {{ productName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByProduct('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="entityName">
+        <b>{{'ASSETS.ENTITY' | translate}}:&nbsp;</b>
+        {{ entityName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByEntityId(null,null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="supplierName">
+        <b>{{'ASSETS.VENDOR' | translate}}:&nbsp;</b>
+        {{ supplierName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchBySupplier('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="isAvailableValue">
+        <b>{{'ASSETS.ISAVAILABLE' | translate}}:&nbsp;</b>
+        {{ isAvailableValue }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByEmpty(null,null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="purchaseDate">
+        <b>{{'ASSETS.PURCHASEDDATE' | translate}}:&nbsp;</b>
+        {{ purchaseDate | date:"dd-MM-yyyy" }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="onPurchasedDateChange(null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="assignedDate">
+        <b>{{'ASSETS.ASSIGNEDDATE' | translate}}:&nbsp;</b>
+        {{ assignedDate | date:"dd-MM-yyyy" }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="onAssignedDateChange(null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="isVendorName">
+        <b>{{'ASSETS.ISVENDORPRODUCT' | translate}}:&nbsp;</b>
+        {{ isVendorName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByVendor(null,null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="activeAssignees == 'false'">
+        <b>{{'ASSETS.ASSIGNEESTATUS' | translate}}:&nbsp;</b>
+        {{'ASSETS.INACTIVEEMPLOYESS' | translate}}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByUserStatus('true')">
+        </fa-icon>
+      </mat-chip>
+    </div>
+    <mat-divider></mat-divider>
+  </mat-card>
+
+  <ng-container *ngIf="(canAccess_feature_ViewListOfAssets)">
+    <div fxLayout="row wrap" fxLayout.xs="column">
+      <div fxFlex="25" fxFlex.lt-md="100">
+        <app-am-list-of-assets [assetsSearchResult]="assetSearchResultsData" [isFilterApplied]="filter()">
+        </app-am-list-of-assets>
+      </div>
+      <div fxFlex="75" fxFlex.lt-md="100">
+        <app-am-asset-view [activeAssignee]='activeAssignee' (getCustomFieldsLength)="getCustomFieldsLength($event)">
+        </app-am-asset-view>
+      </div>
+    </div>
+  </ng-container>
+
+  <sat-popover #filters hasBackdrop verticalAlign="below">
+    <mat-card class="filter-data p-03 mat-filter mobile-view-popover" id="style-1" (click)="$event.stopPropagation()">
+      <mat-form-field ngClass.xs="full-width">
+        <input matInput placeholder="{{'ASSETS.SEARCHBYASSETCODE' | translate}}" [autocomplete]="'off'"
+          [(ngModel)]="searchAssetCode" (keydown)="searchByAsset($event)">
+      </mat-form-field>
+      <span class="close_icon">
+        <mat-icon *ngIf="searchAssetCode" class="icon-button" aria-hidden="false" style="cursor:pointer"
+          (click)="closeSearchByAsset()">
+          close</mat-icon>
+        <mat-icon class="icon-button ml-05" aria-hidden="false" style="cursor:pointer" (click)="searchByAssetIcons()">
+          search</mat-icon>
+      </span>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.ASSIGNEE' | translate}}"
+          (selectionChange)="searchByAssignee($event.value, $event)" [(ngModel)]="selectedAssigneeId">
+          <mat-option value="all" selected>{{'ASSETS.ALL' | translate}}</mat-option>
+          <mat-option [value]="assignee.id" *ngFor="let assignee of selectUserDropDownListData$ | async">
+            <app-avatar class="employee_img" *ngIf="!assignee.profileImage"
+              [name]="assignee.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            <img class="employee_img" src="{{assignee.profileImage}}"
+              *ngIf="assignee.profileImage">{{assignee.fullName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.PRODUCTNAME' | translate}}"
+          (selectionChange)="searchByProduct($event.value, $event)" [(ngModel)]="selectedProductId">
+          <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+          <mat-option [value]="product.productDetailsId" *ngFor="let product of productDetailsList$ | async">
+            {{product.productName}}({{product.manufacturerCode}})</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-label>{{'ASSETS.ENTITY' | translate}}</mat-label>
+        <mat-select (selectionChange)="searchByEntityId($event.value, $event)" [(ngModel)]="selectedEntityId">
+          <mat-option *ngFor="let entity of entities" [value]="entity.id">
+            {{entity.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.BYSUPPLIER' | translate}}"
+          (selectionChange)="searchBySupplier($event.value, $event)" [(ngModel)]="selectedSupplierId">
+          <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+          <mat-option [value]="supplier.supplierId" *ngFor="let supplier of suppliersList$ | async">
+            {{supplier.supplierName}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.ISAVAILABLE' | translate}}"
+          (selectionChange)="searchByEmpty($event.value, $event)" [(ngModel)]="isEmpty">
+          <mat-option value=null>{{'ASSETS.ALL' | translate}}</mat-option>
+          <mat-option value="true">{{'ASSETS.YES' | translate}}</mat-option>
+          <mat-option value="false">{{'ASSETS.NO' | translate}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.ISVENDOR' | translate}}"
+          (selectionChange)="searchByVendor($event.value, $event)" [(ngModel)]="isVendor">
+          <mat-option value=null>{{'ASSETS.ALL' | translate}}</mat-option>
+          <mat-option value="true">{{'ASSETS.YES' | translate}}</mat-option>
+          <mat-option value="false">{{'ASSETS.NO' | translate}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-select placeholder="{{'ASSETS.ASSIGNEESTATUS' | translate}}"
+          (selectionChange)="searchByUserStatus($event.value)" [(ngModel)]="activeAssignees">
+          <mat-option value="true">{{'ASSETS.ACTIVEEMPLOYEES' | translate}}</mat-option>
+          <mat-option value="false">{{'ASSETS.INACTIVEEMPLOYESS' | translate}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-label>{{'ASSETS.SELECTPURCHASEDDATE' | translate}}</mat-label>
+        <input matInput [matDatepicker]="picker3" [(ngModel)]="purchaseDate" (click)="picker3.open()" autocomplete="off"
+          [readonly]="true" (dateChange)="onPurchasedDateChange($event)" class="date-picker">
+        <mat-datepicker-toggle matSuffix [for]="picker3">
+        </mat-datepicker-toggle>
+        <mat-datepicker #picker3></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-label>{{'ASSETS.SELECTASSIGNEDDATE' | translate}}</mat-label>
+        <input matInput [matDatepicker]="picker2" [(ngModel)]="assignedDate" (click)="picker2.open()" autocomplete="off"
+          [readonly]="true" (dateChange)="onAssignedDateChange($event)" class="date-picker">
+        <mat-datepicker-toggle matSuffix [for]="picker2">
+        </mat-datepicker-toggle>
+        <mat-datepicker #picker2></mat-datepicker>
+      </mat-form-field>
+      <!-- <div>
+        <mat-checkbox [(ngModel)]="isWriteOff" (change)="getAllAssets()">  Damaged Assets</mat-checkbox>
+      </div> -->
+    </mat-card>
+  </sat-popover>
+</ng-container>
+
+
+<ng-template #customFormsComponent let-data>
+  <app-custom-form-component [data]=[data] (closeMatDialog)="closeDialog($event)"></app-custom-form-component>
+</ng-template>
+
+<ng-container
+  *ngIf="!(canAccess_feature_ViewListOfAssets) && !(canAccess_feature_ViewAssetsWithAdvancedSearch) && !(canAccess_feature_AddOrUpdateAsset) && !(roleFeaturesIsInProgress$|async)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

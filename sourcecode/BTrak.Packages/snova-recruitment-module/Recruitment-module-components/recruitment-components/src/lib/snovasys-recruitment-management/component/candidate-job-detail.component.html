@@ -1,0 +1,150 @@
+<div *ngIf="canAccess_feature_ViewCandidateJobs">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'CANDIDATEJOB.TITLE' | translate}}">{{'CANDIDATEJOB.TITLE' | translate}}</span>
+        </div>
+        <div fxFlex="135px" fxLayoutAlign="end center" class="search_goalinput mr-05" fxLayout="row wrap">
+          <mat-form-field class="full-width">
+            <input class="search_goal ml-lg-n2 mt-lg-n1" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="close_icon" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+              style="right: 0px !important;">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+</div>
+<div class="activity-data no-drag accessible-ip-height" *ngIf="canAccess_feature_ViewCandidateJobs">
+  <ngx-datatable class="btrak" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="50" [rowHeight]="50"
+    [limit]="10" [rows]="candidateJobDetails" [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true"
+    [virtualization]="false" [sorts]="[{prop: 'jobOpeningTitle', dir: 'asc'}]" (sort)="onSort($event)"
+    [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+    <ngx-datatable-column minWidth="150" name="{{'CANDIDATEJOB.JOBNAME' | translate}}" [flexGrow]="1" [sortable]="true"
+      prop="jobOpeningTitle">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row?.jobOpeningTitle }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column minWidth="150" name="{{'CANDIDATEJOB.APPLIEDDATE' | translate}}" [flexGrow]="1"
+      [sortable]="true" prop="applieddatetime">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row?.appliedDate | date: 'mediumDate' }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column minWidth="150" name="{{'CANDIDATEJOB.INTERVIEWSTATUS' | translate}}" [flexGrow]="1"
+      [sortable]="true" prop="interviewStatus">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <mat-chip class="ml-05 mr-2 allgoals_process text-center goal-cursor userstory_color mt-03" mat-sm-chip
+          [style.backgroundColor]="row?.color" matTooltip="{{row.hiringStatusName}} ">
+          {{ row.hiringStatusName }}
+        </mat-chip>
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+</div>
+
+<!--edit popup-->
+<sat-popover backdropClass="backdrop-color" #upsertJobDetailPopover [autoFocus]="false" hasBackdrop
+  [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ JobTitle }}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="jobDetailForm" #formDirective="ngForm" novalidate
+        (submit)="jobDetailForm.valid && upsertCandidateJobDetails(formDirective)">
+        <div>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="jobName" placeholder="{{'JOBDETAILS.JOBNAME' | translate }}" required>
+            <mat-error *ngIf="jobDetailForm.get('jobName').hasError('maxlength')">
+              {{ 'JOBDETAILS.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="jobDetailForm.get('jobName').hasError('required') && jobDetailForm.get('jobName').touched">
+              {{ 'JOBDETAILS.NAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <input matInput [min]="onBoardProcessDate" formControlName="applieddatetime"
+              [owlDateTimeTrigger]="dateFromDatePicker" [owlDateTime]="dateFromDatePicker" placeholder="Date from">
+            <fa-icon icon="calendar" [owlDateTimeTrigger]="dateFromDatePicker"
+              style="float:right;position:absolute;right:0">
+            </fa-icon>
+            <owl-date-time #dateFromDatePicker></owl-date-time>
+          </mat-form-field>
+          <mat-form-field class="full-width">
+            <input matInput formControlName="interviewStatus" required>
+            <mat-error *ngIf="jobDetailForm.get('interviewStatus').hasError('maxlength')">
+              {{ 'JOBDETAILS.NAMEMAXLENGTHERROR' | translate }}</mat-error>
+            <mat-error
+              *ngIf="jobDetailForm.get('interviewStatus').hasError('required') && jobDetailForm.get('interviewStatus').touched">
+              {{ 'JOBDETAILS.NAMEREQUIREDERROR' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1 text-center">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!jobDetailForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeUpsertJobDetailUpPopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--edit popup-->
+<!--delete popup-->
+<sat-popover backdropClass="backdrop-color" #deleteJobDetailPopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1" *ngIf="!isArchived">{{ 'JOBDETAILS.ARCHIVEJOBDETAILS' | translate }}
+      </div>
+      <div class="card-title-text mb-1" *ngIf="isArchived">
+        {{ 'JOBDETAILS.UNARCHIVEJOBDETAILS' | translate }}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1" *ngIf="!isArchived">
+        {{ 'JOBDETAILS.DESIGNA' | translate }}
+      </div>
+      <div class="card-content mb-1" *ngIf="isArchived">
+        {{ 'JOBDETAILS.DESIGNU' | translate }}
+      </div>
+      <span *ngIf="isThereAnError">{{ validationMessage }}</span>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteJobDetail();">
+          <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+        </button>
+        <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+          [disabled]="isAnyOperationIsInprogress" (click)="deleteJobDetail();">
+          <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteJobDetailPopup();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!--delete-->

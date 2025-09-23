@@ -1,0 +1,22 @@
+export const environment = {
+    production: false,
+    // apiURL: "https://btrak489-development.snovasys.co.uk/backend/",
+    //  apiURL: "https://btrak489-test.snovasys.co.uk/backend/",
+    apiURL: "http://localhost:1241/",
+    // apiURL: 'https://staging.btrak.io/backend/',
+    artificialDelay: 0,
+    version: "dev",
+    useTestAuthenticator: false,
+    cookiePath: "/",
+    deployedEnvironment: "",
+    publishKey:"pub-c-d4eda127-1095-4ded-bd30-5b3b7162a9ff",
+    subscribeKey:"sub-c-4aab85be-6ee8-11ea-895f-e20534093ea4",
+    zendeskAccountUrl: "snovasys.zendesk.com",
+    canAllowCompanyCreation: "true",
+    isShowZendesk: true,
+    trackingId: "UA-154966379-1",
+    fileExtensions: ['jpg', 'jpeg', 'png','csv', 'txt', 'xls', 'xls', 'xml'],
+    maxFileSize : 10485760,
+    domainAddress:'http://localhost:4200/'
+}
+  

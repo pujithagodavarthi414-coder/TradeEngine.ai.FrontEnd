@@ -1,0 +1,92 @@
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+</mat-progress-bar>
+<mat-card *ngIf="showBugs == false" class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+    <div fxLayout="row" fxFlex="100" class="p-05">
+        <fa-icon icon="info-circle"></fa-icon>
+        <p class="ml-1">{{'USERSTORY.THREEARENOBUGSAVILABLE' | translate | softLabelsPipe : softLabels}}</p>
+    </div>
+</mat-card>
+<div *ngIf="(!(anyOperationInProgress$ | async)) && showBugs" class="ml-05">
+    <div class="mb-05" fxLayout="row">
+        <span class="section-description">{{'USERSTORY.BUGSPRESENT' | translate}}
+        </span>
+        <span matTooltip="{{'USERSTORY.BUGSCOUNT' | translate}}"
+            class="ml-05 badge-item test-case-count-number">{{casesCount}}
+        </span>
+    </div>
+    <mat-card-content class="p-0">
+        <mat-list class="compact-list ml-02 mb-1">
+            <mat-list-item class="userstory-case-scenario" *ngFor="let case of (userStoryBugs$ | async)">
+                <div class="userstory-test-case-details" fxFlex="100" fxLayout="row">
+                    <div class="section-cases-operations userstory-bugs-padding"
+                        [ngStyle]="{ 'border-left': 'solid 2px ' + case.bugPriorityColor}" fxFlex="100" fxLayout="row">
+                        <div fxFlex="5" class="ml-02 mr-05 mt-03">
+                            <fa-icon matTooltip="{{ case.bugPriorityName }} ({{case.bugPriorityDescription}})"
+                                icon="{{case.bugPriorityIcon}}"
+                                [ngStyle]="setColorForBugPriorityTypes(case.bugPriorityColor)">
+                            </fa-icon>
+                        </div>
+                        <div fxFlex="5" class="ml-02 mr-05 mt-03" (click)="unlinkBug(case)">
+                            <fa-icon matTooltip="Unlink" icon="unlink" style="text-align: center;margin-top: 3px;">
+                            </fa-icon>
+                        </div>
+                        <div class="userStory-name" #bugTitle fxFlex="70" class="goal-cursor">
+                            <span class="allgoals_txt userStory-name-control user-select-text"
+                                matTooltip="{{case.userStoryName}}">
+                                {{case.userStoryName}}
+                            </span>
+                        </div>
+                        <div fxFlex="20">
+                            <mat-chip matTooltip="{{case.status}}"
+                                class="ml-05 allgoals_process text-center" mat-sm-chip
+                                [satPopoverAnchorFor]="inLineEditUserStoryPopover"
+                                #inLineEditUserStoryPopup="satPopoverAnchor"
+                                [style.backgroundColor]="case.statusHexValue"
+                                (click)="$event.stopPropagation();saveUserStoryStatus(inLineEditUserStoryPopup,case)">
+                                {{ case.status }}
+                            </mat-chip>
+                        </div>
+                    </div>
+                </div>
+            </mat-list-item>
+        </mat-list>
+    </mat-card-content>
+</div>
+
+<sat-popover #inLineEditUserStoryPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+    hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <mat-progress-bar color="primary" mode="indeterminate"
+            *ngIf="(anyOperationInProgress$ | async) || (workItemInProgress)">
+        </mat-progress-bar>
+        <div>
+            <button class="inline_edit_close btn" color="warn" (click)="closeUserStoryDialogWindow()">
+                <fa-icon icon="times"></fa-icon>
+            </button>
+            <mat-card-title class="text-center">
+                <div class="card-title-text p-1 mat-bg-primary">
+                    {{titleText }}
+                </div>
+            </mat-card-title>
+            <!-- <app-inline-editing-userstory-component
+                *ngIf="isInlineEdit || isInlineEditForEstimatedTime || isInlineEditForUserStoryStatus || isInlineEditForUserStoryOwner || isInlineEditForSprintEstimatedTime"
+                [userStoryId]="inLineUserStoryId" [isInlineEditForEstimatedTime]="isInlineEditForEstimatedTime"
+                [isFromBugsCount]="isFromBugsCount" [isInlineEditForUserStoryOwner]="isInlineEditForUserStoryOwner"
+                [isInlineEdit]="isInlineEdit" [isInlineEditForUserStoryStatus]="isInlineEditForUserStoryStatus"
+                [isInlineEditForSprintEstimatedTime]="isInlineEditForSprintEstimatedTime" [goalReplanId]="goalReplanId"
+                [isAllGoalsPage]="isAllGoalsPage" [isEditFromProjects]="fromProjects"
+                [isSprintsView]="isSprintUserStories">
+            </app-inline-editing-userstory-component> -->
+            <div class="card-content p-05">
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'STATUS' | translate }}"
+                        (selectionChange)="getUserStoryStatusChange($event.value)" [(ngModel)]="userStoryStatusId">
+                        <mat-option value="option" *ngFor="let userStoryStatus of workflowStatus"
+                            [value]="userStoryStatus.userStoryStatusId">{{ userStoryStatus.userStoryStatusName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>

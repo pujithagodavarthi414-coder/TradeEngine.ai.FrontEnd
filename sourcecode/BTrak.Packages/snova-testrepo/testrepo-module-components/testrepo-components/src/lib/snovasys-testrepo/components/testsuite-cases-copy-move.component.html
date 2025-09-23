@@ -1,0 +1,103 @@
+<mat-card-title class="">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="start center">
+            {{'TESTMANAGEMENT.COPYORMOVECASES' | translate}}
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center" class="" (click)="cancelShiftingCases()">
+            <fa-icon class="icon-button white-color" icon="times"></fa-icon>
+        </div>
+    </div>
+</mat-card-title>
+<div id="style-1" style="height: calc(100% - 37px)">
+    <div fxLayout="row">
+        <!-- <span><b>{{'TESTMANAGEMENT.SOURCE' | translate}}</b></span> -->
+        <mat-form-field class="full-width p-05">
+            <mat-select placeholder="{{'TESTMANAGEMENT.SOURCE' | translate}}" [formControl]="selectedTestSuite"
+                (selectionChange)="loadSectionsCases($event.value)">
+                <mat-option *ngFor="let suite of (testsuitesList$ | async | testrailName: searchText: 'testsuitecopy')"
+                    [value]="suite.testSuiteId">
+                    {{suite.testSuiteName}}
+                </mat-option>
+            </mat-select>
+            <mat-hint>{{'TESTMANAGEMENT.PLEASEFILLTESTSUITENAME' | translate | softLabelsPipe : softLabels}}</mat-hint>
+        </mat-form-field>
+    </div>
+    <div class="p-05">
+        <b>{{'TESTMANAGEMENT.CASES' | translate}} - {{'TESTMANAGEMENT.SELECT' | translate}}
+            <a class="cases-select-all-none" (click)="selectingAll()">{{'TESTMANAGEMENT.ALL' | translate}}</a> |
+            <a class="cases-select-all-none" (click)="selectingNone()">{{'TESTMANAGEMENT.NONE' | translate}}</a>
+        </b>
+        <a *ngIf="!expandAll" class="add-test-case ml-05" matTooltip="{{'TESTMANAGEMENT.EXPANDSECTIONS' | translate}}"
+            (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+                icon="caret-square-right">
+            </fa-icon>
+        </a>
+        <a *ngIf="expandAll" class="add-test-case ml-05" matTooltip="{{'TESTMANAGEMENT.COLLAPSESECTIONS' | translate}}"
+            (click)="expandAll = !expandAll">
+            <fa-icon class="mr-05 add-section-square expand-collapse-sections mat-color-accent"
+                icon="caret-square-down">
+            </fa-icon>
+        </a>
+    </div>
+    <div class="testsuite-tab p-05" fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px">
+        <div fxFlex="25" fxFlex.xs="100" fxFlex.lt-sm="100">
+            <mat-card class="p-0 m-0">
+                <testsuite-sections-list-shift (selectedSections)="getSelectedSectionId($event)"
+                    (selectedSectionData)="getSelectedSectionData($event)" (sectionsData)="getSectionsData($event)"
+                    [sectionSelected]="sectionSelected" [testSuiteId]="testSuiteId"
+                    [unSelectSectionId]="unselectSectionId" [sectionToCheck]="sectionToCheck"
+                    [selectAllNone]="selectAllNone" [sectionCollapse]="expandAll"
+                    [checkFilterCases]="filteredCasesData">
+                </testsuite-sections-list-shift>
+            </mat-card>
+        </div>
+        <div fxFlex>
+            <mat-card class="p-0 mt-0">
+                <testsuite-select-test-case-view (checkSection)="getSectionTocheck($event)"
+                    (unselectSection)="getUnselectedSection($event)" (selectedCaseDetails)="getListOfTestCases($event)"
+                    (selectedCaseDetailsAllNone)="getListOfTestCasesAllNone($event)"
+                    (sectionCasesData)="getSectionCasesData($event)" [selectedSection]="selectedSectionIdData"
+                    [selectedSectionData]="sectionData" [selectAllNone]="selectAllNone" [testSuitesId]="testSuiteId"
+                    [checkFilterCases]="filteredCasesData" [projectId]="projectId">
+                </testsuite-select-test-case-view>
+            </mat-card>
+        </div>
+    </div>
+    <div class="p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="start center">
+            <button class="mr-05" mat-button mat-raised-button type="button" color="primary" (click)="copyTestCases()"
+                [disabled]="disableShift || checkStatusDisabled()">
+                <fa-icon icon="copy" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.COPY' | translate}}
+            </button>
+            <button class="mr-05" mat-button mat-raised-button type="button" color="primary" (click)="moveTestCases()"
+                [disabled]="disableShift || checkStatusDisabled()">
+                <fa-icon icon="copy" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.MOVE' | translate}}
+            </button>
+            <button mat-button mat-raised-button type="button" (click)="cancelShiftingCases()"
+                [disabled]="disableShift">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{'TESTMANAGEMENT.CANCEL' | translate}}
+            </button>
+        </div>
+        <div fxFlex fxFlex.sm="50" fxLayoutAlign="end center" fxLayoutAlign.sm="start center">
+            <mat-form-field class="mr-1" fxFlex.sm="35">
+                <mat-select [formControl]="selectedOptionForCopying">
+                    <mat-option value="1">{{'TESTMANAGEMENT.COPYMOVECASESONLY' | translate}}</mat-option>
+                    <!-- <mat-option value="2">{{'TESTMANAGEMENT.ALSOCOPYMOVESECTIONS' | translate}}</mat-option> -->
+                    <mat-option value="2">{{'TESTMANAGEMENT.ALSOCOPYMOVESECTIONSANDPARENTS' | translate}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field fxFlex.sm="35" (click)="removeSearch()">
+                <mat-select placeholder="{{'TESTMANAGEMENT.APPENDTO' | translate}}"
+                    [formControl]="selectedSectionForAppending">
+                    <input #sectionsSearch class="move-copy-sections" matInput type="text"
+                        placeholder="{{'EXPENSEMANAGEMENT.SEARCH' | translate}}" (keyup)="onKey($event.target.value)">
+                    <mat-option *ngFor="let section of filteredList" [value]="section.sectionId"
+                        matTooltip="{{section.sectionName}}" matTooltipShowDelay="1000">
+                        <pre class="sections-order-cases">{{getSectionName(section)}}</pre>
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+</div>

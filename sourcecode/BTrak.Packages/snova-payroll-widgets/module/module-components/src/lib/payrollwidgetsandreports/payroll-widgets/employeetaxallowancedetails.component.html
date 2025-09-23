@@ -1,0 +1,342 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'EMPLOYEETAXALLOWANCEDETAILS.EMPLOYEETAXALLOWANCEDETAILSTITLE' | translate | titlecase | softLabelsPipe : softLabels}}">{{ 'EMPLOYEETAXALLOWANCEDETAILS.EMPLOYEETAXALLOWANCEDETAILSTITLE' | translate | titlecase | softLabelsPipe : softLabels}}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="100" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle [matTooltip]="isArchivedTypes == true? seeUnArchivedItems : seeArchivedItems"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+                            (change)="getAllEmployeeTaxAllowanceDetails()">
+                        </mat-slide-toggle>
+                        <mat-form-field>
+                            <input matInput [matDatepicker]="dp" placeholder="{{'HRMANAGAMENT.SELECTYEAR' | translate}}"
+                                [(ngModel)]="year">
+                            <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+                            <mat-datepicker #dp startView="multi-year" (yearSelected)="chosenYearHandler($event, dp)"
+                                panelClass="example-month-picker">
+                            </mat-datepicker>
+                        </mat-form-field>
+                        <button mat-icon-button (click)="resetAllFilters()">
+                            <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}">
+                            </fa-icon>
+                        </button>
+                        <button mat-icon-button color="primary"
+                            matTooltip="{{ 'EMPLOYEETAXALLOWANCEDETAILS.CREATEEMPLOYEETAXALLOWANCEDETAILSTOOLTIP' | translate | softLabelsPipe : softLabels }}"
+                            [satPopoverAnchorFor]="upsertEmployeeTaxAllowanceDetailsPopover"
+                            #upsertEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor"
+                            (click)="createEmployeeTaxAllowanceDetailsPopupOpen(upsertEmployeeTaxAllowanceDetailsPopUp);clearForm()"
+                            *ngIf="!isArchivedTypes">
+                            <fa-icon class="filter mat-color-accent" icon="plus"></fa-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div *ngIf="(canAccess_feature_EmployeeTaxAllowanceDetails)" class="activity-data">
+        <ngx-datatable class="material bg-white" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="50" [rows]="employeeTaxAllowanceDetailsList"
+            [loadingIndicator]="isAnyOperationIsInprogress" [scrollbarH]="true" [virtualization]="false"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.TAXALLOWANCENAME' | translate }}" [flexGrow]="1" [minWidth]="150"
+                [sortable]="true" prop="taxAllowanceName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.taxAllowanceName}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.INVESTEDAMOUNT' | translate }}" [flexGrow]="1" [minWidth]="150"
+                [sortable]="true" prop="modifiedInvestedAmount">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.modifiedInvestedAmount }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.SUBMITTEDDATE' | translate }}" [sortable]="true" [flexGrow]="1" [minWidth]="150"
+                prop="submittedDate">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.submittedDate | date: "dd-MMM-yyyy"}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.APPROVEDBY' | translate }}" [sortable]="true" [flexGrow]="1" [minWidth]="150"
+                prop="approvedBy">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.approvedBy }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.ISAUTOAPPROVED' | translate }}" [flexGrow]="1" [minWidth]="150"
+                [sortable]="true" prop="isAutoApproved">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.isAutoApproved == true ? "Yes" : "No"}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.ISONLYEMPLOYEE' | translate | softLabelsPipe : softLabels }}" [flexGrow]="1" [minWidth]="150"
+                [sortable]="true" prop="isOnlyEmployee">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.isOnlyEmployee == true ? "Yes" : "No"}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.RELATEDTOHRA' | translate }}" [sortable]="true" [flexGrow]="1" [minWidth]="150"
+                prop="isRelatedToHRA">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.isRelatedToHRA == true ? "Yes" : "No"}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'EMPLOYEETAXALLOWANCEDETAILS.OWNERPANNUMBER' | translate }}" [flexGrow]="1" [minWidth]="150"
+                [sortable]="true" prop="ownerPanNumber">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row?.ownerPanNumber}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false" [flexGrow]="1" [minWidth]="250">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center"
+                        title="{{ 'EMPLOYEETAXALLOWANCEDETAILS.EDITEMPLOYEETAXALLOWANCEDETAILS' | translate | softLabelsPipe : softLabels }}"
+                        [satPopoverAnchorFor]="upsertEmployeeTaxAllowanceDetailsPopover"
+                        #upsertEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor"
+                        (click)="editEmployeeTaxAllowanceDetailsPopupOpen(row,upsertEmployeeTaxAllowanceDetailsPopUp)"
+                        *ngIf="!isArchivedTypes" mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center"
+                        title="{{ 'EMPLOYEETAXALLOWANCEDETAILS.ARCHIVEEMPLOYEETAXALLOWANCEDETAILS' | translate | softLabelsPipe : softLabels}}"
+                        [satPopoverAnchorFor]="deleteEmployeeTaxAllowanceDetailsPopover"
+                        #deleteEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor"
+                        (click)="deleteEmployeeTaxAllowanceDetailsPopUpOpen(row, deleteEmployeeTaxAllowanceDetailsPopUp)"
+                        *ngIf="!isArchivedTypes && !row.isApproved" mat-icon-button>
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                    </button>
+                    <button class="text-center"
+                        title="{{ 'EMPLOYEETAXALLOWANCEDETAILS.UNARCHIVEEMPLOYEETAXALLOWANCEDETAILS' | translate | softLabelsPipe : softLabels}}"
+                        [satPopoverAnchorFor]="deleteEmployeeTaxAllowanceDetailsPopover"
+                        #deleteEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor"
+                        (click)="deleteEmployeeTaxAllowanceDetailsPopUpOpen(row, deleteEmployeeTaxAllowanceDetailsPopUp)"
+                        *ngIf="isArchivedTypes" mat-icon-button>
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                    </button>
+                    <ng-container
+                        *ngIf="!row.isApproved  && !row.isAutoApproved && (canAccess_feature_ApproveEmployeeTaxAllowances)">
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.APPROVE' | translate }}"
+                            [satPopoverAnchorFor]="approveEmployeeTaxAllowanceDetailsPopover"
+                            #approveEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor"
+                            (click)="approveEmployeeTaxAllowanceDetailsPopUpOpen(row, approveEmployeeTaxAllowanceDetailsPopUp)"
+                            mat-icon-button>
+                            <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-container>
+                    <ng-container *ngIf="row.isApproved && !row.isAutoApproved">
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.ISAPPROVEED' | translate }}"
+                            mat-icon-button>
+                            <fa-icon icon="check" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-container>
+                    <ng-container
+                        *ngIf="row.isApproved && !row.isAutoApproved && (canAccess_feature_ApproveEmployeeTaxAllowances)">
+                        <button class="text-center" title="{{'EMPLOYEETAXALLOWANCEDETAILS.UNAPPROVE' | translate }}"
+                            (click)="approveEmployeeTaxAllowanceDetailsPopUpOpen(row, approveEmployeeTaxAllowanceDetailsPopUp)"
+                            [satPopoverAnchorFor]="approveEmployeeTaxAllowanceDetailsPopover"
+                            #approveEmployeeTaxAllowanceDetailsPopUp="satPopoverAnchor" mat-icon-button>
+                            <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-container>
+
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!--Edit EMPLOYEETAXALLOWANCEDETAILS dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertEmployeeTaxAllowanceDetailsPopover [autoFocus]="false"
+        hasBackdrop [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0" fxFlex.gt-sm="600px">
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ employeeTaxAllowanceDetails | translate | softLabelsPipe : softLabels}}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="employeeTaxAllowanceDetailsForm" #formDirective="ngForm" novalidate
+                    (submit)="employeeTaxAllowanceDetailsForm.valid && upsertEmployeeTaxAllowanceDetails(formDirective)">
+                    <div>
+                        <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <mat-select formControlName="taxAllowanceId"
+                                        placeholder="{{'EMPLOYEETAXALLOWANCEDETAILS.TAXALLOWANCENAME' | translate}}"
+                                        required>
+                                        <mat-option [value]="taxallowance.taxAllowanceId"
+                                            *ngFor="let taxallowance of taxAllowances">
+                                            {{taxallowance.name}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeTaxAllowanceDetailsForm.get('taxAllowanceId').hasError('required') && employeeTaxAllowanceDetailsForm.get('taxAllowanceId').touched">
+                                        {{ 'EMPLOYEETAXALLOWANCEDETAILS.TAXALLOWANCEDETAILSISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input type='number' matInput formControlName="investedAmount"
+                                        (input)="changeInvestedAmount('amount')"
+                                        placeholder="{{ 'EMPLOYEETAXALLOWANCEDETAILS.INVESTEDAMOUNT' | translate }}">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="98">
+                                <mat-form-field class="full-width">
+                                    <textarea formControlName="comments" matInput
+                                        placeholder="{{ 'EMPLOYEETAXALLOWANCEDETAILS.COMMENTS' | translate }}"
+                                        trim></textarea>
+                                </mat-form-field>
+                            </div>
+                            <mat-radio-group aria-label="Select an option" formControlName="relatedToEmployeeValue">
+                                <mat-radio-button value="1" class="mr-1" checked="checked"
+                                    (change)="changeInvestedAmount('1');">
+                                    {{'EMPLOYEETAXALLOWANCEDETAILS.ISONLYEMPLOYEE' | translate | softLabelsPipe : softLabels}}
+                                </mat-radio-button>
+                                <mat-radio-button value="2" (change)="changeInvestedAmount('2');">
+                                    {{'EMPLOYEETAXALLOWANCEDETAILS.RELATEDTOHRA' | translate}}
+                                </mat-radio-button>
+                            </mat-radio-group>
+                            <div fxFlex="48" class="mt-1">
+                                <mat-checkbox formControlName="isAutoApproved">
+                                    {{'EMPLOYEETAXALLOWANCEDETAILS.ISAUTOAPPROVED' | translate}}
+                                </mat-checkbox>
+                            </div>
+                            <div fxFlex="48" *ngIf="employeeTaxAllowanceDetailsForm.get('investedAmount').value > maxRentalAmount 
+                                && employeeTaxAllowanceDetailsForm.get('relatedToEmployeeValue').value == 2">
+                                <mat-form-field class="full-width">
+                                    <input type='text' matInput formControlName="ownerPanNumber"
+                                        placeholder="{{ 'EMPLOYEETAXALLOWANCEDETAILS.OWNERPANNUMBER' | translate }}"
+                                        required>
+                                    <mat-error class="P-06" *ngIf="employeeTaxAllowanceDetailsForm.get('ownerPanNumber').hasError('required') 
+                                    && employeeTaxAllowanceDetailsForm.get('ownerPanNumber').touched">
+                                        {{'EMPLOYEETAXALLOWANCEDETAILS.OWNERPANNUMBERISREQUIRED' | translate }}
+                                    </mat-error>
+                                    <mat-error class="P-06"
+                                        *ngIf="employeeTaxAllowanceDetailsForm.get('ownerPanNumber').hasError('pattern')">
+                                        {{'EMPLOYEEACCOUNTDETAILS.VALIDPANNUMBER' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48" class="mt-1"
+                                *ngIf="employeeTaxAllowanceDetailsForm.get('relatedToEmployeeValue').value == 2">
+                                <mat-checkbox formControlName="relatedToMetroCity">
+                                    {{'EMPLOYEETAXALLOWANCEDETAILS.RELATEDTOMETROCITY' | translate}}
+                                </mat-checkbox>
+                            </div>
+                        </div>
+                        <div>
+                            <div *ngIf="isPopupOpen">
+                                <app-dropzone [moduleTypeId]="moduleTypeId"
+                                    [referenceTypeId]="referenceTypeId"
+                                    [referenceId]="employeeTaxAllowanceReferenceId" 
+                                    [getFilesByReferenceId]="true"
+                                    [selectedParentFolderId]="selectedParentFolderId"
+                                    [selectedStoreId]="selectedStoreId" 
+                                    [isButtonVisible]="false"
+                                    [isToUploadFiles]="isToUploadFiles"
+                                    (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()">
+                                </app-dropzone>
+                            </div>
+                        </div>
+                        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                        <div class="mt-1 text-center">
+                            <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                                [disabled]="!employeeTaxAllowanceDetailsForm.valid||isAnyOperationIsInprogress">
+                                <mat-progress-bar color="primary" mode="indeterminate"
+                                    *ngIf="isAnyOperationIsInprogress || (isFileExist && isToUploadFiles)">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                            </button>
+                            <button mat-button mat-raised-button
+                                (click)="closeUpsertEmployeeTaxAllowanceDetailsPopup(formDirective)" type="button">
+                                <fa-icon class="mr-05" icon="times"></fa-icon>
+                                {{ 'CANCEL' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Edit COMAPN dialog-->
+
+    <!--Delete EMPLOYEETAXALLOWANCEDETAILS dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteEmployeeTaxAllowanceDetailsPopover hasBackdrop
+        backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isEmployeeTaxAllowanceDetailsArchived">
+                    {{ 'EMPLOYEETAXALLOWANCEDETAILS.ARCHIVEEMPLOYEETAXALLOWANCEDETAILS' | translate | softLabelsPipe : softLabels }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isEmployeeTaxAllowanceDetailsArchived">
+                    {{ 'EMPLOYEETAXALLOWANCEDETAILS.UNARCHIVEEMPLOYEETAXALLOWANCEDETAILS' | translate | softLabelsPipe : softLabels }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isEmployeeTaxAllowanceDetailsArchived">
+                    {{ 'EMPLOYEETAXALLOWANCEDETAILS.ARCHIVEEMPLOYEETAXALLOWANCEDETAILSTEXT' | translate | softLabelsPipe : softLabels}}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isEmployeeTaxAllowanceDetailsArchived">
+                    {{ 'EMPLOYEETAXALLOWANCEDETAILS.UNARCHIVEEMPLOYEETAXALLOWANCEDETAILSTEXT' | translate | softLabelsPipe : softLabels }}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" *ngIf="isEmployeeTaxAllowanceDetailsArchived" mat-button mat-raised-button
+                        color="primary" [disabled]="isAnyOperationIsInprogress"
+                        (click)="deleteEmployeeTaxAllowanceDetails();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" *ngIf="!isEmployeeTaxAllowanceDetailsArchived" mat-button mat-raised-button
+                        color="primary" [disabled]="isAnyOperationIsInprogress"
+                        (click)="deleteEmployeeTaxAllowanceDetails();">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteEmployeeTaxAllowanceDetailsDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Delete EMPLOYEETAXALLOWANCEDETAILS dialog-->
+
+    <!--Approve EMPLOYEETAXALLOWANCEDETAILS dialog-->
+    <sat-popover #approveEmployeeTaxAllowanceDetailsPopover [autoFocus]="false" hasBackdrop
+        backdropClass="backdrop-color" [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isApproved">
+                    {{'EMPLOYEETAXALLOWANCEDETAILS.APPROVETITLE' | translate}}</div>
+                <div class="card-title-text mb-1" *ngIf="!isApproved">
+                    {{'EMPLOYEETAXALLOWANCEDETAILS.UNAPPROVETITLE' | translate}}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isApproved">
+                    {{'EMPLOYEETAXALLOWANCEDETAILS.APPROVEBONUSTEXT' | translate}}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isApproved">
+                    {{'EMPLOYEETAXALLOWANCEDETAILS.UNAPPROVEBONUSTEXT' | translate}}
+                </div>
+                <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteEmployeeTaxAllowanceDetails();">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeApproveEmployeeTaxAllowanceDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Approve EMPLOYEETAXALLOWANCEDETAILS dialog-->
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeTaxAllowanceDetails)"
+    textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

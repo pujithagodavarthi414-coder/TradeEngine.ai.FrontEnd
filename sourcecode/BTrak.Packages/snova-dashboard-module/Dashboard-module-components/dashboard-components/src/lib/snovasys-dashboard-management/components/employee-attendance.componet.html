@@ -1,0 +1,101 @@
+<app-common-message-box *ngIf="!(this.canAccess_feature_EmployeeAttendence) && !(roleFeaturesIsInProgress$|async)"
+  textToDisplay="{{ 'PRODUCTIVITYDASHBOARD.PERMISSION' | translate }}">
+</app-common-message-box>
+<div *ngIf="(this.canAccess_feature_EmployeeAttendence)" class="full-height gridster-noset">
+  <mat-card class="default" class="m-0 p-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{'HRDASHBOARD.EMPLOYEEATTENDANCE' | translate | softLabelsPipe : softLabels | titlecase}}">
+            {{'HRDASHBOARD.EMPLOYEEATTENDANCE' | translate | softLabelsPipe : softLabels | titlecase | titlecase}}</span>
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="shift-timing-close SearchIconAlignment">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button mr-lg-n4" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxLayoutAlign="center start">
+              <fa-icon (click)="getDirection('left')" style="cursor:pointer" icon="chevron-left"></fa-icon>
+              <b>&nbsp;{{date | date: "MMM-yyyy"}}&nbsp;</b><span><b>W{{weekNumber}}&nbsp;</b></span>
+              <fa-icon (click)="getDirection('right')" style="cursor:pointer" icon="chevron-right"></fa-icon>
+            </div>
+
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'LOGTIMEREPORT.SELECTDEPARTMENT' | translate }}" [(ngModel)]="departmentId"
+                (selectionChange)="selectedDepartmentId($event.value)">
+                <mat-option value="0">{{'TESTMANAGEMENT.SELECT' | translate}}</mat-option>
+                <mat-option *ngFor="let department of selectDepartments" [value]="department.departmentId">
+                  {{department.departmentName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{'LOGTIMEREPORT.SELECTDESIGNATION' | translate }}" [(ngModel)]="designationId"
+                (selectionChange)="selectedDesignationId($event.value)">
+                <mat-option value="0">{{'TESTMANAGEMENT.SELECT' | translate}}</mat-option>
+                <mat-option *ngFor="let designation of selectDesignations" [value]="designation.designationId">
+                  {{designation.designationName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="lineManager?.length > 0">
+              <mat-select placeholder="{{'LOGTIMEREPORT.SELECTLINEMANAGER'|translate}}" [(ngModel)]="teamLeadId"
+                (selectionChange)="selectedLineManagerId($event.value)">
+                <mat-option value="0">{{'ADVANCEDSEARCH.ALL' | translate}}</mat-option>
+                <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    src="{{person.profileImage}}">{{person.userName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress"> </mat-progress-bar>
+  <div class="no-drag" id="widget-scroll-id">
+    <ejs-heatmap *ngIf="responseDataDates" id='container1' style="display:block;" [dataSource]='dataSource'
+      [xAxis]='xAxis' [yAxis]='yAxis' [titleSettings]='titleSettings' [paletteSettings]='paletteSettings'
+      [showTooltip]='showTooltip' [cellSettings]='cellSettings' [legendSettings]='legendSettings' style="height: 660px;min-width:1200px;">
+    </ejs-heatmap>
+  </div>
+</div>
+
+<p *ngIf="!responseDataDates" class="no-data">{{'NODATATODISPLAY' | translate}}</p>

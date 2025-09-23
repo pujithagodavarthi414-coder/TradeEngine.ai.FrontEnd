@@ -1,0 +1,110 @@
+<div class="full-height">
+    <div class="p-0 canteen-manage m-0">
+        <div class="full-width data-table-header drag-handler" style="background-color: #007ac1;color: white;">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow" matTooltip="Productive time">
+                        Productive time </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+                    <button type="submit" mat-icon-button class="pull-right cursor-pointer" (click)="refresh()"
+                        matTooltip=" {{'BILLINGDASHBOARD.REFRESH' | translate}}">
+                        <fa-icon icon="redo-alt" class="filter mat-color-accent" style="color: white;">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="canAccess_feature_ViewActivityReports">
+        <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+        <div class="no-drag" style="border: 1px solid #e0e0e0;" fxLayout="column">
+            <div fxFlex fxLayoutAlign="end center" style="background-color: #ffffff;" class="cursor-pointer">
+                <div matTooltip="Switch to area chart" (click)="switchToAreaChart()">
+                    <svg height="30" version="1.1" viewbox="0 0 512 512" width="30" xmlns="http://www.w3.org/2000/svg"
+                        style="border: 1px solid #d0cacadb!important;
+                border-radius: 4px;
+                margin: 9px">
+                        <g transform="translate(1.7,2.7)">
+                            <g transform="scale(0.05)">
+                                <rect class="visual-svg-fill" height="290" rx="5px" stroke-width="3" width="25" x="51"
+                                    y="109">
+                                </rect>
+                                <rect class="visual-svg-fill" height="25" rx="5px" stroke-width="3" width="358" x="51"
+                                    y="388">
+                                </rect>
+                                <g>
+                                    <path d="M130,200    l70 -70 l90 60      l20 -50 l30 70    v90 h-220 z"
+                                        fill="#EFF0F2" class="visual-svg" stroke-width="15"></path>
+                                    <path d="M130,290 l70 -70 l20 30 l 20 -70 l50 70 l30 -30 l50 50 v60 h-250 z"
+                                        class="visual-fill" stroke="gray" stroke-width="3"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <div matTooltip="Switch to bar chart" (click)="switchToBarChart()">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewbox="0 0 512 512"
+                        style="border: 1px solid #d0cacadb!important;
+                border-radius: 4px;
+                margin: 9px">
+                        <g transform="translate(1.7,2.7)">
+                            <g transform="scale(0.05)">
+                                <rect x="51" y="61" width="20" height="338" rx="5px" class="visual-svg-fill"
+                                    stroke-width="3" />
+                                <rect x="51" y="388" width="358" height="20" rx="5px" class="visual-svg-fill"
+                                    stroke-width="3" />
+                                <g transform="rotate(270 230 220) ">
+                                    <rect x="102" y="107" width="72" height="60" rx="1px" class="visual-svg-fill"
+                                        stroke-width="3" />
+                                    <rect x="102" y="107" width="152" height="60" rx="1px" class="visual-svg-fill"
+                                        stroke-width="3" />
+                                    <rect x="102" y="200" width="278" height="60" rx="1px" class="visual-svg-fill"
+                                        stroke-width="3" />
+                                    <rect x="102" y="297" width="200" height="60" rx="1px" class="visual-svg-fill"
+                                        stroke-width="3" />
+                                </g>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <div *ngIf="teamActivityData && areaChart">
+                <ejs-chart style='display:block;' [chartArea]='chartArea' align='center' [primaryXAxis]='primaryXAxis'
+                    [primaryYAxis]='primaryYAxis' (load)='load($event)' [tooltip]='areaTooltip' [palettes]='palette'
+                    (pointRender)='pointRender($event)'>
+                    <e-series-collection>
+                        <e-series [dataSource]='productiveData' type='Area' xName='x' yName='y' [marker]='marker'
+                            name='Productive' opacity=0.5 width=2 border-color='transparent'>
+                        </e-series>
+                        <e-series [dataSource]='unProductiveData' type='Area' xName='x' yName='y' [marker]='marker'
+                            name='Un productive' opacity=0.5 width=2 border-color='transparent'>
+                        </e-series>
+                        <e-series [dataSource]='neutralData' type='Area' xName='x' yName='y' [marker]='marker'
+                            name='Neutral' opacity=0.5 width=2 border-color='transparent'>
+                        </e-series>
+                    </e-series-collection>
+                </ejs-chart>
+            </div>
+
+            <div *ngIf="teamActivityData && barChart">
+                <ejs-chart style='display:block;' [chartArea]='chartArea' align='center' id='chartcontainer'
+                    [primaryXAxis]='barChartXAxis' [primaryYAxis]='barChartYAxis' [tooltip]='tooltip'
+                    (load)='load($event)' [palettes]='palette'>
+                    <e-series-collection>
+                        <e-series [dataSource]='productiveData' type='Column' xName='x' yName='y' name='Productive'
+                            [marker]='barMarker' width=2> </e-series>
+                        <e-series [dataSource]='unProductiveData' type='Column' xName='x' yName='y' name='Un productive'
+                            [marker]='barMarker' width=2> </e-series>
+                        <e-series [dataSource]='neutralData' type='Column' xName='x' yName='y' name='Neutral'
+                            [marker]='barMarker' width=2> </e-series>
+                    </e-series-collection>
+                </ejs-chart>
+            </div>
+        </div>
+    </div>
+    <app-common-message-box *ngIf="!(canAccess_feature_ViewActivityReports) && !loading"
+        textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+    </app-common-message-box>
+</div>

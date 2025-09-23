@@ -1,0 +1,93 @@
+<div *ngIf="permission">
+    <mat-card class="p-0 canteen-manage m-0 ">
+        <mat-card-title class="full-width data-table-header">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center"
+                    matTooltip="{{ 'SIGNATURE.SIGNATUREINVITATIONS' | translate }}">
+                    <span fxFlex="100" class="hide-content-overflow">
+                        {{ 'SIGNATURE.SIGNATUREINVITATIONS' | translate }}</span>
+                </div>
+                <div fxFlex="220px" class="search_goalinput ml-1" fxLayoutAlign="end center">
+                    <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-form-field class="full-width">
+                            <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                [(ngModel)]="searchText" (input)="filterByName($event)">
+                        </mat-form-field>
+                    </div>
+                    <span class="close_icon masterdata-search-close" style="right: 0px !important;"
+                        fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <span *ngIf="!searchText"></span>
+                        <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                            (click)="closeSearch()" style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data">
+        <kendo-grid [data]="invitations" [pageSize]="state.take" [skip]="state.skip" [pageable]="true" [sortable]="true"
+            [sort]="state.sort" [filterable]="false" [loading]="isAnyOperationIsInprogress"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="fileName" title="{{'HRMANAGAMENT.NAME' | translate}}" [width]="220">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="icon-button mr-05 mat-color-accent" icon="file">
+                    </fa-icon><span [matTooltip]="dataItem.fileName">{{ dataItem.fileName }}</span>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="invitedByName" title="{{'SIGNATURE.INVITEDBY' | translate}}" [width]="140">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div class="icon-button" fxLayout="row" (click)="goToUserProfile(dataItem.createdByUserId)">
+                        <div *ngIf="dataItem.invitedByImage != null && dataItem.invitedByImage != ''">
+                            <app-avatar [src]="dataItem.invitedByImage | fetchSizedAndCachedImage: '30':''"
+                                [isRound]="true" size="30">
+                            </app-avatar>
+                        </div>
+                        <div *ngIf="dataItem.invitedByImage == null || dataItem.invitedByImage == ''">
+                            <app-avatar [name]="dataItem.invitedByName | removeSpecialCharacters" [isRound]="true"
+                                size="30"></app-avatar>
+                        </div>
+                        <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.invitedByName}}"
+                            matTooltipShowDelay="400" fxFlex>
+                            {{ dataItem?.invitedByName }}
+                        </span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column title="{{'REMINDER.ACTIONS' | translate}}" [width]="80">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <ng-container
+                        *ngIf="(dataItem.fileExtension == '.jpeg') || (dataItem.fileExtension == '.jpg') || (dataItem.fileExtension == '.png') || (dataItem.fileExtension == '.gif') || (dataItem.fileExtension == '.JPEG') || (dataItem.fileExtension == '.JPG') || (dataItem.fileExtension == '.PNG') || (dataItem.fileExtension == '.GIF')">
+                        <fa-icon class="icon-button mr-1 mat-color-accent" icon="eye"
+                            matTooltip="{{'DOCUMENTMANAGEMENT.VIEWIMAGE' | translate}}"
+                            (click)="openPreview(dataItem);$event.stopPropagation()"></fa-icon>
+                    </ng-container>
+                    <ng-container
+                        *ngIf="!((dataItem.fileExtension == '.jpeg') || (dataItem.fileExtension == '.jpg') || (dataItem.fileExtension == '.png') || (dataItem.fileExtension == '.gif') || (dataItem.fileExtension == '.JPEG') || (dataItem.fileExtension == '.JPG') || (dataItem.fileExtension == '.PNG') || (dataItem.fileExtension == '.GIF'))">
+                        <fa-icon class="icon-button mr-1 mat-color-accent" icon="download"
+                            matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILE' | translate}}"
+                            (click)="downloadFile(dataItem);$event.stopPropagation()"></fa-icon>
+                    </ng-container>
+                    <ng-container>
+                        <fa-icon class="icon-button mr-1 mat-color-accent" icon="file-signature"
+                            matTooltip="{{'SIGNATURE.VIEWANDEDITSIGNATURE' | translate}}"
+                            (click)="viewSignature(dataItem)">
+                        </fa-icon>
+                    </ng-container>
+                </ng-template>
+            </kendo-grid-column>
+        </kendo-grid>
+    </div>
+</div>
+
+<!--image preview-->
+<ng-container *ngIf="galleryImages && galleryImages.length > 0">
+    <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyPreviewGallery>
+    </ngx-gallery>
+</ng-container>
+<!--image preview-->
+
+<app-common-message-box *ngIf="!(permission)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

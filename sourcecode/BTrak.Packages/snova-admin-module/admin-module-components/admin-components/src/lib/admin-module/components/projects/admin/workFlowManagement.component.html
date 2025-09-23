@@ -1,0 +1,298 @@
+<div class="p-0">
+  <mat-card class="p-0 canteen-manage m-0  mt-05" *ngIf="!isGoalsPage">
+    <mat-card-title class="full-width data-table-header">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{ 'WORKFLOWMANAGEMENT.WORKFLOWMANAGEMENTTITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button class="add_btn pull-right" (click)="clearWorkFlowStatusForm()"
+            [satPopoverAnchorFor]="addWorkFlowStatusPopover" (click)="addWorkFlowStatusPopover.open()"
+            matTooltip=" {{'WORKFLOWMANAGEMENT.WORKFLOWTOOLTIP' | translate }} ">
+            <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+          </button>
+          <button mat-icon-button class="add_btn pull-right" (click)="editStatusForm()"
+            [satPopoverAnchorFor]="editWorkFlowStatusPopover" (click)="editWorkFlowStatusPopover.open()"
+            matTooltip=" {{'WORKFLOWMANAGEMENT.EDITWORKFLOWTOOLTIP' | translate }} ">
+            <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+          </button>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <div>
+    <div>
+      <mat-card-content class="p-0 mat-card-fx-col">
+        <mat-progress-bar color="primary" mode="indeterminate"
+          *ngIf="(anyOperationInProgress || reOrderOperationInProgress)">
+        </mat-progress-bar>
+        <div fxFlex="100">
+          <div fxLayout="row" class="userstory-summary superagile-summary">
+            <div fxLayout="row" fxFlex="100" class="userstory-list">
+              <div fxFlex="35" style="margin-left:17px;">
+                <b>
+                  {{ 'WORKFLOWMANAGEMENT.USERSTORYMANAGEMENT' | translate | softLabelsPipe : softLabels}}
+                </b>
+              </div>
+              <div class="mt-02" fxFlex="15">
+                <b>
+                  {{ 'WORKFLOWMANAGEMENT.ORDER' | translate | softLabelsPipe : softLabels}}
+                </b>
+              </div>
+              <div class="mt-02" fxFlex="15">
+                <b>
+                  {{ 'WORKFLOWMANAGEMENT.ENABLEADD' | translate | softLabelsPipe : softLabels}}
+                </b>
+              </div>
+              <div class="mt-02" fxFlex="20">
+                <b>
+                  {{ 'WORKFLOWMANAGEMENT.ENABLEARCHIVE' | translate | softLabelsPipe : softLabels}}
+                </b>
+              </div>
+              <div class="mt-02" fxFlex="15">
+                <b>
+                  {{ 'TESTMANAGEMENT.ACTIONS' | translate }}
+                </b>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="workFlowStatuses && workFlowStatuses.length > 0">
+          <div dragula="reOrderItems" [(dragulaModel)]="workFlowStatuses"
+            [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+            <div class="user-story-list" *ngFor="let workflow of (workFlowStatuses)"
+              [attr.data-userStoryStatusId]="workflow.userStoryStatusId"
+              [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+              <div fxLayout="row wrap">
+                <div fxFlex="100" [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress)  ? 'none' : '' }">
+                  <div fxLayout="row" class="userstory-summary superagile-summary">
+                    <div fxLayout="row" fxFlex="100" class="userstory-list">
+                      <div fxFlex="35" style="margin-left:17px;">
+                        <span class="allgoals_txt" matTooltip="{{ workflow.userStoryStatusName }}"
+                          matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow">
+                          {{ workflow.userStoryStatusName }}
+                        </span>
+                      </div>
+                      <div class="mt-02" fxFlex="15">
+                        {{workflow.orderId}}
+                      </div>
+                      <div class="mt-02" fxFlex="15">
+                        <mat-checkbox class="mr-05 userstory-chcekbox" [disabled]="true" [checked]="workflow.canAdd">
+                        </mat-checkbox>
+                      </div>
+                      <div class="mt-02" fxFlex="20">
+                        <mat-checkbox class="mr-05 userstory-chcekbox" [disabled]="true" [checked]="workflow.canDelete">
+                        </mat-checkbox>
+                      </div>
+                      <div class="mt-02" fxFlex="15">
+                        <fa-icon icon="trash" matTooltip="{{ 'WORKFLOWMANAGEMENT.DELETEWORKFLOWSTATUS' | translate }}"
+                          class="icon-button mat-color-accent" [satPopoverAnchorFor]="deleteWorkflow"
+                          #deleteWorkflowPopover="satPopoverAnchor"
+                          (click)="DeleteStatusForm(workflow,deleteWorkflowPopover); ">
+                        </fa-icon>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <app-common-message-box *ngIf="!(anyOperationInProgress) && (!workFlowStatuses || workFlowStatuses.length == 0)"
+          textToDisplay="{{'NODATATODISPLAY'|translate}}">
+        </app-common-message-box>
+
+      </mat-card-content>
+    </div>
+
+    <sat-popover #updateWorkflow verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+      scrollStrategy="reposition" [restoreFocus]="false" [autoFocus]="false">
+      <mat-card class="filter-data p-0 updateWorkflow">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+        </mat-progress-bar>
+        <div (click)="$event.stopPropagation()">
+          <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+              {{ 'WORKFLOWMANAGEMENT.UPDATEWORKFLOWMANAGEMENT' | translate }}</div>
+          </mat-card-title>
+          <form [formGroup]="EditStatusForm" novalidate (submit)="EditStatusForm.valid && SaveWorkFlowStatus(null)">
+            <div class="card-content p-05">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="WorkFlowName"
+                  placeholder="{{ 'WORKFLOWMANAGEMENT.WORKFLOW' | translate }}" />
+              </mat-form-field>
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="UserStoryStatus"
+                  placeholder="{{'WORKFLOWMANAGEMENT.USERSTORYMANAGEMENT' | translate | softLabelsPipe : softLabels}}" />
+              </mat-form-field>
+              <mat-checkbox formControlName="isComplete" (click)="$event.stopPropagation()"
+                class=" mb-1 checkbox-text checkbox_allgoals full-width">
+                {{ 'WORKFLOWMANAGEMENT.ISCOMPLETED' | translate }}</mat-checkbox>
+
+              <div class="text-center ">
+                <button mat-button mat-raised-button [disabled]="showSpinner" color="primary" class="mr-05"
+                  (click)="$event.stopPropagation()">
+                  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="showSpinner">
+                  </mat-progress-bar>
+                  <fa-icon icon="sync" class="mr-05"></fa-icon>
+                  {{ 'WORKFLOWMANAGEMENT.UPDATE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closedialog(); (false)">
+                  <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #addWorkFlowStatusPopover verticalAlign="below" hasBackdrop [autoFocus]="false" horizontalAlign="start"
+      backdropClass="backdrop-color" (click)="clearWorkFlowStatusForm()">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text p-05 mat-bg-primary">
+            {{'WORKFLOWMANAGEMENT.ADDWORKFLOWSTATUS' | translate | titlecase }}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="selectStatus" novalidate (submit)="selectStatus.valid && upsertWorkFlowStatus()">
+          <div class="card-content p-05">
+            <div fxLayout="row" fxLayoutGap="5px">
+              <div>
+                <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                  <mat-select placeholder="{{ 'WORKFLOWMANAGEMENT.SELECTSTATUS' | translate }}" formControlName="status"
+                    [compareWith]="compareSelectedWorksFn" multiple required>
+                    <mat-option #allSelected (click)="toggleAllGoalStatusSelection()" [value]="0">
+                      {{'WORKFLOWMANAGEMENT.SELECTALL' | translate }}
+                    </mat-option>
+                    <mat-option [value]="roles.userStoryStatusId"
+                      (click)="toggleGoalStatusPerOne(allSelected.viewValue, roles.userStoryStatusId)"
+                      *ngFor="let roles of statusDropDown | statusFilter : workFlowStatuses">
+                      {{ roles.userStoryStatusName }} ( {{roles.taskStatusName}} )
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span *ngIf="!selectStatus.get('status').valid &&selectStatus.get('status').touched">
+                      {{ 'WORKFLOWMANAGEMENT.PLEASESELECTSTATUS' | translate }}</span>
+                  </mat-error>
+                </mat-form-field>
+                <mat-error *ngIf="isThereAnError" class="alert-alert-danger">{{validationmessage}}</mat-error>
+              </div>
+            </div>
+            <div class="text-center mt-05">
+              <button type="submit" [disabled]="!selectStatus.valid" class="mr-05" mat-raised-button color="primary"
+                [disabled]="loadSpinner">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadSpinner">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'ADD' | translate }}
+              </button>
+              <button mat-raised-button type="button" (click)="closeWorkFlowStatusForm()">
+                <fa-icon icon="times" class="mr-05"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #editWorkFlowStatusPopover verticalAlign="below" hasBackdrop [autoFocus]="false"
+      horizontalAlign="start" backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+          <div class="card-title-text p-05 mat-bg-primary">
+            {{'WORKFLOWMANAGEMENT.EDITCONFIGURATIONS' | translate | titlecase }}
+          </div>
+        </mat-card-title>
+        <form [formGroup]="statusForm" novalidate (submit)="saveAddWorkflow()">
+          <div class="card-content p-05">
+            <div fxLayout="row" fxLayoutGap="5px">
+              <div>
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'WORKFLOWMANAGEMENT.SELECTSTATUSFORADDBUTTON' | translate }}"
+                    formControlName="addStatusId" required>
+                    <mat-option [value]="roles.userStoryStatusId"
+                      *ngFor="let roles of statusDropDown | filterStatus : workFlowStatuses">
+                      {{ roles.userStoryStatusName }} ( {{roles.taskStatusName}} )
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span *ngIf="
+                  !statusForm.get('addStatusId').valid &&
+                  statusForm.get('addStatusId').touched
+                ">{{ 'WORKFLOWMANAGEMENT.PLEASESELECTSTATUSFORADDBUTTON' | translate | softLabelsPipe : softLabels
+                      }}</span>
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                  <mat-select placeholder="{{ 'WORKFLOWMANAGEMENT.SELECTSTATUSFORARCHIVEBUTTON' | translate }}"
+                    formControlName="archiveStatusId" required>
+                    <mat-option [value]="roles.userStoryStatusId"
+                      *ngFor="let roles of statusDropDown | filterStatus : workFlowStatuses">
+                      {{ roles.userStoryStatusName }} ( {{roles.taskStatusName}} )
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>
+                    <span *ngIf="
+                  !statusForm.get('archiveStatusId').valid &&
+                  statusForm.get('archiveStatusId').touched
+                ">{{ 'WORKFLOWMANAGEMENT.PLEASESELECTSTATUSFORARCHIVEBUTTON' | translate | softLabelsPipe : softLabels
+                      }}</span>
+                  </mat-error>
+                </mat-form-field>
+                <mat-error *ngIf="validationmessage" class="alert-alert-danger">{{validationmessage}}</mat-error>
+              </div>
+            </div>
+            <div class="text-center mt-05">
+              <button type="submit" [disabled]="!statusForm.valid" class="mr-05" mat-raised-button color="primary"
+                [disabled]="loadSpinner">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadSpinner">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="sync"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-raised-button type="button" (click)="editWorkFlowStatusPopover.close()">
+                <fa-icon icon="times" class="mr-05"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </mat-card>
+    </sat-popover>
+
+
+    <sat-popover #deleteWorkflow verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+      scrollStrategy="reposition" [restoreFocus]="false" [autoFocus]="false">
+      <mat-card class="filter-data p-0 updateWorkflow">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+        </mat-progress-bar>
+        <div (click)="$event.stopPropagation()">
+          <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{ 'WORKFLOWMANAGEMENT.DELETEWORKFLOWSTATUS' | translate }}
+            </div>
+          </mat-card-title>
+          <mat-card-content>
+            <div class="card-content mb-1">
+              Are you sure you want to delete this transition?
+            </div>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            <div class="text-center">
+              <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="anyOperationInProgress"
+                (click)="DeleteWorkFlowStatus()">
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeDeleteDialog()">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </mat-card-content>
+        </div>
+      </mat-card>
+    </sat-popover>
+  </div>
+</div>

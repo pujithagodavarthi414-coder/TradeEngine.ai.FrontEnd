@@ -1,0 +1,317 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManagePaymentMethod)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'EMPLOYEERESIGNATION.TITLE' | translate | titlecase }}">{{ 'EMPLOYEERESIGNATION.TITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchivedTypes == false) ? ('EMPLOYEERESIGNATION.SEEARCHIVEDITEMS' | translate) : ('EMPLOYEERESIGNATION.SEEUNARCHIVEDITEMS' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+              (change)="getAllEmployeesResignation()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button
+              matTooltip="{{'EMPLOYEERESIGNATION.CREATEEMPLOYEERESIGNATIONMETHODTOOLTIP' | translate}}"
+              [satPopoverAnchorFor]="upsertEmployeeResignationPopover"
+              #upsertEmployeeResignationPopUp="satPopoverAnchor"
+              (click)="createEmployeeResignation(upsertEmployeeResignationPopUp);clearForm()" *ngIf="!isArchivedTypes">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag employeeresignation">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="employeesResignationList" [loadingIndicator]="isAnyOperationIsInprogress"
+      [scrollbarH]="true"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.EMPLOYEENAME' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="employeeFullName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span fxFlex="25px" style="display: inline-table;cursor: pointer;" (click)="goToProfile(row.userId)">
+            <app-avatar [name]="row?.employeeFullName | removeSpecialCharacters" [src]="row?.profileImage" [isRound]="true"
+              size="30">
+            </app-avatar>
+          </span>
+          <span matTooltip="{{ row?.employeeFullName }}">&nbsp;{{ row?.employeeFullName }}</span> </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.RESIGNATIONDATE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="resignationDate">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.resignationDate | date: 'dd-MMM-yyyy' }}">{{ row?.resignationDate | date: "dd-MMM-yyyy" }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.LASTDATE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="lastDate">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.lastDate | date: 'dd-MMM-yyyy'}}">{{ row?.lastDate | date: "dd-MMM-yyyy"}}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <!-- <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.RESIGNATIONAPPROVEDBYEMPLOYEE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="EmployeeResignation">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.resignationApprovedByFullName }}">{{ row?.resignationApprovedByFullName }}</span>
+        </ng-template>
+      </ngx-datatable-column> -->
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.APPROVEDDATE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="approvedDate">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.approvedDate | date: 'dd-MMM-yyyy' }}">{{ row?.approvedDate | date: "dd-MMM-yyyy" }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <!-- <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.RESIGNATIONAPPROVEDBYEMPLOYEE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="EmployeeResignation">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.resignationRejectedByFullName }}">{{ row?.resignationRejectedByFullName }}</span>
+        </ng-template>
+      </ngx-datatable-column> -->
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.REJECTEDDATE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="rejectedDate">
+        <ng-template let-row="row" ngx-datatable-cell-template><span
+            matTooltip="{{ row?.rejectedDate | date: 'dd-MMM-yyyy' }}">{{ row?.rejectedDate | date: "dd-MMM-yyyy" }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.RESIGNATIONSTATUS' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="statusName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class='resignation-status' matTooltip="{{ row?.statusName }}"
+            [ngStyle]="{'background': row.resignationStatusColour == ''?'':row.resignationStatusColour}">
+            {{ row?.statusName }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.COMMENTBYEMPLOYEE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="commentByEmployee">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.commentByEmployee }}">{{ row?.commentByEmployee }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'EMPLOYEERESIGNATION.COMMENTBYEMPLOYER' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="commentByEmployer">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.commentByEmployer }}">{{ row?.commentByEmployer }}</span> </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS' | translate}}" [flexGrow]="2" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="employeeresignation-icons">
+            <button class="text-center" title="{{'EMPLOYEERESIGNATION.EDITEMPLOYEERESIGNATION' | translate}}"
+              *ngIf="!isArchivedTypes" (click)="editEmployeeResignation(row,upsertEmployeeResignationPopUp)"
+              [satPopoverAnchorFor]="upsertEmployeeResignationPopover"
+              #upsertEmployeeResignationPopUp="satPopoverAnchor" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEERESIGNATION.ARCHIVEESIGNATIONSTATUSTITLE' | translate}}"
+              *ngIf="!isArchivedTypes && !row.isApproved"
+              (click)="deleteEmployeeResignationPopUpOpen(row,deleteEmployeeResignationPopUp)"
+              [satPopoverAnchorFor]="deleteEmployeeResignationPopover"
+              #deleteEmployeeResignationPopUp="satPopoverAnchor" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+            <button class="text-center" title="{{'EMPLOYEERESIGNATION.UNARCHIVEESIGNATIONSTATUSTITLE' | translate}}"
+              *ngIf="isArchivedTypes" [satPopoverAnchorFor]="deleteEmployeeResignationPopover"
+              #deleteEmployeeResignationPopUp="satPopoverAnchor"
+              (click)="deleteEmployeeResignationPopUpOpen(row,deleteEmployeeResignationPopUp)" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+            <ng-container *ngIf="(!row.isApproved || row.isWaitingForApproval) && !isArchivedTypes">
+              <button class="text-center" title="{{'EMPLOYEERESIGNATION.APPROVE' | translate }}"
+                [satPopoverAnchorFor]="approveEmployeeResignationPopover"
+                #approveEmployeeResignationDetailsPopUp="satPopoverAnchor"
+                (click)="approveEmployeeResignationDetailsPopUpOpen(row, approveEmployeeResignationDetailsPopUp,true)"
+                mat-icon-button>
+                <fa-icon icon="thumbs-up" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-container>
+            <ng-container *ngIf="row.isApproved">
+              <button class="text-center" title="{{'EMPLOYEERESIGNATION.ISAPPROVEED' | translate }}" mat-icon-button>
+                <fa-icon icon="check" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-container>
+            <ng-container *ngIf="(row.isApproved || row.isWaitingForApproval)&& !isArchivedTypes">
+              <button class="text-center" title="{{'EMPLOYEERESIGNATION.UNAPPROVE' | translate }}"
+                (click)="approveEmployeeResignationDetailsPopUpOpen(row, approveEmployeeResignationDetailsPopUp,false)"
+                [satPopoverAnchorFor]="approveEmployeeResignationPopover"
+                #approveEmployeeResignationDetailsPopUp="satPopoverAnchor" mat-icon-button>
+                <fa-icon icon="thumbs-down" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+              </button>
+            </ng-container>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!--Edit Resignation Status dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertEmployeeResignationPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ statusTitle }}</div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="employeeResignationForm" #formDirective="ngForm" novalidate
+          (submit)="employeeResignationForm.valid && upsertEmployeeResignation(formDirective)">
+          <div fxLayout="column" fxLayoutGap="10px">
+            <div fxLayout="row" fxLayoutGap="10px">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'EMPLOYEERESIGNATION.EMPLOYEENAME' | translate}}"
+                  formControlName="employeeId" required (selectionChange)="getSelectedEmployees()">
+                  <mat-select-trigger>
+                    {{selectedEmployees}}
+                  </mat-select-trigger>
+                  <mat-option value="option" *ngFor="let emp of employeeListDataDetails" [value]="emp.employeeId">
+                    <div fxLayout="row wrap" fxLayoutGap="15px" fxLayoutGap.xl="5px">
+                      <div>
+                        <app-avatar matTooltip="{{ emp.firstName }}" [name]="emp.firstName | removeSpecialCharacters"
+                          [src]="emp.profileImage" [isRound]="true" size="30">
+                        </app-avatar>
+                      </div>
+                      <div>
+                        <p class="mat-body-2">
+                          {{emp.firstName}} {{emp.surName}}
+                        </p>
+                      </div>
+                    </div>
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field>
+                <input formControlName="resignationDate" matInput [matDatepicker]="picker" (click)="picker.open();"
+                  placeholder="{{ 'EMPLOYEERESIGNATION.RESIGNATIONDATE' | translate }}" required />
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div fxLayout="row" fxLayoutGap="10px">
+              <mat-form-field class="full-width">
+                <textarea matInput formControlName="commentByEmployer"
+                  placeholder="{{'EMPLOYEERESIGNATION.COMMENT' | translate}}"></textarea>
+              </mat-form-field>
+            </div>
+            <div fxLayout="row" fxLayoutGap="10px">
+              <mat-form-field>
+                <input formControlName="lastDate" matInput [matDatepicker]="picker1" (click)="picker1.open();"
+                  placeholder="{{ 'EMPLOYEERESIGNATION.LASTDATE' | translate }}" required />
+                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div class="text-center">
+            <button mat-raised-button color="primary" class="mr-1 mb-05"
+              [disabled]="!employeeResignationForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertEmployeeResignationPopup(formDirective)"
+              type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit Resignation Status dialog-->
+
+  <!--Delete Resignation Status dialog-->
+  <sat-popover backdropClass="backdrop-color" #deleteEmployeeResignationPopover hasBackdrop
+    backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isEmployeeResignationArchived">
+          {{ 'EMPLOYEERESIGNATION.ARCHIVEESIGNATIONSTATUSTITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isEmployeeResignationArchived">
+          {{ 'EMPLOYEERESIGNATION.UNARCHIVEESIGNATIONSTATUSTITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isEmployeeResignationArchived">
+          {{ 'EMPLOYEERESIGNATION.ARCHIVERESIGNATIONSTATUSTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isEmployeeResignationArchived">
+          {{ 'EMPLOYEERESIGNATION.UNARCHIVEESIGNATIONSTATUSTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="isEmployeeResignationArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="archiveEmployeeResignation();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="!isEmployeeResignationArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteEmployeeResignation();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteEmployeeResignationDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete Resignation Status dialog-->
+
+  <sat-popover #approveEmployeeResignationPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isApproved">
+          {{'EMPLOYEERESIGNATION.APPROVETITLE' | translate}}</div>
+        <div class="card-title-text mb-1" *ngIf="!isApproved">
+          {{'EMPLOYEERESIGNATION.UNAPPROVETITLE' | translate}}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isApproved">
+          {{'EMPLOYEERESIGNATION.APPROVEBONUSTEXT' | translate}}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isApproved">
+          {{'EMPLOYEERESIGNATION.UNAPPROVEBONUSTEXT' | translate}}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteEmployeeResignation();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeApproveEmployeeResignationDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Approve EMPLOYEERESIGNATION dialog-->
+
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManagePaymentMethod)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

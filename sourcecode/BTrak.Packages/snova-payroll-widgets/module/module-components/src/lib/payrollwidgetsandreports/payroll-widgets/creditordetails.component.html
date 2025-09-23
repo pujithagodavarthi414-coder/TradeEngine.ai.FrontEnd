@@ -1,0 +1,318 @@
+<div class="full-height" *ngIf="(canAccess_feature_EmployeeCreditorDetails)">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'CREDITORDETAILS.CREDITORDETAILSTITLE' | translate | titlecase }}">{{
+                        'CREDITORDETAILS.CREDITORDETAILSTITLE' | translate | titlecase }}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchivedTypes == false) ? ('CREDITORDETAILS.SEEARCHIVEDITEMS' | translate) : ('CREDITORDETAILS.SEEUNARCHIVEDITEMS' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+                            (change)="getAllCreditorDetails()"></mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button mat-icon-button
+                            matTooltip="{{ 'CREDITORDETAILS.CREATECREDITORDETAILSTOOLTIP' | translate }}"
+                            [satPopoverAnchorFor]="upsertCreditorDetailsPopover"
+                            #upsertCreditorDetailsPopUp="satPopoverAnchor"
+                            (click)="createCreditorDetailsPopupOpen(upsertCreditorDetailsPopUp);clearForm()"
+                            *ngIf="!isArchivedTypes">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+            [rowHeight]="50" [limit]="50" [rows]="company" [loadingIndicator]="isAnyOperationIsInprogress"
+            [scrollbarH]="true"
+            [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column name="{{ 'CREDITORDETAILS.BRANCH' | translate }}" [sortable]="true" prop="branchName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span matTooltip="{{ row?.branchName }}">{{ row?.branchName }}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'CREDITORDETAILS.BANKNAME' | translate }}" [sortable]="true" prop="bankName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="(row?.bankName)">{{row?.bankName}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'CREDITORDETAILS.ACCOUNTNAME' | translate }}" [sortable]="true"
+                prop="accountName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="(row?.accountName)">{{row?.accountName}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'CREDITORDETAILS.ACCOUNTNUMBER' | translate }}" [sortable]="true"
+                prop="accountNumber">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="(row?.accountNumber)">{{row?.accountNumber}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{ 'CREDITORDETAILS.IFSCCODE' | translate }}" [sortable]="true" prop="ifScCode">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span [matTooltip]="(row?.ifScCode)">{{row?.ifScCode}}</span>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'CREDITORDETAILS.EDITCREDITORDETAILS' | translate }}"
+                        [satPopoverAnchorFor]="upsertCreditorDetailsPopover"
+                        #upsertCreditorDetailsPopUp="satPopoverAnchor"
+                        (click)="editCreditorDetailsPopupOpen(row,upsertCreditorDetailsPopUp)" *ngIf="!isArchivedTypes"
+                        mat-icon-button>
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CREDITORDETAILS.ARCHIVECREDITORDETAILS' | translate }}"
+                        [satPopoverAnchorFor]="deleteCreditorDetailsPopover"
+                        #deleteCreditorDetailsPopUp="satPopoverAnchor"
+                        (click)="deleteCreditorDetailsPopUpOpen(row, deleteCreditorDetailsPopUp)"
+                        *ngIf="!isArchivedTypes" mat-icon-button>
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CREDITORDETAILS.UNARCHIVECREDITORDETAILS' | translate }}"
+                        [satPopoverAnchorFor]="deleteCreditorDetailsPopover"
+                        #deleteCreditorDetailsPopUp="satPopoverAnchor"
+                        (click)="deleteCreditorDetailsPopUpOpen(row, deleteCreditorDetailsPopUp)"
+                        *ngIf="isArchivedTypes" mat-icon-button>
+                        <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+
+    <!--Edit CREDITORDETAILS dialog-->
+    <sat-popover backdropClass="backdrop-color" #upsertCreditorDetailsPopover [autoFocus]="false" hasBackdrop
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="end">
+        <mat-card class="p-0 mr-0" fxFlex="500px">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="getBanksIsInprogress">
+            </mat-progress-bar>
+            <mat-card-title class="text-center">
+                <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ creditorDetails | translate }}
+                </div>
+            </mat-card-title>
+            <mat-card-content class="P-05">
+                <form [formGroup]="creditorDetailsForm" #formDirective="ngForm" novalidate
+                    (submit)="creditorDetailsForm.valid && upsertCreditorDetails(formDirective)">
+                    <div>
+                        <div fxLayout="row wrap" class="p-05">
+                            <div fxFlex="48" class="mr-1">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'CREDITORDETAILS.BRANCH' | translate}}"
+                                        formControlName="branchId" required (selectionChange)="changeBank()">
+                                        <mat-option *ngFor="let branch of (branchList$ | async)"
+                                            [value]="branch.branchId">
+                                            {{ branch.branchName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('branchId').hasError('required') && creditorDetailsForm.get('branchId').touched">
+                                        {{ 'CREDITORDETAILS.REQUIREDBRANCHERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48" *ngIf="!(canAccess_feature_ManageBank)">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'CREDITORDETAILS.BANK' | translate}}"
+                                        formControlName="bankId" required (selectionChange)="changeBank()">
+                                        <mat-option *ngFor="let bank of bankList" [value]="bank.bankId">
+                                            {{ bank.bankName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('bankId').hasError('required') && creditorDetailsForm.get('bankId').touched">
+                                        {{ 'CREDITORDETAILS.BANKISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="40" *ngIf="(canAccess_feature_ManageBank)">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{'CREDITORDETAILS.BANK' | translate}}"
+                                        formControlName="bankId" required (selectionChange)="changeBank()">
+                                        <mat-option *ngFor="let bank of bankList" [value]="bank.bankId">
+                                            {{ bank.bankName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('bankId').hasError('required') && creditorDetailsForm.get('bankId').touched">
+                                        {{ 'CREDITORDETAILS.BANKISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="8" *ngIf="(canAccess_feature_ManageBank)">
+                                <button mat-icon-button matTooltip="{{ 'BANK.CREATEBANKTOOLTIP' | translate }}"
+                                    [satPopoverAnchorFor]="upsertBankPopover" #upsertBankPopUp="satPopoverAnchor"
+                                    (click)="createBankPopupOpen(upsertBankPopUp);" *ngIf="!isArchivedTypes"
+                                    type="button">
+                                    <fa-icon icon="plus" class="filter mat-color-accent">
+                                    </fa-icon>
+                                </button>
+                            </div>
+                            <div fxFlex="48" class="mr-1">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="accountName"
+                                        placeholder="{{ 'CREDITORDETAILS.ACCOUNTNAME' | translate }}" required>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('accountName').hasError('required') && creditorDetailsForm.get('accountName').touched">
+                                        {{ 'CREDITORDETAILS.ACCOUNTNAMEISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="accountNumber"
+                                        placeholder="{{ 'CREDITORDETAILS.ACCOUNTNUMBER' | translate }}" required>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('accountNumber').hasError('required') && creditorDetailsForm.get('accountNumber').touched">
+                                        {{ 'CREDITORDETAILS.ACCOUNTNUMBERISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48" class="mr-1">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="ifScCode"
+                                        placeholder="{{ 'CREDITORDETAILS.IFSCCODE' | translate }}" required>
+                                    <mat-error class="P-06"
+                                        *ngIf="creditorDetailsForm.get('ifScCode').hasError('required') && creditorDetailsForm.get('ifScCode').touched">
+                                        {{ 'CREDITORDETAILS.IFSCCODEISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                                <span *ngIf="creditorDetailsForm.get('ifScCode').hasError('pattern')">
+                                    {{'CREDITORDETAILS.VALIDIFSCCODE' | translate }}
+                                </span>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input formControlName="email" matInput (keyup)="onKey($event)"
+                                        placeholder="{{'HRMANAGAMENT.EMAIL' | translate}}">
+                                    <mat-error>
+                                        <span
+                                            *ngIf="creditorDetailsForm.get('email').hasError('pattern') && !creditorDetailsForm.get('email').hasError('maxlength')">
+                                            {{'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate}} </span>
+                                        <span
+                                            *ngIf="creditorDetailsForm.get('email').hasError('maxlength')">{{'HRMANAGAMENT.EMAILCANNOTEXCEED50CHARACTERS'
+                                            |
+                                            translate}}
+                                        </span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48" class="mr-1">
+                                <mat-form-field class="full-width">
+                                    <input formControlName="mobileNo" matInput
+                                        placeholder="{{'HRMANAGAMENT.MOBILENUMBER' | translate}}" mobileNumber
+                                        autocomplete="off">
+                                    <mat-error>
+                                        <span
+                                            *ngIf="creditorDetailsForm.get('mobileNo').hasError('maxlength')">{{'HRMANAGAMENT.MOBILENUMBERCANNOTEXCEED20CHARACTERS'
+                                            | translate}}
+                                        </span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48">
+                                <mat-form-field class="full-width">
+                                    <input formControlName="panNumber" matInput
+                                        placeholder="PAN number" autocomplete="off">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="48" class="pt-2">
+                                <mat-checkbox formControlName="useForPerformaInvoice">Use for performa invoice
+                                </mat-checkbox>
+                            </div>
+                        </div>
+                        <div>
+                        </div>
+                        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+                        <div class="mt-1 text-center mb-05">
+                            <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                                [disabled]="!creditorDetailsForm.valid||isAnyOperationIsInprogress">
+                                <mat-progress-bar color="primary" mode="indeterminate"
+                                    *ngIf="isAnyOperationIsInprogress">
+                                </mat-progress-bar>
+                                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                            </button>
+                            <button mat-button mat-raised-button
+                                (click)="closeUpsertCreditorDetailsPopup(formDirective)" type="button">
+                                <fa-icon class="mr-05" icon="times"></fa-icon>
+                                {{ 'CANCEL' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Edit COMAPN dialog-->
+
+    <!--Delete CREDITORDETAILS dialog-->
+    <sat-popover backdropClass="backdrop-color" #deleteCreditorDetailsPopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isCreditorDetailsArchived">
+                    {{ 'CREDITORDETAILS.ARCHIVECREDITORDETAILSTITLE' | translate }}</div>
+                <div class="card-title-text mb-1" *ngIf="!isCreditorDetailsArchived">
+                    {{ 'CREDITORDETAILS.UNARCHIVECREDITORDETAILSTITLE' | translate }}</div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isCreditorDetailsArchived">
+                    {{ 'CREDITORDETAILS.ARCHIVECREDITORDETAILSTEXT' | translate }}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isCreditorDetailsArchived">
+                    {{ 'CREDITORDETAILS.UNARCHIVECREDITORDETAILSTEXT' | translate }}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" *ngIf="isCreditorDetailsArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteCreditorDetails();">
+                        <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+                    </button>
+                    <button class="mr-1" *ngIf="!isCreditorDetailsArchived" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="deleteCreditorDetails();">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeDeleteCreditorDetailsDialog();">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+    <!--Delete CREDITORDETAILS dialog-->
+
+    <sat-popover #upsertBankPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+        [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+        horizontalAlign="start">
+        <app-add-bank [editBanks]="editBankData" (closePopup)="closeUpsertBankPopover()">
+        </app-add-bank>
+    </sat-popover>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeCreditorDetails)"
+    textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,305 @@
+<div class="m-0 p-0 full-height"
+    *ngIf="(canAccess_feature_ViewEmployeeEmergencyContactDetails) || (canAccess_feature_CanEditOtherEmployeeDetails )">
+    <mat-card class="p-0 canteen-manage m-0" fxLayout="column">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+                <div fxFlex class="p-1" fxLayoutAlign.xs="center center">
+                    {{'EMERGENCYCONTACTDETAILS.EMERGENCYCONTACTDETAILS' | translate  | titlecase}}
+                </div>
+                <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+                    fxLayoutAlign="end center">
+                    <mat-form-field ngClass.xs="full-width">
+                        <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}"
+                            [(ngModel)]="searchText" (input)="search()">
+                    </mat-form-field>
+                    <span class="close_icon">
+                        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                            style="cursor:pointer">
+                            close</mat-icon>
+                    </span>
+                    <button
+                        *ngIf="((canAccess_feature_AddOrUpdateEmployeeEmergencyContactDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails )"
+                        mat-icon-button matTooltip="{{'EMERGENCYCONTACTDETAILS.ADDEMERGENCYCONTACTS' | translate}}"
+                        mat-icon-button matTooltip="{{'EMERGENCYCONTACTDETAILS.ADDEMERGENCYCONTACTS' | translate}}"
+                        [satPopoverAnchorFor]="emergencyContactDetailsPopover"
+                        #emergencyContactDetailsPopup="satPopoverAnchor"
+                        (click)="addEmergencyContactDetails(emergencyContactDetailsPopup)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="searchText">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+                <b>{{'SEARCH' | translate}}:&nbsp;</b>
+                {{ searchText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <ngx-datatable class="btrak" [scrollbarH]="true" [rows]="emergencyContactDetailsList$ | async"
+            [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true"
+            [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+            (sort)="onSort($event)" (page)='setPage($event)'
+            [loadingIndicator]="emergencyContactDetailsDataLoading$ | async"
+            [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}">
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.FIRSTNAME' | translate}}"
+                [flexGrow]="1" prop="firstName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.firstName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.LASTNAME' | translate}}"
+                [flexGrow]="1" prop="lastName">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.lastName }}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.RELATIONSHIP' | translate}}"
+                [flexGrow]="1" prop="relationship">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.relationship}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.HOMETELEPHONE' | translate}}"
+                [flexGrow]="1" prop="homeTelephone">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.homeTelephone}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.MOBILE' | translate}}" [flexGrow]="1"
+                prop="mobileNo">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.mobileNo}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{'EMERGENCYCONTACTDETAILS.WORKTELEPHONE' | translate}}"
+                [flexGrow]="1" prop="workTelephone">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.workTelephone}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [sortable]="false"
+                *ngIf="((canAccess_feature_AddOrUpdateEmployeeEmergencyContactDetails)&& permission) || (canAccess_feature_CanEditOtherEmployeeDetails )">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <button class="text-center" [satPopoverAnchorFor]="emergencyContactDetailsPopover"
+                        #emergencyContactDetailsPopup="satPopoverAnchor"
+                        (click)="EditEmergencyContactDetails(row,emergencyContactDetailsPopup)"
+                        matTooltip="{{'EMERGENCYCONTACTDETAILS.EDITEMERGENCYCONTACTDETAIL' | translate}}"
+                        mat-icon-button>
+                        <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" [satPopoverAnchorFor]="deleteEmergencyContactPopup"
+                        #deleteEmergencyContactPopover="satPopoverAnchor"
+                        (click)="getEmergencyContactId(row,deleteEmergencyContactPopover)"
+                        matTooltip="{{'EMERGENCYCONTACTDETAILS.DELETEEMERGENCYCONTACTDETAIL' | translate}}"
+                        mat-icon-button>
+                        <fa-icon icon="trash" class="mat-color-accent"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<mat-card class="p-0 m-0 edit_employee full-height"
+    *ngIf="!((canAccess_feature_ViewEmployeeEmergencyContactDetails) || (canAccess_feature_CanEditOtherEmployeeDetails ))">
+    <mat-card-title class="data-table-header drag-handler">
+        <div class="p-1" fxLayout="row wrap">
+            <div fxFlex>
+                {{'EMERGENCYCONTACTDETAILS.EMERGENCYCONTACTDETAILS' | translate}}
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content>
+        <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+        </app-common-message-box>
+    </mat-card-content>
+</mat-card>
+
+<sat-popover #emergencyContactDetailsPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" vverticalAlign="center"
+    horizontalAlign="center">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex fxLayoutAlign="center">
+                    <span
+                        *ngIf="!this.emergencyContactId">{{'EMERGENCYCONTACTDETAILS.ADDEMERGENCYCONTACTS' | translate}}</span>
+                    <span
+                        *ngIf="this.emergencyContactId">{{'EMERGENCYCONTACTDETAILS.EDITEMERGENCYCONTACTS' | translate}}</span>
+                </div>
+            </div>
+        </mat-card-title>
+        <form [formGroup]="emergencyContactsForm" novalidate #formDirective="ngForm" class="hr-apps-scroll" id="style-1"
+            (submit)="emergencyContactsForm.valid && saveEmergencyDetails(formDirective)">
+            <div class="p-1 apps-create-height" id="style-1">
+                <div fxLayout="row" fxLayoutGap="15px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="firstName" removeSpecialCharacters
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.FIRSTNAME' | translate}}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="emergencyContactsForm.get('firstName').hasError('required') && emergencyContactsForm.get('firstName').touched">
+                                    {{'HRMANAGAMENT.PLEASEENTERFIRSTNAME' | translate}}</span>
+                                <span *ngIf="emergencyContactsForm.get('firstName').hasError('maxlength')">&nbsp;
+                                    {{'HRMANAGAMENT.FIRSTNAMESHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="lastName" removeSpecialCharacters
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.LASTNAME' | translate}}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="emergencyContactsForm.get('lastName').hasError('required') && emergencyContactsForm.get('lastName').touched">
+                                    {{'HRMANAGAMENT.PLEASEENTERLASTNAME' | translate}}</span>
+                                <span *ngIf="emergencyContactsForm.get('lastName').hasError('maxlength')">&nbsp;
+                                    {{'HRMANAGAMENT.LASTNAMESHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayoutGap="15px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="relationshipId"
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.RELATIONSHIP' | translate}}" required>
+                                <mat-option value="option" *ngFor="let relationship of relationshipDetailsList$ | async"
+                                    [value]="relationship.relationshipId">
+                                    {{relationship.relationshipName}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error>
+                                <span
+                                    *ngIf="emergencyContactsForm.get('relationshipId').hasError('required') && emergencyContactsForm.get('relationshipId').touched">
+                                    {{'EMERGENCYCONTACTDETAILS.PLEASESELECTRELATIONSHIP' | translate}} </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <input formControlName="homeTelephone" matInput mobileNumber
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.HOMETELEPHONE' | translate}}"
+                                autocomplete="off">
+                            <mat-error>
+                                <span *ngIf="emergencyContactsForm.get('homeTelephone').hasError('maxlength')">&nbsp;
+                                    {{'EMERGENCYCONTACTDETAILS.SHOULDNOTEXCEED20DIGITS' | translate}} </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row" fxLayoutGap="15px" fxLayoutGap.xs="0px" fxLayout.xs="column">
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <input formControlName="mobileNo" matInput mobileNumber
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.MOBILE' | translate}}" required
+                                autocomplete="off">
+                            <mat-error>
+                                <span
+                                    *ngIf="emergencyContactsForm.get('mobileNo').hasError('required') && emergencyContactsForm.get('mobileNo').touched">
+                                    {{'EMERGENCYCONTACTDETAILS.PLEASEENTERMOBILENUMBER' | translate}}</span>
+                                <span *ngIf="emergencyContactsForm.get('mobileNo').hasError('maxlength')">&nbsp;
+                                    {{'EMERGENCYCONTACTDETAILS.SHOULDNOTEXCEED20DIGITS' | translate}} </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="48">
+                        <mat-form-field class="full-width">
+                            <input formControlName="workTelephone" matInput mobileNumber
+                                placeholder="{{'EMERGENCYCONTACTDETAILS.WORKTELEPHONE' | translate}}"
+                                autocomplete="off">
+                            <mat-error>
+                                <span *ngIf="emergencyContactsForm.get('workTelephone').hasError('maxlength')">&nbsp;
+                                    {{'EMERGENCYCONTACTDETAILS.SHOULDNOTEXCEED20DIGITS' | translate}} </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div class="custom-hrm-dropzone" *ngIf="popOverOpen">
+                    <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                        [getFilesByReferenceId]="true" [referenceId]="emergencyContactId"
+                        [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                        [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                        (closeFilePopup)="closeFilePopup()" [isToUploadFiles]="isToUploadFiles">
+                    </app-dropzone>
+                </div>
+            </div>
+            <div class="mb-1 prl-1" fxLayoutAlign="center center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" type="submit"
+                    [disabled]="!emergencyContactsForm.valid || (upsertEmployeeEmergencyDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="upsertEmployeeEmergencyDetailsInProgress$ | async">
+                    </mat-progress-bar>
+                    <span *ngIf="!this.emergencyContactId">
+                        <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+                    </span>
+                    <span *ngIf="this.emergencyContactId">
+                        <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                    </span>
+                </button>
+                <button mat-button mat-raised-button type="button"
+                    [disabled]="(upsertEmployeeEmergencyDetailsInProgress$ | async)"
+                    (click)="closeEmergencyDetailsForm(formDirective)">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteEmergencyContactPopup [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'HRMANAGAMENT.DELETEEMERGENCYDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <div class="card-content p-1">
+            <div class="text-center mb-1">{{'HRMANAGAMENT.AREYOUSUREWANTTODELETE' | translate}}
+            </div>
+            <div fxLayoutAlign="space-around center">
+                <button mat-button mat-raised-button class="mr-05" class="mr-1" color="primary"
+                    (click)="deleteEmergencyDetail()"><i class="fa fa-check"></i> {{'YES' | translate}}</button>
+                <button mat-button mat-raised-button (click)="cancelDeleteEmergencyPopup()"><i
+                        class="fa fa-times"></i>{{'NO' | translate}}</button>
+            </div>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<!-- <div class="floating-right-fab-button" *ngIf="(canAccess_feature_AddOrEditCustomFieldsForHrManagement$ | async)">
+        <div class="handle">
+            <button mat-fab color="accent" matTooltip="{{'HRMANAGAMENT.ADDCUSTOMFIELDS' | translate}}"
+                (click)="openCustomForm()">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+    </div> -->
+
+<!-- <ng-floating-action-menu placement="br" effect="mfb-slidein" iconClass='add' activeIconClass='clear' toggle="hover"
+    mainButtonClass="mat-bg-accent" *ngIf="((canAccess_feature_AddOrUpdateEmployeeEmergencyContactDetails$ | async) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails$ | async )">
+    <li>
+        <ng-floating-action-button iconClass='add' iconType='mat-icon' [satPopoverAnchorFor]="emergencyContactDetailsPopover"
+            #emergencyContactDetailsPopup="satPopoverAnchor" label="{{'EMERGENCYCONTACTDETAILS.ADDEMERGENCYCONTACTS' | translate}}"
+            customClass="mat-bg-old-lace" (click)="addEmergencyContactDetails(emergencyContactDetailsPopup)">
+        </ng-floating-action-button>
+    </li>
+    <li
+        *ngIf="((canAccess_feature_AddOrUpdateEmployeeBankDetails$ | async)  && isPermission) || (canAccess_feature_CanEditOtherEmployeeDetails$ | async )">
+        <ng-floating-action-button iconClass='add' iconType='mat-icon'
+            label="{{'HRMANAGAMENT.ADDCUSTOMFIELDS' | translate}}" customClass="mat-bg-unbleached-silk"
+            (click)="openCustomForm()">
+        </ng-floating-action-button>
+    </li>
+</ng-floating-action-menu> -->

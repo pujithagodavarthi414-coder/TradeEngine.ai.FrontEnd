@@ -1,0 +1,181 @@
+<ng-container *ngIf="(canAccess_feature_SubmitTimesheet)">
+  <div class="full-height">
+    <mat-card class="p-0 m-0 time-sheet">
+      <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0">
+          <div fxFlex fxFlex.xs="100" fxLayoutAlign="start center" fxLayoutAlign.xs="center center">
+            <div class="card-title-text p-05">{{'TIMESHEETSUBMISSION.TIMESHEETSUBMISSION' | translate | titlecase}}
+            </div>
+          </div>
+          <div class="mr-05 search_goalinput" fxFlex="180px" fxFlex.xs="100" fxFlexOffset.xs="20px">
+            <mat-form-field fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="filterByName($event)">
+            </mat-form-field>
+            <span class="custom_close_icon">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+          <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+            <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu">
+              <fa-icon matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}" icon="user-cog"
+                class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+          </div>
+          <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+            <button mat-icon-button (click)="reset()">
+              <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+            </button>
+          </div>
+          <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'TIMESHEETSUBMISSION.SELECTSTATUS' | translate }}"
+                  [(ngModel)]="selectedStatus" (selectionChange)="statusValues($event.value)">
+                  <mat-option *ngFor="let entity of status" [value]="entity">
+                    {{entity.statusName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-card>
+          </mat-menu>
+        </div>
+      </mat-card-title>
+    </mat-card>
+    <div class="activity-data filter-margin viewtimesheet-rows-cursor-pointer m-0 no-drag">
+      <kendo-grid [kendoGridBinding]="timeSheetSubmissions" [filterable]="false" [selectable]="false"
+        [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort" [sortable]="true" [pageable]="true">
+        <kendo-grid-column field="timeSheetTitle" title="{{'TIMESHEETSUBMISSION.TIMESHEETNAME' | translate}}"
+          [style]="{'cursor':'default'}">
+        </kendo-grid-column>
+        <kendo-grid-column field="status" title="{{'TIMESHEETSUBMISSION.STATUS' | translate}}"
+          [style]="{'cursor':'default'}">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div [ngStyle]="{ 'background' : dataItem.statusColour }" style="width :fit-content"
+              fxLayoutAlign="center center">
+              <span style="width: 150px;" fxFlex fxLayoutAlign="center center"
+                class="hide-content-overflow"><b>{{  dataItem.status }}</b></span>
+            </div>
+          </ng-template>
+          <span matTooltip="dataItem.status"></span>
+        </kendo-grid-column>
+        <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button class="text-center" matTooltip="{{'TIMESHEETSUBMISSION.VIEWTIMESHEET' | translate}}" mat-icon-button
+              (click)="openDialog($event,dataItem);$event.stopPropagation();">
+              <fa-icon icon="eye" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+            <button mat-icon-button matTooltip="{{'TIMESHEETSUBMISSION.SUBMITTIMESHEET' | translate}}"
+              [disabled]="!dataItem.isEnableBuuton" [satPopoverAnchorFor]="lineManagersPopover"
+              #lineManagersPopUp="satPopoverAnchor"
+              (click)="updateTimeSheetSubmission(lineManagersPopUp,dataItem);$event.stopPropagation()"
+              *ngIf="dataItem.isEnableBuuton">
+              <fa-icon icon="paper-plane" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <button mat-icon-button matTooltip="{{'TIMESHEETSUBMISSION.VIEWREJECTEDREASON' | translate}}"
+              [disabled]="!dataItem.isRejected" [satPopoverAnchorFor]="rejectedPopOver"
+              #editReasonPopUp="satPopoverAnchor"
+              (click)="editReason(dataItem,editReasonPopUp);$event.stopPropagation();" *ngIf="dataItem.isRejected">
+              <fa-icon icon="exclamation-triangle" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-command-column>
+      </kendo-grid>
+      <div *ngIf="loadingIndicator" class="k-i-loading"></div>
+    </div>
+  </div>
+</ng-container>
+<sat-popover #lineManagersPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 "> {{'TIMESHEETSUBMISSION.LINEMANAGER' | translate}}
+      </div>
+      <div class="satpopover-custom-close">
+        <div class="custom-close" mat-dialog-close (click)="closeLineManagerPopup()">
+          <fa-icon icon="times" class="project-dialog"></fa-icon>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="lineManager">
+      <div *ngFor="let lineManager of lineManager">
+        <mat-card (click)="openSubmitPopup(lineManager,rejectedReasonPopUp)" type="reset"
+          [satPopoverAnchorFor]="rejectedMessagePopOver" #rejectedReasonPopUp="satPopoverAnchor" class="p-05">
+          <div class="icon-button" fxLayout="row">
+            <div *ngIf="lineManager.profileImage != null && lineManager.profileImage != ''"
+              (click)="goToUserProfile(lineManager);$event.stopPropagation()">
+              <app-avatar [src]="lineManager.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="lineManager.profileImage == null || lineManager.profileImage == ''"
+              (click)="goToUserProfile(lineManager);$event.stopPropagation()">
+              <app-avatar [name]="lineManager.userName | removeSpecialCharacters" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <span class="ml-05 hide-content-overflow" matTooltip="{{lineManager.userName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{lineManager.userName}}
+            </span>
+          </div>
+        </mat-card>
+      </div>
+    </mat-card-content>
+    <span *ngIf="lineManager == null || lineManager.length == 0" class="p-05">
+      {{'TIMESHEETSUBMISSION.NOLINEMANAGERS' | translate}}
+    </span>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #rejectedPopOver [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TIMESHEETSUBMISSION.REJECTEDREASON' | translate}}</div>
+      <div class="satpopover-custom-close">
+        <div class="custom-close" mat-dialog-close (click)="closeReasonPopup()">
+          <fa-icon icon="times" class="project-dialog"></fa-icon>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05" fxFlex.md="400px" fxFlex.sm="250px" fxFlex.lg="500px" fxFlex.gt-lg="600px">
+      <div class="mobile-view-popover">
+        {{reason}}
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #rejectedMessagePopOver hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1">Submit time sheet</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1">
+        Are you sure want to submit the time sheet?
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="loadingIndicator"
+          (click)="rejectTimeSheet();">
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closerejectedMessgaePopUp();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_SubmitTimesheet)"
+  textToDisplay="{{ 'MYPROFILE.ALERTMESSAGE' | translate }}">
+</app-common-message-box>

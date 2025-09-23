@@ -1,0 +1,362 @@
+<div class="full-height p-0 mat-card-fx-col" fxLayout="column">
+    <mat-card-title class="full-width data-table-header drag-handler ">
+        <div class ="mat-card-fx-col">
+        <div fxLayout="row wrap" fxLayoutAlign="start center"> 
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip="{{ 'PAYROLLREPORTS.PROFESSIONALTAXRETURN' |  translate }}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{ 'PAYROLLREPORTS.PROFESSIONALTAXRETURN' |  translate }} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="taxDetails">
+                <button mat-icon-button matTooltip="Download pdf">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading">
+                    </mat-progress-bar>
+                    <fa-icon class="mat-color-accent cursor-pointer" icon="download" (click)="getPdf()">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="fromDateFilter">
+                    {{ 'PAYROLLREPORTS.DATE' |  translate }}</button>
+                <button mat-menu-item [matMenuTriggerFor]="isActiveEmployeesOnlyFilter">
+                    {{ 'PAYROLLREPORTS.ISACTIVEEMPLOYEESONLY' |  translate }}</button>
+                    <button mat-menu-item [matMenuTriggerFor]="branchFilter">
+                        Branch</button>
+            </mat-menu>
+            <mat-menu #searchFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <div fxLayout="row">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{ 'PAYROLLREPORTS.SEARCH' |  translate }}" [(ngModel)]="searchText"
+                                    (input)="getTaxReturnDetails()">
+                            </mat-form-field>
+                            <span class="close_icon mr-05">
+                                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+                                    (click)="$event.stopPropagation;" style="cursor:pointer">
+                                    close</mat-icon>
+                            </span>
+                        </div>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #fromDateFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker" placeholder="{{ 'PAYROLLREPORTS.CHOOSEAMONTH' |  translate }}" [formControl]="date"
+                                readonly='true'>
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker (monthSelected)="monthSelected($event)" startView="multi-year"></mat-datepicker>
+                            
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #branchFilter="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field class="full-width">
+                            <mat-select placeholder="Select branch"
+                                [(ngModel)]="selectedBranchId" (selectionChange)="branchSelected($event.value,$event)">
+                                <mat-option *ngFor="let branch of branches" [value]="branch.branchId">
+                                    {{branch.branchName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #isActiveEmployeesOnlyFilter="matMenu">
+                <mat-card class="filter-data">
+                    <span class="mr-1">{{ 'PAYROLLREPORTS.ISACTIVEEMPLOYEESONLY' |  translate }}</span>
+                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isActiveEmployeesOnly"
+                        (change)="getTaxReturnDetails()"></mat-slide-toggle>
+                </mat-card>
+            </mat-menu>
+        </div>
+        </div>
+    </mat-card-title>
+
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInProgress">
+    </mat-progress-bar>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="branchName">
+            <b>Branch name:&nbsp;</b>
+            {{ branchName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="branchSelected('0',null)">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="dateForFilter">
+            <b>Date:&nbsp;</b>
+            {{ dateForFilter }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateFilter()">
+            </fa-icon>
+        </mat-chip>
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="isActiveEmployeesOnly">
+            <b>Is active employees only:&nbsp;</b>
+            {{ isActiveEmployeesOnly }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeIsActive()">
+            </fa-icon>
+        </mat-chip>
+    </div>
+    <div fxLayout="column">
+    <div class="no-drag" fxLayout="column" style="border-style: solid; border-width: 2px;" *ngIf="taxDetails">
+        
+        <div fxFlex fxLayout="row wrap" style="border-bottom-style: solid;border-width: 2px;">
+            <div fxFlex="30" style="border-right-style: solid; border-right-width: 2px;">
+                <div fxFlex fxLayoutAlign="center center">
+                    <b>
+                        <p class="m-2">FORM V</p>
+                    </b>
+                </div>
+                <div fxFlex fxLayoutAlign="center center">
+                    <b>
+                        <p>(See Ruler 12)</p>
+                    </b>
+                </div>
+            </div>
+            <div fxFlex>
+                <div fxFlex fxLayoutAlign="center center">
+                    <b>
+                        <p class="m-2">RETURN OF TAX PAYABLE BY EMPLOYER</p>
+                    </b>
+                </div>
+                <div fxFlex fxLayoutAlign="center center">
+                    <b>
+                        <p>Under Sub-section (1) of the A.P Tax on Professions, Traders, Calling and Employments Act,
+                            1967
+                        </p>
+                    </b>
+                </div>
+            </div>
+        </div>
+        <p class="m-0">Return on Tax Payable for the month ending on</p><br>
+        <div fxFlex fxLayout="row wrap">
+            <div fxFlex="25">
+                Name of the Employer:
+            </div>
+            <div fxFlex>
+                {{taxDetails[0].companyName}}
+            </div>
+        </div>
+
+        <div fxFlex fxLayout="row wrap">
+            <div fxFlex="25">
+                Address:
+            </div>
+            <div fxFlex>
+                {{completeAddress}}
+            </div>
+        </div>
+
+        <div fxFlex fxLayout="row wrap">
+            <div fxFlex="25">
+                Register cerficate number:
+            </div>
+            <div fxFlex>
+            </div>
+        </div>
+        Number of employees during the month in respect of whom the tax payable is under:
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <th class="form-v-table">Employees whose monthly salaries or wages or both</th>
+                <th class="form-v-table">Number of employees</th>
+                <th class="form-v-table">Rate of Tax</th>
+                <th class="form-v-table">Amount of Tax Deducted</th>
+            </tr>
+            <tr *ngFor="let column of taxDetails">
+                <td class="form-v-table">{{column.ranges}}</td>
+                <td class="form-v-table">{{column.noOfEmployee}}</td>
+                <td class="form-v-table">{{column.taxAmount}}</td>
+                <td class="form-v-table">{{column.totalTax}}</td>
+            </tr>
+            <tr>
+                <td class="form-v-table"><b>Total</b></td>
+                <td class="form-v-table"><b>{{totalEmployees}}</b></td>
+                <td class="form-v-table"></td>
+                <td class="form-v-table"><b>{{totalTax}}</b></td>
+            </tr>
+        </table>
+        <p class="max-width:50%">
+            Add: simple interset payable (if any) on the obve amount at two percent per month or part thereof( vide
+            section
+            II (2) of the Act ).
+        </p>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <div *ngFor="let column of taxDetails">
+
+                </div>
+                <th class="form-v-table" style="width: 45%;"><b>GRAND TOTAL</b></th>
+                <th class="form-v-table" style="width: 20.5%;"><b>{{totalEmployees}}</b></th>
+                <th class="form-v-table" style="width:12%"><b></b></th>
+                <th class="form-v-table"><b>{{totalTax}}</b></th>
+            </tr>
+        </table>
+
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Amount paid</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;{{totalTax}}</label>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Under Challan No</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;</label>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>dated</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        I certify that the employees who are liable to pay tax in my employment during the period of return have been
+        covered by the foregoing particulars. I also certify that the necessary revision in the amoiunt of tax
+        deductable
+        from the salary or wages of the employees on account variation in the salary or wages earned by them has been
+        made
+        wherever necessary.
+        <br>
+        solemnly declare that the above statements are true to the best of my knowledge and belief.
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Place</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;</label>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="33.3">
+            </div>
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Signature</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;</label><br>
+                        (Employer)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Date</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;{{date1 | date: "dd-MMM-yyyy"}}</label>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="33.3">
+            </div>
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Signature</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="border-bottom-style: solid;border-bottom-width: 2px;"></div>
+        <div fxFlex fxLayoutAlign="center center">
+            <b>(FOR OFFICIAL USE ONLY)</b>
+        </div>
+        The return is accepted on verification
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Tax assessed</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;Rs</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Tax paid</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;Rs</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px">
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Balance</b></label>
+                    </div>
+                    <div fxFlex="55" class="hide-content-overflow">
+                        <label>:&nbsp;Rs</label>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="33.3">
+            </div>
+            <div fxFlex="33.3">
+                <div fxLayout="row wrap">
+                    <div fxFlex="45">
+                        <label><b>Assessing Authority</b></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div fxFlex fxLayoutAlign="center center">
+            <b>Note: When the return is not acceptable seperate order of assessment should be passed.</b>
+        </div>
+    </div>
+</div>
+    <mat-card *ngIf="!taxDetails" class="p-1">
+        <span>{{'NODATATODISPLAY' | translate }}</span>
+    </mat-card>
+</div>

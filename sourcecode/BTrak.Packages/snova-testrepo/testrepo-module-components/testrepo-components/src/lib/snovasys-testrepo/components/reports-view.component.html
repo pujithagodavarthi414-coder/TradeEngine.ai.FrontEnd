@@ -1,0 +1,82 @@
+<div class="reports-tab" fxLayout="row wrap" fxLayout.lt-sm="column" fxLayoutGap="5px"
+    *ngIf="(reportsCount$ | async) > 0" (window:resize)="onResize()">
+    <div fxFlex="25px" fxHide.sm fxHide.xs>
+        <div class='custom-label veritcal-label'>
+            <div class='custom-label-content' (click)="isReport = !isReport">
+                {{'TESTMANAGEMENT.REPORTS' | translate| softLabelsPipe : softLabels}}
+                <span>
+                    <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isReport}">
+                    </fa-icon>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div fxFlex="15" fxFlex.lg="20" fxFlex.md="25" fxFlex.sm="98" fxFlex.lt-sm="100" [hidden]="isReport">
+        <mat-card class="custom-box mb-0 p-0 mt-0">
+            <reports-list (loadReport)="getLoadReportById($event)" (reportId)="getReportId($event)"></reports-list>
+        </mat-card>
+    </div>
+    <div fxFlex fxFlex.lt-sm="100">
+        <as-split direction="horizontal" unit="percent" gutterSize="5">
+            <as-split-area size="*" minSize="45">
+                <mat-card class="custom-box mb-0 p-0 mt-0">
+                    <detailed-report-view (caseStatusPreviewDetails)="getCaseStatusPreviewDetails($event)"
+                        [loadReport]="loadReport" [reportId]="reportId"></detailed-report-view>
+                </mat-card>
+            </as-split-area>
+            <as-split-area size="37" minSize="36" maxSize="54" *ngIf="(showCaseStatusPreview) && (screenWidth > 1024)">
+                <div fxFlex="100" *ngIf="showCaseStatusPreview">
+                    <report-test-case-details [caseDetails]="showCaseStatusPreview" [reportId]="reportId"
+                        (closePreview)="closePreviewDialog()">
+                    </report-test-case-details>
+                </div>
+            </as-split-area>
+        </as-split>
+    </div>
+    <div fxFlex="100" *ngIf="showCaseStatusPreview && !(screenWidth > 1024)">
+        <report-test-case-details [caseDetails]="showCaseStatusPreview" (closePreview)="closePreviewDialog()">
+        </report-test-case-details>
+    </div>
+</div>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && ((reportsCount$ | async) <= 0 || (reportsCount$ | async) == null)
+        && (canAccess_entityType_feature_AddOrUpdateTestReport)"
+    textToDisplay="{{'TESTMANAGEMENT.YOUDONTHAVEANYREPORTSINTHEPROJECT' | translate | softLabelsPipe :softLabels}}">
+    <ng-template ng-message-tmp>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+            *ngIf="canAccess_entityType_feature_AddOrUpdateTestReport" [satPopoverAnchorFor]="addReport"
+            #addReportPopover="satPopoverAnchor" (click)="openReportDialog(addReportPopover)">
+            <fa-icon class="mr-05" icon="plus"></fa-icon>
+            {{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+        </button>
+    </ng-template>
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!(projectRelatedDataLoading$ | async) && ((reportsCount$ | async) == 0 || (reportsCount$ | async) == null)
+        && !(canAccess_entityType_feature_AddOrUpdateTestReport)"
+    textToDisplay="{{'TESTMANAGEMENT.NOYOUDONTHAVEANYREPORTSINTHEPROJECT' | translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>
+
+<!-- <div class="floating-right-fab-button" *ngIf="canAccess_entityType_feature_AddOrUpdateTestReport">
+    <div class="handle">
+        <button mat-fab color="accent"
+            matTooltip="{{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}"
+            [satPopoverAnchorFor]="addReport" #addReportsPopover="satPopoverAnchor"
+            (click)="openReportsDialog(addReportsPopover)">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div> -->
+
+<sat-popover backdropClass="backdrop-color" #addReport verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <add-report *ngIf="loadAddReport" (closeReport)="closeReportDialog()" [hideMileStones]="hideMileStones">
+        </add-report>
+    </mat-card>
+</sat-popover>

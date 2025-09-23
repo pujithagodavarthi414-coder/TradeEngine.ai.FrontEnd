@@ -1,0 +1,111 @@
+<div fxLayout="row wrap">
+  <div fxFlex="100" fxFlex.gt-sm="100">
+    <mat-card class="project-card project-dtl p-05" (click)="fetchProjectRecord(projectSearchResult)">
+      <div fxLayout="row wrap" fxLayoutGap="5px">
+        <div class="project-avatar-image" fxFlex.lt-md="19" fxFlex="21" fxFlex.md="30">
+          <app-avatar fxHide fxHide.gt-lg="false" [name]="projectSearchResult.projectName | removeSpecialCharacters "
+            [isRound]="false" size="80">
+          </app-avatar>
+          <app-avatar fxShow fxShow.gt-lg="false" [name]="projectSearchResult.projectName | removeSpecialCharacters "
+            [isRound]="false" size="48">
+          </app-avatar>
+        </div>
+
+        <div fxFlex="74" fxFlex.md="59">
+          <div fxLayout="column" fxLayoutGap="0px">
+            <div fxFlex="10">
+              <div fxLayout="row" fxLayoutGap="0px">
+                <div fxFlex="80" class="pull-left" fxShow fxShow.gt-lg="false">
+                  <div class="mat-body-2 project-card-name" [matTooltip]="projectSearchResult.projectName">
+                    {{ projectSearchResult.projectName }}
+                  </div>
+                </div>
+                <div fxFlex="20" fxFlex.gt-lg="100" *ngIf="!isArchived">
+                  <div class="pull-right">
+                    <span>&nbsp;</span>
+                    <span *ngIf="projectSearchResult.activeGoalCount > 0" class="badge-item"
+                      [ngClass]="projectSearchResult.numberOfReds > 0 ? 'mat-bg-red' : 'mat-bg-green'"
+                      matTooltip="{{'PROJECTS.ACTIVEGOALSCOUNT' | translate | softLabelsPipe : softLabels}}">{{projectSearchResult.activeGoalCount}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <mat-icon class="more_vert" [matMenuTriggerFor]="menu2" matTooltip="{{'MENU' | translate}}"
+                (click)="$event.stopPropagation()"
+                *ngIf="!isForDialog && ((canAccess_feature_ArchiveProject) || (canAccess_feature_UnarchiveProject) || (canAccess_feature_AddProject))">
+                more_vert</mat-icon>
+            </div>
+            <div fxFlex="30" fxHide fxHide.gt-lg="false" class="project-card-name">
+              <span class="project-name-control mat-h2" matTooltipClass="tooltip-overflow"
+                [matTooltip]="projectSearchResult.projectName">
+                {{ projectSearchResult.projectName }}
+              </span>
+              <app-chip [matTooltip]="projectSearchResult.fullName" class="pull-right mt-05"
+                *ngIf="projectSearchResult.fullName" [src]="projectSearchResult.profileImage
+                         | fetchSizedAndCachedImage: '20':''"
+                [name]="projectSearchResult.fullName | removeSpecialCharacters" [size]="20">
+              </app-chip>
+            </div>
+            <!-- <div fxFlex="55" fxFlex.lt-lg="85">
+              <app-chip [matTooltip]="projectSearchResult.fullName" class="pull-right"
+                *ngIf="projectSearchResult.fullName" [src]="projectSearchResult.profileImage
+                         | fetchSizedAndCachedImage: '20':''"
+                [name]="projectSearchResult.fullName | removeSpecialCharacters" [size]="20">
+              </app-chip>
+            </div> -->
+            <div fxFlex *ngIf="(canAccess_feature_AccessTestrepo)">
+              <p matLine class="demo-2">{{'TESTMANAGEMENT.CONTAINS' | translate}}
+                <b>{{projectSearchResult.testSuiteCount}}</b> {{'TESTMANAGEMENT.TESTSUITESSMALL' | translate}},
+                <b>{{projectSearchResult.testRunCount}}</b>
+                {{'TESTMANAGEMENT.TESTRUNSSMALL' | translate}},
+                <b>{{projectSearchResult.milestoneCount}}</b>
+                {{'TESTMANAGEMENT.MILESTONESSMALL' | translate}},
+                <b>{{projectSearchResult.reportCount}}</b>
+                {{'TESTMANAGEMENT.REPORTSSMALL' | translate}} {{'TESTMANAGEMENT.AND' | translate}}
+                <b>{{projectSearchResult.casesCount}}</b>
+                {{'TESTMANAGEMENT.TESTCASESSMALL' | translate}}.
+              </p>
+            </div>
+          </div>
+        </div>
+        <mat-menu #menu2="matMenu" class="dialog_window" (click)="$event.stopPropagation()">
+          <button type="button" mat-menu-item (click)="archivePopover.toggle()"
+            *ngIf="checkPermissionsForMatMenu(projectSearchResult,canAccess_feature_ArchiveProject,canAccess_feature_UnarchiveProject)">
+            <mat-icon aria-hidden="false" aria-label="Example" [satPopoverAnchorFor]="archivePopover">archive</mat-icon>
+            <span *ngIf="!projectSearchResult.isArchived">{{'ARCHIVE' | translate | softLabelsPipe : softLabels}}
+            </span>
+            <span *ngIf="projectSearchResult.isArchived">
+              {{'UNARCHIVE' | translate | softLabelsPipe : softLabels}}</span>
+          </button>
+          <button type="button" mat-menu-item [satPopoverAnchorFor]="editProjectPopover"
+            (click)="editProjectPopover.toggle();editProject()"
+            *ngIf="(!projectSearchResult.isArchived) && (canAccess_feature_AddProject)">
+            <mat-icon aria-hidden="false" aria-label="Example">edit</mat-icon>
+            <span>{{'PROJECTS.EDITPROJECT'|translate}} </span>
+          </button>
+        </mat-menu>
+
+        <sat-popover #archivePopover verticalAlign="below" hasBackdrop horizontalAlign="end">
+          <app-pm-component-project-archive [projectId]="projectSearchResult.projectId"
+            [isArchived]="projectSearchResult.isArchived" [timeStamp]="projectSearchResult.timeStamp"  [projectName]="projectSearchResult.projectName"
+            (closeArchiveDialog)="closeDialog($event)"></app-pm-component-project-archive>
+        </sat-popover>
+        <sat-popover #editProjectPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+          scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end"
+          backdropClass="backdrop-color">
+          <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+              <div class="card-title-text mat-bg-primary p-05">
+                {{'PROJECTS.EDITPROJECT'|translate | softLabelsPipe : softLabels}}
+              </div>
+            </mat-card-title>
+            <app-pm-component-createproject *ngIf="isEditProject" [projectId]="projectSearchResult.projectId"
+              (closePopup)="closeProjectDialog()">
+            </app-pm-component-createproject>
+          </mat-card>
+        </sat-popover>
+      </div>
+    </mat-card>
+  </div>
+</div>

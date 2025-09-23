@@ -1,0 +1,170 @@
+<ng-container *ngIf="canAccess_feature_ViewJobOpeningStatus">
+  <div class="full-height">
+    <mat-card class="p-0 m-0">
+      <mat-card-title class="data-table-header drag-handler">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px" fxLayoutGap.xs="0">
+          <div fxFlex class="card-title-text p-05 ml-05" fxLayoutAlign="start center" class="p-1"
+            fxLayoutAlign.xs="center center">{{'JOBOPENINGSTATUS.JOBOPENINGSTATUS' | translate}}
+          </div>
+          <div class="ml-05 mr-05 search_goalinput" fxFlex="33.333" fxLayoutAlign.xs="center center"
+            fxLayoutAlign="end center">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center"
+              *ngIf="isAddandEdit">
+              <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                (change)="getJobOpeningStatus()"></mat-slide-toggle>
+            </div>
+            <mat-form-field ngClass.xs="full-width">
+              <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+                (input)="search()">
+            </mat-form-field>
+            <span class="close_icon" style="right: 6px !important; top: 15px !important;">
+              <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+            <button mat-icon-button matTooltip="{{'JOBOPENINGSTATUS.CREATEJOBOPENING' | translate}}"
+              [satPopoverAnchorFor]="upsertJobOpeningStatusPopover" #upsertJobOpeningStatusPopUp="satPopoverAnchor"
+              (click)="createJobOpeningStatus(upsertJobOpeningStatusPopUp);"
+              *ngIf="!isArchived && canAccess_feature_AddorEditJobOpeningStatus && isAddandEdit">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data filter-margin m-0 no-drag app-height-search-2" id="style-1">
+      <ngx-datatable class="btrak" [rows]=" jobOpeningStatusList$ | async" [columnMode]="'force'" [headerHeight]="35"
+        [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements"
+        [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+        [ngClass]="isFromRoute ? 'full-height' : ''" [loadingIndicator]=" jobOpeningStatusDataLoading$ | async"
+        [sorts]="[{prop: 'order', dir: 'asc'}]" [scrollbarH]="true" [virtualization]="false" (sort)="onSort($event)"
+        (page)='setPage($event)' [selectionType]="'single'" (select)='onSelect($event)'
+        [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate, selectedMessage: false}">
+        <ngx-datatable-column name="{{'JOBOPENINGSTATUS.STATUS' | translate}}" sortable="true" prop="status">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div>{{ row.status }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'JOBOPENINGSTATUS.ORDER' | translate}}" sortable="true" prop="order">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            <div>{{ row.order }}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="{{'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false"
+          *ngIf="(canAccess_feature_AddorEditJobOpeningStatus || canAccess_feature_ArchiveJobOpeningStatus) && isAddandEdit">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{'JOBOPENINGSTATUS.CREATEJOBOPENING' | translate}}"
+              [satPopoverAnchorFor]="upsertJobOpeningStatusPopover" #upsertJobOpeningStatusPopUp="satPopoverAnchor"
+              (click)=" editJobOpeningStatus(row,upsertJobOpeningStatusPopUp)"
+              *ngIf="!isArchived && canAccess_feature_AddorEditJobOpeningStatus" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+
+            <button class="text-center" title="{{ 'JOBOPENINGSTATUS.ARCHIVE' | translate }}"
+              [satPopoverAnchorFor]="deleteJobOpeningPopover" #deleteJobOpeningPopup="satPopoverAnchor"
+              (click)="deleteJobOpeningStatusPopupOpen(row,deleteJobOpeningPopup)"
+              *ngIf="!isArchived && canAccess_feature_ArchiveJobOpeningStatus" mat-icon-button>
+              <mat-icon style="cursor:pointer;" class="mat-color-accent">archive</mat-icon>
+            </button>
+
+            <button class="text-center" title="{{ 'JOBOPENINGSTATUS.UNARCHIVE' | translate }}"
+              [satPopoverAnchorFor]="deleteJobOpeningPopover" #deleteJobOpeningPopup="satPopoverAnchor"
+              (click)="deleteJobOpeningStatusPopupOpen(row,deleteJobOpeningPopup)"
+              *ngIf="isArchived && canAccess_feature_ArchiveJobOpeningStatus" mat-icon-button>
+              <mat-icon style="cursor:pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #upsertJobOpeningStatusPopover hasBackdrop
+      backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isEdit">{{'JOBOPENINGSTATUS.ADDJOBOPENINGSTATUS' | translate}}
+          </div>
+          <div class="card-title-text mb-1" *ngIf="isEdit">
+            {{'JOBOPENINGSTATUS.UPDATEJOBOPENINGSTATUS' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <form [formGroup]="jobOpeningStatusForm" #formDirective="ngForm" novalidate
+            (submit)="jobOpeningStatusForm.valid && upsertJobOpeningStatus(formDirective)">
+            <div>
+              <mat-form-field class="full-width">
+                <input matInput formControlName="status" placeholder="{{'JOBOPENINGSTATUS.STATUS' | translate}}"
+                  required>
+                <mat-error
+                  *ngIf="jobOpeningStatusForm.get('status').hasError('required') && jobOpeningStatusForm.get('status').touched">
+                  {{ 'JOBOPENINGSTATUS.STATUSREQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <input matInput formControlName="order" placeholder="{{'JOBOPENINGSTATUS.ORDER' | translate}}" required>
+                <mat-error
+                  *ngIf="jobOpeningStatusForm.get('order').hasError('required') && jobOpeningStatusForm.get('order').touched">
+                  {{ 'JOBOPENINGSTATUS.ORDERREQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="text-center">
+              <button mat-raised-button color="primary" class="mr-1" [disabled]="isAnyOperationsInProgress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationsInProgress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> <span *ngIf="!isEdit">{{ 'SAVE' | translate }}</span>
+                <span *ngIf="isEdit">{{'JOBOPENINGSTATUS.UPDATE' | translate}}</span>
+              </button>
+              <button mat-button mat-raised-button [disabled]="isAnyOperationsInProgress"
+                (click)="closeUpsertJobOpeningStatusPopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover backdropClass="backdrop-color" #deleteJobOpeningPopover hasBackdrop backdropClass="backdrop-color"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text mb-1" *ngIf="!isArchived">{{'JOBOPENINGSTATUS.ARCHIVE' | translate}}
+          </div>
+          <div class="card-title-text mb-1" *ngIf="isArchived">
+            {{'JOBOPENINGSTATUS.UNARCHIVE' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+          <div class="card-content mb-1" *ngIf="!isArchived">
+            {{'JOBOPENINGSTATUS.DESIGNA' | translate}}
+          </div>
+          <div class="card-content mb-1" *ngIf="isArchived">
+            {{'JOBOPENINGSTATUS.DESIGNU' | translate}}
+          </div>
+          <span *ngIf="isThereAnError">{{ validationMessage }}</span>
+          <div class="text-center">
+            <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isArchived"
+              [disabled]="isAnyOperationsInProgress" (click)="deleteJobOpeningStatus() ;">
+              <mat-icon style="cursor:pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+            </button>
+            <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isArchived"
+              [disabled]="isAnyOperationsInProgress" (click)="deleteJobOpeningStatus();">
+              <mat-icon style="cursor:pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeleteJobOpeningStatusPopup();">
+              <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+  </div>
+</ng-container>
+<ng-container *ngIf="!(canAccess_feature_ViewJobOpeningStatus)">
+  <app-common-message-box textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+  </app-common-message-box>
+</ng-container>

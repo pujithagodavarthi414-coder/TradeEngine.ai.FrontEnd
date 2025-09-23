@@ -1,0 +1,93 @@
+<div class="testrail-case-details section-cases-operations category-questions" fxLayout="row"
+    [ngStyle]="{ 'background-color': caseSelected == true ? '#e0dbdb' : '' }">
+    <div fxFlex="5" fxFlex.lg="7" fxFlex.md="7" class="text-overflow-wrap" (click)="previewTestcase()">
+        <a>{{caseDetail.questionIdentity}}</a>
+        <span *ngIf="caseDetail.isQuestionMandatory != null && (caseDetail.isQuestionMandatory == true)"
+            style="color: red;">
+            *
+        </span>
+    </div>
+    <div fxFlex class="m-0 ml-05 text-overflow-wrap userStory-name" (click)="previewTestcase()" #reportCaseTitle
+        (mouseover)="checkTitleTooltipStatus()">
+        <span class="user-select-text" [matTooltip]="showTitleTooltip ? caseDetail.questionName : ''"
+            matTooltipShowDelay="300">
+            {{caseDetail.questionName}}
+        </span>
+    </div>
+    <div fxFlex="44px" (click)="$event.stopPropagation()" *ngIf="caseDetail.actionsCount > 0">
+        <a matTooltip="{{'AUDIT.ACTIONSCOUNT' | translate | softLabelsPipe :softLabels}}" [satPopoverAnchorFor]="scenarioBugs"
+            #scenarioBugsPopover="satPopoverAnchor"
+            (click)="$event.stopPropagation();openBugsPopover(scenarioBugsPopover)">
+            <fa-icon icon="eye"></fa-icon>
+        </a>
+        <span class="testsuite-sections-count scenario-bugs-place scenario-bugs-count-padding">
+            {{caseDetail.actionsCount}}
+        </span>
+    </div>
+    <mat-chip *ngIf="caseDetail.isQuestionAnswered != null && caseDetail.isQuestionAnswered == false"
+        matTooltip="{{'AUDIT.RESULT' | translate}} - Not answered" matTooltipShowDelay="300" fxFlex="11"
+        class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #b0b0b0;color: white; text-transform: none !important;">
+        {{'AUDIT.NOTANSWERED' | translate}}
+    </mat-chip>
+    <mat-chip
+        *ngIf="caseDetail.isQuestionAnswered != null && caseDetail.isQuestionAnswered == true && caseDetail.isAnswerValid == false"
+        matTooltip="{{'AUDIT.RESULT' | translate}} - {{caseDetail.questionResult}}" matTooltipShowDelay="300"
+        fxFlex="11" class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #d97373;color: white; text-transform: none !important;">
+        <span *ngIf="caseDetail.questionResult">{{caseDetail.questionResult}}</span>
+        <span *ngIf="caseDetail.questionResultText">{{caseDetail.questionResultText}}</span>
+        <span
+            *ngIf="caseDetail.questionResultDate">{{caseDetail.questionResultDate | utcToLocalTime | date: "dd-MMM-yyyy"}}</span>
+        <span *ngIf="caseDetail.questionResultNumeric">{{caseDetail.questionResultNumeric}}</span>
+        <span *ngIf="caseDetail.questionResultTime">{{caseDetail.questionResultTime}}</span>
+    </mat-chip>
+    <mat-chip
+        *ngIf="caseDetail.isQuestionAnswered != null && caseDetail.isQuestionAnswered == true && caseDetail.isAnswerValid == true"
+        matTooltip="{{'AUDIT.RESULT' | translate}} - {{caseDetail.questionResult}}" matTooltipShowDelay="300"
+        fxFlex="11" class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+        style="background-color: #65bb63;color: white; text-transform: none !important;">
+        <span *ngIf="caseDetail.questionResult">{{caseDetail.questionResult}}</span>
+        <span *ngIf="caseDetail.questionResultText">{{caseDetail.questionResultText}}</span>
+        <span
+            *ngIf="caseDetail.questionResultDate">{{caseDetail.questionResultDate | utcToLocalTime | date: "dd-MMM-yyyy"}}</span>
+        <span *ngIf="caseDetail.questionResultNumeric">{{caseDetail.questionResultNumeric}}</span>
+        <span *ngIf="caseDetail.questionResultTime">{{caseDetail.questionResultTime}}</span>
+    </mat-chip>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #scenarioBugs hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <button class="inline_edit_close btn" color="warn" (click)="closeBugPopover()">
+            <fa-icon icon="times"></fa-icon>
+        </button>
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'AUDIT.ACTIONS' | translate | softLabelsPipe :softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="p-05 goal-bugs" id="style-1" *ngIf="loadActions && caseDetail.actionsCount > 0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(bugsInTestCaseProgress$ | async)">
+            </mat-progress-bar>
+            <div fxLayout="column" *ngIf="!(bugsInTestCaseProgress$ | async)" fxLayoutGap="5px">
+                <div fxLayout="row" *ngFor="let bug of (scenarioBugs$ | async);let i = index" fxLayoutGap="5px">
+                    <div fxFlex="15px">
+                        <fa-icon matTooltip="{{ bug.bugPriorityName }} ({{bug.bugPriorityDescription}})"
+                            icon="{{bug.bugPriorityIcon}}"
+                            [ngStyle]="setColorForBugPriorityTypes(bug.bugPriorityColor)">
+                        </fa-icon>
+                    </div>
+                    <div fxFlex="70" class="word-break display-pre-line">
+                        <span>{{bug.userStoryName}}</span>
+                    </div>
+                    <mat-chip matTooltip="{{'AUDIT.ACTIONSTATUS' | translate | softLabelsPipe :softLabels}}" fxFlex
+                        class="allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="bug.statusHexValue">
+                        {{ bug.status }}
+                    </mat-chip>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

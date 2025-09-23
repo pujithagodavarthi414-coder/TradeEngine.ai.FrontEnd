@@ -1,0 +1,196 @@
+<div class="ml-05 mr-05 search_goalinput" fxLayout="row wrap">
+  <div fxLayout="row wrap" fxFlex="120px" fxFlex.md="100px" fxFlex.sm="24" fxFlex.xs="50"
+    class="custom-position-relative">
+    <mat-form-field>
+      <input class="search_goal full-width" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText">
+    </mat-form-field>
+    <span class="close_icon">
+      <span *ngIf="!searchText"></span>
+      <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+        style="cursor:pointer">
+        close</mat-icon>
+    </span>
+  </div>
+  <div fxFlex="10px" fxFlex.md="13px" fxFlex.sm="35px" fxFlex.xs="10" fxLayoutAlign.sm="end center"
+    (click)="resetAllFilters()">
+    <fa-icon mat-icon-button class="filter mat-color-accent goal_clear ml-01" style="cursor: pointer;" icon="undo">
+    </fa-icon>
+  </div>
+  <div fxFlex="14px" fxFlex.md="13px" fxFlex.sm="35px" fxFlex.xs="10" class="color-search mt-05 ml-08 mr-05"
+    fxLayoutAlign="space-around center">
+    <fa-icon icon="filter" mat-icon-button class="mat-color-accent icon-button" *ngIf="goals.length > 0"
+      [matMenuTriggerFor]="sortFilter">
+    </fa-icon>
+    <mat-menu #sortFilter="matMenu" class="p-05 hide-content-overflow" (click)="$event.stopPropagation();"
+      xPosition="after" yPosition="below">
+      <div class="color-search" (click)="$event.stopPropagation();">
+        <mat-form-field class="goal-replan full-width mt-0 custom-select-matform" (click)="$event.stopPropagation();">
+          <mat-select placeholder="{{'GOALS.SELECTSORTBYOPTIONASC' | translate}}" [(ngModel)]="sortBy"
+            (selectionChange)="onChangePermission($event)">
+            <mat-option [value]="0">{{ 'GOALS.SORTBYNAME' | translate }}</mat-option>
+            <mat-option [value]="1">{{ 'GOALS.SORTBYONBOARDDATE' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-checkbox [(ngModel)]="isAscending" class="checkbox-text full-width pull-left mt-05"
+        (click)="$event.stopPropagation();" (change)="getAllGoalsByFilterContext();">
+        {{ 'GOALS.SORTASCENDING' | translate | softLabelsPipe : softLabels }}
+      </mat-checkbox>
+      <mat-form-field class="full-width pull-left mt-05 custom-searchbar" (click)="$event.stopPropagation();">
+        <input class="search_goal full-width" matInput
+          placeholder="{{'GOALS.SEARCHGOALTAGS' | translate | softLabelsPipe : softLabels}}"
+          [(ngModel)]="searchGoalTags">
+      </mat-form-field>
+      <span class="close_icon" style="left:244px;position: absolute !important;top:123px !important;">
+        <span *ngIf="!searchGoalTags">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <mat-icon *ngIf="searchGoalTags" class="icon-button" aria-hidden="false" (click)="closeGoalSearch()"
+          style="cursor:pointer">
+          close</mat-icon>
+      </span>
+    </mat-menu>
+  </div>
+  <div *ngIf="goals.length > 0 && isProcessDashboardStatusColor && showDropdown">
+    <div class="select_colours mt-1" [ngStyle]="{ 'right': goalSearchCriteria.isGoalsPage ? '0px' : ''}"
+      [ngClass]="{'mr-05': (processDashboardStatus$ | async | goalFilter: 'processDashboardStatusHexaValue':goals)?.length == 1}">
+      <span class="colour_plus" [matMenuTriggerFor]="showColoursList"
+        *ngIf="(processDashboardStatus$ | async | goalFilter: 'processDashboardStatusHexaValue':goals)?.length >1">
+        <fa-icon icon="plus" [ngClass]="{'countActive': divActivate}"></fa-icon>
+      </span>
+
+      <mat-button-toggle-group #group="matButtonToggleGroup" multiple=true class="color-search first_colour first-Color"
+        [(ngModel)]="colorList">
+        <mat-button-toggle
+          *ngFor="let processdashboard of (processDashboardStatus$ | async | goalFilter: 'processDashboardStatusHexaValue':goals | slice:0:1)"
+          (change)="selectGoalStatusColor($event.value)" class="color-circle"
+          [value]="processdashboard.processDashboardStatusHexaValue"
+          [ngStyle]="setMyStyles(processdashboard.processDashboardStatusHexaValue)">
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <mat-menu #showColoursList="matMenu" class="color-search dialog_window color-search-width" xPosition="before"
+        yPosition="below">
+        <mat-button-toggle-group #group="matButtonToggleGroup" [(ngModel)]="colorList" multiple=true>
+          <mat-button-toggle (click)="$event.stopPropagation();" class="color-circle"
+            *ngFor="let processdashboard of (processDashboardStatus$|async | goalFilter: 'processDashboardStatusHexaValue':goals | slice:1);"
+            (change)="selectGoalStatusColor($event.value)" [value]="processdashboard.processDashboardStatusHexaValue"
+            [ngStyle]="setMyStyles(processdashboard.processDashboardStatusHexaValue)">
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <mat-form-field hidden>
+          <input matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="selectedColor">
+        </mat-form-field>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div [ngClass]="showDropdown ? 'goals-selectusers': 'goal-users'" class="select_users"
+    *ngIf="goalSearchCriteria && !goalSearchCriteria.isGoalsPage && (goals.length)>0" fxFlex="73px">
+    <span class="members_count mt-2p" [matMenuTriggerFor]="showUsersList"
+      *ngIf="(goals$ | async | goalResponsiblePersonFilter: 'id':goals)?.length >1"
+      [ngClass]="{'countActive': divActivate}">
+      <fa-icon icon="plus"></fa-icon>
+    </span>
+    <div class="project_member"
+      *ngFor="let member of (goals$ | async | goalResponsiblePersonFilter: 'id':goals | slice:0:1);let k=index">
+      <div (click)="getSelectedMember(member.goalResponsibleUserId,k);" class="mt-03"
+        [ngClass]="{memberhide: !isSelectedMembers[k], membershow: isSelectedMembers[k]}"
+        matTooltip="{{member.goalResponsibleUserName}}">
+        <app-avatar [name]="member.goalResponsibleUserName| removeSpecialCharacters"
+          [src]='member.goalResponsibleProfileImage' [isRound]="true" size="30">
+        </app-avatar>
+      </div>
+    </div>
+
+    <mat-menu #showUsersList="matMenu" xPosition="before" yPosition="below">
+      <div class="projectmembers_list" id="style-1" style="width: 215px;">
+        <div *ngFor="let member of (goals$ | async| goalResponsiblePersonFilter: 'id':goals | slice:1);let j=index"
+          [ngClass]="{membershow: isSelected[j]}">
+          <div class="projectmembers_list single_projectmember" style="height: 40px;"
+            *ngIf="member.goalResponsibleUserName!='' && member.goalResponsibleUserName!=null">
+            <div *ngIf="member.goalResponsibleUserName!='' && member.goalResponsibleUserName!=null" fxLayout="row wrap"
+              class="pt-2 pl-05" fxLayoutGap="5px">
+              <div fxFlex="10" class="pt-2">
+                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                  (change)="GetAssigne(member.goalResponsibleUserId, isSelected[j],j)"></mat-checkbox>
+              </div>
+              <div fxFlex="15">
+                <app-avatar matTooltip="{{member.goalResponsibleUserName}}"
+                  [name]="member.goalResponsibleUserName| removeSpecialCharacters"
+                  [src]='member.goalResponsibleProfileImage' [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <div fxFlex="65" *ngIf="member.goalResponsibleUserName!='' && member.goalResponsibleUserName!=null"
+                class="pt-lg-1 hide-content-overflow">
+                <p class="m-0">{{member.goalResponsibleUserName}}</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-menu>
+
+  </div>
+
+  <fa-icon icon="plus-circle" mat-icon-button class="mat-color-accent icon-button "
+    [ngClass]="showDropdown ? 'goal-add': 'goal-add-backlog'"
+    matTooltip="{{'GOALS.ADDGOAL'|translate  | softLabelsPipe :softLabels}}"
+    *ngIf="selectedTab == 'backlog-goals' && goals.length > 0 && (canAccess_entityType_feature_AddOrUpdateGoal) && (canAccess_entityType_feature_ViewGoals)"
+    [satPopoverAnchorFor]="addOrEditGoalPopover" #addGoalPopover="satPopoverAnchor"
+    (click)="addGoalPopover.openPopover(); clearGoalForm()">
+  </fa-icon>
+</div>
+<div fxFlex class="p-05" fxLayout="row" *ngIf="searchGoalTags">
+  <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchGoalTags">
+    <b>{{'GOALS.SEARCHGOALTAGS' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+    {{searchGoalTags}}
+    <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeGoalSearch()">
+    </fa-icon>
+  </mat-chip>
+</div>
+
+<app-common-message-box *ngIf="!(anyOperationInProgress$ | async) && (goals$ | async | resultfilter: searchText:'goalName' | goalStatusfilter :selectedColor 
+| goalResponsiblefilter: 'goalResponsibleUserId':goalResponsiblePerson
+ | goalTagsFilter : searchGoalTags)?.length == 0"
+  textToDisplay="{{'GOALS.GOALSNOTFOUND'|translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>
+
+<div class="p-0">
+  <div class="p-0 m-0 allgoals-list" id="style-1" [ngStyle]="setHeights()">
+    <div class="p-0">
+      <span *ngIf="!(anyOperationInProgress$ | async)">
+        <mat-list-item *ngFor="let goal of (goals$ | async | resultfilter: searchText:'goalName' | goalStatusfilter:selectedColor 
+          | goalResponsiblefilter: 'goalResponsibleUserId':goalResponsiblePerson
+           | sortByGoal:goalSearchCriteria
+           | goalTagsFilter : searchGoalTags 
+           | goalOrder :goalSearchCriteria)">
+          <gc-goal-summary [goal]="goal" [isAllGoalsPage]="goalSearchCriteria && goalSearchCriteria.isGoalsPage"
+            [uniqueGoalPage]="goalSearchCriteria && goalSearchCriteria.isUniqueGoalsPage" class="full-width" [userStoriesCount]="userStoriesCount"
+            (click)="handleClickOnGoalSummaryComponent(goal)" (selectGoalId)="selectedGoal($event)"
+            [goalSelected]="goal.goalId === selectedGoalId">
+          </gc-goal-summary>
+        </mat-list-item>
+      </span>
+      <gc-goal-summary-loading *ngIf="(anyOperationInProgress$ | async)">
+      </gc-goal-summary-loading>
+    </div>
+  </div>
+</div>
+
+
+<sat-popover #addOrEditGoalPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-05 mat-bg-primary">
+          {{'GOALS.ADDGOAL'|translate  | softLabelsPipe :softLabels}}
+        </div>
+      </mat-card-title>
+      <app-pm-component-goal-create *ngIf="openGoalForm" [projectId]="projectId" [clearCreateForm]="clearCreateForm"
+        [isTestrailEnable]="isTestrailEnable" (closePopup)="closeGoalDialog()"></app-pm-component-goal-create>
+    </div>
+  </mat-card>
+</sat-popover>

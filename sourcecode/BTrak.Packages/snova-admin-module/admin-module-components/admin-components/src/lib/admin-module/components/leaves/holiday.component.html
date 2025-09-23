@@ -1,0 +1,308 @@
+<div *ngIf="(canAccess_feature_ManageHoliday)">
+  <div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0 ">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayout.xs="column">
+          <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+            <span fxFlex="100" class="hide-content-overflow"
+              matTooltip="{{ 'HOLIDAY.HOLIDAYTITLE' | translate | titlecase }}">{{ 'HOLIDAY.HOLIDAYTITLE' | translate |
+              titlecase }}</span>
+          </div>
+          <div fxFlex fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-slide-toggle
+                [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="getAllHolidays()">
+              </mat-slide-toggle>
+            </div>
+            <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+              fxLayoutAlign.xs="start center">
+              <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-form-field class="full-width">
+                  <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                </mat-form-field>
+              </div>
+              <span class="mr-1 shift-timing-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                  style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <button mat-icon-button matTooltip="{{ 'HOLIDAY.CREATEHOLIDAYTOOLTIP' | translate }}"
+                [satPopoverAnchorFor]="upsertHolidayPopover" #upsertHolidayPopUp="satPopoverAnchor"
+                (click)="createHoliday(upsertHolidayPopUp);clearForm()" *ngIf="!isArchived">
+                <fa-icon icon="plus" class="filter mat-color-accent">
+                </fa-icon>
+              </button>
+              <div fxFlex="36px" *ngIf="isArchived"></div>
+            </div>
+          </div>
+        </div>
+      </mat-card-title>
+      <mat-divider></mat-divider>
+    </mat-card>
+
+
+    <div class="activity-data pagination-move-left">
+      <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+        [rowHeight]="50" [limit]="10" [rows]="holidayModel" [loadingIndicator]="isAnyOperationIsInprogress"
+        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+        <ngx-datatable-column minWidth="150" name="{{ 'HOLIDAY.HOLIDAYREASONTITLE' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="reason">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.reason }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'HOLIDAY.COUNTRYTITLE' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="countryName">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.countryName }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'HOLIDAY.DATETITLE' | translate }}" [flexGrow]="1"
+          [sortable]="true" prop="date">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div *ngIf="row?.date !=null">{{ row?.date | date: "dd-MMM-yyyy" }}
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <button class="text-center" title="{{ 'HOLIDAY.EDITHOLIDAYTITLE' | translate }}"
+              [satPopoverAnchorFor]="upsertHolidayPopover" #upsertHolidayPopUp="satPopoverAnchor"
+              (click)="editHolidayPopupOpen(row,upsertHolidayPopUp)" *ngIf="!isArchived" mat-icon-button>
+              <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+
+            <button class="text-center" title="{{ 'HOLIDAY.ARCHIVEHOLIDAYTITLE' | translate }}"
+              (click)="deleteHolidayPopUpOpen(row,deleteHolidayPopUp)" [satPopoverAnchorFor]="deleteHolidayPopover"
+              #deleteHolidayPopUp="satPopoverAnchor" *ngIf="!isArchived" mat-icon-button>
+              <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+            </button>
+
+            <button class="text-center" title="{{ 'HOLIDAY.UNARCHIVEHOLIDAYTITLE' | translate }}"
+              (click)="deleteHolidayPopUpOpen(row,deleteHolidayPopUp)" [satPopoverAnchorFor]="deleteHolidayPopover"
+              #deleteHolidayPopUp="satPopoverAnchor" *ngIf="isArchived" mat-icon-button>
+              <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+            </button>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+
+  <!--Edit Leave Session dialog-->
+  <sat-popover backdropClass="backdrop-color" #upsertHolidayPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ holidayEdit }}</div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="holidayForm" #formDirective="ngForm" novalidate
+          (submit)="holidayForm.valid && upsertHoliday(formDirective)">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="reason"
+                placeholder="{{ 'HOLIDAY.HOLIDAYREASONPLACEHOLDER' | translate }}" required>
+              <mat-error *ngIf="holidayForm.get('reason').hasError('maxlength')">
+                {{ 'HOLIDAY.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error *ngIf="holidayForm.get('reason').hasError('required') && holidayForm.get('reason').touched">
+                {{ 'HOLIDAY.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select formControlName="countryId" placeholder="{{ 'HOLIDAY.COUNTRYPLACEHOLDER' | translate }}"
+                required>
+                <mat-option [value]="0">Select None</mat-option>
+                <mat-option value="option" *ngFor="let country of countries" [value]="country.countryId">
+                  {{ country.countryName }}</mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="holidayForm.get('countryId').hasError('required') && holidayForm.get('countryId').touched">
+                {{ 'HOLIDAY.REQUIREDCOUNTRYERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <input formControlName="date" matInput autocomplete="off" [matDatepicker]="picker" (click)="picker.open()"
+                placeholder="{{ 'HOLIDAY.HOLIDAYDATEPLACEHOLDER' | translate }}" required />
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error *ngIf="holidayForm.get('date').hasError('required') && holidayForm.get('date').touched">
+                {{ 'HOLIDAY.REQUIREDDATEERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!holidayForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertHolidayPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <sat-popover backdropClass="backdrop-color" #upsertWeekOffHolidayPopOver [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ holidayEdit }}</div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="weekOffHolidayForm" #formDirective="ngForm" novalidate
+          (submit)="weekOffHolidayForm.valid && upsertWeekOffHoliday(formDirective)">
+          <div>
+            <mat-form-field class="mt-05 full-width">
+              <mat-label>{{'LEAVETYPES.FROMDATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker1" (click)="picker1.open()" autocomplete="off" [readonly]="true"
+                class="date-picker" formControlName="dateFrom" (input)="startDate()" (dateChange)="startDate()">
+              <mat-datepicker-toggle matSuffix [for]="picker1">
+              </mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+              <mat-error>
+                <span *ngIf="!weekOffHolidayForm.get('dateFrom').valid && weekOffHolidayForm.get('dateFrom').touched">
+                  {{'LEAVETYPES.FROMDATEREQUIREDERROR' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="mt-05 full-width">
+              <mat-label>{{'LEAVETYPES.TODATE' | translate}}</mat-label>
+              <input matInput [matDatepicker]="picker2" (click)="picker2.open()" autocomplete="off" [readonly]="true"
+                class="date-picker" formControlName="dateTo" [min]="minDateForEndDate" disabled={{endDateBool}}>
+              <mat-datepicker-toggle matSuffix [for]="picker2">
+              </mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+              <mat-error>
+                <span *ngIf="!weekOffHolidayForm.get('dateTo').valid && weekOffHolidayForm.get('dateTo').touched">
+                  {{'LEAVETYPES.TODATEREQUIREDERROR' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="mt-05 full-width">
+              <mat-select placeholder="{{'LEAVESLIST.SELECTBRANCH' | translate}}" formControlName="branchId" required>
+                <mat-option value="option" *ngFor="let branch of branchList " [value]="branch.branchId">
+                  {{ branch.branchName}}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="weekOffHolidayForm.get('branchId').hasError('required') && weekOffHolidayForm.get('branchId').touched">
+                {{'HOLIDAY.BRANCHREQUIREDERROR' | translate}}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select formControlName="weekOffDays" placeholder="{{'HOLIDAY.SELECTWEEKOFFDAY' | translate}}"
+                multiple required>
+                <mat-option value="option" *ngFor="let week of weekModel" [value]="week.weekName">
+                  {{ week.weekName }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="weekOffHolidayForm.get('weekOffDays').hasError('required')&& weekOffHolidayForm.get('weekOffDays').touched">
+                {{'HOLIDAY.SELECTWEEKOFFDAYREQUIRED' | translate}}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!weekOffHolidayForm.valid||upsertInProgress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="upsertInProgress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)=" closeUpsertWeekOffHolidayPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Edit Leave Session dialog-->
+
+  <!--Delete Leave Session dialog-->
+  <sat-popover backdropClass="backdrop-color" #deleteHolidayPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">
+          {{ 'HOLIDAY.ARCHIVEHOLIDAYTITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'HOLIDAY.UNARCHIVEHOLIDAYTITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'HOLIDAY.ARCHIVEHOLIDAYTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'HOLIDAY.UNARCHIVEHOLIDAYTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHoliday();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHoliday();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteHolidayDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete Leave Session dialog-->
+
+  <sat-popover backdropClass="backdrop-color" #deleteWeekOffHolidayPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived">
+          {{ 'HOLIDAY.ARCHIVEWEEKOFFHOLIDAYTITLE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived">
+          {{ 'HOLIDAY.UNARCHIVEWEEKOFFHOLIDAYTITLE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'HOLIDAY.ARCHIVEWEEKOFFHOLIDAYTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'HOLIDAY.UNARCHIVEWEEKOFFHOLIDAYTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteweekOffHoliday();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+            [disabled]="isweekOffUpsertInProgress" (click)="deleteweekOffHoliday();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteWeekOffHolidayDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_ManageHoliday)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

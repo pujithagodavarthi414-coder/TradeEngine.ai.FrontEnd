@@ -1,0 +1,427 @@
+<div class="full-height" *ngIf="(canAccess_feature_TaxSlabs)">
+
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+
+      <div fxLayout="row wrap" fxLayout.xs="column">
+
+        <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+          <span
+            matTooltip="{{'TAXSLABS.TITLE' | translate | titlecase }}">{{'TAXSLABS.TITLE' | translate | titlecase }}</span>
+        </div>
+
+        <div fxFlex="40px" fxLayoutAlign="end center" fxLayoutAlign.xs="25px" class="mr-05 ml-15">
+          <mat-slide-toggle
+            [matTooltip]="(isArchived == false) ? ('TAXSLABS.SEEARCHIVEDITEMS' | translate) : ('TAXSLABS.SEEUNARCHIVEDITEMS' | translate)"
+            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="filterSlabs()">
+          </mat-slide-toggle>
+        </div>
+
+        <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap"
+          fxLayoutAlign.xs="start center">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="Search" [(ngModel)]="searchText"
+              (input)="filterByName($event)">
+          </mat-form-field>
+          <div fxFlex="20px">
+            <span class="close_icon" style="right: 0px !important;">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+        </div>
+
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{ 'TAXSLABS.ADDTAXSLAB' | translate }}"
+            [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+            (click)="createTaxSlabPopupOpen(upsertPayGradePopUp);clearForm()" *ngIf="!isArchived">
+            <fa-icon icon="plus" class="filter mat-color-accent">
+            </fa-icon>
+          </button>
+        </div>
+
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+      [rowHeight]="50" [limit]="10" [rows]="taxSlabs" [loadingIndicator]="isAnyOperationIsInprogress"
+      [scrollbarH]="true"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{ 'BANK.COUNTRY' | translate }}" [sortable]="true" prop="countryName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.countryName }}">{{ row?.countryName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.NAME' | translate }}" [flexGrow]="1" [sortable]="true" prop="name">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.name }}">{{ row?.name }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXALLOWANCE.PARENTNAME' | translate }}" [sortable]="true" prop="parentName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.parentName }}">{{ row?.parentName }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TESTMANAGEMENT.PRIORITY' | translate }}" [sortable]="true" prop="order">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.order }}">{{ row?.order }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.FROMRANGE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="modifiedFromRange">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedFromRange }}">{{ row?.modifiedFromRange }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.TORANGE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="modifiedToRange">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedToRange }}">{{ row?.modifiedToRange }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.TAXPERCENTAGE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="taxPercentage">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.taxPercentage }}">{{ row?.taxPercentage }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.ACTIVEFROM' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="activeFrom">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span
+            matTooltip="{{ row?.activeFrom | date: 'dd-MMM-yyyy'}}">{{ row?.activeFrom | date: "dd-MMM-yyyy"}}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.ACTIVETO' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="activeTo">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.activeTo | date: 'dd-MMM-yyyy'}}">{{ row?.activeTo | date: "dd-MMM-yyyy"}}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.MINAGE' | translate }}" [flexGrow]="1" [sortable]="true" prop="minAge">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.minAge }}">{{ row?.minAge }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.MAXAGE' | translate }}" [flexGrow]="1" [sortable]="true" prop="maxAge">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.maxAge }}">{{ row?.maxAge }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.GENDER' | translate }}" [flexGrow]="1" [sortable]="true" prop="forMale">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.forMale" matTooltip="Male">Male</span>
+          <span *ngIf="row.forFemale" matTooltip="Female">Female</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.ISHANDICAPPED' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="handicapped">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.handicapped" matTooltip="Yes">Yes</span>
+          <span *ngIf="!row.handicapped" matTooltip="No">No</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'TAXSLABS.ISFLATERATE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="handicapped">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.isFlatRate" matTooltip="Yes">Yes</span>
+          <span *ngIf="!row.isFlatRate" matTooltip="No">No</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <!-- <ngx-datatable-column name="{{ 'TAXSLABS.TEMPLATES' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="templateNames" matTooltip="templateNames">
+      </ngx-datatable-column> -->
+      <ngx-datatable-column name="{{ 'TAXSLABS.TAXCALCULATIONTYPE' | translate }}" [flexGrow]="1" [sortable]="true"
+        prop="taxCalculationTypeName" matTooltip="taxCalculationTypeName">
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{'PAYGRADE.EDITPAYGRADE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="upsertPayGradePopover" #upsertPayGradePopUp="satPopoverAnchor"
+            (click)="editTaxSlabPopupOpen(row,upsertPayGradePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{'TAXSLABS.DELETETAXSLAB' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deletePayGradeePopover" #deletePayGradePopUp="satPopoverAnchor"
+            (click)="deleteTaxSlabPopUpOpen(row,deletePayGradePopUp)">
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+          </button>
+          <button class="text-center" title="{{'TAXSLABS.UNARCHIVETAXSLAB' | translate }}" *ngIf="isArchived"
+            [satPopoverAnchorFor]="deletePayGradeePopover" #deletePayGradePopUp="satPopoverAnchor"
+            (click)="deleteTaxSlabPopUpOpen(row,deletePayGradePopUp)" mat-icon-button>
+            <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <sat-popover backdropClass="backdrop-color" #upsertPayGradePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex="600px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ payGradeEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="taxSlabForm" #formDirective="ngForm" novalidatey
+          (submit)="taxSlabForm.valid && upsertTaxSlab(formDirective)">
+          <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+            <div fxFlex="98.5"
+              *ngIf="taxSlabForm.get('parentId').value != null && taxSlabForm.get('parentId').value != 0">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'BANK.COUNTRY' | translate}}" formControlName="countryId" required
+                  (selectionChange)="changeCountry($event.value, true)">
+                  <mat-option *ngFor="let country of countries" [value]="country.countryId">
+                    {{ country.countryName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="taxSlabForm.get('countryId').hasError('required') && taxSlabForm.get('countryId').touched">
+                  {{ 'BANK.REQUIREDCOUNTRYERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'BANK.COUNTRY' | translate}}" formControlName="countryId" required
+                  (selectionChange)="changeCountry($event.value, true)">
+                  <mat-option *ngFor="let country of countries" [value]="country.countryId">
+                    {{ country.countryName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="taxSlabForm.get('countryId').hasError('required') && taxSlabForm.get('countryId').touched">
+                  {{ 'BANK.REQUIREDCOUNTRYERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="name" placeholder="{{ 'TAXSLABS.NAME' | translate }}" required>
+                <mat-error *ngIf="taxSlabForm.get('name').hasError('maxlength')">
+                  {{ 'TAXSLABS.MAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error *ngIf="taxSlabForm.get('name').hasError('required') && taxSlabForm.get('name').touched">
+                  {{ 'TAXSLABS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="parentId" placeholder="{{'TAXALLOWANCE.PARENTNAME' | translate}}"
+                  (selectionChange)="changeParent($event.value,null)">
+                  <mat-option value="0">{{'TAXALLOWANCE.SELECTPARENT' | translate}}</mat-option>
+                  <div *ngFor="let parentTaxSlab of parentTaxSlabsWithBranch">
+                    <ng-container *ngIf="parentTaxSlab.taxSlabId != taxSlabId">
+                      <mat-option [value]="parentTaxSlab.taxSlabId">
+                        {{parentTaxSlab.name}}
+                      </mat-option>
+                    </ng-container>
+                  </div>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="order" placeholder="{{ 'TESTMANAGEMENT.PRIORITY' | translate }}"
+                  type="number" required>
+                <mat-error *ngIf="taxSlabForm.get('order').hasError('required') && taxSlabForm.get('order').touched">
+                  {{ 'TAXSLABS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value != null && taxSlabForm.get('parentId').value != 0">
+              <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="fromRange"
+                  placeholder="{{ 'TAXSLABS.FROMRANGE' | translate }}" (blur)="checkValidations()" required>
+                <mat-error
+                  *ngIf="taxSlabForm.get('fromRange').hasError('required') && taxSlabForm.get('fromRange').touched">
+                  {{ 'TAXSLABS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value != null && taxSlabForm.get('parentId').value != 0">
+              <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="toRange"
+                  placeholder="{{ 'TAXSLABS.TORANGE' | translate }}" (blur)="checkValidations()">
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value != null && taxSlabForm.get('parentId').value != 0">
+              <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="taxPercentage"
+                  placeholder="{{ 'TAXSLABS.TAXPERCENTAGE' | translate }}" required>
+                <mat-error *ngIf="taxSlabForm.get('taxPercentage').hasError('maxlength')">
+                  {{ 'TAXSLABS.MAXLENGTHERROR' | translate }}</mat-error>
+                <mat-error
+                  *ngIf="taxSlabForm.get('taxPercentage').hasError('required') && taxSlabForm.get('taxPercentage').touched">
+                  {{ 'TAXSLABS.REQUIREDERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <!-- <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'TAXSLABS.TEMPLATES' | translate }}" multiple
+                  formControlName="payRollTemplateIds" (selectionChange)="getPayRollTemplatesList()" required>
+                  <mat-select-trigger>
+                    {{selectedPayRollTemplates}}
+                  </mat-select-trigger>
+                  <mat-option #allSelected (click)="toggleAllPayRollTemplatesSelected();getPayRollTemplatesList();"
+                    [value]="0">
+                    {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                  <mat-option #allSelected *ngFor="let payRollTemplate of dropDownPayRollTemplates"
+                    [value]="payRollTemplate.payRollTemplateId" (click)="togglePayRollTemplatePerOne()">
+                    {{payRollTemplate.payRollName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="taxSlabForm.get('payRollTemplateIds').hasError('required') && taxSlabForm.get('payRollTemplateIds').touched">
+                  {{ 'PAYROLLBRANCHCONFIGURATION.REQUIREDBRANCHERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div> -->
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="activeFrom" formControlName="activeFrom" required
+                  (click)="activeFrom.open();checkValidations();" placeholder="{{ 'TAXSLABS.ACTIVEFROM' | translate }}"
+                  (blur)="checkValidations()">
+                <mat-datepicker-toggle matSuffix [for]="activeFrom"></mat-datepicker-toggle>
+                <mat-datepicker #activeFrom></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="taxSlabForm.get('activeFrom').hasError('required') && taxSlabForm.get('activeFrom').touched">
+                    {{'PAYROLLBRANCHCONFIGURATION.ACTIVEFROMREQUIRED' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="activeTo" formControlName="activeTo"
+                  [min]="taxSlabForm.get('activeFrom').value" (click)="activeTo.open();checkValidations();"
+                  placeholder="{{ 'TAXSLABS.ACTIVETO' | translate }}" (blur)="checkValidations()">
+                <mat-datepicker-toggle matSuffix [for]="activeTo"></mat-datepicker-toggle>
+                <mat-datepicker #activeTo></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="minAge" placeholder="{{ 'TAXSLABS.MINAGE' | translate }}"
+                  (blur)="checkValidations()" (input)="changeAge()">
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <input type="number" matInput formControlName="maxAge" placeholder="{{ 'TAXSLABS.MAXAGE' | translate }}"
+                  (blur)="checkValidations()" (input)="changeAge()">
+              </mat-form-field>
+            </div>
+            <div fxFlex="48"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'TAXSLABS.TAXCALCULATIONTYPE' | translate}}"
+                  formControlName="taxCalculationTypeId" required (selectionChange)="changeTaxCalCulationType()">
+                  <mat-option *ngFor="let taxCalculationType of taxCalCulationTypesWithCountry"
+                    [value]="taxCalculationType.taxCalculationTypeId">
+                    {{ taxCalculationType.taxCalculationTypeName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="taxSlabForm.get('taxCalculationTypeId').hasError('required') && taxSlabForm.get('taxCalculationTypeId').touched">
+                  {{ 'TAXSLABS.PLEASESELECTTAXCALCULATIONTYPE' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxLayout="row" class="mt-1" fxLayoutGap="10px" fxLayout.xs="column" fxLayoutGap.xs="0px"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <p class="create-text-wrap">{{ 'TAXSLABS.GENDER' | translate }}: </p>
+              <mat-radio-group formControlName="forMale">
+                <mat-radio-button class="mr-1" value="true">{{ 'TAXSLABS.MALE' | translate }}</mat-radio-button>
+                <mat-radio-button class="mr-1" value="false">{{ 'TAXSLABS.FEMALE' | translate }}</mat-radio-button>
+              </mat-radio-group>
+            </div>
+            <div fxFlex="24" class="mt-1"
+              *ngIf="taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0">
+              <mat-checkbox mat-primary formControlName="handicapped" (change)="changeHandicaped()">
+                {{ 'TAXSLABS.ISHANDICAPPED' | translate }}
+              </mat-checkbox>
+            </div>
+            <div fxFlex="24" class="mt-1"
+              *ngIf="(taxSlabForm.get('parentId').value == null || taxSlabForm.get('parentId').value == 0) && showIsFlate">
+              <mat-checkbox formControlName="isFlatRate">{{ 'TAXSLABS.ISFLATERATE' | translate }}
+              </mat-checkbox>
+            </div>
+
+            <div fxFlex="90">
+              <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+            </div>
+          </div>
+          <div class="mt-1 text-center">
+            <button mat-raised-button color="primary" class="mr-1 mb-1"
+              [disabled]="!taxSlabForm.valid || isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertTaxSlabsPopup(formDirective)" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+  <!--Delete PayGrade dialog-->
+  <sat-popover backdropClass="backdrop-color" #deletePayGradeePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchived"> {{ 'TAXSLABS.DELETETAXSLAB' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="isArchived"> {{ 'TAXSLABS.UNARCHIVETAXSLAB' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchived">
+          {{ 'TAXSLABS.ARCHIVETAXSLABTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchived">
+          {{ 'TAXSLABS.UNARCHIVETAXSLABTEXT' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteTaxSlab();" *ngIf="!isArchived">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+            (click)="deleteTaxSlab();" *ngIf="isArchived">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteTaxSlabDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!--Delete PayGrade dialog-->
+</div>
+<app-common-message-box *ngIf="!(canAccess_feature_TaxSlabs)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

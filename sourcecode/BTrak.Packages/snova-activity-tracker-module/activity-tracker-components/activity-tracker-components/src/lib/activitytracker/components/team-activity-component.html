@@ -1,0 +1,109 @@
+<div class="full-height">
+    <div class="p-0 canteen-manage m-0">
+        <div class="full-width data-table-header" style="background-color: #00675b;color: white;">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05 tracker-helper-icon" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow" matTooltip="{{'SUMMARYPAGE.TIMEPRODUCTIVITY' | translate}}">
+                        {{'SUMMARYPAGE.TIMEPRODUCTIVITY' | translate}}</span>
+                    <fa-icon icon="eye" aria-hidden="true" style="color: white;"
+                        class="goal-cursor mat-color-accent tracker-helper pl-05"
+                        matTooltip="{{'ACTIVITYTRACKERHELPERS.TIMEPRODUCTIVITYHELPER'|translate}}"></fa-icon>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" style="height: 20px;">
+                    <div matTooltip="Switch to donut chart" (click)="switchToAreaChart()" class="cursor-pointer mt-1">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                            viewbox="0 0 512 512" [ngClass]="[this.areaChart == true ? 'tracker-icon' : '']" > 
+                            <g transform="translate(6,7)">
+                                <g transform="scale(0.4)">
+                                    <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="transparent">
+                                    </circle>
+                                    <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent"
+                                        stroke="transparent" stroke-width="7"></circle>
+                                    <circle class="donut-segment visual-svg" cx="21" cy="21" r="15.91549430918954"
+                                        style="stroke: white;" fill="transparent" stroke-width="7"
+                                        stroke-dasharray="50 57" stroke-dashoffset="41" />
+                                    <circle class="donut-segment visual-svg" cx="21" cy="21" r="15.91549430918954"
+                                        style="stroke: white;" fill="transparent" stroke-width="7"
+                                        stroke-dasharray="19 80" stroke-dashoffset="87" />
+                                    <circle class="donut-segment visual-svg" cx="21" cy="21" r="15.91549430918954"
+                                        style="stroke: white;" fill="transparent" stroke-width="7"
+                                        stroke-dasharray="29 70" stroke-dashoffset="65" />
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div matTooltip="Switch to bar chart" (click)="switchToBarChart()" class="cursor-pointer mt-1">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                            viewbox="0 0 512 512" style="
+                        margin: 9px;" [ngClass]="[this.barChart == true ? 'tracker-icon' : '']">
+                            <g transform="translate(1.7,2.7)">
+                                <g transform="scale(0.05)">
+                                    <rect x="51" y="61" width="20" height="338" rx="5px" class="tracker-visual-svg-fill"
+                                        stroke-width="3" />
+                                    <rect x="51" y="388" width="358" height="20" rx="5px"
+                                        class="tracker-visual-svg-fill" stroke-width="3" />
+                                    <g transform="rotate(270 230 220) ">
+                                        <rect x="102" y="107" width="72" height="60" rx="1px"
+                                            class="tracker-visual-svg-fill" stroke-width="3" />
+                                        <rect x="102" y="107" width="152" height="60" rx="1px"
+                                            class="tracker-visual-svg-fill" stroke-width="3" />
+                                        <rect x="102" y="200" width="278" height="60" rx="1px"
+                                            class="tracker-visual-svg-fill" stroke-width="3" />
+                                        <rect x="102" y="297" width="200" height="60" rx="1px"
+                                            class="tracker-visual-svg-fill" stroke-width="3" />
+                                    </g>
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+    <div style="border: 1px solid #e0e0e0;">
+        <div *ngIf="teamActivityData && areaChart && totalCount && !loading">
+            <ejs-accumulationchart id="donut-container" [height]='height' #pie style='display:block'
+                [legendSettings]="legendSettings" [tooltip]="donutTooltip" (textRender)="onTextRender($event)"
+                selectionMode='Point' (load)='load($event)'>
+                <e-accumulation-series-collection>
+                    <e-accumulation-series name='Revenue' [dataSource]='donutData' [palettes]='palette' xName='x'
+                        yName='y' [startAngle]="startAngle" [endAngle]="endAngle" innerRadius="40%"
+                        [dataLabel]="dataLabel"> </e-accumulation-series>
+                </e-accumulation-series-collection>
+            </ejs-accumulationchart>
+        </div>
+
+        <div *ngIf="teamActivityData && barChart && totalCount && !loading">
+            <ejs-chart style='display:block;' [chartArea]='chartArea' align='center' id='chartcontainer'
+                [primaryXAxis]='barChartXAxis' [primaryYAxis]='barChartYAxis' [tooltip]='tooltip' [height]='height'
+                [width]='width' (load)='load($event)' [palettes]='palette'>
+                <e-series-collection>
+                    <e-series [dataSource]='deskTime' type='Column' xName='x' yName='y' columnWidth="1"
+                        name="{{'SUMMARYPAGE.DESKTIME' | translate}}" [cornerRadius]='radius' [marker]='barMarker'>
+                    </e-series>
+                    <e-series [dataSource]='productiveData' type='Column' xName='x' yName='y' columnWidth="1"
+                        name="{{'SUMMARYPAGE.PRODUCTIVETIME' | translate}}" [cornerRadius]='radius'
+                        [marker]='barMarker'> </e-series>
+                    <e-series [dataSource]='unProductiveData' type='Column' xName='x' yName='y' columnWidth="1"
+                        name="{{'SUMMARYPAGE.UNPRODUCTIVETIME' | translate}}" [cornerRadius]='radius'
+                        [marker]='barMarker'> </e-series>
+                    <e-series [dataSource]='neutralData' type='Column' xName='x' yName='y' columnWidth="1"
+                        name="{{'SUMMARYPAGE.NEUTRALTIME' | translate}}" [cornerRadius]='radius' [marker]='barMarker'>
+                    </e-series>
+                </e-series-collection>
+            </ejs-chart>
+        </div>
+
+        <div fxLayoutAlign="center center" fxLayout="row" fxFlex *ngIf="!totalCount && !loading" class="no-data"
+            style="height:345px; background-color: #ffffff;">
+            {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+        </div>
+
+        <div *ngIf="loading" style="height:345px; background-color: #ffffff;">
+
+        </div>
+    </div>
+</div>

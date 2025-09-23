@@ -1,0 +1,204 @@
+<mat-card class="p-0 mr-0" fxFlex.gt-sm="600px">
+  <mat-card-title class="text-center">
+    <div class="card-title-text  mat-bg-primary p-05 mb-1">
+      <span *ngIf="!rateTagId">{{'RATETAG.ADDRATETAGTITLE' | translate}}</span>
+      <span *ngIf="rateTagId">{{'RATETAG.EDITRATETAGTITLE' | translate}}</span>
+    </div>
+  </mat-card-title>
+  <mat-card-content class="P-05 ratetag-popup">
+    <form [formGroup]="rateTagForm" #formDirective="ngForm" novalidate
+      (submit)="rateTagForm.valid && upsertRateTag(formDirective)">
+      <div class="create-ratetag-component card-content p-05">
+        <div class="apps-create-height" id="style-1">
+          <div fxLayout="row wrap" class="mb-1">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="rateTagName" placeholder="{{'RATETAG.RATETAGTITLENAME' | translate}}"
+                  required>
+                <mat-error *ngIf="rateTagForm.get('rateTagName').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('rateTagName').hasError('required') && rateTagForm.get('rateTagName').touched">
+                  {{'RATETAG.REQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+              <mat-form-field class="full-width tags-popup ratetagfor-margin">
+                <mat-chip-list #tagsList>
+                  <mat-chip *ngFor="let tags of rateInputTags" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeTags(tags)" class="userstory-tags">
+                    <span class="hide-content-overflow" matTooltip="{{tags}}" matTooltipClass="tooltip-overflow">
+                      {{tags.rateTagForName}}
+                    </span>
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                  </mat-chip>
+                  <input placeholder="{{'RATETAG.RATETAGTYPE' | translate}}*" [matAutocomplete]="auto" #tagInput
+                    [matChipInputFor]="tagsList" [(ngModel)]="tag" formControlName="rateTagForId"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes" required
+                    (input)="searchRateTagForTags($event)">
+                </mat-chip-list>
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedTagValue($event)">
+                  <mat-option *ngFor="let tags of rateTagForNamesList" [value]="tags">
+                    {{tags.rateTagForName}}
+                  </mat-option>
+                </mat-autocomplete>
+                <mat-error
+                  *ngIf="rateTagForm.get('rateTagForId').hasError('required') && rateTagForm.get('rateTagForId').touched">
+                  {{'RATETAG.PLEASESELECTONERATETAG' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mb-1">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHour" placeholder="{{'RATETAG.RATEPERHOUR' | translate}}"
+                  min="0" (keypress)="omitSpecialChar($event)" (change)="setValidator(false)" type="number"
+                  [required]="!isIndividual">
+                <mat-error *ngIf="rateTagForm.get('ratePerHour').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHour').hasError('required') && rateTagForm.get('ratePerHour').touched">
+                  {{'RATETAG.RATEPERHOURREQUIREDERROR' | translate}}
+                </mat-error>
+                <mat-error *ngIf="rateTagForm.get('ratePerHour').hasError('pattern')">
+                  {{'RATETAG.RATEPERHOURCANNOTHAVEMORETHANTWODECIMAL' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourMon" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURMON' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourMon').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourMon').hasError('required') && rateTagForm.get('ratePerHourMon').touched">
+                  {{'RATETAG.RATEPERHOURMONREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mb-1">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourTue" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURTUE' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourTue').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourTue').hasError('required') && rateTagForm.get('ratePerHourTue').touched">
+                  {{'RATETAG.RATEPERHOURTUEREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourWed" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURWED' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourWed').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourWed').hasError('required') && rateTagForm.get('ratePerHourWed').touched">
+                  {{'RATETAG.RATEPERHOURWEDREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mb-1">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourThu" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURTHU' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourThu').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourThu').hasError('required') && rateTagForm.get('ratePerHourThu').touched">
+                  {{'RATETAG.RATEPERHOURTHUREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourFri" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURFRI' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourFri').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourFri').hasError('required') && rateTagForm.get('ratePerHourFri').touched">
+                  {{'RATETAG.RATEPERHOURFRIREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="mb-1">
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourSat" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURSAT' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourSat').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourSat').hasError('required') && rateTagForm.get('ratePerHourSat').touched">
+                  {{'RATETAG.RATEPERHOURSATREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <input matInput formControlName="ratePerHourSun" (change)="setValidator(true)" min="0"
+                  [required]="isIndividual" type="number" placeholder="{{'RATETAG.RATEPERHOURSUN' | translate}}">
+                <mat-error *ngIf="rateTagForm.get('ratePerHourSun').hasError('maxlength')">
+                  {{'RATETAG.MAXLENGTHERROR' | translate}}</mat-error>
+                <mat-error
+                  *ngIf="rateTagForm.get('ratePerHourSun').hasError('required') && rateTagForm.get('ratePerHourSun').touched">
+                  {{'RATETAG.RATEPERHOURSUNREQUIREDERROR' | translate}}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48.5" class="mr-1">
+              <mat-form-field class="full-width">
+                <input formControlName="minTime" placeholder="{{'RATETAGALLOWANCETIME.MINTIME' | translate}}" matInput
+                  type="number" min="0" (keypress)="omitSpecialChar($event)" (input)="minCheck()"
+                  [required]="isMinRequired">
+              </mat-form-field>
+              <mat-error class="P-06"
+                *ngIf="rateTagForm.get('minTime').hasError('required') && rateTagForm.get('minTime').touched">
+                {{ 'PAYROLLBRANCHCONFIGURATION.MINTIMEREQUIRED' | translate }}
+              </mat-error>
+              <mat-error class="P-06"
+                *ngIf="(rateTagForm.get('minTime').value > rateTagForm.get('maxTime').value && rateTagForm.get('maxTime').value != null)">
+                {{ 'RATETAGALLOWANCETIME.MINMAXCHECK' | translate }}
+              </mat-error>
+            </div>
+            <div fxFlex="48.5">
+              <mat-form-field class="full-width">
+                <input formControlName="maxTime" placeholder="{{'RATETAGALLOWANCETIME.MAXTIME' | translate}}" matInput
+                  type="number" min="0" (keypress)="omitSpecialChar($event)" (input)="minCheck()"
+                  [required]="isMaxRequired" />
+              </mat-form-field>
+              <mat-error class="P-06"
+                *ngIf="rateTagForm.get('maxTime').hasError('required') && rateTagForm.get('maxTime').touched">
+                {{ 'PAYROLLBRANCHCONFIGURATION.MAXTIMEREQUIRED' | translate }}
+              </mat-error>
+            </div>
+          </div>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        </div>
+        <div class="mt-1  text-center">
+          <button mat-raised-button type="submit" color="primary" class="mr-1"
+            [disabled]="!rateTagForm.valid || isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closePopover(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

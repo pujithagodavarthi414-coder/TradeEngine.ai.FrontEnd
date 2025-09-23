@@ -1,0 +1,81 @@
+<mat-card class="p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+    </mat-progress-bar>
+    <div *ngIf="!signatureEdit">
+        <div class="m-1" *ngIf="(signatureUrl == null)">
+            {{ 'SIGNATURE.NOSIGNATUREFOUND' | translate }}
+        </div>
+        <div *ngIf="!(signatureUrl == null)">
+            <img [src]="(signatureUrl | fetchSizedAndCachedImage: '850':'250')" alt="Signature" height="250"
+                width="862">
+        </div>
+        <div>
+            <div *ngIf="(canEdit && !(signatureUrl == null))" class="pull-right signature-button">
+                <button mat-button mat-raised-button class="mat-color-accent cursor-pointer" color="primary"
+                    (click)="editSignature()" type="button">
+                    {{ 'SIGNATURE.MODIFYSIGNATURE' | translate }}
+                </button>
+            </div>
+            <div *ngIf="(canDelete && !canEdit && !(signatureUrl == null))" class="pull-right signature-button">
+                <button mat-button mat-raised-button class="mat-color-accent cursor-pointer" color="primary"
+                    [satPopoverAnchorFor]="deleteSignaturePopover" #deleteSignaturePopup="satPopoverAnchor"
+                    (click)="deleteSignaturePopUpOpen(deleteSignaturePopup)" type="button">
+                    {{ 'SIGNATURE.CLEARSIGNATURE' | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="signatureEdit">
+        <form [formGroup]="form" (submit)="submit()" (window:resize)="beResponsive()">
+            <div class="sig-container" #sigContainer>
+                <div fxLayout="row">
+                    <app-component-signature-base formControlName="signatureField"></app-component-signature-base>
+                </div>
+            </div>
+            <div>
+                <div *ngIf="!(signatureUrl == null)" class="pull-right signature-button">
+                    <button class="cursor-pointer" mat-button mat-raised-button (click)="cancel()" type="submit">
+                        {{ 'CANCEL' | translate }}
+                    </button> </div>
+                <div *ngIf="!(isAnyOperationIsInprogress || !form.valid)" class="pull-right signature-button">
+                    <button class="cursor-pointer" mat-button mat-raised-button (click)="clear()" type="button">
+                        {{ 'SIGNATURE.CLEARSIGNATURE' | translate }}
+                    </button> </div>
+                <div class="pull-right signature-button">
+                    <button class="cursor-pointer" color="primary" mat-button mat-raised-button (click)="submit()"
+                        type="submit" [disabled]="isAnyOperationIsInprogress || !form.valid">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        {{ 'SAVE' | translate }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</mat-card>
+
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deleteSignaturePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                {{ 'SIGNATURE.CLEARSIGNATURE' | translate }} ?</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'SIGNATURE.SIGNATURECLEARTEXT' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteSignature();">
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteSignatureDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

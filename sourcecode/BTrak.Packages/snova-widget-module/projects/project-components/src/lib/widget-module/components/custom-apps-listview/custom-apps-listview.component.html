@@ -1,0 +1,111 @@
+<div fxLayout="row" fxLayout.lt-md="column" class="allGoals-page splitter" fxLayoutGap="5px"
+  [ngClass]="fromProductivity ? 'custom-apps-listview-productivity-height':'custom-apps-listview-height'">
+  <div fxFlex="27px" class="ml-05 mt-03" *ngIf="!isTreeviewPinned">
+    <div class='custom-label veritcal-label'>
+      <div class='custom-label-content' (click)="pinTreeView()">
+        {{ 'APP.APPS' | translate }} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': !isTreeviewPinned}">
+          </fa-icon>
+        </span>
+      </div>
+    </div>
+  </div>
+  <as-split direction="horizontal" gutterSize="5">
+    <as-split-area *ngIf="isTreeviewPinned" order="1" maxSize="40" minSize="20" size="20" style="overflow: hidden;">
+      <div>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadWorkspace">
+        </mat-progress-bar>
+        <mat-card class="p-0" [ngStyle]="{ 'height': isFromProjectReports ? '' : 'calc(100vh - 165px)',
+                'margin': isFromProjectReports ? '0.33333rem' : '0.1rem' }" style="height: calc(100vh - 100px);" fxLayout="column">
+          <span class="appstore-pin-close">
+            <mat-icon class="icon-button cursor-pointer mat-color-accent" (click)="pinTreeView()" aria-hidden="false">
+              push_pin</mat-icon>
+          </span>
+          <!-- <div display="block !important" fxLayoutAlign="end center" class="ml-1 mr-05 searchfieldflex search_goalinput"> -->
+            <mat-form-field fxLayoutAlign="start center" class="ml-1 mr-05 searchfieldflex search_goalinput">
+              <input name="search" class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                (input)="searchWidgets()" [(ngModel)]="searchWidget" autocomplete="off" trim>
+              <span class="linked-userstory-close">
+                <span *ngIf="!searchWidget">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchWidget" class="material-icons icon-button mat-color-accent" aria-hidden="false"
+                  (click)="closeWidgetsSearch()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+            </mat-form-field>
+          <!-- </div> -->
+          <div class="goalList-popup p-0 custom-box">
+            <mat-card-content class="p-0 listof_roles roles-list custom-list tag-card" id="style-1">
+              <mat-list class="compact-list" *ngIf="!loadWorkspace">
+                <div [dragula]='"widgets"' [dragulaModel]='widgets'>
+                  <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+                    *ngFor="let w of widgets" [ngClass]="{ active: selectedWidget == w }"
+                    [attr.data-widgetid]="w.dashboardId" (click)="selectWidget(w)">
+                    <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center" class="entity-role widget-card">
+                      <span fxFlex class="hide-content-overflow" matTooltipClass="tooltip-overflow"
+                        matTooltip="{{ w.dashboardName ? (w.dashboardName | softLabelsPipe : softLabels | titlecase) : (w.name | softLabelsPipe : softLabels | titlecase) }}">{{w.dashboardName
+                        ? (w.dashboardName | softLabelsPipe : softLabels | titlecase) : (w.name | softLabelsPipe :
+                        softLabels | titlecase)}}</span>
+                      <div class="hide-icons">
+                        <mat-icon
+                          *ngIf="(canAccess_feature_DragApps) && isSinglePage && workspaceId && allowCustomizations"
+                          class="icon-button mat-color-accent" matTooltip="{{'APP.UNINSTALL' | translate}}"
+                          [satPopoverAnchorFor]="deleteAppPopUp" #deleteAppPopover="satPopoverAnchor"
+                          (click)="$event.stopPropagation(); openDeletePopUp(deleteAppPopover,w);">
+                          delete</mat-icon>
+                      </div>
+                      <sat-popover #deleteAppPopUp hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+                        verticalAlign="below" [interactiveClose]="false" horizontalAlign="end">
+                        <mat-card class="p-0">
+                          <mat-card-title class="text-center mat-bg-primary">
+                            <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+                          </mat-card-title>
+                          <mat-card-content>
+                            <div class="card-content mb-1">
+                              {{ 'APP.APPDELETETEXT' | translate }}
+                            </div>
+                            <div class="text-center">
+                              <button class="mr-1" mat-button mat-raised-button color="accent"
+                                [disabled]="disableAppDelete" (click)="removeItem()">
+                                <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'APP.UNINSTALL' | translate }}
+                              </button>
+                              <button mat-button mat-raised-button
+                                (click)="closeDeleteAppPopover();deleteAppPopUp.close()">
+                                <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                              </button>
+                            </div>
+                          </mat-card-content>
+                        </mat-card>
+                      </sat-popover>
+                    </div>
+                  </div>
+                </div>
+              </mat-list>
+              <div *ngIf="(!widgets || !(widgets.length > 0)) && !loadWorkspace"
+                style="text-align: center;padding-top: 10px;">
+                No apps found
+              </div>
+            </mat-card-content>
+          </div>
+        </mat-card>
+      </div>
+    </as-split-area>
+    <as-split-area order="2" minSize="60" size="80" style="overflow: hidden; display: block !important;">
+      <div>
+        <mat-card class="p-0 custom-list-data" [ngStyle]="{ 'height': isFromProjectReports ? 'calc(100vh - 105px)' : 'calc(100vh - 165px)',
+                                            'margin': isFromProjectReports ? '0.33333rem' : '0.1rem' }">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgressForWidget">
+          </mat-progress-bar>
+          <app-widgetsgridster [fromRoute]="true" [isListView]="true" [selectedApps]="selectedWidget"
+            [reloadwidget]="selectedAppRefresh" [selectedWorkspaceId]="workspaceId"
+            [dashboardFilters]="dashboardFilters" [isSinglePage]="isSinglePage"
+            [deletedSelectedWidget]="deletedSelectedWidget" *ngIf="!anyOperationInProgressForWidget && selectedWidget">
+          </app-widgetsgridster>
+          <div *ngIf="(!widgets || !(widgets.length > 0)) && !loadWorkspace && !anyOperationInProgressForWidget"
+            style="text-align: center;padding-top: 10px;">
+            No apps found to display data
+          </div>
+        </mat-card>
+      </div>
+    </as-split-area>
+  </as-split>
+</div>

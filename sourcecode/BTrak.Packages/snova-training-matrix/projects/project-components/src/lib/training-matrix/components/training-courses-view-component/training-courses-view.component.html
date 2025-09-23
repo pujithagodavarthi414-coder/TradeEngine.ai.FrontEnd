@@ -1,0 +1,148 @@
+<div *ngIf="canAccess_feature_ViewTrainingCourses" class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" [matTooltip]="dashboardName" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!canAccess_feature_DragApps">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="searchTrainingCourses();updateTrainingCourseDashboardFilter();">
+                        </mat-slide-toggle>
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <button mat-icon-button matTooltip="{{ 'TRAININGMANAGEMENT.CREATECOURSE' | translate }}"
+                            (click)="openCreateTrainingCourseDialog(null)"
+                            *ngIf="!isArchived && canAccess_feature_AddOrUpdateTrainingCourse">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <div fxFlex="36px" *ngIf="isArchived && !canAccess_feature_AddOrUpdateTrainingCourse">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag grid-table" fxLayout="column">
+        <div>
+            <kendo-grid [data]="trainingCoursesList" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                (dataStateChange)="dataStateChange($event)" [selectable]="true" [loading]="isAnyOperationIsInprogress"
+                [scrollable]="true">
+                <kendo-grid-column width="150" field="courseName" title="{{'TRAININGMANAGEMENT.COURSENAME' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div [matTooltip]="dataItem.courseName" class="cursor-pointer">
+                            {{ dataItem.courseName }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="150" field="courseDescription" title="{{'TRAININGMANAGEMENT.COURSEDESCRIPTION' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div [matTooltip]="dataItem.courseDescription" class="cursor-pointer">{{ dataItem.courseDescription }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column width="150" field="validityInMonths" title="{{'TRAININGMANAGEMENT.VALIDITYINMONTHS' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div [matTooltip]="dataItem.validityInMonths" class="cursor-pointer">{{ dataItem.validityInMonths}}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-command-column width="150" title="{{'ACTIONS' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <button *ngIf="!isArchived && canAccess_feature_AddOrUpdateTrainingCourse"
+                            class="text-center" title="{{ 'TRAININGMANAGEMENT.EDITCOURSE' | translate }}"
+                            mat-icon-button (click)="openCreateTrainingCourseDialog(dataItem);$event.stopPropagation();">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" *ngIf="canAccess_feature_ArchiveTrainingCourse"
+                            [matTooltip]="(dataItem.isArchived == true) ? ('TRAININGMANAGEMENT.UNARCHIVETRAININGCOURSE' | translate) : ('TRAININGMANAGEMENT.ARCHIVETRAININGCOURSE' | translate)"
+                            mat-icon-button [satPopoverAnchorFor]="archiveTrainingCoursePopover"
+                            #archiveTrainingCoursePopUp="satPopoverAnchor" style="top: 3px;"
+                            (click)="archiveTrainingCoursePopupOpen(dataItem,archiveTrainingCoursePopUp);$event.stopPropagation();">
+                            <span class="vertical-baseline" *ngIf="!dataItem.isArchived">
+                                <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>    
+                            </span>
+                            <span class="vertical-baseline" *ngIf="dataItem.isArchived">
+                                <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+                            </span>
+                        </button>
+                    </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #archiveTrainingCoursePopover hasBackdrop backdropClass="backdrop-color"
+        verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1" *ngIf="isArchived">
+                    {{'TRAININGMANAGEMENT.UNARCHIVETRAININGCOURSE' | translate}}
+                </div>
+                <div class="card-title-text mb-1" *ngIf="!isArchived">
+                    {{'TRAININGMANAGEMENT.ARCHIVETRAININGCOURSE' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <div class="card-content mb-1" *ngIf="isArchived">
+                    {{'TRAININGMANAGEMENT.UNARCHIVETRAININGCOURSETEXT' | translate}}
+                </div>
+                <div class="card-content mb-1" *ngIf="!isArchived">
+                    {{'TRAININGMANAGEMENT.ARCHIVETRAININGCOURSETEXT' | translate}}
+                </div>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isArchiveInProgress" (click)="archiveOrUnArchiveTrainingCourse();">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isArchiveInProgress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeArchiveTrainingCourseDialog();"
+                        [disabled]="isArchiveInProgress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<ng-template #addTrainingCourse let-data>
+    <custom-app-add-new-training-course [data]=[data]></custom-app-add-new-training-course>
+</ng-template>
+
+<app-common-message-box *ngIf="!canAccess_feature_ViewTrainingCourses"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

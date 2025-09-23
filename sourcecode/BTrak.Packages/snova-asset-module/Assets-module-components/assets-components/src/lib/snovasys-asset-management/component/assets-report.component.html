@@ -1,0 +1,154 @@
+<mat-card class="p-0">
+  <mat-card-title>
+    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="0" fxLayoutGap.xs="10px">
+      <div fxFlex fxLayoutAlign="start center">
+        <button class="text-center" (click)="showFilters()"  type="button"
+          matTooltip="{{'ASSETS.CLICKHERETOFILTERASSETS' | translate}}" mat-icon-button>
+          <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isFiltersVisible ,'mat-color-accent': isFiltersVisible }">
+          </fa-icon>
+        </button>
+      </div>
+      <div fxFill *ngIf="isFiltersVisible">
+        <div class="filter-section">
+          <ul>
+            <li [ngClass]="{ 'active': searchByAssetName }" [satPopoverAnchorFor]="assetNamePopover" hasBackdrop
+              (click)="assetNamePopover.toggle()">
+              <a>
+               <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.ASSETCODE' | translate}}
+              </a>
+              <sat-popover #assetNamePopover verticalAlign="below" [autoFocus]="false" hasBackdrop
+                horizontalAlign="start">
+                <mat-card class="filter-data" fxLayout="row wrap" fxLayoutGap="5px">
+                  <mat-form-field class="full-width" fxFlex>
+                    <input class="search_goal" matInput placeholder="{{'ASSETS.SEARCHBYASSETCODE' | translate}}" [(ngModel)]="searchAssetCode"
+                      (input)="searchByAsset()" />
+                  </mat-form-field>
+                  <span class="close_icon mt-05 mr-05" fxFlex="20px">
+                    <span *ngIf="!searchAssetCode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <mat-icon *ngIf="searchAssetCode" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                      style="cursor:pointer">
+                      close</mat-icon>  
+                  </span>
+                </mat-card>
+              </sat-popover>
+            </li>
+
+            <li [ngClass]="{ 'active': searchByEmployee }" [satPopoverAnchorFor]="employeePopover" hasBackdrop
+              (click)="employeePopover.toggle()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.EMPLOYEE' | translate}}
+              </a>
+              <sat-popover #employeePopover verticalAlign="below" [autoFocus]="false" hasBackdrop
+                horizontalAlign="start">
+                <mat-card class="filter-data">{{'ASSETS.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}
+                  <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'ASSETS.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}"
+                      (selectionChange)="employeeSelected($event.value)">
+                      <mat-option value="all">All</mat-option>
+                      <mat-option [value]="emp.id" *ngFor="let emp of (selectUserDropDownListData$ | async)">
+                          <app-avatar class="employee_img" *ngIf="!emp.profileImage" [name]="emp.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                          src="{{ emp.profileImage }}" />{{ emp.fullName }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </mat-card>
+              </sat-popover>
+            </li>
+
+            <li [ngClass]="{ 'active': searchByBranch }" [satPopoverAnchorFor]="branchPopover"
+              (click)="branchPopover.toggle()">
+              <a>
+                <mat-icon>arrow_drop_down</mat-icon>{{'ASSETS.SELECTBRANCH' | translate}}
+              </a>
+              <sat-popover #branchPopover [autoFocus]="false" verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+                  <mat-form-field class="full-width">
+                    <mat-select placeholder="{{'ASSETS.SELECTBRANCH' | translate}}"
+                      (selectionChange)="branchSelected($event.value)">
+                      <mat-option value="all">All</mat-option>
+                      <mat-option [value]="branch.branchId" *ngFor="let branch of (branchList$ | async)">
+                        {{ branch.branchName }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </mat-card>
+              </sat-popover>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </mat-card-title>
+  <mat-divider></mat-divider>
+</mat-card>
+
+<div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0" *ngIf="!(assetsListGridSpinner$ | async) && isAssetsExist">
+  <div fxFlex="25" fxFlex.xs="100" fxFlex.sm="50" fxFlex.md="50" fxFlex.lg="33.3"
+  *ngFor="let employee of (assetsAllocatedToEmployeesList)">
+    <mat-card class="project-card p-05">
+      <div fxLayout="row wrap" fxLayoutGap="5px" (click)="onSelect(employee.assetId)">
+        <div fxFlex="80px">
+          <app-avatar [name]="employee.assetName | removeSpecialCharacters" [isRound]="false" size="80">
+          </app-avatar>
+        </div>
+        <div fxFlex="calc(100% - 100px)" class="asset-content-hide">
+          <div fxLayout="row wrap" fxLayoutGap="2px">
+            <div fxFlex fxFlex="79" matTooltip="{{ employee.assetName }}">
+              <a href="javascript:;" class="mat-body-1">{{employee.assetName}}</a>
+            </div>
+          </div>
+          <p class="mat-small" matTooltip="{{ employee.assignedToEmployeeName }}">
+            {{'ASSETS.ASSIGNEDTO' | translate}} <strong>{{ employee.assignedToEmployeeName }}</strong>
+          </p>
+          <p class="mat-small" matTooltip="{{ employee.approvedByEmployeeName }}">
+            {{'ASSETS.APPROVEDBY' | translate}} <strong>{{ employee.approvedByEmployeeName }}</strong>
+          </p>
+          <p class="mat-small">
+            {{'ASSETS.ASSIGNEDON' | translate}}
+            <strong>{{employee.assignedDateFrom | date: "dd-MMM-yyyy"}}</strong>
+          </p>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>
+
+<app-common-message-box *ngIf="!isAssetsExist"
+  textToDisplay="{{ 'NODATAFOUND' | translate }}">
+</app-common-message-box>
+
+<div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="0" *ngIf="(assetsListGridSpinner$ | async)">
+  <div fxFlex="25" fxFlex.xs="100" fxFlex.sm="50" fxFlex.md="50" fxFlex.lg="33.3"
+    *ngFor="let employee of [1, 2, 3, 4, 5, 6]">
+    <mat-card class="project-card p-05">
+      <div fxLayout="row wrap" fxLayoutGap="5px">
+        <div fxFlex="80px" class="img-bg loading-bg">
+          <div class="img"></div>
+        </div>
+        <div fxFlex="calc(100% - 100px)">
+          <div fxLayout="column" fxLayoutGap="5px">
+            <div fxFlex="25">
+              <div fxFlex="50">
+                <p class="mat-body-1 empty-text loading-bg"></p>
+              </div>
+            </div>
+            <div fxFlex="25">
+              <div fxFlex="70">
+                <p class="mat-body-1 empty-text loading-bg"></p>
+              </div>
+            </div>
+            <div fxFlex="25">
+              <div fxFlex="70">
+                <p class="mat-body-1 empty-text loading-bg"></p>
+              </div>
+            </div>
+            <div fxFlex="25">
+              <div fxFlex="90">
+                <p class="mat-body-1 empty-text loading-bg"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>

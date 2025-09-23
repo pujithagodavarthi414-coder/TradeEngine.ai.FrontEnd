@@ -1,0 +1,263 @@
+<ng-container>
+  <!-- <div
+    *ngIf="((rolesLoading$ | async) ||(branchesLoading$ | async) ||(jobCategoriesLoading$ | async) ||(shiftTimingsLoading$ | async) ||(currenciesLoading$ | async) 
+          ||(timeZonesLoading$ | async) ||(departmentsLoading$ | async) || (designationsLoading$ | async) || (employmentTypeLoading$ | async) ||  entitiesLoading)"
+    class="k-i-loading"></div> -->
+  <mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05" fxLayout="column">
+    <mat-card-title class="full-width data-table-header">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+          matTooltip=" {{'SOFTLABELS.EMPLOYEESLABEL' | translate | softLabelsPipe : softLabels | titlecase}}">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{'SOFTLABELS.EMPLOYEESLABEL' | translate | softLabelsPipe : softLabels | titlecase}} </span>
+        </div>
+        <!-- <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button type="button" matTooltip="Leaves" [routerLink]="['/leavemanagement/waitingforapproval']">
+            <fa-icon class="icon-button mat-color-accent" icon="calendar"></fa-icon>
+          </button>
+        </div> -->
+
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="(canAccess_feature_UserUpload)">
+          
+          <button mat-icon-button type="button">
+            <fa-icon class="mat-color-accent icon-button"
+              matTooltip="{{'HRMANAGAMENT.UPLOADEMPLOYEE' | translate | softLabelsPipe : softLabels}}" icon="upload"
+              (click)="fileInput.click()">
+              <input type="file" id="file" (change)="uploadEventHandler($event.target.files,$event)" #fileInput>
+            </fa-icon>
+          </button>
+          <button mat-icon-button type="button">
+            <fa-icon class="icon-button mat-color-accent" icon="download"
+              matTooltip="{{'DOCUMENTMANAGEMENT.DOWNLOADFILE' | translate}}" (click)="downloadFile();"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'APP.EXPORTDATATOEXCEL' | translate}}" (click)="exportToExcel()">
+            <fa-icon class="filter mat-color-accent" icon="file-excel">
+        </fa-icon>
+      </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'DOWNLOADCSV' | translate}}" (click)="exportToCsv()">
+            <fa-icon class="filter mat-color-accent" icon="file-csv">
+        </fa-icon>
+      </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+            <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center">
+          <button type="submit" mat-icon-button [satPopoverAnchorFor]="filters" (click)="filters.toggle()"
+            matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+            <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxLayoutAlign="end center" *ngIf="(canAccess_feature_ApproveOrRejectLeave)">
+          <button mat-icon-button="" type="button" class="mat-icon-button">
+            <fa-icon class="mat-color-accent icon-button" matTooltip="{{'HRMANAGAMENT.LEAVES' | translate}}" icon="calendar"
+              (click)="navigateToLeaves()"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="(canAccess_feature_CanEditOtherEmployeeDetails)">
+          <button type="submit" mat-icon-button (click)="addEmployeeDetails()"
+            matTooltip="{{ 'HRMANAGAMENT.ADDEMPLOYEE' | translate | softLabelsPipe : softLabels }}">
+            <fa-icon icon="plus" class="mat-color-accent icon-button">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="(canAccess_feature_CanEditOtherEmployeeDetails)">
+          <button type="submit" mat-icon-button (click)="createOrEditForm()"
+            matTooltip="{{ 'HRMANAGAMENT.EDITCONFIGURATION' | translate | softLabelsPipe : softLabels }}">
+            <fa-icon icon="edit" class="mat-color-accent icon-button">
+            </fa-icon>
+          </button>
+      </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+    <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchText">
+        <b>{{'HRMANAGAMENT.NAME' | translate}}:&nbsp;</b>
+        {{ searchText }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchEmail">
+        <b>{{'HRMANAGAMENT.EMAIL' | translate}}:&nbsp;</b>
+        {{ searchEmail }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeEmailSearch()">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="selectedStatusId">
+        <b>{{'HRMANAGAMENT.USERRSTATUS' | translate}}:&nbsp;</b>
+        {{ selectedStatusId }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByActiveStatuses('Active')">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="branchName">
+        <b>{{'HRMANAGAMENT.ENTITY' | translate}}:&nbsp;</b>
+        {{ branchName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByEntityId('all',null)">
+        </fa-icon>
+      </mat-chip>
+      
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="designationName">
+        <b>{{'HRMANAGAMENT.DESIGNATION' | translate}}:&nbsp;</b>
+        {{ designationName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByDesignation('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="employeeStatusName">
+        <b>{{'HRMANAGAMENT.EMPLOYEESTATUS' | translate}}:&nbsp;</b>
+        {{ employeeStatusName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+          (click)="searchByEmploymentStatus('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="departmentName">
+        <b>{{'HRMANAGAMENT.DEPARTMENT' | translate}}:&nbsp;</b>
+        {{ departmentName }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="searchByDepartment('all',null)">
+        </fa-icon>
+      </mat-chip>
+      <mat-chip disableRipple matRipple class="mr-08" *ngIf="searchLineManager">
+        <b>{{'HRMANAGAMENT.LINEMANAGER' | translate}}:&nbsp;</b>
+        {{ searchLineManager }}
+        <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeSearchReportTo()">
+        </fa-icon>
+      </mat-chip>
+    </div>
+  </mat-card>
+  <!-- <app-employee-generic-application></app-employee-generic-application> -->
+  <app-hr-component-employeeList [employeeSearchResultData]="employeeSearchResultData" [downloadExcel]="downloadExcel" [downloadCsv]="downloadCsv" (downloadExcelComplete)="downloadExcelComplete()" [updatedFieldCongiguration]="updatedFieldCongiguration"></app-hr-component-employeeList>
+</ng-container>
+<!-- <app-common-message-box *ngIf="!(canAccess_feature_ViewAllEmployees)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box> -->
+
+<sat-popover #filters hasBackdrop verticalAlign="below">
+  <mat-card class="filter-data p-03 mat-filter" (click)="$event.stopPropagation()">
+    <div fxLayout="row">
+      <mat-form-field class="full-width">
+        <input class="search_goal" matInput
+          placeholder="{{'HRMANAGAMENT.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+          [(ngModel)]="searchText" (input)="search()">
+      </mat-form-field>
+      <span class="close_icon mr-05">
+        <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false"
+          (click)="$event.stopPropagation;closeSearch()" style="cursor:pointer">
+          close</mat-icon>
+      </span>
+    </div>
+    <div fxLayout="row">
+      <mat-form-field class="full-width">
+        <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}}"
+          [(ngModel)]="searchEmail" (input)="searchByEmail()">
+      </mat-form-field>
+      <span class="close_icon mr-05 mat-icon-position" style="top: 80px !important;">
+        <span *ngIf="!searchEmail">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <mat-icon *ngIf="searchEmail" class="icon-button cursor-pointer" aria-hidden="false"
+          (click)="closeEmailSearch()" style="cursor:pointer">
+          close</mat-icon>
+      </span>
+    </div>
+    <!-- <mat-form-field class="full-width">
+      <mat-label>{{'HRMANAGAMENT.SELECTBRANCH' | translate}}</mat-label>
+      <mat-select (selectionChange)="searchByBranch($event.value, $event)" [(ngModel)]="selectedBranchId">
+        <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+        <mat-option *ngFor="let branch of branchList$ | async" [value]="branch.branchId">
+          {{branch.branchName}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field> -->
+    <mat-form-field class="full-width">
+      <mat-label>{{'HRMANAGAMENT.SELECTSTATUS' | translate}}</mat-label>
+      <mat-select (selectionChange)="searchByActiveStatus($event.value)" [(value)]="selectedStatusId">
+        <mat-option value="All">Both</mat-option>
+        <mat-option value="Active">Active</mat-option>
+        <mat-option value="Inactive">Inactive</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+      <mat-label>{{'HRMANAGAMENT.ENTITY' | translate}}</mat-label>
+      <mat-select (selectionChange)="searchByEntityId($event.value, $event)" [(ngModel)]="selectedEntityId">
+        <mat-option *ngFor="let entity of entities" [value]="entity.id">
+          {{entity.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>{{'HRMANAGAMENT.SELECTDESIGNATION' | translate}}</mat-label>
+      <mat-select (selectionChange)="searchByDesignation($event.value, $event)" [(ngModel)]="selectedDesignationId">
+        <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+        <mat-option *ngFor="let designation of selectDesignationDropDownListData$ | async"
+          [value]="designation.designationId">{{designation.designationName}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>{{'HRMANAGAMENT.SELECTEMPLOYEESTATUS' | translate | softLabelsPipe : softLabels}}</mat-label>
+      <mat-select (selectionChange)="searchByEmploymentStatus($event.value, $event)"
+        [(ngModel)]="selectedEmploymentStatus">
+        <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+        <mat-option *ngFor="let employmentStatus of selectEmploymentStatusDropDownListData$ | async"
+          [value]="employmentStatus.employmentStatusId">{{employmentStatus.employmentStatusName}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>{{'HRMANAGAMENT.SELECTDEPARTMENT' | translate}}</mat-label>
+      <mat-select (selectionChange)="searchByDepartment($event.value, $event)" [(ngModel)]="selectedDepartmentId">
+        <mat-option value="all">{{'ASSETS.ALL' | translate}}</mat-option>
+        <mat-option *ngFor="let department of selectDepartmentDropDownListData$ | async"
+          [value]="department.departmentId">
+          {{department.departmentName}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div fxLayout="row">
+      <mat-form-field class="full-width">
+        <input type="text" placeholder="{{'HRMANAGAMENT.SELECTLINEMANAGER' | translate}}" matInput
+          [(ngModel)]="searchLineManager" (input)="searchByLineManager()" [matAutocomplete]="auto">
+        <i class="fa fa-spin fa-spinner custom-auto-spinner" *ngIf="operationInProgress"></i>
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+          (optionSelected)='selectedLineManagerId($event.option.value)'>
+          <mat-option *ngFor="let emp of employeeListDataDetails" [value]="emp.employeeId">
+            <app-avatar class="employee_img" *ngIf="!emp.profileImage" [name]="emp.userName | removeSpecialCharacters"
+              [isRound]="true" size="30">
+            </app-avatar>
+            <img class="employee_img" *ngIf="emp.profileImage"
+              [src]="emp.profileImage | fetchSizedAndCachedImage: '40':''">{{emp.userName}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      <span class="close_icon mat-icon-position" style="top: 9px !important;padding-left: 20px;"
+        *ngIf="searchLineManager && !operationInProgress">
+        <span *ngIf="!searchLineManager">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <mat-icon *ngIf="searchLineManager" class="icon-button custom-auto-close" aria-hidden="false"
+          (click)="closeSearchReportTo()" style="cursor:pointer">
+          close</mat-icon>
+      </span>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<!-- <sat-popover #addEmployeePopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <div *ngIf="popUpOpen">
+    <app-hr-create-employee-component (closePopup)="closeDialog()" [isEmployeeAdd]="addEmployee"></app-hr-create-employee-component>
+  </div>
+</sat-popover> -->
+
+
+<ng-template #formDialogComponent let-data>
+  <app-form-creator [data]=[data]></app-form-creator>
+</ng-template>
+<ng-template #addEmployeePopup let-data>
+  <app-hr-create-employee-component [data]=[data]>
+  </app-hr-create-employee-component>
+</ng-template>

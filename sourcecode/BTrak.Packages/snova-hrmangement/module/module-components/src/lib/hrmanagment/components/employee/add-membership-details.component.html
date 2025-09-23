@@ -1,0 +1,171 @@
+<mat-card-title class="text-center">
+    <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex fxLayoutAlign="center">
+            <span *ngIf="!employeeMembershipDetailsId">{{'EMPLOYEEMEMBERSHIP.ADDMEMBERSHIP' | translate}}</span>
+            <span *ngIf="employeeMembershipDetailsId">{{'EMPLOYEEMEMBERSHIP.EDITMEMBERSHIP' | translate}}</span>
+        </div>
+    </div>
+</mat-card-title>
+<form [formGroup]="employeeMembershipDetailsForm" novalidate #formDirective="ngForm"
+    (submit)="employeeMembershipDetailsForm.valid && saveEmployeeMembershipDetails()">
+    <div class="p-1 apps-create-height">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="nameOfTheCertificate"
+                        placeholder="{{'EMPLOYEEMEMBERSHIP.NAMEOFTHECERTIFICATE' | translate}}" required>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('nameOfTheCertificate').hasError('required') && employeeMembershipDetailsForm.get('nameOfTheCertificate').touched">
+                            {{'EMPLOYEEMEMBERSHIP.PLEASEENTERCERTIFICATENAME' | translate}}</span>
+                        <span *ngIf="employeeMembershipDetailsForm.get('nameOfTheCertificate').hasError('maxlength')">
+                            {{'HRMANAGAMENT.SHOULDNOTEXCEED800CHARACTERS' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="issueCertifyingAuthority"
+                        placeholder="{{'EMPLOYEEMEMBERSHIP.AUTHORITY' | translate}}" required>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('issueCertifyingAuthority').hasError('required') && employeeMembershipDetailsForm.get('issueCertifyingAuthority').touched">
+                            {{'EMPLOYEEMEMBERSHIP.ENTERISSUECERTIFYINGAUTHORITY' | translate}}</span>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('issueCertifyingAuthority').hasError('maxlength')">
+                            {{'HRMANAGAMENT.SHOULDNOTEXCEED800CHARACTERS' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="membershipId"
+                        placeholder="{{'EMPLOYEEMEMBERSHIP.MEMBERSHIP' | translate}}"
+                        (selectionChange)="searchByMembership($event.value)" required>
+                        <mat-option *ngFor="let level of selectMembershipListData$ | async"
+                            [value]="level.membershipId">
+                            {{level.memberShipName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('membershipId').hasError('required') && employeeMembershipDetailsForm.get('membershipId').touched">
+                            {{'EMPLOYEEMEMBERSHIP.PLEASESELECTMEMBERSHIP' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="commenceDate" [matDatepicker]="picker1" (click)="picker1.open()"
+                        placeholder="{{'EMPLOYEEMEMBERSHIP.COMMENCEDDATE' | translate}}" (input)="startDate()"
+                        (dateChange)="startDate()" required [max]="maxDate" [min]="minDate" autocomplete="off">
+                    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                    <mat-datepicker #picker1></mat-datepicker>
+                    <mat-error>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('commenceDate').hasError('required') && employeeMembershipDetailsForm.get('commenceDate').touched">
+                            {{'EMPLOYEEMEMBERSHIP.PLEASESELECTCOMMENCEDATE' | translate}}</span>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('commenceDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                        <span
+                            *ngIf="employeeMembershipDetailsForm.get('commenceDate').hasError('matDatepickerMax')">{{'HRMANAGAMENT.SELECTEDDATESHOULDBELESSTHANTODAYSDATE' | translate}}</span>
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-checkbox mat-primary formControlName="paid" [(ngModel)]="checked" (click)="visibility()">
+                    {{'EMPLOYEEMEMBERSHIP.MEMBERSHIPPAID' | translate}}
+                </mat-checkbox>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+                <mat-checkbox mat-primary formControlName="validity" [(ngModel)]="validity" (click)="visibility()">
+                    {{'EMPLOYEEMEMBERSHIP.VALIDITY' | translate}}
+                </mat-checkbox>
+            </div>
+        </div>
+        <div *ngIf="checked">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="subscriptionId"
+                            placeholder="{{'EMPLOYEEMEMBERSHIP.SUBSCRIPTIONPAIDBY' | translate}}"
+                            (selectionChange)="searchBySubscriptionPaidByOptions($event.value)">
+                            <mat-option *ngFor="let level of selectSubscriptionPaidByOptionsListData$ | async"
+                                [value]="level.subscriptionPaidById">
+                                {{level.subscriptionPaidByName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="currencyId"
+                            placeholder="{{'EMPLOYEEMEMBERSHIP.CURRENCY' | translate}}"
+                            (selectionChange)="searchByCurrency($event.value)">
+                            <mat-option *ngFor="let currency of currencyList$ | async" [value]="currency.currencyId">
+                                {{currency.currencyName}}</mat-option>
+                        </mat-select>
+
+                    </mat-form-field>
+                </div>
+            </div>
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input amountOnly matInput formControlName="subscriptionAmount"
+                            placeholder="{{'EMPLOYEEMEMBERSHIP.SUBSCRIPTIONAMOUNT' | translate}}" autocomplete="off">
+                        <mat-error>
+                            <span *ngIf="employeeMembershipDetailsForm.get('subscriptionAmount').hasError('min')">
+                                {{'EMPLOYEEMEMBERSHIP.ENTERSUBSUBSCRIPTION' | translate}} </span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="validity">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                <div fxFlex="50" fxFlex.xs="100">
+                    <mat-form-field class="full-width">
+                        <input matInput formControlName="renewalDate" [matDatepicker]="picker2" (click)="picker2.open()"
+                            placeholder="{{'EMPLOYEEMEMBERSHIP.RENEWALDATE' | translate}}" [min]="minDateForEndDate"
+                            disabled={{endDateBool}} [readonly]="true" autocomplete="off">
+                        <mat-datepicker-toggle matSuffix [for]="picker2" disabled={{endDateBool}}>
+                        </mat-datepicker-toggle>
+                        <mat-datepicker #picker2></mat-datepicker>
+                    </mat-form-field>
+                </div>
+            </div>
+        </div>
+        <div class="custom-hrm-dropzone">
+            <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                [getFilesByReferenceId]="true" [referenceId]="employeeMembershipDetailsId"
+                [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+                [isToUploadFiles]="isToUploadFiles">
+            </app-dropzone>
+        </div>
+        <!-- <mat-label>{{'USERSTORY.FILEEXTENSIONS' | translate}} :&nbsp;jpg, jpeg, png, pdf</mat-label> -->
+    </div>
+    <div class="mb-1 prl-1" fxLayoutAlign="center center">
+        <button mat-button mat-raised-button type="submit" color="primary" class="mr-1"
+            [disabled]="!employeeMembershipDetailsForm.valid || (upsertEmployeeMembershipDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="upsertEmployeeMembershipDetailsInProgress$ | async">
+            </mat-progress-bar>
+            <span *ngIf="!this.employeeMembershipDetailsId">
+                <fa-icon class="mr-05" icon="save"></fa-icon> {{'SAVE' | translate }}
+            </span>
+            <span *ngIf="this.employeeMembershipDetailsId">
+                <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+            </span>
+        </button>
+        <button mat-button mat-raised-button type="button" (click)="closePopover()"
+            [disabled]="(upsertEmployeeMembershipDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+        </button>
+    </div>
+</form>

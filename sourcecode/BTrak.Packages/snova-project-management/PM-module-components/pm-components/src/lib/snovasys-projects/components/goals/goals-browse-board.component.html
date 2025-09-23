@@ -1,0 +1,255 @@
+<div fxLayout="row" fxLayout.lt-md="column" class="allGoals-page" fxLayoutGap="8px">
+  <div fxFlex="27px" class="ml-05 mt-03" fxHide.lt-md>
+    <div class='custom-label veritcal-label'>
+      <div class='custom-label-content' (click)="getGoalsView()">
+        {{'PROJECTS.GOALS' | translate | softLabelsPipe : softLabels}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isGoal}"> </fa-icon>
+        </span>
+      </div>
+      <div class='custom-label-content' (click)="getSprintsList()"
+        *ngIf=" (canAccess_entityType_feature_ViewSprints) && ((goalSearchCriteria && !goalSearchCriteria.isGoalsPage && isSprintsEnable && (selectedTab == 'active-goals' || selectedTab == 'replan-goals')) || (goalSearchCriteria && goalSearchCriteria.isGoalsPage && isCompanyLevelEnable)) ">
+        {{'SPRINTS.SPRINTS' | translate | softLabelsPipe : softLabels}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isSprint}"> </fa-icon>
+        </span>
+      </div>
+      <div class='custom-label-content' (click)="goToBacklog()"
+        *ngIf=" (canAccess_entityType_feature_ViewGoals) && (selectedTab == 'active-goals')">
+        {{'PROJECTS.GOTOBACKLOG'|translate}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="share"> </fa-icon>
+        </span>
+      </div>
+      <div class='custom-label-content' (click)="goToActive()"
+        *ngIf=" (canAccess_entityType_feature_ViewGoals) && (selectedTab == 'backlog-goals')">
+        {{'PROJECTS.GOTOACTIVE'|translate}} <span>
+          <fa-icon class="ml-02 rotate-icon" icon="share"> </fa-icon>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isSprintsBoard" fxFlex>
+    <app-pm-sprints-browse-board
+      *ngIf="((activeSprintsCount$|async) > 0 && selectedTab == 'active-goals') || ((replanSprintsCount$|async) > 0 && selectedTab == 'replan-goals') || (sprintSearchCriteriaModel.isGoalsPage)  && (canAccess_entityType_feature_ViewSprints)"
+      [sprintSearchCriteriaModel]="sprintSearchCriteriaModel" [goalSearchCriteria]="goalSearchCriteria" [isSprint]="isSprint"></app-pm-sprints-browse-board>
+    <app-common-message-box *ngIf="(replanSprintsCount$|async) == 0  && selectedTab == 'replan-goals'"
+      textToDisplay="{{'PROJECTS.THEREARENOREPLANSPRINTS' |translate}} ">
+    </app-common-message-box>
+
+    <app-common-message-box
+      *ngIf="((activeGoalsCount$ | async) == 0 && selectedTab == 'active-goals' && !isSprintsBoard) "
+      textToDisplay="{{'PROJECTS.DONTHAVEANYGOALSGOTOBACKLOG'|translate  | softLabelsPipe :softLabels}}">
+    </app-common-message-box>
+
+    <app-common-message-box *ngIf="(activeSprintsCount$|async) == 0  && selectedTab == 'active-goals'"
+      textToDisplay="{{'PROJECTS.THEREARENOACTIVESPRINTS' |translate}} ">
+      <ng-template ng-message-tmp>
+        <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary" (click)="goToBacklog()">
+          <fa-icon class="mr-05" icon="external-link-alt"></fa-icon>{{'PROJECTS.GOTOBACKLOG'|translate}}
+        </button>
+      </ng-template>
+    </app-common-message-box>
+
+    <app-common-message-box *ngIf="!(canAccess_entityType_feature_ViewSprints)"
+      textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+    </app-common-message-box>
+  </div>
+
+  <div fxLayout="row wrap" class="full-width mt-05" *ngIf="(anyOperationInProgress$ | async) && isGoal && goalSearchCriteria.isGoalsPage ">
+    <div fxFlex="100" *ngFor="let form of UserstoryLoader(UserstoryLoaderCount).fill(1)">
+      <div fxLayout="row wrap" class="userstory-loader m-0 p-0">
+        <div fxFlex="92" fxFlexOffset="10px">
+          <div fxLayout="row p-05">
+
+            <div fxFlex="39">
+              <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+            </div>
+            <div fxFlex="1" fxFlexOffset="28">
+              <p class="mat-small userstory-emptytext goal-loader-img loading-bg"></p>
+            </div>
+            <div fxFlex="3" fxFlexOffset="3">
+              <p class="mat-small p-05 userstory-emptytext  loading-bg"></p>
+            </div>
+            <div fxFlex="3" fxFlexOffset="3">
+              <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+            </div>
+            <div fxFlexOffset="6" fxFlex="13">
+              <p class="mat-small p-05 userstory-emptytext loading-bg"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div *ngIf="goalsCount > 0">
+    <div fxFlex="100" fxFlex.gt-sm="300px" fxFlex.md="280px" [hidden]="isGoal" class="allgoals-listData"
+      *ngIf="!isSprintsBoard">
+      <div fxLayout="column">
+        <div fxFlexFill>
+          <mat-card class="goalList-popup p-0 custom-box" [ngStyle]="setHeights()">
+            <gc-goal-list fxLayout='column' *ngIf="!fromCustomApp" [goalSearchCriteria]="goalSearchCriteria"
+              [userStoriesCount]="userStoriesCount" [isTestrailEnable]="isTestrailEnable"
+              [isGoalsFiltersVisible]="isFiltersVisible" (selectGoal)="selectGoal($event)"
+              (clearGoalSelection)="clearGoalSelectionHandler()" (getAllGoalsCount)="getGoalsCount($event)"
+              (changeUserStoryGoal)="changeUserStoryGoal($event)">
+              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+            </gc-goal-list>
+            <gc-goal-list fxLayout='column' *ngIf="fromCustomApp && (Idsforgoals != null || Idsforgoals != undefined)" [Ids]="Idsforgoals"
+              [isTestrailEnable]="isTestrailEnable" [goalSearchCriteria]="goalSearchCriteria"
+              [userStoriesCount]="userStoriesCount" [isGoalsFiltersVisible]="isFiltersVisible"
+              (selectGoal)="selectGoal($event)" (clearGoalSelection)="clearGoalSelectionHandler()"
+              (getAllGoalsCount)="getGoalsCount($event)" (changeUserStoryGoal)="changeUserStoryGoal($event)">
+              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+            </gc-goal-list>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div fxFlex="100" fxFlex.gt-sm="calc(100% - 350px)" fxFlex.md="calc(100% - 330px)"
+    *ngIf="goal && !isSprintsBoard && goalsCount > 0" [ngStyle]="setHeights()">
+    <as-split direction="horizontal" unit="percent" gutterSize="5">
+      <as-split-area size="62" minSize="40" [ngStyle]="{ 'overflow': goalSearchCriteria.isGoalsPage ? 'hidden' : ''}">
+        <div *ngIf="!showReportsBoard">
+          <app-pm-goal-board-type-api [goal]="goal"
+            *ngIf="!isTheBoardLayoutKanban && isBoardTypeForApi && !isTheBoardLayoutReports"
+            [isTheBoardLayoutKanban]="isTheBoardLayoutKanban">
+          </app-pm-goal-board-type-api>
+          <app-sprint-userstories-list *ngIf="isSprintsView" [goal]="goal" [isSprintsEnable]="isSprintsEnable"
+            [isGoalsPage]="goalSearchCriteria.isGoalsPage" [userStorySearchCriteria]="userStorySearchCriteria"
+            (selectUserStory)="selectUserStory($event)">
+          </app-sprint-userstories-list>
+          <gc-userstory-list [goal]="goal" [userStorySearchCriteria]="userStorySearchCriteria"
+            (selectUserStory)="selectUserStory($event);" [selectedTab]="selectedTab" 
+            *ngIf="!isTheBoardLayoutKanban && !isBoardTypeForApi && !showReportsBoard && !showCalendarView && !isSprintsView && !showDocuments && !showEmployeeTaskBoard && userStorySearchCriteria"
+            (eventClicked)="afterClicked($event)" (reportsClicked)="reportsafterClicked($event)"
+            [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" [isGoalsFiltersVisible]="isFiltersVisible"
+            (getGoalReplanId)="selectGoalReplanId($event)" (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+            (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+            (emitUserStoriesCount)="emitUserStoriesCount($event)"
+            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)"
+            (updateUserStoryGoal)="updateUserStoryGoalEvent($event)" (getDocumentStore)="getDocumentStore($event)">
+          </gc-userstory-list>
+          <app-pm-kanbanboard [goal]="goal" [userStorySearchCriteria]="userStorySearchCriteria"
+            *ngIf="isTheBoardLayoutKanban && !showReportsBoard && !showCalendarView && !isSprintsView && !showDocuments && !showEmployeeTaskBoard && userStorySearchCriteria"
+            [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" [isGoalsFiltersVisible]="isFiltersVisible"
+            (eventClicked)="afterClicked($event)" (selectedUserStory)="selectUserStory($event)"
+            (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"   (getGoalReplanId)="selectGoalReplanId($event)"
+            (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+            (updateUserStoryGoalEvent)="updateUserStoryGoalEvent($event)" (getDocumentStore)="getDocumentStore($event)"
+            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+          </app-pm-kanbanboard>
+        </div>
+
+        <app-goal-component-calender-view-detail *ngIf="!showReportsBoard && showCalendarView && !showEmployeeTaskBoard"
+          [goal]="goal" (eventClicked)="afterClicked($event)" [workItemList]=null class="dispaly-grid"
+          (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+          (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)" (getDocumentStore)="getDocumentStore($event)"
+          (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+        </app-goal-component-calender-view-detail>
+
+        <ng-container *ngIf="!showReportsBoard && !showCalendarView && !showDocuments && showEmployeeTaskBoard">
+          <app-goal-employee-task-board-view *ngIf="showEmployeeTaskBoard" [goal]="goal"
+            [uesrStoriesData]="(userStories$ | async)" (eventClicked)="afterClicked($event)" class="display-grid"
+            (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)" [isFromGoalBrowseBoard]="true"
+            (getGoalCalenderView)="getGoalRelatedCalenderView($event)" (getDocumentStore)="getDocumentStore($event)"
+            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+          </app-goal-employee-task-board-view>
+        </ng-container>
+
+        <app-pm-component-goal-burn-charts *ngIf="showReportsBoard" [goal]="goal" (eventClicked)="afterClicked($event)"
+          class="display-grid" (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+          (getGoalCalenderView)="getGoalRelatedCalenderView($event)" (getDocumentStore)="getDocumentStore($event)"
+          (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+        </app-pm-component-goal-burn-charts>
+
+        <ng-container *ngIf="showDocuments && !showCalendarView && !showReportsBoard && !showEmployeeTaskBoard">
+          <app-pm-component-superagile-board [goal]="goal" [showHeader]="false"
+            [isTheBoardLayoutKanban]="isTheBoardLayoutKanban" [isReportsPage]="false" [isCalenderView]="false"
+            [isEmployeeTaskBoardPage]="false" (eventClicked)="afterClicked($event)" [isDocument]=true
+            (getChartDetails)="getGoalRelatedCharts($event)" (getCalanderView)="getGoalRelatedCalenderView($event)"
+            (getDocumentDetails)="getDocumentStore($event)" (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)" [highLightMenu]="documents">
+          </app-pm-component-superagile-board>
+          <!-- <app-document-store 
+            [goal]="goal"
+            [fileElement]="fileElement"
+            [isComponentRefresh]="isComponentRefresh"
+            (getDocumentStore)="getDocumentStore($event)"
+            (getGoalRelatedBurnDownCharts)="getGoalRelatedCharts($event)"
+            (eventClicked)="afterClicked($event)"
+            (getGoalCalenderView)="getGoalRelatedCalenderView($event)"
+            (getGoalEmployeeTaskBoard)="getEmployeeTaskBoard($event)">
+          </app-document-store> -->
+          <div *ngIf="documentStoreLoaded">
+            <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+              [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+              [ndcDynamicInputs]="documentStoreComponent.inputs" [ndcDynamicOutputs]="documentStoreComponent.outputs">
+            </ndc-dynamic>
+          </div>
+        </ng-container>
+
+      </as-split-area>
+      <as-split-area size="38" minSize="37" maxSize="45" *ngIf="selectedUserStory && showDiv" id="style-1">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(userStoryIsInProgress$|async)">
+        </mat-progress-bar>
+        <gc-userstory-detail *ngIf="selectedUserStory" [userStoryId]="selectedUserStory" [isUserStoriesPage]="true"
+          [isSprintUserStories]="isSprintUserStories" [isGoalUniquePage]=false
+          [enableSprints]="(project$|async)?.isSprintsConfiguration" [isGoalChange]="isGoalChange"
+          [isAllGoalsPage]="goalSearchCriteria.isGoalsPage" [goalReplanId]="goalReplanId" [selectedTab]="selectedTab"
+          [selectedGoalId]="selectedGoalIdDetails" (userStoryCloseClicked)="userStoryCloseClicked()">
+        </gc-userstory-detail>
+      </as-split-area>
+    </as-split>
+  </div>
+  <div fxFlex="100" fxShow fxHide.gt-sm *ngIf="selectedUserStory && !showDiv">
+    <gc-userstory-detail *ngIf="selectedUserStory" [userStoryId]="selectedUserStory" [isUserStoriesPage]="true"
+      [isSprintUserStories]="isSprintUserStories" [isGoalUniquePage]=false
+      [enableSprints]="(project$|async)?.isSprintsConfiguration" [isAllGoalsPage]="goalSearchCriteria.isGoalsPage"
+      [goalReplanId]="goalReplanId" [selectedTab]="selectedTab" (userStoryCloseClicked)="userStoryCloseClicked()"
+      [selectedGoalId]="selectedGoalIdDetails" [isGoalChange]="isGoalChange">
+    </gc-userstory-detail>
+  </div>
+
+
+</div>
+
+
+<app-common-message-box
+  *ngIf="goalsCount < 0 && !isSprintsBoard && selectedTab != 'active-goals' && !(anyOperationInProgress$|async)"
+  textToDisplay="{{'GOALS.GOALSNOTFOUND'|translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>
+
+<app-common-message-box
+  *ngIf="((activeGoalsCount$ | async) == 0 && selectedTab == 'active-goals' && !isSprintsBoard) && !(anyOperationInProgress$|async) && !(projectSummaryLoading$|async)"
+  textToDisplay="{{'PROJECTS.DONTHAVEANYGOALSGOTOBACKLOG'|translate  | softLabelsPipe :softLabels}}">
+  <ng-template ng-message-tmp>
+    <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary" (click)="goToBacklog()">
+      <fa-icon class="mr-05" icon="external-link-alt"></fa-icon>{{'PROJECTS.GOTOBACKLOG'|translate}}
+    </button>
+    <button mat-button mat-raised-button class="mr-05 text-center mt-1" color="primary"
+      *ngIf="(canAccess_entityType_feature_AddOrUpdateGoal)  && (canAccess_entityType_feature_ViewGoals)"
+      [satPopoverAnchorFor]="addOrEditGoalPopover" #addGoalPopover="satPopoverAnchor"
+      (click)="addGoalPopover.openPopover();clearGoalForm()">
+      <fa-icon class="mr-05" icon="plus"></fa-icon>{{'GOALS.ADDGOAL'|translate | softLabelsPipe :softLabels}}
+    </button>
+  </ng-template>
+</app-common-message-box>
+<sat-popover #addOrEditGoalPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-05 mat-bg-primary">
+          {{'GOALS.ADDGOAL'|translate  | softLabelsPipe :softLabels}}
+        </div>
+      </mat-card-title>
+      <app-pm-component-goal-create *ngIf="openGoalForm" [projectId]="goalSearchCriteria.projectId"
+        [clearCreateForm]="clearCreateForm" [isActiveGoal]=true [isTestrailEnable]="isTestrailEnable"
+        (closePopup)="closeGoalDialog()"></app-pm-component-goal-create>
+    </div>
+  </mat-card>
+</sat-popover>

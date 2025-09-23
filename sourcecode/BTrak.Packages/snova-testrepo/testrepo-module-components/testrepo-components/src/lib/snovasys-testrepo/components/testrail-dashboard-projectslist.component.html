@@ -1,0 +1,134 @@
+<app-common-message-box *ngIf="!(canAccess_feature_AccessTestrepo)"
+    textToDisplay="{{'TESTMANAGEMENT.DONTHAVEPERMISSION' | translate}}">
+</app-common-message-box>
+
+<mat-card class="p-0" *ngIf="(canAccess_feature_AccessTestrepo)">
+    <mat-progress-bar class="m-0" color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <mat-card-title class="data-table-header">
+        <div fxLayout="row">
+            <div fxFlex="85" fxLayoutAlign="start center">
+                <span class="ml-05">
+                    <b>{{ 'TESTMANAGEMENT.PROJECTS' | translate | softLabelsPipe : softLabels }}</b></span>
+                <span matTooltip="{{'TESTMANAGEMENT.PROJECTSCOUNT' | translate | softLabelsPipe : softLabels}}"
+                    class="ml-05 badge-item test-case-count-number project-count">
+                    <!-- *ngIf="!(anyOperationInProgress$ | async) && (projectsList$ | async | testrailName: searchText: 'project').length > 0" -->
+                    {{(projectsList$ | async | testrailName: searchText: 'project').length}}
+                </span>
+                <div class="card-title-text p-03" fxLayout="row wrap">
+                    <div fxFlex="54" class="mt-02">
+                        <span class="archive-label"><b>{{ 'PROJECTS.ARCHIVE' | translate }}:</b></span>
+                    </div>
+                    <div fxFlex class="mt-02">
+                        <mat-slide-toggle class="ml-08 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            [disabled]="(anyOperationInProgress$ | async)" (change)="getTestrailProjects()">
+                        </mat-slide-toggle>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="15" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center">
+                <input type="text" name="search" class="search_goal" placeholder="{{'SEARCH' | translate}}"
+                    [(ngModel)]="searchText">
+                <span class="close_icon mt-n3">
+                    <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <mat-icon *ngIf="searchText" class="icon-button mt-03" aria-hidden="false" (click)="closeSearch()">
+                        close
+                    </mat-icon>
+                </span>
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+</mat-card>
+<div fxLayout="row wrap" class="mt-1 testrail-project-list"
+    *ngIf="(canAccess_feature_AccessTestrepo) && !(anyOperationInProgress$ | async)" id="style-1">
+    <mat-card class="project-card p-05 milestones-view" fxFlex="100" fxFlex.gt-xl="24" fxFlex.xl="32" fxFlex.lg="32"
+        fxFlex.md="48" fxFlex.sm="48" fxFlex.xs="100"
+        *ngFor="let project of (projectsList$ | async | testrailName: searchText: 'project')">
+        <div fxLayout="row wrap" fxLayoutGap="5px">
+            <div class="project-avatar-image" fxFlex="20" fxFlex.lg="17" fxFlex.md="15" fxFlex.sm="17"
+                fxFlex.lt-sm="17">
+                <app-avatar [name]="project.projectName | removeSpecialCharacters" fxHide fxHide.gt-lg="false"
+                    [isRound]="false" size="70">
+                </app-avatar>
+                <app-avatar [name]="project.projectName | removeSpecialCharacters" fxShow fxShow.gt-lg="false"
+                    [isRound]="false" size="50">
+                </app-avatar>
+            </div>
+            <div fxFlex="77" fxFlex.md="82" fxFlex.sm="80" fxFlex.lt-sm="80">
+                <div fxLayout="column" fxLayoutGap="3px">
+                    <div fxLayout="row" fxLayoutGap="0px">
+                        <div class="mat-body-2 project-card-name">
+                            <p class="mat-body-1 person-name">
+                                <a (click)="navigateToTestSuites(project.projectId,0)"
+                                    class="mat-primary testrail-project-name full-width"
+                                    [matTooltip]="project.projectName.length > 35 ? project.projectName : ''">
+                                    {{project.projectName}}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutGap="0px" class="testprojectsview mt-05">
+                        <div fxFlex="24" class="text-overflow-wrap pr-02">
+                            <span (click)="navigateToTestSuites(project.projectId,0)" class="mr-05 mat-primary"
+                                matTooltip=" {{'TESTMANAGEMENT.TESTSUITES' | translate | softLabelsPipe : softLabels}}">
+                                {{'TESTMANAGEMENT.TESTSUITES' | translate | softLabelsPipe : softLabels}}
+                            </span>
+                        </div>
+                        <div fxFlex="5px">
+                            <span> | </span>
+                        </div>
+                        <div fxFlex="24" class="text-overflow-wrap text-center">
+                            <span (click)="navigateToTestRuns(project.projectId,1)" class="mr-05 ml-05 mat-primary"
+                                matTooltip="{{'TESTMANAGEMENT.TESTRUNS' | translate | softLabelsPipe : softLabels}}">
+                                {{'TESTMANAGEMENT.TESTRUNS' | translate | softLabelsPipe : softLabels}}
+                            </span>
+                        </div>
+                        <div fxFlex="5px">
+                            <span> | </span>
+                        </div>
+                        <div fxFlex="26" class="text-overflow-wrap text-center">
+                            <span (click)="navigateToMilestones(project.projectId,2)" class="mr-05 ml-05 mat-primary"
+                                matTooltip="{{'TESTMANAGEMENT.MILESTONES' | translate | softLabelsPipe : softLabels}}">
+                                {{'TESTMANAGEMENT.MILESTONES' | translate | softLabelsPipe : softLabels}}
+                            </span>
+                        </div>
+                        <div fxFlex="5px">
+                            <span> | </span>
+                        </div>
+                        <div fxFlex="22" class="text-overflow-wrap text-center">
+                            <span (click)="navigateToReports(project.projectId,3)" class="ml-05 mat-primary"
+                                matTooltip="{{'TESTMANAGEMENT.REPORTS' | translate | softLabelsPipe : softLabels}}">
+                                {{'TESTMANAGEMENT.REPORTS' | translate| softLabelsPipe : softLabels}}
+                            </span>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutGap="0px">
+                        <p matLine class="demo-2">{{'TESTMANAGEMENT.CONTAINS' | translate}}
+                            <b>{{project.testSuiteCount}}</b> {{'TESTMANAGEMENT.TESTSUITESSMALL' | translate}},
+                            <b>{{project.testRunCount}}</b>
+                            {{'TESTMANAGEMENT.TESTRUNSSMALL' | translate}},
+                            <b>{{project.milestoneCount}}</b>
+                            {{'TESTMANAGEMENT.MILESTONESSMALL' | translate}},
+                            <b>{{project.reportsCount}}</b>
+                            {{'TESTMANAGEMENT.REPORTSSMALL' | translate}} {{'TESTMANAGEMENT.AND' | translate}}
+                            <b>{{project.casesCount}}</b>
+                            {{'TESTMANAGEMENT.TESTCASESSMALL' | translate}}.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+    <mat-card *ngIf="(projectsList$ | async | testrailName: searchText: 'project').length === 0"
+        class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+        <div fxLayout="row" fxFlex="100" class="p-1">
+            <!-- <div fxFlex="100" fxFlex.gt-sm="5" class="p-05"> -->
+            <fa-icon icon="info-circle"></fa-icon>
+            <!-- </div> -->
+            <!-- <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1"> -->
+            <span class="ml-1">{{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate}}</span>
+            <!-- </div> -->
+        </div>
+    </mat-card>
+</div>

@@ -1,0 +1,269 @@
+<app-common-message-box *ngIf="!(canAccess_feature_QaPerformance)"
+  textToDisplay="{{'QAPERFORMANCE.PERMISSSION' | translate}}">
+</app-common-message-box>
+<div class="p-0 full-height" *ngIf="(canAccess_feature_QaPerformance)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow"> {{'QAPERFORMANCE.QAPERFORMANCE' | translate | titlecase}}</span>
+        </div>
+        <div fxFlex.gt-xs="180px" fxFlex.xs="100px" class="ml-05 mr-05 search_goalinput" fxLayoutAlign="end center"
+          fxLayoutAlign.xs="center center">
+          <mat-form-field ngClass.xs="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchQaPerformance"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 8px !important;">
+            <span *ngIf="!searchQaPerformance">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchQaPerformance" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" style="cursor: pointer;">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxLayoutAlign="center start">
+              <fa-icon (click)="getPreviousSelectedDate('left')" icon="chevron-left"></fa-icon>
+              <b>&nbsp;{{selectedDate | date: "MMM-yyyy"}}&nbsp;</b><span
+                *ngIf="weekNumber"><b>W{{weekNumber}}&nbsp;</b></span>
+              <fa-icon (click)="getCurrentSelectedDate('right')" icon="chevron-right"></fa-icon>
+            </div>
+            <mat-form-field class="full-width">
+              <mat-select [(ngModel)]="selectedValue" (ngModelChange)="changeFilterType()">
+                <mat-option *ngFor="let Filter of Filters" [value]="Filter.value">
+                  {{Filter.value}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="(canAccess_feature_ManageAppFilters)">
+              <mat-select [(value)]="selectedFilterValue" (selectionChange)="changeFilterValue($event.value)">
+                <mat-option value="all">All</mat-option>
+                <mat-option value="reportingOnly">Reporting only</mat-option>
+                <mat-option value="mySelf">My self</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+  </mat-progress-bar>
+  <div class="activity-data filter-margin m-0 app-height-search-2" id="style-1">
+    <!-- <ngx-datatable class="btrak" [rows]="qaPerformanceDetails" [columnMode]="'force'" [headerHeight]="35"
+      [footerHeight]="35" [rowHeight]="35" [externalPaging]="true" [count]="count" [offset]="pageNumber"
+      [limit]="pageSize" [loadingIndicator]="anyOperationInProgress" (sort)="onSort($event)" (page)='setPage($event)'
+      [sorts]="[{prop: 'age', dir: 'desc'}]"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column name="{{'QAPERFORMANCE.PROJECTNAME' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" prop="projectName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row.projectName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.GOALNAME' | translate | softLabelsPipe : softLabels}}" [flexGrow]="1"
+        prop="goalName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.goalName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.SPRINTNAME' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" prop="sprintName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.sprintName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.USERSTORY' | translate | softLabelsPipe : softLabels}}"
+        [flexGrow]="1" [width]="550" prop="UserStory">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.userStoryName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.CURRENTSTATUS' | translate}}" [flexGrow]="1" prop="CurrentStatus">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.statusName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.TESTERNAME' | translate}}" [flexGrow]="1" prop="testerName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.testerName }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.ORIGINALDEPLOYEDDATE' | translate}}" [flexGrow]="1"
+        prop="OriginalDeployedDate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.originalDeployedDate !=null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(row)">{{ row?.originalDeployedDate | date: "dd-MMM-yyyy"  }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.LATESTDEPLOYEDDATE' | translate}}" [flexGrow]="1"
+        prop="LatestDeployedDate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.latestDeployedDate !=null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(row)">{{ row?.latestDeployedDate | date: "dd-MMM-yyyy"  }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.QAACTIONDATE' | translate}}" [flexGrow]="1" prop="QAActiondate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.actionDate !=null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(row)">{{row?.actionDate | date: "dd-MMM-yyyy"  }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'QAPERFORMANCE.AGE' | translate}}" [flexGrow]="1" [width]="75" prop="age">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(row)">
+            {{ row?.age }}
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable> -->
+
+    <kendo-grid [data]="qaPerformanceDetails" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+      [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false" [scrollable]="true"
+      [columnMenu]="true" (dataStateChange)="dataStateChange($event)"
+      (columnVisibilityChange)="onVisibilityChange($event)">
+      <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+        pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+      </kendo-grid-messages>
+      <kendo-grid-column field="projectName"
+        title="{{'QAPERFORMANCE.PROJECTNAME' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('projectName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.projectName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="goalName" title="{{'QAPERFORMANCE.GOALNAME' | translate | softLabelsPipe : softLabels}}"
+        width="150" [hidden]="checkVisibility('goalName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.goalName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="sprintName"
+        title="{{'QAPERFORMANCE.SPRINTNAME' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('sprintName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.sprintName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="userStoryName"
+        title="{{'QAPERFORMANCE.USERSTORY' | translate | softLabelsPipe : softLabels}}" width="150"
+        [hidden]="checkVisibility('userStoryName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.userStoryName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="statusName" title="{{'QAPERFORMANCE.CURRENTSTATUS' | translate}}" width="150"
+        [hidden]="checkVisibility('statusName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem.statusName }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="testerName" title="{{'QAPERFORMANCE.TESTERNAME' | translate}}" width="150"
+        [hidden]="checkVisibility('testerName')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" style="text-align: left !important" (click)="goToProfile(dataItem.userId)">
+            <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != ''">
+              <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="(dataItem.profileImage == null || dataItem.profileImage == '')">
+              <app-avatar [name]="dataItem.testerName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.testerName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ dataItem?.testerName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="originalDeployedDate" title="{{'QAPERFORMANCE.ORIGINALDEPLOYEDDATE' | translate}}"
+        width="150" [hidden]="checkVisibility('originalDeployedDate')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.originalDeployedDate != null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(dataItem)"  matTooltip="{{dataItem?.originalDeployedDateTimeZoneName}}" >{{ dataItem?.originalDeployedDate | date: "dd-MMM-yyyy"  }}
+            <span class="timezone-name" *ngIf="(dataItem.originalDeployedDate | covertTimeIntoUtcTime) != Offset"
+            >{{dataItem?.originalDeployedDateTimeZoneAbbreviation}}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="latestDeployedDate" title="{{'QAPERFORMANCE.LATESTDEPLOYEDDATE' | translate}}"
+        width="150" [hidden]="checkVisibility('latestDeployedDate')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.latestDeployedDate != null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(dataItem)"  matTooltip="{{dataItem?.latestDeployedDateTimeZoneName}}">{{ dataItem?.latestDeployedDate | date: "dd-MMM-yyyy"  }}
+            <span class="timezone-name" *ngIf="(dataItem.latestDeployedDate | covertTimeIntoUtcTime) != Offset"
+            >{{dataItem?.latestDeployedDateTimeZoneAbbreviation}}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="actionDate" title="{{'QAPERFORMANCE.QAACTIONDATE' | translate}}" width="150"
+        [hidden]="checkVisibility('actionDate')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div *ngIf="dataItem.actionDate != null" class="icon-button" fxLayout="row"
+            (click)="navigateToUserStoriesPage(dataItem)"   matTooltip="{{dataItem?.actionDateTimeZoneName}}">{{dataItem?.actionDate | date: "dd-MMM-yyyy"}}
+            <span class="timezone-name" *ngIf="(dataItem.actionDate | covertTimeIntoUtcTime) != Offset"
+            >{{dataItem?.actionDateTimeZoneAbbreviation}}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="age" title="{{'QAPERFORMANCE.AGE' | translate}}" width="150"
+        [hidden]="checkVisibility('age')">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <div class="icon-button" fxLayout="row" (click)="navigateToUserStoriesPage(dataItem)">
+            {{ dataItem?.age }}
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+    </kendo-grid>
+  </div>
+</div>
+<ng-template #uniqueUserstoryDialogQa let-data>
+  <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+</ng-template>

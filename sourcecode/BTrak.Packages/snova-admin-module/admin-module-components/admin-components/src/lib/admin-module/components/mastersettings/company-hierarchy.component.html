@@ -1,0 +1,293 @@
+<div class="mat-card-fx-col">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text full-width p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'COMPANYHIERARCHY.COMPANYHIERARCHY' | translate }}">
+                        {{ 'COMPANYHIERARCHY.COMPANYHIERARCHY' | translate }}</span>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="mt-1 text-center mb-05" *ngIf="treeviewData && canAccess_feature_ViewCompanyStructure">
+        <button mat-raised-button color="primary" class="mr-1" (click)="expandTreeview(true)">
+            <fa-icon class="mr-05" icon="expand-alt"></fa-icon> {{'COMPANYHIERARCHY.EXPANDALL' | translate}}
+        </button>
+        <button mat-raised-button color="primary" (click)="expandTreeview(false)">
+            <fa-icon class="mr-05" icon="compress-alt"></fa-icon>{{'COMPANYHIERARCHY.COLLAPSEALL' | translate}}
+        </button>
+    </div>
+
+    <div class="mt-1 text-center mb-05" *ngIf="!treeviewData">
+        <button mat-raised-button color="primary" style="cursor: pointer;"
+            [satPopoverAnchorFor]="AddCompanyDetailsPopover" #AddCompanyDetailsPopup="satPopoverAnchor"
+            (click)="createCompanyPopupOpen(AddCompanyDetailsPopup,null)"
+            *ngIf="canAccess_feature_AddOrEditCompanyStructure">
+            {{'COMPANYHIERARCHY.ADDNEWCOMPANY' | translate}}
+        </button>
+    </div>
+
+    <div fxFlex fxLayoutAlign="center center" *ngIf="treeviewData && canAccess_feature_ViewCompanyStructure">
+        <kendo-treeview [nodes]="treeviewData" kendoTreeViewExpandable kendoTreeViewHierarchyBinding
+            childrenField="children" class="company-hierarchical-tree tree-height" [(expandedKeys)]="expandKeys"
+            kendoTreeViewExpandable [expandBy]="'entityName'" kendoTreeViewDragAndDrop id="style-1"
+            kendoTreeViewDragAndDropEditing (nodeDrop)="handleDrop($event)">
+            <ng-template kendoTreeViewNodeTemplate let-dataItem>
+                <div fxLayout="row" class="mr-2">
+                    <div fxFlex class="pr-1 pl-1 company-details-size">{{dataItem.entityName}}
+                        <mat-chip [selectable]="false" [removable]="false" class="p-03"
+                            [ngClass]="dataItem.isGroup ? 'group-styling' : dataItem.isEntity ? 'entity-styling' : dataItem.isCountry ? 'country-styling' : 'branch-styling'">
+                            <span class="hide-content-overflow">
+                                {{getChipData(dataItem)}}
+                            </span>
+                        </mat-chip>
+                        <mat-chip [selectable]="false" [removable]="false" *ngIf="dataItem.isHeadOffice"
+                            style="background-color: indianred;" class="p-03">
+                            <span class="hide-content-overflow">
+                                {{'COMPANYHIERARCHY.HEADOFFICE' | translate}}
+                            </span>
+                        </mat-chip>
+                        <mat-chip *ngFor="let tag of getTagsForBranch(dataItem)" class="p-03" [selectable]="false"
+                            [removable]="false">
+                            <span class="hide-content-overflow" matTooltip="{{ tag }}">
+                                {{tag}}
+                            </span>
+                        </mat-chip>
+                    </div>
+                    <div fxFlex="125px" fxLayoutAlign="end center">
+                        <fa-icon icon="plus" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'COMPANYHIERARCHY.ADD' | translate}}"
+                            *ngIf="!dataItem.isBranch && canAccess_feature_AddOrEditCompanyStructure"
+                            (click)="createCompanyPopupOpen(AddCompanyDetailsPopup,dataItem)" style="cursor: pointer;"
+                            [satPopoverAnchorFor]="AddCompanyDetailsPopover" #AddCompanyDetailsPopup="satPopoverAnchor">
+                        </fa-icon>
+                        <fa-icon icon="caret-square-up" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'COMPANYHIERARCHY.ADDPARENT' | translate}}"
+                            (click)="createParentCompanyPopupOpen(AddCompanyDetailsPopup,dataItem)"
+                            style="cursor: pointer;" *ngIf="canAccess_feature_AddOrEditCompanyStructure"
+                            [satPopoverAnchorFor]="AddCompanyDetailsPopover" #AddCompanyDetailsPopup="satPopoverAnchor">
+                        </fa-icon>
+                        <fa-icon icon="edit" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'COMPANYHIERARCHY.EDIT' | translate}}"
+                            (click)="editCompanyPopupOpen(AddCompanyDetailsPopup,dataItem)" style="cursor: pointer;"
+                            *ngIf="canAccess_feature_AddOrEditCompanyStructure"
+                            [satPopoverAnchorFor]="AddCompanyDetailsPopover" #AddCompanyDetailsPopup="satPopoverAnchor">
+                        </fa-icon>
+                        <fa-icon icon="trash" class="pr-1 fa-lg filter mat-color-accent"
+                            matTooltip="{{'COMPANYHIERARCHY.DELETE' | translate}}"
+                            (click)="deleteCompanyPopupOpen(DeleteCompanyDetailsPopup,dataItem)"
+                            *ngIf="canAccess_feature_DeleteCompanyStructure"
+                            [satPopoverAnchorFor]="DeleteCompanyDetailsPopover" style="cursor: pointer;"
+                            #DeleteCompanyDetailsPopup="satPopoverAnchor"></fa-icon>
+                    </div>
+                </div>
+            </ng-template>
+        </kendo-treeview>
+    </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #AddCompanyDetailsPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+    horizontalAlign="center">
+    <mat-card class="p-0 mr-0" fxFlex="450px">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">{{'COMPANYHIERARCHY.ADDDETAILS' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="companyDetailsForm" #formDirective="ngForm" novalidate
+                (submit)="companyDetailsForm.valid && upsertCompanyDetails(formDirective)">
+                <div>
+                    <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="entityName"
+                                placeholder="{{'COMPANYHIERARCHY.PLEASEPROVIDENAME' | translate}}" required>
+                            <mat-error *ngIf="companyDetailsForm.get('entityName').hasError('maxlength')">
+                                {{'COMPANYHIERARCHY.ENTITYNAMEMAXLENGTHERROR' | translate}}</mat-error>
+                            <mat-error
+                                *ngIf="companyDetailsForm.get('entityName').hasError('required') && companyDetailsForm.get('entityName').touched">
+                                {{'COMPANYHIERARCHY.ENTITYNAMEREQUIREDERROR' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="description"
+                                placeholder="{{'COMPANYHIERARCHY.DESCRIPTION' | translate}}">
+                            <mat-error *ngIf="companyDetailsForm.get('description').hasError('maxlength')">
+                                {{'COMPANYHIERARCHY.DESCRIPTIONMAXLENGTHERROR' | translate}}</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="typeOfGrouping" (selectionChange)="onTypeOfGroupChnage($event)"
+                            placeholder="{{'COMPANYHIERARCHY.LEVELOFTHECOMPANY' | translate}}" required>
+                            <mat-option value="option" [value]="1" *ngIf="showGroup">
+                                {{'COMPANYHIERARCHY.GROUP' | translate}}</mat-option>
+                            <mat-option value="option" [value]="2" *ngIf="showEntity">
+                                {{'COMPANYHIERARCHY.ENTITY' | translate}}</mat-option>
+                            <mat-option value="option" [value]="3" *ngIf="showCountry">
+                                {{'COMPANYHIERARCHY.COUNTRY' | translate}}</mat-option>
+                            <mat-option value="option" [value]="4" *ngIf="showBranch">
+                                {{'COMPANYHIERARCHY.BRANCH' | translate}}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="companyDetailsForm.get('typeOfGrouping').hasError('required') && companyDetailsForm.get('typeOfGrouping').touched">
+                            {{ 'COMPANYHIERARCHY.LEVELREQUIREDERROR' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+
+                    <div *ngIf="companyDetailsForm.get('typeOfGrouping').value == 4" fxLayout="column">
+                        <!-- <mat-form-field class="full-width">
+                            <input matInput formControlName="address"
+                                placeholder="{{ 'COMPANYHIERARCHY.ADDRESS' | translate }}" required>
+                            <mat-error *ngIf="companyDetailsForm.get('address').hasError('maxlength')">
+                                {{ 'COMPANYHIERARCHY.ADDRESSMAXLENGTHERROR' | translate }}</mat-error>
+                            <mat-error
+                                *ngIf="companyDetailsForm.get('address').hasError('required') && companyDetailsForm.get('address').touched">
+                                {{ 'COMPANYHIERARCHY.ADDRESSREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </mat-form-field> -->
+                        <span class="mt-05">
+                            <b>{{ 'BRANCH.ADDRESSTITLE' | translate }}:</b>
+                        </span><br>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="street" required
+                                    placeholder="{{ 'BRANCH.STREETNAME' | translate }}">
+                                <mat-error *ngIf="companyDetailsForm.get('street').hasError('maxlength')">
+                                    {{ 'BRANCH.STREETMAXLENGTHERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="city" required
+                                    placeholder="{{ 'BRANCH.CITYNAME' | translate }}">
+                                <mat-error *ngIf="companyDetailsForm.get('city').hasError('maxlength')">
+                                    {{ 'BRANCH.CITYMAXLENGTHERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="postalCode" required
+                                    placeholder="{{ 'BRANCH.POSTALNAME' | translate }}">
+                                <mat-error *ngIf="companyDetailsForm.get('postalCode').hasError('maxlength')">
+                                    {{ 'BRANCH.POSTALCODEMAXLENGTHERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="state" required
+                                    placeholder="{{ 'BRANCH.STATENAME' | translate }}">
+                                <mat-error *ngIf="companyDetailsForm.get('state').hasError('maxlength')">
+                                    {{ 'BRANCH.STATEMAXLENGTHERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                            <mat-form-field class="full-width">
+                                <mat-select formControlName="defaultPayrollTemplateId"
+                                    placeholder="{{ 'COMPANYHIERARCHY.DEFAULTPAYROLLTEMPLATE' | translate }}">
+                                    <mat-option value="option" *ngFor="let template of payRollTemplates"
+                                        [value]="template.payRollTemplateId">
+                                        {{ template.payRollName }}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field class="full-width">
+                                <mat-select formControlName="currencyId"
+                                    placeholder="{{ 'COMPANYHIERARCHY.CURRENCY' | translate }}" required>
+                                    <mat-option value="option" *ngFor="let currency of currencies"
+                                        [value]="currency.currencyId">
+                                        {{ currency.currencyName }}</mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="companyDetailsForm.get('currencyId').hasError('required') && companyDetailsForm.get('currencyId').touched">
+                                    {{ 'COMPANYHIERARCHY.CURRENCYREQUIREDERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayout.xs="column">
+                            <mat-form-field class="full-width">
+                                <mat-select formControlName="timeZoneId"
+                                    placeholder="{{ 'COMPANYHIERARCHY.TIMEZONE' | translate }}" required>
+                                    <mat-option value="option" *ngFor="let timeZone of timezones"
+                                        [value]="timeZone.timeZoneId">
+                                        {{ timeZone.timeZoneName }}</mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="companyDetailsForm.get('timeZoneId').hasError('required') && companyDetailsForm.get('timeZoneId').touched">
+                                    {{ 'COMPANYHIERARCHY.TIMEZONEREQUIREDERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                            <mat-form-field class="full-width">
+                                <mat-select formControlName="countryId"
+                                    placeholder="{{ 'COMPANYHIERARCHY.COUNTRY' | translate }}" required>
+                                    <mat-option value="option" *ngFor="let country of countries"
+                                        [value]="country.countryId">
+                                        {{ country.countryName }}</mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="companyDetailsForm.get('countryId').hasError('required') && companyDetailsForm.get('countryId').touched">
+                                    {{ 'COMPANYHIERARCHY.COUNTRYREQUIREDERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex>
+                            <mat-checkbox mat-primary formControlName="isHeadOffice" class="pl-1">
+                                {{ 'COMPANYHIERARCHY.ISHEADOFFICE' | translate }}
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-1 text-center mb-05">
+                    <button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!companyDetailsForm.valid||isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeUpsertCompanyDetailsPopup(formDirective)"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #DeleteCompanyDetailsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{'COMPANYHIERARCHY.DELETECOMPANY' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{'COMPANYHIERARCHY.DELETECONFIRMATIONMESSAGE' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteCompany();">
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteCompanyPopup();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<ng-template #confrmationPopup let-data>
+    <div class="card-content text-center mb-1">
+        {{data?.entityName}}{{'COMPANYHIERARCHY.CONFIRMATIONMESSAGE' | translate}}
+    </div>
+    <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" (click)="upsertHeadOffice(true);">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="upsertHeadOffice(false);">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'NO' | translate }}
+        </button>
+    </div>
+</ng-template>

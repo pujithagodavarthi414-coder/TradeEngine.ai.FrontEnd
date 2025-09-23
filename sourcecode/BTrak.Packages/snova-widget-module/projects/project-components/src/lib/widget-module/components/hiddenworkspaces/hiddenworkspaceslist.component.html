@@ -1,0 +1,83 @@
+<div class="p-0">
+    <div fxLayout="row">
+        <div class="ml-1 mr-05 search_goalinput" fxFlex fxLayoutAlign="end center">
+            <mat-form-field fxLayoutAlign="start center">
+                <input name="search" class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                    [(ngModel)]="searchText">
+            </mat-form-field>
+            <span class="close_icon" fxLayoutAlign="start center">
+                <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+            </span>
+        </div>
+    </div>
+    <div class="widgets-list" id="style-1">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+        </mat-progress-bar>
+        <div fxLayout="row wrap" *ngIf="!(anyOperationInProgress$ | async)">
+            <div fxFlex="25" fxFlex.lt-sm="100" fxFlex.sm="50" fxFlex.md="33"
+                *ngFor="let workspace of (hiddenWorkspacesList$ | async | widgetName: searchText: 'HiddenWorkspace')">
+                <mat-card class="p-05 cursor-pointer" [satPopoverAnchorFor]="unhideWorkspace"
+                    #unHideWorkspacePopover="satPopoverAnchor"
+                    (click)="dashboardSelected(unHideWorkspacePopover, workspace)">
+                    <div fxLayout="row">
+                        <div fxFlex="25px" *ngIf="workspace.isHidden == true">
+                            <fa-icon class="cursor-pointer mat-color-accent" matTooltip="{{ 'APP.HIDDEN' | translate }}"
+                                icon="eye-slash">
+                            </fa-icon>
+                        </div>
+                        <div fxFlex class="mb-05 hide-content-overflow">
+                            <b class="app-dialog-title">{{workspace.workspaceName}}</b>
+                        </div>
+                    </div>
+                    <div fxLayout="row">
+                        <div fxFlex class="" (mouseover)="checkTitleTooltipStatus(workspace.description)">
+                            <p class="mat-small mb-05 app-description-overflow" #description
+                                [matTooltip]="showTitleTooltip ? workspace.description : ''"
+                                matTooltipClass="tooltip-overflow" matTooltipShowDelay="200">
+                                &nbsp;{{workspace.description}}</p>
+                        </div>
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+        <mat-card
+            *ngIf="!(anyOperationInProgress$ | async) && (hiddenWorkspacesList$ | async | widgetName: searchText: 'HiddenWorkspace')?.length === 0"
+            class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+            <div fxLayout="row" fxFlex="100">
+                <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                    <fa-icon icon="info-circle"></fa-icon>
+                </div>
+                <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                    <p class="m-0">{{'APP.NODASHBOARDSFOUND' | translate | softLabelsPipe : softLabels}}
+                    </p>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+</div>
+
+<sat-popover #unhideWorkspace hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'APP.DASHBOARDUNHIDETEXT' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="accent" [disabled]="disableWorkspaceunhide"
+                    (click)="unHideSelectedWorkspace()">
+                    <fa-icon class="mr-05" icon="eye"></fa-icon> {{ 'APP.UNHIDE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeUnHideWorkspacePopover()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'TESTMANAGEMENT.CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,384 @@
+<div >
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isLoading">
+    </mat-progress-bar>
+    <mat-card id="style-1" class="mat-card-height">
+        <div fxFlex fxLayout="column">
+            <div>
+                <div fxFlex fxLayout="column">
+                    <div fxFlex="100" fxLayout="row" class="mb-1" style="margin-top:8px;">
+                        <div fxFlex="50">
+                            <div fxFlex fxLayout="row nowrap" fxLayoutAlign="center start"
+                                fxLayoutAlign.xs="center center" fxLayoutAlign.sm="end center">
+                                <div class="tracker-day-filter" fxLayoutAlign="center center"
+                                    fxLayoutAlign.xs="center center" fxLayoutAlign.sm="end center"
+                                    style="margin-right:5px;">
+                                    <div fxLayout="row wrap">
+                                        <div fxFlex fxLayout="row" class="date-value-margin">
+                                            <input matInput [matDatepicker]="picker2"
+                                                class="date-picker tracker-date-filter-value date-picker-size cursor-date"
+                                                (dateChange)="getDataList()" (click)="picker2.open()"
+                                                [(ngModel)]='dateFrom' [readonly]="true"
+                                                style="width:120px;border: none;padding: 0px 10px;color: #2f3065 !important;font-weight: 500;">
+                                            <fa-icon icon="calendar" (click)="picker2.open()" aria-hidden="true"
+                                                class="mr-05 mt-06"
+                                                style="color:#2f3065;font-weight: 400;font-size: large;cursor: pointer;"></fa-icon>
+                                            <mat-datepicker #picker2></mat-datepicker>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tracker-day-filter" fxLayoutAlign="center center"
+                                    fxLayoutAlign.xs="center center" fxLayoutAlign.sm="end center">
+                                    <div fxLayout="row wrap">
+                                        <div fxFlex fxLayout="row" class="date-value-margin">
+                                            <input matInput [matDatepicker]="picker3"
+                                                class="date-picker tracker-date-filter-value date-picker-size cursor-date"
+                                                (click)="picker3.open()" [(ngModel)]='dateTo' [readonly]="true"
+                                                (dateChange)="getDataList()"
+                                                style="width:120px;border: none;padding: 0px 10px;color: #2f3065 !important;font-weight: 500;">
+                                            <fa-icon icon="calendar" (click)="picker3.open()" aria-hidden="true"
+                                                class="mr-05 mt-06"
+                                                style="color:#2f3065;font-weight: 400;font-size: large;cursor: pointer;"></fa-icon>
+                                            <mat-datepicker #picker3></mat-datepicker>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button mat-icon-button class="material-icons app-toolbar-menu delete-button ml-05"
+                                    matTooltip="Download as image" onclick="downloadimageTs('dailypositiontableId')">
+                                    <!-- <mat-icon style="color:#2f3065;font-weight: 400;font-size: large;cursor: pointer;">photo_size_select_actual</mat-icon> -->
+                                    <fa-icon icon="download" class="mr-05"
+                                        style="color:#2f3065;font-weight: 400;font-size: large;cursor: pointer;">
+                                    </fa-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div fxLayout="row nowrap" fxLayout.md="row wrap" class="ml-02"></div>
+                    <div fxFlex="100" #positionTable>
+                        <table id="dailypositiontableId" mat-table [dataSource]="dataSource" multiTemplateDataRows>
+                            <ng-container matColumnDef="groupName">
+                                <td mat-cell *matCellDef="let element" [attr.colspan]="2" style="border-right-style: hidden !important;">
+                                    <span style="font-weight: bold;">{{element.groupName}}
+                                        <mat-icon
+                                            *ngIf="(element.groupName == 'SG ORIMU' || element.groupName == 'SG ANA' || element.groupName == 'PAPER & FUTURES')"
+                                            (click)="expandElementRow(element)"
+                                            style="cursor:pointer;vertical-align: bottom;">{{expandedElement
+                                            === element ? 'expand_less' : 'expand_more'}}</mat-icon>
+                                    </span>
+
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgrossText">
+                                <td mat-cell *matCellDef="let element" [attr.colspan]="8"
+                                    style="border-bottom-color: rgba(0,0,0,.12);border-right-style: hidden !important;">
+                                    <span style="font-size : 16px;">{{element.ytDgrossText}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="totalGrossText">
+                                <td mat-cell *matCellDef="let element" [attr.colspan]="4"
+                                    style="border-bottom-color: rgba(0,0,0,.12);border-right-style: hidden !important;">
+                                    <span style="font-size : 16px;">{{element.totalGrossText}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="dayChangeMtmValue">
+                                <td mat-cell *matCellDef="let element" 
+                                    style="border-bottom-color: rgba(0,0,0,.12); border-right-style: hidden !important;">
+                                    <span
+                                        style="font-size : 16px;color:red !important;font-style: italic;">{{getFormatData(element.dayChangeMtmValue)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="dailyMTMValue">
+                                <td mat-cell *matCellDef="let element" [attr.colspan]="6"
+                                    style="border-bottom-color: rgba(0,0,0,.12);">
+                                    <span
+                                        style="font-size : 16px;color:red !important;font-style: italic;">{{getFormatData(element.dailyMTMValue)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="2">
+                                <th mat-header-cell *matHeaderCellDef colspan="1"
+                                    class="text-background-opening-balance"
+                                    style="border-bottom-color: #FFE699 !important;">
+                                </th>
+                            </ng-container>
+
+                            <ng-container matColumnDef="commodity">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance">
+                                    COMMODITY/
+                                    INSTRUMENT </th>
+                                <td mat-cell *matCellDef="let data" [ngClass]="data.isBold == true ? 'text-bold' : ''">
+                                    <span [ngClass]="getFontSizeAndColor(data)"> {{getCommodityName(data.commodity)}}
+
+                                        <mat-icon *ngIf="data?.children?.length > 0 && showExpandIcon(data)"
+                                            (click)="expandElementRow(data)"
+                                            style="cursor:pointer;vertical-align: bottom;">{{expandedElement
+                                            === data ? 'expand_less' : 'expand_more'}}</mat-icon>
+
+                                    </span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="3">
+                                <th mat-header-cell *matHeaderCellDef colspan="1"
+                                    class="text-background-opening-balance"
+                                    style="border-bottom-color: rgba(0,0,0,.12);"></th>
+                            </ng-container>
+                            <ng-container matColumnDef="openingBalance">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> OPENING
+                                    BALANCE
+                                </th>
+                                <td mat-cell *matCellDef="let data" [ngClass]="getOpeningBalanceStyle(data)">
+                                    <span
+                                        [ngClass]="getFontSize(data,data.openingBalance)">{{getFormatData(data.openingBalance)}}
+                                    </span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="present">
+                                <th mat-header-cell *matHeaderCellDef colspan="1"
+                                    class="text-background-opening-balance text-center"
+                                    style="font-weight: bold;font-style: italic;">PRESENT</th>
+                            </ng-container>
+                            <ng-container matColumnDef="ytDgross">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"
+                                    style="width:78px;"> YTM
+                                    GROSS -
+                                    <span style="color:red !important;">{{selectedDate | date :
+                                        'MMM-yyyy'}}</span>
+                                </th>
+                                <td mat-cell *matCellDef="let data" [ngClass]="getOpeningBalanceStyle(data)">
+                                    <span
+                                        [ngClass]="getFontSize(data,data.ytDgross)">{{getFormatData(data.ytDgross)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="summary">
+                                <th mat-header-cell *matHeaderCellDef colspan="7"
+                                    class="text-center text-background-opening-balance text-center"
+                                    style="font-weight: bold;font-style: italic;">
+                                    FORWARD TRADE POSITION SUMMARY
+                                </th>
+                            </ng-container>
+                            <ng-container matColumnDef="ytDgross1">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> <span
+                                        style="color:red">{{monthString[0] |
+                                        date :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross1)">{{getFormatData(element.ytDgross1)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross2">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"><span
+                                        style="color:red">{{monthString[1] | date
+                                        :
+                                        'MMM-yyyy'}} </span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross2)">{{getFormatData(element.ytDgross2)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross3">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"><span
+                                        style="color:red">{{monthString[2] | date
+                                        :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross3)">{{getFormatData(element.ytDgross3)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross4">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"><span
+                                        style="color:red">{{monthString[3] | date
+                                        :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross4)">{{getFormatData(element.ytDgross4)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross5">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"><span
+                                        style="color:red">{{monthString[4] | date :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross5)">{{getFormatData(element.ytDgross5)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross6">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"><span
+                                        style="color:red">{{monthString[5] | date :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross6)">{{getFormatData(element.ytDgross6)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytDgross7">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> <span
+                                        style="color:red;">{{monthString[6] | date :
+                                        'MMM-yyyy'}}</span> </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytDgross7)">{{getFormatData(element.ytDgross7
+                                        )}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="position">
+                                <th mat-header-cell *matHeaderCellDef colspan="4"
+                                    class="text-center text-background-opening-balance"
+                                    style="font-weight: bold;font-style: italic;">
+                                    POSITION</th>
+                            </ng-container>
+
+                            <ng-container matColumnDef="totalGross">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> TOTAL
+                                    GROSS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.totalGross)">{{getFormatData(element.totalGross)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="netClosing">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> NET
+                                    CLOSING :
+                                    <span style="color:red">{{dateTo | date : 'dd-MMM-yyyy'}}</span>
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.netClosing)">{{getFormatData(element.netClosing)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="netOpening">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> NET
+                                    OPENING :
+                                    <span style="color:red">{{dateTo | date : 'dd-MMM-yyyy'}}</span>
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.netOpening)">{{getFormatData(element.netOpening)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="dayChange">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-opening-balance"> DAY
+                                    CHANGE : 
+                                    <span style="color:red">{{dateTo | date : 'dd-MMM-yyyy'}}</span>
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getOpeningBalanceStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.dayChange)">{{getFormatDataChange(element.dayChange)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="mtm">
+                                <th mat-header-cell *matHeaderCellDef colspan="2"
+                                    class="text-center text-background-daily-mtm"
+                                    style="font-weight: bold;font-style: italic;">MTM</th>
+                            </ng-container>
+                            <ng-container matColumnDef="dayChangeMtm">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-daily-mtm"> DAY CHANGE :
+                                    (%) </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getmtmStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.dayChangeMtm)">{{getFormatData(element.dayChangeMtm)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="dailyMTM">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-daily-mtm">
+                                    Daily MTM
+                                    RATE
+                                    (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="getmtmStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.dailyMTM)">{{getFormatData(element.dailyMTM)}}</span>
+                                </td>
+                            </ng-container>
+                            <ng-container matColumnDef="tradingPL">
+                                <th mat-header-cell *matHeaderCellDef colspan="5"
+                                    class="text-center text-background-trading-pl"
+                                    style="font-weight: bold;font-style: italic;">TRADING
+                                    P&L</th>
+                            </ng-container>
+                            <ng-container matColumnDef="dayPAndL">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-trading-pl">
+                                    DAY P&L (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="gettradingPlStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.dayPAndL)">{{getFormatDataChange(element.dayPAndL)}}
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="mtdpAndL">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-trading-pl">
+                                    MTD P&L (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="gettradingPlStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.mtdpAndL)">{{getFormatDataChange(element.mtdpAndL)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytdRealisedPAndL">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-trading-pl"> YTD REALISED
+                                    P&L (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="gettradingPlStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytdRealisedPAndL)">{{getFormatData(element.ytdRealisedPAndL)}}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="ytdUnRealisedPAndL">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-trading-pl"> YTD UNREALISED
+                                    P&L (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="gettradingPlStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytdUnRealisedPAndL)">{{getFormatData(element.ytdUnRealisedPAndL)}}</span>
+                                </td>
+                            </ng-container>
+
+
+                            <ng-container matColumnDef="ytdTotalPAndL">
+                                <th mat-header-cell *matHeaderCellDef class="text-background-trading-pl"> YTD TOTAL P&L
+                                    (USD)
+                                </th>
+                                <td mat-cell *matCellDef="let element" [ngClass]="gettradingPlStyle(element)">
+                                    <span
+                                        [ngClass]="getFontSize(element,element.ytdTotalPAndL)">{{getFormatData(element.ytdTotalPAndL)}}</span>
+                                </td>
+                            </ng-container>
+
+
+                            <tr mat-header-row
+                                *matHeaderRowDef="['2','3','present','summary','position','mtm','tradingPL']sticky: true"
+                                style="height:40px !important;"></tr>
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                            <tr mat-row
+                                *matRowDef="let row; columns: ['groupName','ytDgrossText','totalGrossText','dayChangeMtmValue','dailyMTMValue']; when: (isGroup)"
+                                style="height:40px !important;">
+                            </tr>
+                            <tr mat-row *matRowDef="let element; columns: displayedColumns;"
+                                [ngClass]="{'hide-row': getHideData(element)}" style="height: 40px !important;">
+                            </tr>
+                            <!-- <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row">
+                            </tr> -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+</div>

@@ -1,0 +1,93 @@
+<div class="card-content p-05">
+  <mat-form-field class="full-width" *ngIf="isInlineEdit && isDateTimeConfiguration">
+    <!-- <input matInput [min]="onboardProcessDate" [(ngModel)]="deadlineDate" [matDatetimepicker]="deadlineDatePicker"
+      autocomplete="false" placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+      [disabled]="checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))"
+      (dateChange)="changeDeadline()" (click)="deadlineDatePicker.open()">
+    <mat-datetimepicker-toggle [for]="deadlineDatePicker" matSuffix></mat-datetimepicker-toggle>
+    <mat-datetimepicker #deadlineDatePicker type="datetime"></mat-datetimepicker> -->
+    <input matInput [min]="onboardProcessDate" [(ngModel)]="deadlineDate" (dateTimeChange)="changeDeadline()"
+      [owlDateTimeTrigger]="deadlineDatePicker" [owlDateTime]="deadlineDatePicker"
+      [disabled]="checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))"
+      placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}">
+    <fa-icon icon="calendar" [owlDateTimeTrigger]="deadlineDatePicker" style="float:right;position:absolute;right:0">
+    </fa-icon>
+    <owl-date-time #deadlineDatePicker></owl-date-time>
+  </mat-form-field>
+
+  <mat-form-field class="full-width" *ngIf="isInlineEdit && !isDateTimeConfiguration">
+    <input [(ngModel)]="deadlineDate" matInput [matDatepicker]="picker" (click)="picker.open()"
+      placeholder="{{ 'USERSTORY.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}" [min]="onboardProcessDate"
+      [disabled]="checkDeadlineDateIsDisabled((canAccess_entityType_feature_EditActiveGoalDeadlineDate),(canAccess_entityType_feature_EditBacklogGoalDeadlineDate),(canAccess_entityType_feature_EditReplanGoalDeadlineDate))"
+      (dateChange)="changeDeadline()" required />
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+
+  </mat-form-field>
+
+  <app-common-estimatedTime *ngIf="isInlineEditForEstimatedTime" [estimatedTime]="estimatedTime"
+    [isDisabled]="checkUserStoryEstimatedIsDisabled((canAccess_entityType_feature_EditActiveGoalEstimatedTime),(canAccess_entityType_feature_EditBacklogGoalEstimatedTime),(canAccess_entityType_feature_EditReplanGoalEstimatedTime))"
+    (totalEstimatedTimeInHours)="changeEstimatedTime($event)">
+  </app-common-estimatedTime>
+
+  <mat-form-field class="full-width" *ngIf="isInlineEditForSprintEstimatedTime">
+    <input matInput [(ngModel)]="sprintEstimatedTime" (blur)="saveEstimatedTime()" (keypress)="$event.stopPropagation()"
+      [disabled]="checkUserStoryEstimatedIsDisabled((canAccess_entityType_feature_EditActiveGoalEstimatedTime),(canAccess_entityType_feature_EditBacklogGoalEstimatedTime),(canAccess_entityType_feature_EditReplanGoalEstimatedTime))"
+      placeholder="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}" amountOnly>
+  </mat-form-field>
+  <mat-error *ngIf="isValidation">
+    {{ 'USERSTORY.ESTIMATEDTIMEINSPCANNOTGREATERTHAN99HOURS' | translate }}
+  </mat-error>
+
+  <mat-form-field class="full-width" *ngIf="isInlineEditForUserStoryStatus">
+    <mat-select [disabled]="isUserStoryStatusDisabled" placeholder="{{ 'STATUS' | translate }}"
+      (selectionChange)="getUserStoryStatusChange($event.value)" [(ngModel)]="userStoryStatusId">
+      <mat-option value="option" *ngFor="let userStoryStatus of (workflowStatus)"
+        [value]="userStoryStatus.userStoryStatusId">{{ userStoryStatus.userStoryStatusName }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <div fxLayout="row wrap" *ngIf="isInlineEditForUserStoryOwner">
+    <div fxFlex="90" fxFlex.md="90">
+      <mat-form-field class="full-width">
+        <mat-select
+          [disabled]="checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))"
+          placeholder="{{ 'PROJECTS.ASSIGNEE' | translate }}" (selectionChange)="changeAssignee($event.value)"
+          [(ngModel)]="ownerUserId">
+          <mat-select-trigger>
+            {{selectedMember}}
+          </mat-select-trigger>
+          <mat-option [value]="0">{{ 'USERSTORY.SELECTNONE' | translate }}</mat-option>
+          <mat-option value="option"
+            *ngFor="let person of (projectMembers$ | async | dependencyFilter: 'projectMember.id':dependencyUserId)"
+            [value]="person.projectMember.id">
+            <app-avatar class="employee_img" matTooltip="{{ person.projectMember.name }}"  *ngIf="!person.projectMember.profileImage"
+              [name]="person.projectMember.name | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            <img class="employee_img" *ngIf="person.projectMember.profileImage" matTooltip="{{ person.projectMember.name }}"
+              [src]="person.projectMember.profileImage | fetchSizedAndCachedImage: '40':''">{{ person.projectMember.name  }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div fxFlex="3" fxFlexOffset="3px">
+      <mat-icon aria-hidden="false" aria-label="add"
+        matTooltip="{{ 'USERSTORY.ADDPROJECTMEMBER' | translate | softLabelsPipe : softLabels}}"
+        *ngIf="!checkUserStoryAssigneeIsDisabled((canAccess_entityType_feature_EditActiveGoalAssignee),(canAccess_entityType_feature_EditBacklogGoalAssignee),(canAccess_entityType_feature_EditReplanGoalAssignee))"
+        class="mat-bg-primary plus_icon" [satPopoverAnchorFor]="projectMemberPopover"
+        (click)="projectMemberPopover.open();createProjectMember()">
+        add
+      </mat-icon>
+    </div>
+  </div>
+</div>
+
+<sat-popover #projectMemberPopover [restoreFocus]="false" [interactiveClose]="false" [autoFocus]="false"
+  scrollStrategy="reposition" verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <app-pm-component-add-projectmember *ngIf="loadprojectMember" [projectId]="userStory.projectId"
+      [clearProjectForm]="clearProjectMemberForm" (closePopup)="closeProjectMemberDialog()"
+      (getProjectMembersCount)="getProjectMembersCount()">
+    </app-pm-component-add-projectmember>
+  </mat-card>
+</sat-popover>

@@ -1,0 +1,319 @@
+<div class="full-height" *ngIf="(canAccess_feature_ManageHtmltemplate)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'HTMLTEMPLATE.HTMLTEMPLATETITLE' | translate | titlecase }}">{{
+            'HTMLTEMPLATE.HTMLTEMPLATETITLE' | translate | titlecase }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <mat-slide-toggle
+              [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+              class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived" (change)="gethtmltemplate()">
+            </mat-slide-toggle>
+          </div>
+          <div fxFlex="185px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+            fxLayoutAlign.xs="start center">
+            <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <mat-form-field class="full-width">
+                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="filterByName($event)">
+              </mat-form-field>
+            </div>
+            <span class="shift-timing-close mr-lg-n4" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <span *ngIf="!searchText"></span>
+              <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                style="cursor:pointer">
+                close</mat-icon>
+            </span>
+          </div>
+          <!-- <button mat-icon-button matTooltip="{{ 'HTMLTEMPLATE.CLICKHERETOCREATEAHTMLTEMPLATETYPE' | translate }}"
+              [satPopoverAnchorFor]="htmlTemplatePopover" #htmlTemplatePopup="satPopoverAnchor"
+              (click)=" createHtmlTemplate(htmlTemplatePopup);clearForm()" *ngIf="!isArchived">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button> -->
+          <div fxFlex="36px"></div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+
+  <div class="activity-data no-drag">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+      [rowHeight]="50" [limit]="100" [rows]="htmltemplatedata" [loadingIndicator]="isAnyOperationIsInprogress"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+      <ngx-datatable-column minWidth="150" name="{{ 'HTMLTEMPLATE.HTMLTEMPLATENAME' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="htmlTemplateName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.htmlTemplateName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'HTMLTEMPLATE.CONFIGUREDTO' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="configuredto">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div *ngIf="row.isConfigurable && row.selectedRoleNames" matTooltip="{{ row?.selectedRoleNames }}"
+            matTooltipClass="tooltip-overflow">{{ row?.selectedRoleNames }}</div>
+          <div *ngIf="row.isConfigurable && row.mailUrls" matTooltip="{{ row?.mails }}"
+            matTooltipClass="tooltip-overflow">{{ row?.mails }}</div>
+          <div *ngIf="!row.isConfigurable || (!row.mailUrls && !row.selectedRoleNames)">-</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'HTMLTEMPLATE.HTMLTEMPLATE' | translate }}" [flexGrow]="1"
+        [sortable]="true" prop="htmlTemplate">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row?.htmlTemplate }}
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'HTMLTEMPLATE.EDITHTMLTEMPLATE' | translate }}"
+            [satPopoverAnchorFor]="htmlTemplatePopover" #htmlTemplatePopup="satPopoverAnchor"
+            (click)="editHtmlTemplate(row,htmlTemplatePopup)"
+            *ngIf="!isArchived && !row.isMaster && !row.isConfigurable" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{ 'HTMLTEMPLATE.CONFIGURATIONSETTINGS' | translate }}"
+            [satPopoverAnchorFor]="configureTemplatePopover" #configureTemplatePopup="satPopoverAnchor"
+            *ngIf="row.isConfigurable" (click)="configureTemplate(row,configureTemplatePopup)" mat-icon-button>
+            <fa-icon icon="cog" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <!-- <button class="text-center" title="{{ 'HTMLTEMPLATE.ARCHIVEHTMLTEMPLATE' | translate }}"
+            [satPopoverAnchorFor]="deleteHtmlTemplatePopover" #deleteHtmlTemplatePopup="satPopoverAnchor"
+            (click)="deleteHtmlTemplatePopupOpen(row,deleteHtmlTemplatePopup)" *ngIf="!isArchived" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button> -->
+
+          <!-- <button class="text-center" title="{{ 'HTMLTEMPLATE.ARCHIVEHTMLTEMPLATE' | translate }}"
+          [satPopoverAnchorFor]="htmlTemplateCopyPopover" #htmlTemplateCopyPopup="satPopoverAnchor"
+          (click)="gethtmltemplatecopy(row,htmlTemplateCopyPopup)" *ngIf="!isArchived" mat-icon-button>
+          <fa-icon icon="copy" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+        </button> -->
+
+          <!-- <button class="text-center" title="{{ 'HTMLTEMPLATE.UNARCHIVEHTMLTEMPLATE' | translate }}"
+            [satPopoverAnchorFor]="deleteHtmlTemplatePopover" #deleteHtmlTemplatePopup="satPopoverAnchor"
+            (click)="deleteHtmlTemplatePopupOpen(row,deleteHtmlTemplatePopup)" *ngIf="isArchived" mat-icon-button>
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button> -->
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+  <!-- configuration -->
+  <sat-popover backdropClass="backdrop-color" #configureTemplatePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05">{{ 'HTMLTEMPLATE.CONFIGURATIONSETTINGS' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="configureTemplateForm" novalidate #formDirective="ngForm" style="width: 400px;">
+          <mat-radio-group aria-label="select an option" formControlName="configurationType"
+            (change)="onChange($event)">
+            <div fxLayout="row" class="mt-05">
+              <mat-radio-button value=0 class="pr-05">{{ 'HTMLTEMPLATE.ROLES' | translate }}
+              </mat-radio-button>
+              <mat-radio-button value=1 class="pr-05">{{ 'HTMLTEMPLATE.EMAILS' | translate }}
+              </mat-radio-button>
+              <mat-radio-button value=2 class="pr-05">{{ 'ACTIVITYAPPS.NONE' | translate }}
+              </mat-radio-button>
+            </div>
+          </mat-radio-group>
+          <mat-form-field class="full-width" *ngIf="isRoleBased">
+            <mat-select formControlName="selectedRoleIds" placeholder="{{ 'USERMANAGEMENT.ROLE' | translate }}" multiple
+              required>
+              <app-select-all [model]="configureTemplateForm.get('selectedRoleIds')" [values]="roleIds">
+              </app-select-all>
+              <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                {{ roles.roleName }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="configureTemplateForm.get('selectedRoleIds').hasError('required') && configureTemplateForm.get('selectedRoleIds').touched">
+              {{ 'APP.SELECTANYROLE' | translate }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="full-width tags-popup" *ngIf="isMailBased"
+            hintLabel="{{ 'EXPENSEMANAGEMENT.PLEASEPRESSCOMMAORENTERFORNEXTMAIL' | translate }}">
+            <mat-chip-list #tagsList1>
+              <mat-chip *ngFor="let tags of toMailsList" [selectable]="selectable" [removable]="removable"
+                (removed)="removeToMailId(tags)" class="userstory-tags">
+                <span class="hide-content-overflow" matTooltip="{{ tags }}" matTooltipClass="tooltip-overflow">
+                  {{tags}}
+                </span>
+                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+              </mat-chip>
+              <input placeholder="{{'HTMLTEMPLATE.EMAILS' | translate}}" [matChipInputFor]="tagsList1"
+                [(ngModel)]="toMail" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                (matChipInputTokenEnd)="addToMailIds($event)">
+            </mat-chip-list>
+          </mat-form-field>
+          <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          <div fxLayout="row" class="mt-1 mb-05">
+            <div fxFlex fxLayoutAlign="center center" class="m-0 p-0">
+              <button mat-raised-button color="primary" class="mr-1" (click)="upsertHtmlTemplate()"
+                [disabled]="checkIsConfigurationDisabled()">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>{{ 'SAVE' | translate }}
+              </button>
+              <button mat-button mat-raised-button (click)="closeUpsertConfigurationPopup()" type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- configuration -->
+
+  <!-- edit -->
+  <sat-popover backdropClass="backdrop-color" #htmlTemplatePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="center"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0 template-popup">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ htmlTemplateEdit }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="htmlTemplateForm" #formDirective="ngForm" novalidate
+          (submit)="htmlTemplateForm.valid && upsertHtmlTemplate()">
+          <div>
+            <mat-form-field class="full-width">
+              <input matInput formControlName="htmlTemplateName"
+                placeholder="{{ 'HTMLTEMPLATE.HTMLTEMPLATENAME' | translate }}" required>
+              <mat-error *ngIf="htmlTemplateForm.get('htmlTemplateName').hasError('maxlength')">
+                {{ 'HTMLTEMPLATE.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="htmlTemplateForm.get('htmlTemplateName').hasError('required') && htmlTemplateForm.get('htmlTemplateName').touched">
+                {{ 'HTMLTEMPLATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div>
+            <mat-form-field class="full-width">
+              <!-- <input matInput formControlName="htmlTemplate" placeholder="{{ 'HTMLTEMPLATE.HTMLTEMPLATE' | translate }}"
+                required> -->
+              <textarea matInput class="text-area" formControlName="htmlTemplate" rows="15"
+                placeholder="{{ 'HTMLTEMPLATE.HTMLTEMPLATE' | translate }}"></textarea>
+              <mat-error *ngIf="htmlTemplateForm.get('htmlTemplate').hasError('maxlength')">
+                {{ 'HTMLTEMPLATE.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="htmlTemplateForm.get('htmlTemplate').hasError('pattern') && htmlTemplateForm.get('htmlTemplate').hasError('required') && htmlTemplateForm.get('webHookUrl').touched">
+                {{ 'HTMLTEMPLATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1 button-center">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!htmlTemplateForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeupsertHtmlTemplatePopup()" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- edit -->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deleteHtmlTemplatePopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="isHtmlTemplateArchived">
+          {{ 'HTMLTEMPLATE.ARCHIVEHTMLTEMPLATE' | translate }}</div>
+        <div class="card-title-text mb-1" *ngIf="!isHtmlTemplateArchived">
+          {{ 'HTMLTEMPLATE.UNARCHIVEHTMLTEMPLATE' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="isHtmlTemplateArchived">
+          {{ 'HTMLTEMPLATE.DESIGNA' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="!isHtmlTemplateArchived">
+          {{ 'HTMLTEMPLATE.DESIGNU' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isHtmlTemplateArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHtmlTemplate();">
+            <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="!isHtmlTemplateArchived"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteHtmlTemplate();">
+            <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeHtmlTemplatePopup();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+
+  <!-- copy -->
+  <sat-popover backdropClass="backdrop-color" #htmlTemplateCopyPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'HTMLTEMPLATE.EDITHTMLTEMPLATE' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="htmlTemplateFormDetails" #formDirectiveCopy="ngForm" novalidate
+          (submit)="htmlTemplateFormDetails.valid && upsertHtmlTemplateCopy()">
+          <div>
+            <mat-form-field>
+              <input matInput formControlName="htmlTemplateName"
+                placeholder="{{ 'HTMLTEMPLATE.HTMLTEMPLATENAME' | translate }}" required>
+              <mat-error *ngIf="htmlTemplateFormDetails.get('htmlTemplateName').hasError('maxlength')">
+                {{ 'HTMLTEMPLATE.MAXLENGTHERROR' | translate }}</mat-error>
+              <mat-error
+                *ngIf="htmlTemplateFormDetails.get('htmlTemplateName').hasError('required') && htmlTemplateFormDetails.get('htmlTemplateName').touched">
+                {{ 'HTMLTEMPLATE.REQUIREDERROR' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error>
+          </div>
+          <div class="mt-1">
+            <button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!htmlTemplateFormDetails.valid || isAnyOperationIsInprogressCopy">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogressCopy">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closeUpsertHtmlTemplateCopyPopup()" type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- copy -->
+
+</div>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ManageHtmltemplate)"
+  textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

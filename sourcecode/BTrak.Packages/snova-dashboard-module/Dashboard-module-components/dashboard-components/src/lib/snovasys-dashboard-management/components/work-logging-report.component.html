@@ -1,0 +1,381 @@
+<app-common-message-box *ngIf="!(canAccess_feature_EmployeeWorkLogReport)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height">
+  <div *ngIf="(canAccess_feature_EmployeeWorkLogReport)">
+    <mat-card class="m-0 p-0">
+      <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutGap="0" fxLayoutAlign="end center">
+          <div fxFlex fxLayoutAlign="start center" class="p-05 drag-handler">
+            <span fxFlex="100"
+              class="hide-content-overflow">{{'WORKLOGGING.WORKLOGGINGREPORT' | translate | titlecase}}</span>
+          </div>
+          <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02" fxLayoutAlign="end center">
+            <button mat-icon-button (click)="resetAllFilters()">
+              <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+            </button>
+          </div>
+          <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center">
+            <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+              [matMenuTriggerFor]="filterMenu">
+              <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }"
+                matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+              </fa-icon>
+            </button>
+          </div>
+          <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+            <button mat-menu-item [ngClass]="{ 'active': selectEmployeeFilterIsActive }"
+              [matMenuTriggerFor]="employeeSearch">
+              {{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+            <button mat-menu-item [ngClass]="{ 'active': selectLineManagerfilter }"
+              [matMenuTriggerFor]="lineManagerSearch">
+              {{'LOGTIMEREPORT.LINEMANAGER'|translate}}</button>
+            <button mat-menu-item [ngClass]="{ 'active': true }" [matMenuTriggerFor]="fromDateSearch">
+              {{'MYPROFILE.FROMDATE' | translate}}</button>
+            <button mat-menu-item [ngClass]="{ 'active': true }" [matMenuTriggerFor]="toDateSearch">
+              {{'MYPROFILE.TODATE' | translate}}</button>
+          </mat-menu>
+          <mat-menu #employeeSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <mat-form-field>
+                <mat-select placeholder="{{'WORKLOGGING.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                  [(ngModel)]="selectedUserId" (selectionChange)="selectedEmployeesId($event.value)">
+                  <mat-option value="all">All</mat-option>
+                  <mat-option *ngFor="let employee of employeeList" [value]="employee.teamMemberId">
+                    <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                      [name]="employee.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30">
+                    </app-avatar>
+                    <img class="employee_img" *ngIf="employee.profileImage"
+                      src="{{employee.profileImage}}">{{employee.teamMemberName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-card>
+          </mat-menu>
+          <mat-menu #lineManagerSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <mat-form-field>
+                <mat-select placeholder="{{'LOGTIMEREPORT.SELECTLINEMANAGER'|translate}}" [(ngModel)]="selectedLineId"
+                  (selectionChange)="selectedLineManagerId($event.value)">
+                  <mat-option value="all">All</mat-option>
+                  <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                    <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                      [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                    <img class="employee_img" *ngIf="person.profileImage"
+                      src="{{person.profileImage}}">{{person.userName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-card>
+          </mat-menu>
+          <mat-menu #fromDateSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <mat-form-field>
+                <mat-label>{{'MYPROFILE.FROMDATE' | translate}}</mat-label>
+                <input matInput [matDatepicker]="picker1" [(ngModel)]="fromDate" (click)="picker1.open()"
+                  autocomplete="off" (dateChange)="dateFromChanged($event)" class="date-picker" [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker1">
+                </mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+              </mat-form-field>
+            </mat-card>
+          </mat-menu>
+          <mat-menu #toDateSearch="matMenu">
+            <mat-card class="filter-data" (click)="$event.stopPropagation()">
+              <mat-form-field>
+                <mat-label>{{'MYPROFILE.TODATE' | translate}}</mat-label>
+                <input matInput [matDatepicker]="picker2" [(ngModel)]="toDate" [min]="minDate" (click)="picker2.open()"
+                  autocomplete="off" (dateChange)="dateToChanged($event)" class="date-picker" [readonly]="true">
+                <mat-datepicker-toggle matSuffix [for]="picker2">
+                </mat-datepicker-toggle>
+                <mat-datepicker #picker2></mat-datepicker>
+              </mat-form-field>
+            </mat-card>
+          </mat-menu>
+        </div>
+        <mat-divider></mat-divider>
+      </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+    </mat-progress-bar>
+    <div class="activity-data filter-margin m-0 full-height no-drag paging-move">
+      <!-- <ngx-datatable class="btrak" [rows]="loggingReport" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="35"
+            [rowHeight]="35" [externalPaging]="true" [count]="page.totalElements" [offset]="page.pageNumber"
+            [limit]="page.size" [externalSorting]="true" [scrollbarH]="scroll" (sort)="onSort($event)"
+            (page)='setPage($event)'
+            [messages]="{emptyMessage:(searchText.trim().length > 0 ? ('SEARCHEDNODATATODISPLAY' | translate) : ('NODATATODISPLAY' | translate)), totalMessage: 'TOTAL' | translate}"
+            [loadingIndicator]="isAnyOperationIsInprogress">
+            <ngx-datatable-column name="{{'WORKLOGGING.DATE' | translate}}" sortable="true" prop="date">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.date != null">{{ row.date | date: "dd-MMM-yyyy"  }}
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.PROJECT' | translate | softLabelsPipe : softLabels}}" sortable="true"
+              prop="projectName">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                {{value}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.GOALNAME' | translate | softLabelsPipe : softLabels}}" sortable="true"
+              prop="goalName">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <span matTooltip="{{ row?.goalName}}">{{ row?.goalName}}</span>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+              sortable="true" prop="developerName">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                {{value}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.BOARDTYPE' | translate}}" sortable="true" prop="boardType">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                {{value}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.TASKNAME' | translate}}" sortable="true" prop="userStoryName">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <span matTooltip="{{ row?.userStoryName}}">{{ row?.userStoryName}}</span>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'HISTORICALREPORT.ORIGINALESTIMATE' | translate}}" sortable="true"
+              prop="originalEstimate">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.originalEstimate != null">{{value}}h</div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.TIMESPENTSOFAR' | translate}}" sortable="true"
+              prop="totalSpentTimeSoFar">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.totalSpentTimeSoFar != null">{{value}}h</div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.TIMESPENTTODAY' | translate}}" sortable="true" prop="spentToday">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.spentToday != null">{{value}}h</div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.REMAININGTIME' | translate}}" sortable="true" prop="remainingTime">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <div *ngIf="row.remainingTime != null">{{value}}h</div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'WORKLOGGING.DESCRIPTION' | translate}}" [sortable]="false" prop="comments">
+              <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                <button class="text-center" title="{{'WORKLOGGING.DESCRIPTION' | translate}}" mat-icon-button
+                  [satPopoverAnchorFor]="commentPopover" #commentPopUp="satPopoverAnchor"
+                  (click)="commentView(row,commentPopUp)">
+                  <fa-icon icon="tasks" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                </button>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable> -->
+
+      <kendo-grid [data]="loggingReport" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+        [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false" [scrollable]="true"
+        [columnMenu]="true" (dataStateChange)="dataStateChange($event)"
+        (columnVisibilityChange)="onVisibilityChange($event)">
+        <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+          pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+        </kendo-grid-messages>
+        <kendo-grid-column field="date" title="{{'WORKLOGGING.DATE' | translate}}" width="150"
+          [hidden]="checkVisibility('date')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div *ngIf="dataItem.date != null">{{ dataItem.date | date: "dd-MMM-yyyy"  }}
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="projectName" title="{{'WORKLOGGING.PROJECT' | translate}}" width="150"
+          [hidden]="checkVisibility('projectName')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <span class="userstory-hover text-underline hide-content-overflow"
+              (click)="navigateToProjectDetailsPage(dataItem); $event.stopPropagation();">
+              <a matTooltip="{{ dataItem.projectName }}">
+                {{dataItem.projectName}}
+              </a>
+            </span>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="goalName" title="{{'WORKLOGGING.GOALNAME' | translate}}" width="150"
+          [hidden]="checkVisibility('goalName')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <span class="userstory-hover text-underline hide-content-overflow"
+              (click)="navigateToGoalDetailsPage(dataItem); $event.stopPropagation();">
+              <a matTooltip="{{ dataItem.goalName }}">
+                {{ dataItem.goalName }}
+              </a>
+            </span>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="developerName" title="{{'WORKLOGGING.EMPLOYEENAME' | translate}}" width="150"
+          [hidden]="checkVisibility('developerName')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div class="icon-button" fxLayout="row" style="text-align: left !important"
+              (click)="goToProfile(dataItem.userId); $event.stopPropagation();">
+              <div *ngIf="dataItem.developerImage != null && dataItem.developerImage != ''">
+                <app-avatar [src]="dataItem.developerImage | fetchSizedAndCachedImage: '30':''" [isRound]="true"
+                  size="30">
+                </app-avatar>
+              </div>
+              <div *ngIf="(dataItem.developerImage == null || dataItem.developerImage == '')">
+                <app-avatar [name]="dataItem.developerName | removeSpecialCharacters" [isRound]="true" size="30">
+                </app-avatar>
+              </div>
+              <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.developerName}}"
+                matTooltipShowDelay="400" fxFlex>
+                {{ dataItem?.developerName }}
+              </span>
+            </div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="boardType" title="{{'WORKLOGGING.BOARDTYPE' | translate}}" width="150"
+          [hidden]="checkVisibility('boardType')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            {{ dataItem?.boardType}}
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="userStoryName"
+          title="{{'WORKLOGGING.TASKNAME' | translate | softLabelsPipe : softLabels}}" width="500"
+          [hidden]="checkVisibility('userStoryName')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <span class="userstory-hover text-underline hide-content-overflow"
+              (click)="navigateToUserStoriesPage(dataItem);$event.stopPropagation();">
+              <a matTooltip="{{ dataItem.userStoryName }}">
+                {{ dataItem.userStoryName }}
+              </a>
+            </span>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="originalEstimate" title="{{'HISTORICALREPORT.ORIGINALESTIMATE' | translate}}"
+          width="150" [hidden]="checkVisibility('originalEstimate')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div *ngIf="dataItem.originalEstimate != null">{{dataItem.originalEstimate}}h</div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="totalSpentTimeSoFar" title="{{'WORKLOGGING.TIMESPENTSOFAR' | translate}}" width="150"
+          [hidden]="checkVisibility('totalSpentTimeSoFar')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div *ngIf="dataItem.totalSpentTimeSoFar != null">{{dataItem.totalSpentTimeSoFar}}h</div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="spentToday" title="{{'WORKLOGGING.TIMESPENTTODAY' | translate}}" width="150"
+          [hidden]="checkVisibility('spentToday')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div *ngIf="dataItem.spentToday != null">{{dataItem.spentToday}}h</div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="remainingTime" title="{{'WORKLOGGING.REMAININGTIME' | translate}}" width="150"
+          [hidden]="checkVisibility('remainingTime')">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <div *ngIf="dataItem.remainingTime != null">{{dataItem.remainingTime}}h</div>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="comments" title="{{'WORKLOGGING.DESCRIPTION' | translate}}" width="150"
+          [hidden]="checkVisibility('comments')" [sortable]="false">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button class="text-center" title="{{'WORKLOGGING.DESCRIPTION' | translate}}" mat-icon-button
+              [satPopoverAnchorFor]="commentPopover" #commentPopUp="satPopoverAnchor"
+              (click)="commentView(dataItem,commentPopUp)">
+              <fa-icon icon="tasks" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="commits" title="{{'REPOSITORYCOMMITS.REPOCOMMITS' | translate}}" width="150"
+          [hidden]="checkVisibility('commits')" [sortable]="false">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button class="text-center" title="{{'REPOSITORYCOMMITS.REPOCOMMITS' | translate}}" mat-icon-button
+              [satPopoverAnchorFor]="commitPopover" #commitPopUp="satPopoverAnchor"
+              (click)="SearchRepositoryCommits(dataItem,commitPopUp)">
+              <mat-icon class="mat-color-accent cursor-pointer" aria-hidden="false">
+                wysiwyg</mat-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-command-column title="Screenshots" [width]="100">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button class="text-center" title="screenshots" mat-icon-button (click)="openScreenShotsDialog(dataItem)">
+              <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+            </button>
+          </ng-template>
+        </kendo-grid-command-column>
+      </kendo-grid>
+
+    </div>
+    <sat-popover backdropClass="backdrop-color" #commentPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+      [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0 mr-0" fxLayout="column">
+        <mat-card-title class="text-center">
+          <div fxLayout="row">
+            <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+              {{'WORKLOGGING.DESCRIPTION' | translate}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary p-05" (click)="closePopOver()">
+              <fa-icon class="icon-button" icon="times"></fa-icon>
+            </div>
+          </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+          <!-- fxFlex.md="400px" fxFlex.sm="250px" fxFlex.lg="500px" fxFlex.gt-lg="600px" -->
+          <div class="mobile-view-popover">
+            <div *ngIf="comments != ''">
+              <div *ngFor="let discription of comments" class="history-tab">
+                <span [innerHTML]="discription"></span>
+              </div>
+            </div>
+            <div class="p-1" *ngIf="comments == ''">
+              {{'WORKLOGGING.NOCOMMENTSTODISPLAY' | translate}}
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+  </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #commitPopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+        [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+        <mat-card class="p-0 mr-0" fxLayout="column">
+            <mat-card-title class="text-center">
+                <div fxLayout="row">
+                    <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+                        {{'REPOSITORYCOMMITS.REPOCOMMITS' | translate}}
+                    </div>
+                    <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary p-05"
+                        (click)="closeCommitPopOver()">
+                        <fa-icon class="icon-button" icon="times"></fa-icon>
+                    </div>
+                </div>
+            </mat-card-title>
+            <mat-card-content id="style-1" class="mobile-view-popover p-0 no-drag" style="max-height: 320px;">
+              <!-- fxFlex.md="400px" fxFlex.sm="250px" fxFlex.lg="500px" fxFlex.gt-lg="600px" -->
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingIndicator">
+                </mat-progress-bar>
+                <div *ngIf="!loadingIndicator">
+                    <div *ngIf="commits.length > 0">
+                        <div *ngFor="let commit of commits" class="history-tab">
+                            <div (click)="openInNewTab(commit)" class="ml-1 mb-05 mt-05 cursor-pointer"
+                                matTooltip="{{ 'REPOSITORYCOMMITS.CLICKTONAVIGATE' | translate }}">
+                                <span><b>{{ commit.createdDateTime | utcToLocalTime | date: 'dd MMM yyyy HH:mm' }}</b></span>
+                                -
+                                <span>{{ commit.commitMessage }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-1" *ngIf="commits.length == 0">
+                        {{'REPOSITORYCOMMITS.NOCOMMITSTODISPLAY' | translate}}
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+
+
+<ng-template #uniqueUserstoryDialogWorkLogging let-data>
+  <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+</ng-template>
+
+<ng-template #screenShotComponent let-data>
+  <app-ts-component-trackerscreenshots [data]=[data]></app-ts-component-trackerscreenshots>
+</ng-template>

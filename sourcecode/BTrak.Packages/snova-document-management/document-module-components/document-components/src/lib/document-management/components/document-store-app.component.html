@@ -1,0 +1,187 @@
+<div fxLayout="column" class="full-height" id="document-store-system-app">
+  <!--Header-->
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap">
+        <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center" *ngIf="!isEditAppName">
+          <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+            *ngIf="(canAccess_feature_DragApps)">
+            {{ dashboardName }}
+          </span>
+          <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+            {{ dashboardName }}
+          </span>
+        </div>
+        <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+          <mat-form-field>
+            <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+               [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+              matInputAutofocus />
+          </mat-form-field>
+        </div>
+        <ng-container *ngIf="(canAccess_feature_CreateFolder) && folderReferenceId">
+          <button fxFlex="40px" mat-icon-button matTooltip="{{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}"
+            [satPopoverAnchorFor]="upsertFolderPopover" #upsertFolderPopup="satPopoverAnchor"
+            (click)="addUpsertFolderPopup(upsertFolderPopup,null)">
+            <mat-icon class="icon-button mat-color-accent">create_new_folder</mat-icon>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="(canAccess_feature_UploadFiles) && folderReferenceId">
+          <button fxFlex="40px" mat-icon-button matTooltip="Upload files"
+            [satPopoverAnchorFor]="fileUploadDropzonePopover" #fileUploadDropzonePopup="satPopoverAnchor"
+            (click)="addUploadFilePopupOpen(fileUploadDropzonePopup)">
+            <fa-icon icon="file-upload" class="filter mat-color-accent fa-lg"></fa-icon>
+          </button>
+        </ng-container>
+        <div fxLayoutAlign="end center" style="width: 90px;">
+          <mat-select [(ngModel)]="isGrid" (selectionChange)="selectView($event.value)">          
+            <mat-option [value]="false">{{'TABLEVIEW' | translate}}</mat-option>
+            <mat-option [value]="true">{{'GRIDVIEW' | translate}}</mat-option>
+          </mat-select>
+        </div>
+        <div class="mt-05">
+          <mat-slide-toggle
+            [matTooltip]="(isReviewEnabled == true) ? ('DOCUMENTMANAGEMENT.SWITCHTODISABLEREVIEWFILES' | translate) : ('DOCUMENTMANAGEMENT.SWITCHTOREVIEWFILES' | translate)"
+            class="mr-1 archive-switch" [(ngModel)]="isReviewEnabled" [checked]="isReviewEnabled"
+            (change)="reviewFileChanged()">
+          </mat-slide-toggle>
+        </div>
+        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center" class="mr-05">
+          <mat-form-field class="full-width search_goalinput">
+            <input class="search_goalinput" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+              [(ngModel)]="searchText" (keydown)="searchByInput($event)" autocomplete="off">
+          </mat-form-field>
+        </div>
+        <span class="close_icon documents-search-close">
+          <span *ngIf="!searchText"></span>
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+            style="cursor:pointer">
+            close</mat-icon>
+        </span>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <!--Header-->
+  <div class="m-0 p-0 no-drag mat-card-fx-col " *ngIf="(canAccess_feature_ViewFiles)">
+    <ng-container>
+      <div fxFlex fxFlex.lt-sm="100" class="full-height gridster-noset" id="style-1">
+        <app-documents-folders-files *ngIf="folderReferenceId"
+          class="full-width  flex-style-row" [folderReferenceId]="folderReferenceId"
+          [moduleTypeId]="moduleTypeId" [folderReferenceTypeId]="folderReferenceTypeId"
+          [searchText]="searchTextInput" [isFromDocumentsApp]="true" [isToNavigatecell]="true"
+          [optionalParameters]="optionalParameters"
+          [isFileUploadCompleted]="isFileUploadCompleted" [selectedParentFolderId]="selectedParentFolderId"
+          (parentFolderId)="setParentFolderDetails($event)" 
+          [isGridView]="isGrid" (showGrid)="selectView($event)"
+          [isReviewEnabled]="isReviewEnabled"
+          [permissionToDelete]="true" [isFolderUploadCompleted]="isFolderUploadCompleted">
+        </app-documents-folders-files>
+      </div>
+      <div *ngIf="!folderReferenceId">
+        <app-common-message-box textToDisplay="{{ 'DASHBOARDASSOCIATIONMESSAGE' | translate }}">
+        </app-common-message-box>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<sat-popover #upsertFolderPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <app-document-component-add-folder [editFolderDetails]="editFolderDetails" [selectedStoreId]="selectedStoreId"
+    [selectedParentFolderId]="selectedParentFolderId" [folderReferenceId]="folderReferenceId"
+    [isFromDocumentsApp]="true" [folderReferenceTypeId]="folderReferenceTypeId" (closePopup)="closeUpsertFolderPopup()">
+  </app-document-component-add-folder>
+</sat-popover>
+
+<sat-popover #fileUploadDropzonePopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+  scrollStrategy="reposition">
+  <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+    <mat-card-title>
+      <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+        <div fxFlex class="text-center">
+          {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center">
+          <button class="inline_edit_close_btn btn" (click)="closeUploadFilePopup()">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <div class="m-1">
+      <div *ngIf="storeConfigurations" class="custom-dropzone dropzone-height" ngx-dropzone
+        (change)="filesSelected($event)" [accept]="storeConfigurations.fileExtensions"
+        [maxFileSize]="storeConfigurations.maxStoreSize" [disabled]="anyOperationInProgress">
+        <ngx-dropzone-label>
+          <span>{{'DOCUMENTMANAGEMENT.DRAGANDDROPFILESHERE' | translate}}</span>
+        </ngx-dropzone-label>
+        <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+          (removed)="onRemove(f)">
+          <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">
+            {{ setLabelNameForDropzone(f.name) }}
+          </ngx-dropzone-label>
+        </ngx-dropzone-preview>
+      </div>
+      <div class="m-05 text-muted" style="text-align: center;">
+        <span>allowed file extensions : {{setAllowedFileExtensions()}}</span>
+      </div>
+      <mat-progress-bar color="primary" mode="determinate" [value]="progressValue" *ngIf="progressValue > 0">
+      </mat-progress-bar>
+      <div *ngIf="progressValue > 0">
+        {{progressValue}}% completed (Uploading {{fileCounter}} of {{files.length}} files)
+      </div>
+      <div class="m-05" *ngIf="isReviewEnabled">
+        <mat-checkbox mat-primary [(ngModel)]="isTobeReviewed">
+          {{'DOCUMENTMANAGEMENT.ISTOBEREVIEWED' | translate}}
+        </mat-checkbox>
+      </div>
+      <div class="mt-05" fxLayoutAlign="center end" *ngIf="isButtonVisible && filesPresent">
+        <button mat-button mat-raised-button color="primary" (click)="saveFiles()"
+          [disabled]="anyOperationInProgress || progressValue > 0">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="save"></fa-icon>{{'UPLOAD' | translate}}
+        </button>
+        <button class="ml-1" mat-button mat-raised-button (click)="removeAllFiles();"
+          [disabled]="anyOperationInProgress">
+          <fa-icon class="mr-05" icon="times"></fa-icon>{{'DOCUMENTMANAGEMENT.CLEARFILES' | translate}}
+        </button>
+      </div>
+    </div>
+    <!-- <div class="m-1">
+      <ng-container>
+        <div class="m-1">
+          <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="folderReferenceTypeId"
+            [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+            [referenceId]="selectedParentFolderId ? selectedParentFolderId: folderReferenceId"
+            [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="false">
+          </app-dropzone>
+        </div>
+      </ng-container>
+    </div> -->
+  </mat-card>
+</sat-popover>
+
+<style>
+  .file-or-folder-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 50px;
+  }
+
+  .file-or-folder-name-align {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .dropzone-height {
+    height: 100px;
+  }
+</style>
+
+<app-common-message-box *ngIf="!(canAccess_feature_ViewFiles)" textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

@@ -1,0 +1,46 @@
+import { Guid } from "guid-typescript";
+
+export class FeatureIds {
+  public static Feature_ManagePaymentMethod: Guid = Guid.parse('EE635C28-0FC2-420A-8C23-0F44DB2F5B4C');
+  public static Feature_PayrollCalculationConfigurations: Guid = Guid.parse('86D8CAC3-3953-4FCB-955D-1129E9F8CF60');
+  public static Feature_ContractPaySettings: Guid = Guid.parse('2DDDBEBA-63F7-423D-B522-1181B5782DDE');
+  public static Feature_EmployeeLoans: Guid = Guid.parse('7E12ED2E-0A76-450F-95DF-16EB35A3EA23');
+  public static Feature_AddOrEditEmployeeLoanInstallment: Guid = Guid.parse('513B41A3-BA1A-4A5C-94B9-1FAEDCBCE6DD');
+  public static Feature_ConfigurePayrollStatus: Guid = Guid.parse('495B187C-C8E4-4D48-83D5-209D90E2B1CC');
+  public static Feature_TdsSettings: Guid = Guid.parse('E50D0E15-8A69-488B-9391-27659FA2AB4A');
+  public static Feature_PayrollRun: Guid = Guid.parse('1CBAE3D3-D06C-42C7-BC67-3A7E1D6A5883');
+  public static Feature_EditPayslip: Guid = Guid.parse('7A11C52B-30C2-4923-977C-3C4D0F87A4CC');
+  public static Feature_FinancialYearConfigurations: Guid = Guid.parse('4542DE20-63BE-4CF3-BEFB-3D040897BC24');
+  public static Feature_ApproveEmployeeTaxAllowances: Guid = Guid.parse('3631B1E9-B9CA-4CE4-B33B-3DDBA2B2459E');
+  public static Feature_ViewEmployeeLoanInstallment: Guid = Guid.parse('8AF0BA30-3BB3-4C0B-9450-43E05D5FBD59');
+  public static Feature_PayrollTemplateConfiguration: Guid = Guid.parse('B2BEE500-1AA1-43C6-8C3F-637809C326EC');
+  public static Feature_EmployeeCreditorDetails: Guid = Guid.parse('DC499C59-A9A0-4DC3-A179-64128E994AC4');
+  public static Feature_ApproveEmployeeLoans: Guid = Guid.parse('D9FDF976-5055-42CA-87F6-644EA5BF1F2E');
+  public static Feature_PayrollRoleConfiguration: Guid = Guid.parse('6CC68DAB-3E6A-4F98-A4B1-72B3D72E7916');
+  public static Feature_PayrollMaritalStatusConfiguration: Guid = Guid.parse('E65F528C-2B37-4462-B393-84C597ADC571');
+  public static Feature_EmployeePayrollDetails: Guid = Guid.parse('AF7A7997-4CE2-41B8-813D-9AE6DF46797E');
+  public static Feature_ManagePayrollComponent: Guid = Guid.parse('BEF56867-343C-485F-989D-9B157AAFED2F');
+  public static Feature_CanEditOtherEmployeeDetails: Guid = Guid.parse('A701FB6F-F1E3-42B0-9B4D-9B9F7C248F1E');
+  public static Feature_HourlyTdsConfiguration: Guid = Guid.parse('83B1EF70-F371-42AF-A8C5-A1632033D4B7');
+  public static Feature_PayrollManagement: Guid = Guid.parse('642D9BD8-610A-426E-86D2-AC66706D7B00');
+  public static Feature_PayrollGenderConfiguration: Guid = Guid.parse('8A856A6D-F5F3-4207-9390-BBDE1E991983');
+  public static Feature_AllowanceTime: Guid = Guid.parse('3B2AFE42-A447-454D-8873-C42E218FBFFD');
+  public static Feature_AddOrUpdateEmployeeContactDetails: Guid = Guid.parse('368B22EE-2089-4AB6-A400-C8ABDD34D886');
+  public static Feature_LeaveEncashmentSettings: Guid = Guid.parse('886D492F-D091-452B-88FE-CA4B13DBFF2A');
+  public static Feature_ConfigureEmployeePayrollTemplates: Guid = Guid.parse('82E88771-B74E-46C2-AFE9-CDCB10D653B0');
+  public static Feature_ManagePayrollTemplate: Guid = Guid.parse('40F9CFEC-717E-4091-837F-DCB1219326A1');
+  public static Feature_PayrollBranchConfiguration: Guid = Guid.parse('61312A34-7556-4A1E-9FEF-DFB2B592B7FF');
+  public static Feature_PayrollRunEmployee: Guid = Guid.parse('FBC1FD87-EBE4-4181-AF08-E2DAE768C8E9');
+  public static Feature_EmployeeTaxAllowanceDetails: Guid = Guid.parse('BEE9D8FD-BC11-49ED-915F-E5F554A3C66D');
+  public static Feature_ViewEmployeeBonus: Guid = Guid.parse('7121765F-5B22-4FBC-9975-E6BD1B66F21D');
+  public static Feature_DaysOfWeekConfiguration: Guid = Guid.parse('7CD55073-755E-4126-A4B7-E880BA223AC3');
+  public static Feature_PayrollFrequency: Guid = Guid.parse('25391559-1629-4772-BB51-E94A834C1774');
+  public static Feature_ViewMonthlyPayrollDetails: Guid = Guid.parse('D0AE20C9-BF9C-4389-8904-E9557D7B498F');
+  public static Feature_ManageEmployeeRateTag: Guid = Guid.parse('12E01F5C-3064-415A-BE33-EAB6DE261F8C');
+  public static Feature_ManageRateTag: Guid = Guid.parse('2CCA224D-9693-450A-B47B-7B1142350A07');
+  public static Feature_RateTagAllowanceTime: Guid = Guid.parse('3C0C75B9-46D8-4AE4-8BB5-36A0721F27D6');
+  public static Feature_ManageRateTagConfiguration: Guid = Guid.parse('58822DB6-B5DF-4431-A851-45AF8D9AEC1E');
+  public static Feature_ManageBank: Guid = Guid.parse('7517DF07-DEEC-4329-B080-A3F3ABAC620D');
+  public static EmployeePreviousCompanyTax: Guid = Guid.parse('82D718AA-3BD1-4180-BD9C-B3130D5C89B1');
+  public static Feature_AddOrUpdateEmployeeBonus: Guid = Guid.parse('B50D9A50-06CB-4D9B-8227-617CDAF016FD');
+}

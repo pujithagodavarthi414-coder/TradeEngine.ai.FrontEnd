@@ -1,0 +1,294 @@
+<div class="custom-dialog">
+  <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+    <fa-icon icon="times" class="project-dialog"></fa-icon>
+  </div>
+</div>
+<ng-container *ngIf="canAccess_feature_ViewTodaysTimesheet">
+  <h1 mat-dialog-title fxLayout="row">
+    <div *ngIf="profileImage != null && profileImage != ''">
+      <app-profile-avatar [src]="profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+      </app-profile-avatar>
+    </div>
+    <div *ngIf="profileImage == null || profileImage == ''">
+      <app-profile-avatar [name]="employeeName | removeSpecialCharacters" [isRound]="true" size="30">
+      </app-profile-avatar>
+    </div>
+    <span class="ml-05" *ngIf="employeeName">
+      {{ employeeName }}'s</span>&nbsp;{{ 'VIEWTIMESHEET.MONTHLYTIMESHEET' | translate }}
+  </h1>
+  <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+    <mat-form-field class="m-1">
+      <mat-label>{{ 'VIEWTIMESHEET.FROMDATE' | translate }}</mat-label>
+      <input matInput [matDatepicker]="picker1" [max]="maxDate" (click)="picker1.open()" autocomplete="off"
+        [max]="maxDate" (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom">
+      <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+      <mat-datepicker #picker1></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field class="m-1">
+      <mat-label>{{ 'VIEWTIMESHEET.TODATE' | translate }}</mat-label>
+      <input matInput [matDatepicker]="picker2" (click)="picker2.open()" autocomplete="off" [min]="minDate"
+        [max]="maxDate" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo">
+      <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+      <mat-datepicker #picker2></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field class="m-1">
+      <input type="text" class="search_goal" style="width: 150px;"
+        placeholder="{{'TIMESHEET.EMPLOYEENAME' | translate}}" matInput [(ngModel)]="selectedUserId"
+        (input)="getTimeSheetDetails()" [matAutocomplete]="auto" autocomplete="off" trim required>
+      <span class="linked-userstory-close" *ngIf="selectedUserId">
+        <span *ngIf="!selectedUserId">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <mat-icon *ngIf="selectedUserId" class="icon-button custom-auto-close-timesheet mt-lg-n2" aria-hidden="false"
+          (click)="clearTimeSheetDetails()" style="cursor:pointer">
+          close</mat-icon>
+      </span>
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+        (optionSelected)="fetchTimeSheetDetails($event.option.value)">
+        <mat-option [value]="row.userId" *ngFor="let row of  (list)" matTooltip="{{row.employeeName}}">
+          <app-avatar class="employee_img" *ngIf="!row.userProfileImage"
+            [name]="row.employeeName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+          <img class="employee_img" *ngIf="row.userProfileImage"
+            [src]="row.userProfileImage | fetchSizedAndCachedImage: '40':''">{{ row.employeeName}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+
+
+    <div class=" custom-monthly-timesheet">
+      <button mat-icon-button type="button" (click)="downloadFile();">
+        <fa-icon class="icon-button mat-color-accent" icon="download"
+          matTooltip="{{'TIMESHEET.DOWNLOADTIMESHEET' | translate}}"></fa-icon>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="downloadInProgress">
+        </mat-progress-bar>
+      </button>
+    </div>
+    <div class=" custom-monthly-timesheet">
+      <button class="text-center" matTooltip="{{ 'PERMISSIONHISTORY.RESET' | translate}}" (click)="reset();"
+        mat-icon-button>
+        <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+      </button>
+    </div>
+  </div>
+  <mat-card-content class="m-0" fxLayout="column">
+    <div class="activity-data monthly-timesheet no-drag">
+      <kendo-grid #grid [data]="gridSettings.gridData" [height]="100" [style.cursor]="cursor"
+        (cellHover)="cursor = 'pointer'" (cellLeave)="cursor = 'default'" [scrollable]="true"
+         (remove)="removeHandler()" [pageable]="true"
+        [pageSize]="gridSettings.state ? gridSettings.state.take : 0 " [reorderable]="true"
+        (columnReorder)="onReorder($event)" [skip]="gridSettings.state ? gridSettings.state.skip : 0"
+        (pageChange)="pageChange($event)" [filterable]="false"
+        [filter]="gridSettings.state ? gridSettings.state.filter : null" [sortable]="true"
+        [sort]="gridSettings.state ? gridSettings.state.sort : null" [resizable]="true" [columnMenu]="true"
+        (dataStateChange)="dataStateChange($event)" (columnVisibilityChange)="onVisibilityChange($event)"
+        (columnResize)="onResize($event)">
+        <kendo-grid-messages sortAscending="{{ 'KENDOGRIDMESSAGES.SORTASCENDING' | translate }}"
+          sortDescending="{{ 'KENDOGRIDMESSAGES.SORTDESCENDING' | translate }}"
+          columnsReset="{{ 'KENDOGRIDMESSAGES.COLUMNSRESET' | translate }}"
+          columnsApply="{{ 'KENDOGRIDMESSAGES.COLUMNSAPPLY' | translate }}"
+          columns="{{ 'KENDOGRIDMESSAGES.COLUMNS' | translate }}"
+          filterEqOperator="{{ 'KENDOGRIDMESSAGES.ISEQUALTO' | translate }}"
+          filterNotEqOperator="{{ 'KENDOGRIDMESSAGES.ISNOTEQUALTO' | translate }}"
+          filterContainsOperator="{{ 'KENDOGRIDMESSAGES.CONTAINS' | translate }}"
+          filterNotContainsOperator="{{ 'KENDOGRIDMESSAGES.DOESNOTCONTAIN' | translate }}"
+          filterStartsWithOperator="{{ 'KENDOGRIDMESSAGES.STARTSWITH' | translate }}"
+          filterEndsWithOperator="{{ 'KENDOGRIDMESSAGES.ENDSWITH' | translate }}"
+          filterIsNullOperator="{{ 'KENDOGRIDMESSAGES.ISNULL' | translate }}"
+          filterIsNotNullOperator="{{ 'KENDOGRIDMESSAGES.ISNOTNULL' | translate }}"
+          filterIsEmptyOperator="{{ 'KENDOGRIDMESSAGES.ISEMPTY' | translate }}"
+          filterIsNotEmptyOperator="{{ 'KENDOGRIDMESSAGES.ISNOTEMPTY' | translate }}"
+          filterAndLogic="{{ 'KENDOGRIDMESSAGES.AND' | translate }}"
+          filterOrLogic="{{ 'KENDOGRIDMESSAGES.OR' | translate }}"
+          filterClearButton="{{ 'KENDOGRIDMESSAGES.CLEAR' | translate }}"
+          filterFilterButton="{{ 'KENDOGRIDMESSAGES.FILTERBUTTON' | translate }}"
+          filter="{{ 'KENDOGRIDMESSAGES.FILTER' | translate }}" pagerItems="{{ 'LEAVESLIST.ITEMS' | translate }}"
+          noRecords="{{ 'LEAVESLIST.NODATATODISPLAY' | translate }}">
+        </kendo-grid-messages>
+        <ng-container *ngFor=" let col of gridSettings.columnsConfig">
+          <kendo-grid-column [field]="col.field" [title]="col.title | translate | softLabelsPipe : softLabels"
+            [hidden]="col.hidden" [filter]="col.type" [filterable]="true" [width]="col.width" [columnMenu]="false"
+            *ngIf="col.field != 'actions'">
+
+            <ng-template kendoGridHeaderTemplate let-column="col">
+              <span matTooltip="{{col.title | translate | softLabelsPipe : softLabels}}">{{col.title | translate |
+                softLabelsPipe : softLabels}}</span>
+            </ng-template>
+
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div *ngIf="col.field == 'date'">
+                <span matTooltip="{{dataItem?.date }}">{{ dataItem?.date | date: "dd-MMM-yyyy" }}</span>
+              </div>
+              <div *ngIf="col.field == 'inTime' && dataItem.inTime != null"
+                [ngClass]="{ 'bold-time-sheet': dataItem.isMorningLate }"
+                matTooltip="{{ dataItem?.inTime | timeZoneData: 'dd MMM yyyy HH:mm' : currentUserTimeZoneOffset }} {{ dataItem.inTimeAbbreviation | timeZoneName : currentUserTimeZoneAbbr}}">
+                {{ dataItem.inTime | timeZoneData: "HH:mm" : currentUserTimeZoneOffset }} <span
+                  matTooltip="{{ dataItem.inTimeTimeZone | timeZoneName : currentUserTimeZoneName }}"
+                  matTooltipShowDelay="500">{{ dataItem.inTimeAbbreviation | timeZoneName : currentUserTimeZoneAbbr
+                  }}</span>
+              </div>
+              <div *ngIf="col.field == 'outTime' && dataItem.outTime != null"
+                matTooltip="{{dataItem?.outTime | timeZoneData: 'dd MMM yyyy HH:mm' : currentUserTimeZoneOffset }} {{ dataItem.outTimeAbbreviation | timeZoneName : currentUserTimeZoneAbbr }}">
+                {{ dataItem.outTime | timeZoneData: "HH:mm" : currentUserTimeZoneOffset }} <span
+                  matTooltip="{{dataItem.outTimeTimeZone | timeZoneName : currentUserTimeZoneName }}"
+                  matTooltipShowDelay="500">{{ dataItem.outTimeAbbreviation | timeZoneName : currentUserTimeZoneAbbr
+                  }}</span>
+              </div>
+              <div *ngIf="col.field == 'lunchBreakDiff'" (mouseover)="checkLunchBreakTooltip(dataItem)"
+                [ngClass]="{ 'bold-time-sheet': dataItem.isAfterNoonLate }">
+                <span [matTooltip]="showLunchBreakTooltip ? lunchToolTipValue : ''" matTooltipClass="tooltip-overflow"
+                  matTooltipShowDelay="200"
+                  *ngIf="dataItem.lunchBreakEndTime != null">{{dataItem?.lunchBreakDiff}}</span>
+                <span [matTooltip]="showLunchBreakTooltip ? lunchToolTipValue : ''" matTooltipClass="tooltip-overflow"
+                  matTooltipShowDelay="200"
+                  *ngIf="dataItem.lunchBreakEndTime == null && dataItem.lunchBreakStartTime != null">
+
+                  {{dataItem?.lunchBreakStartTime | timeZoneData: "HH:mm" : currentUserTimeZoneOffset }} <span
+                    matTooltip="{{dataItem.lunchStartTimeZone | timeZoneName : currentUserTimeZoneName }}"
+                    matTooltipShowDelay="500">{{
+                    dataItem.lunchStartAbbreviation | timeZoneName : currentUserTimeZoneAbbr }}</span>
+                </span>
+              </div>
+              <div *ngIf="col.field == 'userBreaks' && dataItem.userBreaks != null" class="cursor-pointer"
+                [ngClass]="{ 'bold-time-sheet': dataItem.isBreaksBold }" class="text-underline"
+                [matTooltip]="dataItem.userBreaksCount > 0 ? ('FEEDTIMESHEET.VIEWBREAKDETAILS' | translate) : ''"
+                (click)="$event.stopPropagation();viewUserBreakDetails(dataItem);">
+                <span *ngIf="dataItem.userBreaksCount > 0">{{ dataItem.usersBreakTime }}
+                  ({{ dataItem.userBreaksCount }})</span>
+              </div>
+              <div *ngIf="col.field == 'loggedTime'" class="text-underline"
+                (click)="openWorkDrillDown(dataItem);$event.stopPropagation();">
+                {{ dataItem?.loggedTime | hoursAndMinutes}}
+              </div>
+              <div *ngIf="col.field == 'leaveReason'"
+                matTooltip="{{dataItem?.leaveTypeName}}&nbsp;({{dataItem?.leaveReason}})&nbsp;for&nbsp;{{dataItem?.leaveSessionName}}">
+                <span
+                  *ngIf="(dataItem.leaveTypeName != null || dataItem.leaveReason != null || dataItem.leaveSessionName != null)">
+                  {{ 'YES' | translate }}
+                </span>
+              </div>
+              <div *ngIf="col.field == 'spentTimeDiff'">
+                {{ dataItem?.spentTimeDiff }}
+              </div>
+              <div *ngIf="col.field == 'activeTimeInMin'" class="text-underline"
+                (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, null)">
+                {{ dataItem?.activeTimeInMin | hoursAndMinutes}}
+              </div>
+              <div *ngIf="col.field == 'productiveTimeInMin'" class="text-underline"
+                (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Productive')">
+                {{ dataItem?.productiveTimeInMin | hoursAndMinutes}}
+              </div>
+              <div *ngIf="col.field == 'totalIdleTime'" class="text-underline"
+                (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'SystemBreaks')">
+                {{ dataItem?.totalIdleTime | hoursAndMinutes}}
+              </div>
+              <div *ngIf="col.field == 'screenshots' && canAccess_feature_ViewActivityScreenshots"
+                class="text-underline"
+                (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem, 'Screenshots')">
+                {{ dataItem?.screenshots}}
+              </div>
+              <div *ngIf="col.field == 'statusName'" [ngStyle]="{ 'background' : dataItem?.statusColour }" style="width :fit-content"
+                fxLayoutAlign="center center">
+                <span style="width: 150px;" fxFlex fxLayoutAlign="center center" class="hide-content-overflow"><b>{{
+                    dataItem.statusName }}</b></span>
+              </div>
+              <!-- <div *ngIf="col.field == 'createdDateTime' && dataItem.createdDateTime != null">
+                {{ dataItem.createdDateTime | timeZoneData: "HH:mm"}}
+              </div> -->
+            </ng-template>
+          </kendo-grid-column>
+          <!-- <kendo-grid-column-group [title]="col.title | translate | softLabelsPipe : softLabels" [hidden]="col.hidden"
+            *ngIf="col.field == 'activitygroup'" [columnMenu]="false">
+            <ng-container *ngFor=" let groupcol of gridSettings.columnsConfig">
+              <kendo-grid-column [field]="groupcol.field" [width]="groupcol.width" [columnMenu]="false"
+                [title]="groupcol.title | translate | softLabelsPipe : softLabels" [hidden]="groupcol.hidden"
+                [filter]="groupcol.type" [filterable]="true" [reorderable]="false"
+                *ngIf="groupcol.field == 'activeTimeInMin' || groupcol.field == 'productiveTimeInMin' || groupcol.field == 'totalIdleTime' || (groupcol.field == 'screenshots' && canAccess_feature_ViewActivityScreenshots)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                  <div *ngIf="groupcol.field == 'activeTimeInMin'" class="text-underline"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem)">
+                    {{ dataItem?.activeTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'totalActiveTimeInMin'"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem)">
+                    {{ dataItem?.totalActiveTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'productiveTimeInMin'" class="text-underline"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem)">
+                    {{ dataItem?.productiveTimeInMin | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'totalIdleTime'" class="text-underline"
+                    (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem)">
+                    {{ dataItem?.totalIdleTime | hoursAndMinutes}}
+                  </div>
+                  <div *ngIf="groupcol.field == 'screenshots' && canAccess_feature_ViewActivityScreenshots"
+                    class="text-underline" (click)="$event.stopPropagation();openActivityTrackerDetails(dataItem)">
+                    {{ dataItem?.screenshots}}
+                  </div>
+                </ng-template>
+              </kendo-grid-column>
+            </ng-container>
+          </kendo-grid-column-group> -->
+        </ng-container>
+        <kendo-grid-command-column title="{{ 'ACTIONS' | translate}}" [width]="100" field="actions"
+          *ngIf="(canAccess_feature_AddOrUpdateTimesheetentry || canAccess_feature_AddPermission)">
+          <ng-template kendoGridCellTemplate let-dataItem>
+            <button class="text-center" title="{{ 'TIMESHEET.EDIT' | translate}}"
+              *ngIf="canAccess_feature_AddOrUpdateTimesheetentry"
+              (click)="$event.stopPropagation(); editFeedTimeSheetPopupOpen(dataItem, feedTimeSheetpopup)"
+              [satPopoverAnchorFor]="feedTimeSheetPopover" #feedTimeSheetpopup="satPopoverAnchor" mat-icon-button>
+              <fa-icon icon="edit" class="mat-color-accent" style="cursor: pointer;"></fa-icon>
+            </button>
+            <button class="text-center" matTooltip="{{ 'TIMESHEET.PERMISSION' | translate}}"
+              *ngIf="canAccess_feature_AddPermission"
+              (click)="$event.stopPropagation(); permissionPopupOpen(dataItem, permissionpopup)"
+              [satPopoverAnchorFor]="permissionPopover" #permissionpopup="satPopoverAnchor" mat-icon-button>
+              <fa-icon icon="clock" class="mat-color-accent" style="cursor: pointer;"></fa-icon>
+            </button>
+          </ng-template>
+        </kendo-grid-command-column>
+      </kendo-grid>
+      <div [ngClass]="{'k-i-loading': isAnyOperationIsInprogress}"></div>
+    </div>
+  </mat-card-content>
+</ng-container>
+
+<sat-popover #feedTimeSheetPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <app-ts-component-feedtimesheet *ngIf="isEditForFeedTimeSheet" [feedtimesheetpopupdata]="feedtimesheetpopupdata"
+      [feedtimesheeteditpopup]="feedtimesheeteditpopup" (closefeedtimesheetPopup)="closeFeedTimeSheetPopover()"
+      (closetimesheetMonthlyPopup)="closetimesheetPopup()"
+      (submitclosefeedtimesheetPopup)="submitcloseFeedTimeSheetPopover()">
+    </app-ts-component-feedtimesheet>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #absentPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <app-ts-component-feedtimesheet *ngIf="isEditForAbsentFeedTimeSheet" [absentpopupdata]="absentpopupdata"
+      [absentpopup]="absentpopup" (closeabsentPopup)="closeabsentPopover()"
+      (submitcloseabsentPopup)="submitcloseabsentPopover()">
+    </app-ts-component-feedtimesheet>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #permissionPopover [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0 mr-0">
+    <app-ts-component-feedtimesheet *ngIf="isEditForPermissionFeedTimeSheet" [permissionpopupdata]="permissionpopupdata"
+      [permissionpopup]="permissionpopup" (closepermissionPopup)="closepermissionPopover()">
+    </app-ts-component-feedtimesheet>
+  </mat-card>
+</sat-popover>
+
+<ng-template #openBreakDialogComponent let-data>
+  <app-break-timings-display [data]=[data]></app-break-timings-display>
+</ng-template>
+
+<ng-template #activityTrackerDialog let-data>
+  <app-activity-tracker-dialog [data]=[data]></app-activity-tracker-dialog>
+</ng-template>
+
+<ng-template #workDrillDownDialog let-data>
+  <app-work-log-drill-down [data]=[data]></app-work-log-drill-down>
+</ng-template>

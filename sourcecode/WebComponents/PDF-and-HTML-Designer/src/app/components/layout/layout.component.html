@@ -1,0 +1,97 @@
+<div class="pdf-designer-layout-container card">
+  <div class="row full-width" *ngIf="!showdocumenteditor">
+    <div class="col">
+      <div fxLayout="row">
+        <div fxFlex fxLayoutAlign="start center">
+          <button mat-flat-button (click)="openDocumentEditor()" class="m-3 mb-2 hover-button pdf-designer-button">
+            <div class="bottom-margin-negative">
+              <span>
+                <i class="fa fa-plus designer-action-icons" aria-hidden="true"
+                  style="padding-right: 8px;margin-left:0px !important"></i>
+                <span style="font-weight:620;">Add New Template</span></span>
+            </div>
+          </button>
+        </div>
+
+        <div fxFlex fxLayoutAlign="end center">
+          <div fxFlex="280px" fxLayout="row" fxLayout.xs="column">
+            <div fxFlex="280px" fxFlex.xs="120px" class="template-search_goalinput ml-1 input-search"
+              fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+              <input autocomplete="off" class="search_goal form-control"
+                placeholder="&#xF002; Search with template name" [(ngModel)]="searchText"
+                (keyup)="searchTextChange($event)" (keyup.enter)="filterByName($event)"
+                style="font-family:Arial, FontAwesome">
+              <span class="template-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                <mat-icon *ngIf="searchText" class="icon-button mr-05 cursor-pointer" aria-hidden="false"
+                  (click)="closeSearch()">
+                  close</mat-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div fxLayout="row">
+        <div fxFlex fxLayoutAlign="end center">
+          <span class="archived-text-padding">Is Archived : </span>
+          <i title="click here to get archived templates"
+            class="fa fa-toggle-off designer-action-icons archive-toggele-icon" aria-hidden="true"
+            (click)="toggleArchivedStatus()" *ngIf="isArchived == false"></i>
+          <i title="click here to get unarchived templates"
+            class="fa fa-toggle-on designer-action-icons archive-toggele-icon" aria-hidden="true"
+            (click)="toggleArchivedStatus()" *ngIf="isArchived == true"></i>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="no-drag pdf-records-data-height" id="style-1" *ngIf="!showdocumenteditor">
+    <kendo-grid [data]="gridData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip" [pageable]="true"
+      [sortable]="true" [sort]="state.sort" (dataStateChange)="dataStateChange($event)" [columnMenu]="true">
+      <kendo-grid-column fxFlex="40" field="fileName" title="Template Name"
+        [headerStyle]="{'text-align': 'center !important'}">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <span class="hide-content-overflow" matTooltip="{{dataItem.fileName}}">
+            {{ dataItem.fileName }}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column fxFlex="15" field="dataSources" title="Data Sources"
+        [headerStyle]="{'text-align': 'center !important'}">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <span *ngIf="dataItem.createdDateTime">
+            {{ dataItem.dataSources}}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column fxFlex="15" field="createdDateTime" title="Created Date"
+        [headerStyle]="{'text-align': 'center !important'}">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <span *ngIf="dataItem.createdDateTime">
+            {{ dataItem.createdDateTime | date: 'dd-MM-yyyy HH:mm'}}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column fxFlex="15" field="updatedDateTime" title="Updated Date"
+        [headerStyle]="{'text-align': 'center !important'}">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <span *ngIf="dataItem.updatedDateTime">
+            {{ dataItem.updatedDateTime | date: 'dd-MM-yyyy HH:mm'}}
+          </span>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-command-column fxFlex="15" field="action" title="Actions">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <i *ngIf="dataItem.isArchived == false && canAccessTemplate(dataItem)" class="fa fa-edit designer-action-icons" title="Edit"
+            aria-hidden="true" (click)="editTemplate(dataItem)"></i>
+          <i *ngIf="dataItem.isArchived == false" class="fa fa-toggle-off designer-action-icons" title="Archive"
+            aria-hidden="true" (click)="archiveTemplate(dataItem)"></i>
+          <i *ngIf="dataItem.isArchived == true" class="fa fa-toggle-on designer-action-icons" title="Unarchive"
+            aria-hidden="true" (click)="unarchiveTemplate(dataItem)"></i>
+        </ng-template>
+      </kendo-grid-command-column>
+    </kendo-grid>
+  </div>
+
+  <app-document-editor [selectedHtmlFile]="selectedHtmlFile" (loadHtmlTemplates)="gethtmlfiles(false)"
+    *ngIf="showdocumenteditor"></app-document-editor>
+</div>

@@ -1,0 +1,389 @@
+<div fxLayout="row wrap"
+    [ngClass]="userStory.isOnTrack ? 'kanban-listItemsRed userstory-summary': 'kanban-listItems userstory-summary'"
+    (contextmenu)="openContextMenu($event,userStory.userStoryId)">
+    <input matInput [value]="(canAccess_entityType_feature_AddOrUpdateWorkItem)" #accessForUserstoryEdit hidden />
+    <div class="full-width text-left mat-body-2 userstory-text" style="display: inline;">
+        <a *ngIf="userStory.bugPriorityId ">
+            <fa-icon icon="{{userStory.icon}}" [ngStyle]="setColorForBugPriorityTypes(userStory.bugPriorityColor)"
+                matTooltip=" {{ userStory.bugPriority }}({{userStory.bugPriorityDescription}})"></fa-icon>
+        </a>
+        &nbsp;
+        <app-chip class="avatar-image profile-icon-style"
+            matTooltip="{{ 'USERSTORY.ASSIGNEDTO' | translate }} {{userStory.ownerName}}" [isNameRequired]="false"
+            *ngIf="userStory.ownerUserId" [name]="userStory.ownerName | removeSpecialCharacters "
+            [src]="userStory.ownerProfileImage | fetchSizedAndCachedImage: '22':''" size="22"
+            [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+            (click)="$event.stopPropagation();saveAssignee(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">
+        </app-chip>
+
+        <app-chip class="avatar-image profile-icon-style" [isNameRequired]="false" *ngIf="!userStory.ownerUserId"
+            [name]="defaultProfileImage| removeSpecialCharacters" [src]="defaultProfileImage" size="25"
+            [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+            (click)="$event.stopPropagation();saveAssignee(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">
+        </app-chip> <span class="ml-02 word-break"
+            style="position: relative; top: -3px;">{{ userStory.userStoryName }}</span>
+    </div>
+    <span class="userstory-tags-display d-block full-width hide-content-overflow mt-045 ml-15">
+        <span *ngIf="userStory.goalId && userStory.sprintId">
+            <span *ngIf="isFromSprint">
+                <span class="custom-goal-tag" matTooltip="{{ userStory.goalShortName }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{ userStory.goalShortName}}
+                </span>
+            </span>
+            <span *ngIf="!isFromSprint">
+                <span class="custom-goal-tag" matTooltip="{{ userStory.sprintName }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{ userStory.sprintName}}
+                </span>
+            </span>
+        </span>
+        <div *ngFor="let tag of userStoryInputTags">
+            <span class="custom-userstory-tag mt-02" matTooltip="{{ tag }}" matTooltipClass="tooltip-overflow">
+                {{tag}}
+            </span>
+        </div>
+    </span>
+    <span fxFlex>
+        <span fxFlex class="mr-1"
+            *ngIf="show && userStory.isEnableStartStop && !userStory.userStoryArchivedDateTime && !userStory.userStoryParkedDateTime && !isComplete">
+            <!-- <mat-progress-bar color="primary" mode="indeterminate" *ngIf="_isLoading || currentUserStory">
+            </mat-progress-bar> -->
+            <!-- <fa-icon *ngIf="!_isLoading && !currentUserStory" icon="{{userStory.autoLog == true || userStory.autoLog == 1 ? 'play' : 'pause'}}" matTooltip="userStory.autoLog == true || userStory.autoLog == 1 ? (USERSTORY.STARTWORK | translate)  : (USERSTORY.PAUSEWORK | translate)" [ngStyle]="{ 'color': userStory.autoLog == true || userStory.autoLog == 1 ? 'green' : 'red' }" (click)="$event.stopPropagation();LogAction(userStory)">
+            </fa-icon> -->
+            <button mat-icon-button (click)="$event.stopPropagation();LogAction(userStory)"
+                [disabled]="_isLoading || currentUserStory" *ngIf="(userStory.autoLog  || userStory.autoLog)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="_isLoading || currentUserStory">
+                </mat-progress-bar>
+                <fa-icon icon="play" matTooltip="{{ 'USERSTORY.STARTWORK' | translate }}"
+                    [ngStyle]="{ 'color': 'green' }">
+                </fa-icon>
+            </button>
+            <button mat-icon-button (click)="$event.stopPropagation();LogAction(userStory)"
+                [disabled]="_isLoading || currentUserStory" *ngIf="(!userStory.autoLog)">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="_isLoading || currentUserStory">
+                </mat-progress-bar>
+                <fa-icon icon="pause" matTooltip="{{ 'USERSTORY.PAUSEWORK' | translate }}"
+                    [ngStyle]="{ 'color' : 'red' }">
+                </fa-icon>
+            </button>
+            <!-- <fa-icon *ngIf="!_isLoading && !currentUserStory && (userStory.autoLog  || userStory.autoLog  )" icon="play"
+                matTooltip="{{ 'USERSTORY.STARTWORK' | translate }}" [ngStyle]="{ 'color': 'green' }"
+                (click)="$event.stopPropagation();LogAction(userStory)">
+            </fa-icon>
+            <fa-icon *ngIf="!_isLoading && !currentUserStory && (!userStory.autoLog)" icon="pause"
+                matTooltip="{{ 'USERSTORY.PAUSEWORK' | translate }}" [ngStyle]="{ 'color' : 'red' }"
+                (click)="$event.stopPropagation();LogAction(userStory)">
+            </fa-icon> -->
+        </span>
+        <span *ngIf="userStory.userStoryUniqueName" fxFlex fxLayoutAlign="end end" class="mt-02 kanban-unique">
+            <a (click)="navigateToUserStoriesPage(userStory.userStoryId); $event.stopPropagation();"
+                matTooltip="{{ userStory.userStoryUniqueName }}" style="display: flex;" class="pb-2">
+                <span class="unique-badge-number" [ngClass]="applyClassForUniqueName(userStory.userStoryTypeColor)"
+                    [ngStyle]="{ 'background-color': userStory.userStoryTypeColor ? userStory.userStoryTypeColor : ''}">
+                    {{userStory.userStoryUniqueName}}
+                </span>
+            </a>
+            <!-- <div *ngIf="canAccess_feature_ViewActivityScreenshots"
+                matTooltip="{{ 'ACTIVITYTRACKER.TRACKERSCREENSHOTS' | translate}}">
+                <i class="material-icons mat-color-accent" style="cursor: pointer;"
+                    (click)="$event.stopPropagation();openScreenShotsDialog()">photo</i>
+            </div> -->
+        </span>
+    </span>
+    <span class="full-width pull-right text-left mat-body-2" style="height: 24px;">
+        <div>
+            <span class="mr-05" *ngIf="userStory.estimatedTime" matTooltip="{{ 'GOALS.ESTIMATEDTIME' | translate }}"
+                [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                (click)="$event.stopPropagation();saveEstimatedTime(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory)">{{ userStory.estimatedTime |timefilter }}
+            </span>
+
+            <fa-icon icon="minus" *ngIf="!userStory.estimatedTime  && notFromAudits"
+                matTooltip="{{ 'GOALS.ESTIMATEDTIME' | translate | softLabelsPipe : softLabels}}"
+                [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                (click)="$event.stopPropagation();saveEstimatedTime(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">
+            </fa-icon>
+
+            &nbsp;&nbsp;
+
+            <span class="mr-05" *ngIf="userStory.sprintEstimatedTime && isFromSprint"
+                matTooltip="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate }}"
+                [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                (click)="$event.stopPropagation();saveEstimatedTimeInSp(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory)">{{ userStory.sprintEstimatedTime}}
+                SP
+            </span>
+
+            <fa-icon icon="minus" *ngIf="isFromSprint && !userStory.sprintEstimatedTime"
+                matTooltip="{{ 'GOALS.ESTIMATEDTIMEINSP' | translate | softLabelsPipe : softLabels}}"
+                [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                (click)="$event.stopPropagation();saveEstimatedTimeInSp(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">
+            </fa-icon>
+
+            <span *ngIf="userStory.deadLineDate && !isFromSprint">
+                <input matInput
+                    [value]="userStory.deadLineDate|deadLineDateToIconFilter :userStory.isDateTimeConfiguration"
+                    #deadLineDate hidden />
+                <span *ngIf="deadLineDate.value == 'arrow-right'">
+                    <fa-icon icon="arrow-right" class="mr-05"></fa-icon>
+                </span>
+                <span *ngIf="deadLineDate.value == 'arrow-left'">
+                    <fa-icon icon="arrow-left" class="mr-05 absDaysCount"></fa-icon>
+                </span>
+                <span
+                    [matTooltip]="configureDeadlineDateDisplay(userStory.deadLineDate,userStory.isDateTimeConfiguration)"
+                    [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                    (click)="$event.stopPropagation();saveDeadlineDate(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">{{userStory.deadLineDate | deadLineDateFilter :userStory.isDateTimeConfiguration}}</span>
+            </span>
+
+            <fa-icon icon="minus" *ngIf="!isFromSprint && !userStory.deadLineDate"
+                matTooltip="{{ 'USERDETAIL.DEADLINEDATE' | translate | softLabelsPipe : softLabels}}"
+                [satPopoverAnchorFor]="inLineEditUserStoryPopover" #inLineEditUserStoryPopup="satPopoverAnchor"
+                (click)="$event.stopPropagation();saveDeadlineDate(workflow.userStoryStatusId,inLineEditUserStoryPopup,accessForUserstoryEdit.value,userStory);">
+            </fa-icon>
+            <p class="text-right pull-right version-name" matTooltip="{{ userStory.versionName }}"
+                (click)="$event.stopPropagation();"> {{ userStory.versionName }}</p>
+            <p class="text-right pull-right version-name" matTooltip="{{'USERSTORY.SUBTASKS'|translate}}"
+                *ngIf="userStory.subUserStories"> ({{userStory.subUserStoriesList.length}})</p>
+        </div>
+
+        <span class="full-width pull-right text-left mat-body-2">
+            <span class="mr-05" *ngIf="userStory.projectFeatureName"
+                matTooltip="{{ 'USERDETAIL.PROJECTCOMPONENT' | translate | softLabelsPipe : softLabels}}"><b>{{ userStory.projectFeatureName }}</b>
+            </span>
+        </span>
+
+        <mat-icon class="more_vert card-control pull-right" matTooltip="{{ 'MENU' | translate }}" *ngIf="(isGoalUserStory) ||
+                  (((isGoalsPage && isPermissionForAddUserStory) || (!isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem)) && ((!isListViewType) || (!isActiveGoalStatusId && isListViewType))  && !ArchivedGoalUserStory && !ParkedGoalUserStory 
+        && (workflow.canAdd == true) || isGoalUserStory &&
+                ( ((isGoalsPage && isPermissionForParkUserStory) || (!isGoalsPage && canAccess_entityType_feature_ParkWorkItem))) || isGoalUserStory &&
+                (((isGoalsPage && isPermissionForArchiveUserStory)|| (!isGoalsPage && canAccess_entityType_feature_ArchiveWorkItem))))
+                " [matMenuTriggerFor]="EditUserStory" (click)="$event.stopPropagation();"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+
+        &nbsp;
+        <app-chip class="avatar-image pull-right" *ngIf="userStory.dependencyUserId"
+            matTooltip="{{ 'USERSTORY.DEPENDENCYON' | translate }} {{userStory.dependencyName}}"
+            [isNameRequired]="false" [name]="userStory.dependencyName | removeSpecialCharacters "
+            [src]="userStory.dependencyProfileImage | fetchSizedAndCachedImage: '22':''" size="22">
+        </app-chip>
+        <app-chip class="avatar-image pull-right" *ngIf="userStory.bugCausedUserId"
+            matTooltip="{{ 'USERSTORY.CAUSEDBY' | translate }} {{userStory.bugCausedUserName}}" [isNameRequired]="false"
+            [name]="userStory.bugCausedUserName | removeSpecialCharacters "
+            [src]="userStory.bugCausedUserProfileImage | fetchSizedAndCachedImage: '22':''" size="22">
+        </app-chip>
+    </span>
+    <span *ngIf="userStory.userStoryUniqueName" fxFlex fxLayoutAlign="end end" class="mt-02 kaban-unique-view">
+        <a (click)="navigateToUserStoriesPage(userStory.userStoryId); $event.stopPropagation();"
+            matTooltip="{{ userStory.userStoryUniqueName }}" style="display: flex;" class="pb-2">
+            <span class="unique-badge-number" [ngClass]="applyClassForUniqueName(userStory.userStoryTypeColor)"
+                [ngStyle]="{ 'background-color': userStory.userStoryTypeColor ? userStory.userStoryTypeColor : ''}">
+                {{userStory.userStoryUniqueName}}
+            </span>
+        </a>
+    </span>
+
+    <mat-menu class="goal-options" #EditUserStory="matMenu" (click)="$event.stopPropagation()">
+        <div *ngIf="!ArchivedGoalUserStory && !ParkedGoalUserStory && isGoalUserStory && notFromAudits">
+            <button mat-menu-item matTooltip="{{ 'USERSTORY.EDITWORKITEM' | translate }}"
+                *ngIf="((isGoalsPage && isPermissionForAddUserStory) || 
+            (!isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem)) && 
+            ((!isListViewType || (isListViewType && !isActiveGoalStatusId)))  && !ArchivedGoalUserStory && !ParkedGoalUserStory " [satPopoverAnchorFor]="addKanbanUserStory"
+                #addKanbanUserStoryPopover="satPopoverAnchor"
+                (click)="editUserStoryById(userStory,addKanbanUserStoryPopover)">
+                <mat-icon>edit</mat-icon> <span>{{ 'USERSTORY.EDITWORKITEM' | translate }}</span>
+            </button>
+        </div>
+
+        <div
+            *ngIf="isGoalUserStory && !userStory.userStoryArchivedDateTime && ((isGoalsPage && isPermissionForParkUserStory) || (!isGoalsPage && canAccess_entityType_feature_ParkWorkItem)) && notFromAudits">
+            <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="parkUserStoryPopover"
+                #parkKanbanUserStoryPopOver="satPopoverAnchor"
+                (click)="parkUserStoryNew(userStory,parkKanbanUserStoryPopOver);$event.stopPropagation()"
+                *ngIf="!userStory.userStoryParkedDateTime">
+                <mat-icon>local_parking</mat-icon>
+                {{ 'USERSTORY.PARKUSERSTORY' | translate | softLabelsPipe : softLabels}}
+            </button>
+
+            <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="parkUserStoryPopover"
+                #parkKanbanUserStoryPopOver="satPopoverAnchor"
+                (click)="parkUserStoryNew(userStory,parkKanbanUserStoryPopOver);$event.stopPropagation()"
+                *ngIf="userStory.userStoryParkedDateTime">
+                <mat-icon>local_parking</mat-icon>
+                {{ 'USERSTORY.RESUMEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+            </button>
+        </div>
+        <div
+            *ngIf="isGoalUserStory && !userStory.userStoryParkedDateTime && isGoalUserStory && ((isGoalsPage && isPermissionForArchiveUserStory)|| (!isGoalsPage && canAccess_entityType_feature_ArchiveWorkItem))">
+            <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="archiveUserStoryPopover"
+                #archiveKanbanUserStoryPopOver="satPopoverAnchor" *ngIf="userStory.userStoryArchivedDateTime"
+                (click)="archiveUserStoryNew(userStory,archiveKanbanUserStoryPopOver); $event.stopPropagation()">
+                <mat-icon>archive</mat-icon>
+                {{ 'USERSTORY.UNARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+            </button>
+            <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="archiveUserStoryPopover"
+                #archiveKanbanUserStoryPopOver="satPopoverAnchor" *ngIf="!userStory.userStoryArchivedDateTime"
+                (click)="archiveUserStoryNew(userStory,archiveKanbanUserStoryPopOver); $event.stopPropagation()">
+                <mat-icon>archive</mat-icon>
+                {{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+            </button>
+        </div>
+        <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="createSubTaskPopover"
+            #createKanbanSubTaskPopover="satPopoverAnchor" *ngIf="((!isListViewType) || (!isActiveGoalStatusId && isListViewType)) && !isBugBoard &&((isGoalsPage && isPermissionForAddUserStory) || 
+        (!isGoalsPage && canAccess_entityType_feature_AddOrUpdateWorkItem)) && !ArchivedGoalUserStory && !ParkedGoalUserStory  && isGoalUserStory && (
+    (workflow.canAdd == true)) && notFromAudits"
+            (click)="createSubTaskNew(userStory,createKanbanSubTaskPopover); $event.stopPropagation()">
+            <mat-icon>add</mat-icon> {{ 'USERSTORY.CREATESUBTASK' | translate }}
+        </button>
+        <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="userstoryTagsPopover"
+            #kanbanUserStoryTagsPopOver="satPopoverAnchor"
+            *ngIf="!ArchivedGoalUserStory && !ParkedGoalUserStory && isGoalUserStory"
+            (click)="userstoryTagsPopover.open(); $event.stopPropagation();openTagsPopUp(userStory,kanbanUserStoryTagsPopOver)">
+            <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+        </button>
+
+        <div>
+            <button mat-menu-item class="allgoals_icons"
+                *ngIf="!ArchivedGoalUserStory && !ParkedGoalUserStory && isGoalUserStory && notFromAudits"
+                (click)="copyLink(); $event.stopPropagation()">
+                <mat-icon>file_copy</mat-icon>{{'USERSTORY.CLICKHERETOCOPYLINK' | translate}}
+            </button>
+        </div>
+        <div>
+            <button mat-menu-item class="allgoals_icons"
+                *ngIf="!ArchivedGoalUserStory && !ParkedGoalUserStory && isGoalUserStory && notFromAudits"
+                (click)="openInNewTab(); $event.stopPropagation()">
+                <mat-icon>web_asset</mat-icon>{{'USERSTORY.CLICKHERETOOPENINNEWTAB' | translate}}
+            </button>
+        </div>
+    </mat-menu>
+
+    <sat-popover #inLineEditUserStoryPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+        hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+
+        <mat-card class="filter-data p-0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="userStoryIsInProgress$ | async">
+            </mat-progress-bar>
+            <div>
+                <button class="inline_edit_close btn" color="warn" (click)="closeUserStoryDialogWindow()">
+                    <fa-icon icon="times"></fa-icon>
+                </button>
+                <mat-card-title class="text-center">
+                    <div class="card-title-text p-05 mat-bg-primary">
+                        {{titleText | softLabelsPipe : softLabels}}
+                    </div>
+                </mat-card-title>
+
+                <app-inline-editing-userstory-component
+                    *ngIf="isInlineEdit || isInlineEditForEstimatedTime || isInlineEditForUserStoryStatus || isInlineEditForUserStoryOwner || isInlineEditForSprintEstimatedTime"
+                    [userStory]="userStory" [isInlineEditForEstimatedTime]="isInlineEditForEstimatedTime"
+                    [isEditFromProjects]=true [isInlineEditForSprintEstimatedTime]="isInlineEditForSprintEstimatedTime"
+                    [isFromBugsCount]=false [isSprintsView]="isFromSprint" [isAllGoalsPage]="isGoalsPage"
+                    [isInlineEditForUserStoryOwner]="isInlineEditForUserStoryOwner" [isInlineEdit]="isInlineEdit"
+                    [isInlineEditForUserStoryStatus]="isInlineEditForUserStoryStatus" [goalReplanId]="goalReplanId"
+                    [notFromAudits]="notFromAudits" [isBugsTab]=false (completeUserStory)="getStableState($event)">
+                </app-inline-editing-userstory-component>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #parkUserStoryPopover verticalAlign="below" [interactiveClose]="false" backdropClass="backdrop-color"
+        hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <mat-card-title class="text-center">
+                <div *ngIf="userStoryDetail.userStoryParkedDateTime">
+                    <div class="card-title-text mat-bg-primary p-05">
+                        {{ 'USERSTORY.RESUMEUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                    </div>
+                </div>
+                <div *ngIf="!userStoryDetail.userStoryParkedDateTime">
+                    <div class="card-title-text mat-bg-primary p-05">
+                        {{ 'USERSTORY.PARKUSERSTORY' | translate | softLabelsPipe : softLabels}}
+                    </div>
+                </div>
+            </mat-card-title>
+            <p class="p-05 m-0" *ngIf="userStory.userStoryParkedDateTime">
+                {{ 'USERSTORY.AREYOUSUREWANTTORESUMETHISWORKITEM' | translate | softLabelsPipe : softLabels  }} </p>
+            <p class="p-05 m-0" *ngIf="!userStory.userStoryParkedDateTime">
+                {{ 'USERSTORY.AREYOUSUREWANTTOPARKTHISWORKITEM' | translate | softLabelsPipe : softLabels  }}</p>
+            <app-pm-component-park-userStory *ngIf="isParkUserStory" [userStory]="userStoryDetail"
+                [isSprintUserStories]="isFromSprint" [userstoryUniquePage]=false [isAllGoalsPage]="isGoalsPage"
+                (closePopup)="closeUserStoryParkPopup()">
+            </app-pm-component-park-userStory>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #archiveUserStoryPopover verticalAlign="below" backdropClass="backdrop-color" hasBackdrop
+        horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress$ | async)">
+            </mat-progress-bar>
+            <mat-card-title class="text-center">
+                <div *ngIf="userStoryDetail.userStoryArchivedDateTime">
+                    <div class="card-title-text mat-bg-primary p-05">
+                        {{ 'USERSTORY.UNARCHIVEUSERSTORY' | translate | translate | softLabelsPipe : softLabels}}</div>
+                </div>
+                <div *ngIf="!userStoryDetail.userStoryArchivedDateTime">
+                    <div class="card-title-text mat-bg-primary p-05">
+                        {{ 'USERSTORY.ARCHIVEUSERSTORY' | translate | translate | softLabelsPipe : softLabels}}</div>
+                </div>
+            </mat-card-title>
+            <p class="p-05 m-0" *ngIf="userStory.userStoryArchivedDateTime">
+                {{ 'USERSTORY.AREYOUSUREWANTTOUNARCHIVETHISWORKITEM' | translate | softLabelsPipe : softLabels  }} </p>
+            <p class="p-05 m-0" *ngIf="!userStory.userStoryArchivedDateTime">
+                {{ 'USERSTORY.AREYOUSUREWANTTOARCHIVETHISWORKITEM' | translate | softLabelsPipe : softLabels  }}</p>
+            <app-pm-component-archive-userStory *ngIf="isArchiveUserStory" [userStory]="userStoryDetail"
+                [isSprintUserStories]="isFromSprint" [userstoryUniquePage]=false [isAllGoalsPage]="isGoalsPage"
+                (closePopup)="closeUserStoryArchivePopup()">
+            </app-pm-component-archive-userStory>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #addKanbanUserStory horizontalAlign="center" verticalAlign="center" [interactiveClose]="false"
+        backdropClass="backdrop-color" hasBackdrop>
+        <mat-card class="filter-data p-0">
+            <app-pm-component-add-user-story *ngIf="addUserStory" [goal]="goal" [sprint]="sprint"
+                [goalReplanId]="goalReplanId" [userStoryId]="userStory.userStoryId"
+                (closeDialog)="closeUserStoryDialog()">
+            </app-pm-component-add-user-story>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #createSubTaskPopover horizontalAlign="center" verticalAlign="center" [interactiveClose]="false"
+        backdropClass="backdrop-color" hasBackdrop>
+        <mat-card class="filter-data p-0">
+            <app-pm-component-create-userstory-subtask *ngIf="isCreateSubTask" [userStory]="userStoryDetail"
+                [isSprintUserStories]="isFromSprint" (closeDetailComponent)="closeUserStoryDetailWindow()">
+            </app-pm-component-create-userstory-subtask>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #userstoryTagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+        horizontalAlign="start" backdropClass="backdrop-color">
+        <mat-card class="filter-data p-0">
+            <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="(anyOperationInProgress$ | async)|| (userStoryIsInProgress$|async)">
+            </mat-progress-bar>
+            <div>
+                <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog()">
+                    <fa-icon icon="times"></fa-icon>
+                </button>
+                <mat-card-title class="text-center">
+                    <div class="card-title-text p-1 mat-bg-primary">
+                        {{'USERSTORY.TAGS' | translate}}
+                    </div>
+                </mat-card-title>
+                <app-pm-component-tags *ngIf="isTagsPopUp" [userStoryId]="userStoryDetail.userStoryId" [goalId]=null
+                    [isAllGoalsPage]="isGoalsPage" [isSprintUserStories]="isFromSprint"
+                    (closeTagsPopUp)=" closeTagsDialog();">
+                </app-pm-component-tags>
+            </div>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<ng-template #screenShotComponent let-data>
+    <app-ts-component-trackerscreenshots [data]=[data]></app-ts-component-trackerscreenshots>
+</ng-template>

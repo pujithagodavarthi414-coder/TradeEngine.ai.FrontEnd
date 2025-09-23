@@ -1,0 +1,168 @@
+
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex fxLayoutAlign="start center">
+                    <span class="hide-content-overflow"
+                        matTooltip="{{ 'ANNOUNCEMENT.ANNOUNCEMENTS' | translate }}">{{ 'ANNOUNCEMENT.ANNOUNCEMENTS' | translate }}</span>
+                </div>
+                <div fxFlex="40px"
+                    *ngIf="(canAccess_feature_CanPassAnAnnouncement) && (totalAnnouncements > 0)">
+                    <button mat-icon-button matTooltip="{{ 'ANNOUNCEMENT.EDITANNOUNCEMENT' | translate }}"
+                        [satPopoverAnchorFor]="upsertAnnouncementPopover" #upsertAnnouncementPopUp="satPopoverAnchor"
+                        (click)="editAnnouncementPopupOpen(announcements[announcementNumber],upsertAnnouncementPopUp)">
+                        <fa-icon icon="edit" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px"
+                    *ngIf="(canAccess_feature_CanPassAnAnnouncement) && (totalAnnouncements > 0)">
+                    <button mat-icon-button matTooltip="{{ 'ANNOUNCEMENT.DELETECURRENTANNOUNCEMENT' | translate }}"
+                        [satPopoverAnchorFor]="deleteAnnouncementPopover" #deleteAnnouncementPopUp="satPopoverAnchor"
+                        (click)="deleteAnnouncementPopUpOpen(announcements[announcementNumber],deleteAnnouncementPopUp)">
+                        <fa-icon icon="trash" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" *ngIf="(canAccess_feature_CanPassAnAnnouncement)">
+                    <button mat-icon-button matTooltip="{{ 'ANNOUNCEMENT.ADDANNOUNCEMENT' | translate }}"
+                        [satPopoverAnchorFor]="upsertAnnouncementPopover" #upsertAnnouncementPopUp="satPopoverAnchor"
+                        (click)="createAnnouncementPopupOpen(upsertAnnouncementPopUp)">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+
+    <div class="activity-data no-drag">
+        <div fxLayout="row" class="announcement" *ngIf="totalAnnouncements > 0">
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <fa-icon icon="angle-left" class="mat-color-accent announcement-icons" *ngIf="announcementNumber > 0"
+                    (click)="changeannouncement(-1)">
+                </fa-icon>
+            </div>
+            <div fxFlex fxLayout="column">
+                <div fxFlex="100px" fxLayoutAlign="space-around center">
+                    <app-avatar
+                        matTooltip="{{announcements[announcementNumber].announcedBy}}"
+                        [name]="announcements[announcementNumber].announcedBy | removeSpecialCharacters"
+                        [src]="announcements[announcementNumber].announcedByUserImage | fetchSizedAndCachedImage: '80':''"
+                        [isRound]="true" size="80">
+                    </app-avatar>
+                </div>
+                <div fxFlex fxLayoutAlign="space-around center" style="text-align: center;">
+                    <span [innerHTML]="announcements[announcementNumber].announcement | sanitizeHtml"></span>
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="space-around  center">
+                    {{ announcements[announcementNumber].announcedOn | utcToLocalTime | date: 'dd/MM/yyyy HH:mm' }}
+                </div>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="start center">
+                <fa-icon icon="angle-right" class="mat-color-accent announcement-icons"
+                    *ngIf="((totalAnnouncements > announcementNumber) && nextVisible && totalAnnouncements > 1)"
+                    (click)="changeannouncement(1)">
+                </fa-icon>
+            </div>
+        </div>
+        <div fxLayout="row" class="announcement" *ngIf="totalAnnouncements == 0">
+            <div fxFlex fxLayoutAlign="center center">
+                <b>{{ 'ANNOUNCEMENT.NOANNOUNCEMENTSYET' | translate }}</b>
+            </div>
+        </div>
+    </div>
+
+
+<sat-popover backdropClass="backdrop-color" #upsertAnnouncementPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05">{{ announcementName }}
+            </div>
+        </mat-card-title>
+        <mat-card-content class="P-05" style="width: 550px;">
+            <form [formGroup]="announcementForm" novalidate (submit)="announcementForm.valid && upsertAnnouncement()"
+                #formDirective="ngForm">
+                <div class="full-width mt-1">
+                    <span class="mb-05 font-bold">{{ 'ANNOUNCEMENT.MESSAGE' | translate }}*</span>
+                    <editor *ngIf="isEditorAvailable" formControlName="announcement"
+                        class="dfree-header custom-logtime-comment"
+                        apiKey="ewi2adl9u4cmc1lic9wcz3zq03696a3ihlodo4n1oaveo3kk" placeholder="comment" menubar="false"
+                        [init]="initSettings" height="120" background="white" [(ngModel)]="announcementMessage">
+                    </editor>
+                    <!--                   <textarea matInput formControlName="announcement" rows="4"
+                        placeholder="{{ 'ANNOUNCEMENT.MESSAGE' | translate }}"></textarea> -->
+                    <mat-error
+                        *ngIf="announcementForm.get('announcement').hasError('required') && announcementForm.get('announcement').touched">
+                        {{ 'ANNOUNCEMENT.ANNOUNCEMENTISREQUIRED' | translate }}
+                    </mat-error>
+                </div>
+                <mat-radio-group aria-label="select an option" formControlName="announcementLevel"
+                    (change)="onChange($event)">
+                    <div fxLayout="row">
+                        <mat-radio-button value=0 class="pr-05">{{ 'ANNOUNCEMENT.COMPANY' | translate }}
+                        </mat-radio-button>
+                        <mat-radio-button value=1 class="pr-05">{{ 'ANNOUNCEMENT.BRANCH' | translate }}
+                        </mat-radio-button>
+                        <mat-radio-button value=2>{{ 'ANNOUNCEMENT.EMPLOYEE' | translate | softLabelsPipe : softLabels  }}</mat-radio-button>
+                    </div>
+                </mat-radio-group>
+                <mat-form-field class="full-width" *ngIf="isSelectVisible == true">
+                    <mat-select formControlName="announcedTo" placeholder="{{ 'ANNOUNCEMENT.ANNOUNCETO' | translate }}"
+                        multiple required>
+                        <app-select-all [model]="announcementForm.get('announcedTo')" [values]="announcedIds">
+                        </app-select-all>
+                        <mat-option [value]="announced.key" *ngFor="let announced of announcedList">
+                            {{ announced.value }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="announcementForm.get('announcedTo').hasError('required') && announcementForm.get('announcedTo').touched">
+                        {{ 'BADGE.ASSIGNEISREQUIRED' | translate }}
+                    </mat-error>
+                </mat-form-field>
+                <div fxLayout="row" class="mt-1 mb-05">
+                    <div fxFlex fxLayoutAlign="center center" class="m-0 p-0">
+                        <button mat-raised-button color="primary" class="mr-1"
+                            [disabled]="!(announcementForm.valid && !isAnyOperationIsInprogress)">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                            </mat-progress-bar>{{ 'ANNOUNCEMENT.ANNOUNCE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closeUpsertAnnouncementPopup()" type="button">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deleteAnnouncementPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">
+                {{ 'ANNOUNCEMENT.DELETEANNOUNCEMENT' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'ANNOUNCEMENT.AREYOUSUREYOUWANTTODELETEANNOUNCEMENT' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary"
+                    [disabled]="isAnyOperationIsInprogress" (click)="deleteAnnouncement();">
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteAnnouncementDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

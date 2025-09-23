@@ -1,0 +1,336 @@
+<mat-card class="mat-card-fx-col" id="style-1"
+  *ngIf="(canAccess_feature_AddOrUpdateClient) || (canAccess_feature_ViewRecentlyActiveClients)">
+  <div fxLayout="row" class="m-0">
+    <div fxFlex="50" fxLayoutAlign="start center">
+      <b>
+        <h3 class="mb-1 ml-05">{{'CLIENTS.CLIENTS' | translate | softLabelsPipe : softLabels}}</h3>
+      </b>
+    </div>
+    <div fxFlex="50" fxLayoutAlign="end">
+      <button mat-raised-button color="primary" style="line-height: 46px!important;" (click)="addClientDetails()"
+        matTooltip="Click here to add new {{'CLIENTS.CLIENT' | translate | softLabelsPipe : softLabels}}">{{
+        'CLIENTS.NEWCLIENT' | translate | softLabelsPipe : softLabels }}</button>
+
+      <div class="pr-05 pl-05">
+        <button mat-raised-button style="line-height: 46px!important;" (click)="goToInvoices()" color="primary"
+          matTooltip="{{'CLIENTS.CLICKHERETOMOVETOINVOICEPAGE' | translate}}">
+          <span class="activity-material material-icons icon mr-05">request_quote</span>Invoices
+        </button>
+      </div>
+      <div class="pr-05">
+        <button mat-raised-button color="primary" *ngIf="isStartEnable" style="line-height: 46px!important;"
+          (click)="enableIntro()" matTooltip="Click here to explain this page">Explain This Page</button>
+      </div>
+    </div>
+    <div *ngIf="false" class="mr-05" fxFlex="50" fxLayoutAlign="end center">
+      <mat-form-field>
+        <mat-label>{{'TESTMANAGEMENT.ACTIONS' | translate}}</mat-label>
+        <mat-select (selectionChange)="changeaction($event.value)">
+          <mat-option *ngFor="let action of actionsList" [value]="action.id">
+            <fa-icon icon="file-import" *ngIf="action.id == 1">
+            </fa-icon>
+            <fa-icon icon="file-export" *ngIf="action.id == 2">
+            </fa-icon> <span class="ml-1"> {{action.name}}</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+  <div *ngIf="false">
+    <!-- <div fxLayout="row" fxLayout.xs="column" *ngIf="clientAmountDetails" class="m-0"> -->
+    <div fxFlex="33.3">
+      <mat-card class="bliing_custom-card">
+        <div fxLayout="column" fxLayoutAlign="center center">
+          <h5>{{clientAmountDetails.paid}}</h5>
+          <h5>{{'CLIENTS.PAID' | translate}}</h5>
+        </div>
+      </mat-card>
+    </div>
+    <div fxFlex="33.3">
+      <mat-card class="bliing_custom-card">
+        <div fxLayout="column" fxLayoutAlign="center center">
+          <h5>{{clientAmountDetails.overdue}}</h5>
+          <h5>{{'CLIENTS.OVERDUE' | translate}}</h5>
+        </div>
+      </mat-card>
+    </div>
+    <div fxFlex="33.3">
+      <mat-card class="bliing_custom-card">
+        <div fxLayout="column" fxLayoutAlign="center center">
+          <h5>{{clientAmountDetails.outstanding}}</h5>
+          <h5>{{'CLIENTS.TOTALOUTSTANDING' | translate}}</h5>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="ClientTypesLoading">
+  </mat-progress-bar>
+  <div fxLayout="row" *ngIf="(clientTypeList.length>0)&&!ClientTypesLoading">
+    <div fxFlex="27px" class="mt-03" *ngIf="selectedTab === 'supplier' && !ClientTypesLoading">
+      <div class='custom-label veritcal-label'>
+        <div class='custom-label-content' (click)="getSupplierList()">
+          Supplier <span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isSupplierList}">
+            </fa-icon>
+          </span>
+        </div>
+        <div class='custom-label-content' (click)="getPurchaseContractList()" *ngIf="canAccess_feature_ViewContracts">
+          {{ 'CONTRACT.CONTRACT' | translate }}<span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+              [ngClass]="{'rotate-icon-down': isPurchaseContractList}">
+            </fa-icon>
+          </span>
+        </div>
+        <div class='custom-label-content' (click)="getPurchaseShipmentList()"
+          *ngIf="canAccess_feature_ViewPurchaseExecution">
+          Shipments<span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack"
+              [ngClass]="{'rotate-icon-down': isPurchaseShipemntList}">
+            </fa-icon>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div fxFlex="27px" class="mt-03" *ngIf="selectedTab === 'buyer' && !ClientTypesLoading">
+      <div class='custom-label veritcal-label'>
+        <div class='custom-label-content' (click)="getBuyersList()">
+          Buyer <span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isBuyersList}">
+            </fa-icon>
+          </span>
+        </div>
+        <div class='custom-label-content' (click)="getBuyerContractList()" *ngIf="canAccess_feature_ViewContracts">
+          {{ 'CONTRACT.CONTRACT' | translate }}<span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isContractList}">
+            </fa-icon>
+          </span>
+        </div>
+        <div class='custom-label-content' (click)="getLeadsList()" *ngIf="canAccess_feature_ViewLeads">
+          {{ 'CONTRACT.LEADS' | translate }}
+          <span>
+            <fa-icon class="ml-02 rotate-icon" icon="thumbtack" [ngClass]="{'rotate-icon-down': isLeadsList}">
+            </fa-icon>
+          </span>
+        </div>
+      </div>
+    </div>
+    <mat-tab-group class="pt-1" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabClick($event)"
+      class="client-height client-mat-tab-body" style="width: 100%;">
+      <ng-container *ngFor="let clientType of clientTypeList">
+        <mat-tab label={{clientType.clientTypeName}}>
+          <ng-template mat-tab-label>
+            {{clientType.clientTypeName}}
+          </ng-template>
+          <ng-template matTabContent>
+            <div *ngIf="(canAccess_feature_AddOrUpdateClient && selectedTab == 'supplier' && isSupplierList)"
+              id="client-2" style="width: 100%;">
+              <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize"
+                [selectedTab]="selectedTab" [selectedRowValue]="selectedRowValue" [pageCount]="pageCount"
+                [isArchived]="isArchived" [searchText]="searchText" [branchName]="branchName"
+                [productName]="productName" [anyOperationInProgress]="anyOperationInProgress"
+                (setPageEmit)="setPage($event)" (onSortEmit)="onSort($event)" (searchEmit)="search($event)"
+                (closeSearchEmit)="closeSearch()" (exportAsXLSXEmit)="exportAsXLSX()"
+                (clearBranchFilterEmit)="clearBranchFilter()" (clearProjectFilterEmit)="clearProjectFilter()"
+                (clearArchiveFilterEmit)="clearArchiveFilter()" (editClientDetailsEmit)="editClientDetails($event)"
+                (onSelectEmit)="onSelect($event)" (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()"
+                (refreshEmit)="getClients()">
+              </app-clients-table>
+            </div>
+            <div *ngIf="isContarctList" style="width: 100%;">
+              <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35"
+                [footerHeight]="50" [rowHeight]="50" [limit]="100" [rows]="contractsSubmissionDetails"
+                [loadingIndicator]="leadsLoadingIndicator"
+                [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+                <ngx-datatable-column minWidth="150" name="Client" [flexGrow]="1" [sortable]="true" prop="clientId">
+                  <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.fullName }}
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [flexGrow]="1"
+                  [sortable]="false">
+                  <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="text-center" title="{{ 'PROBATION.PREVIEWFORM' | translate}}" mat-icon-button
+                      (click)="openDialog(row,'supplier')">
+                      <fa-icon class="mat-color-accent cursor-pointer mr-1 pull-right" icon="eye"
+                        matTooltip="{{ 'PROBATION.PREVIEWFORM' | translate}}"></fa-icon>
+                    </button>
+                  </ng-template>
+                </ngx-datatable-column>
+              </ngx-datatable>
+            </div>
+            <div *ngIf="(canAccess_feature_ViewContracts && selectedTab == 'supplier' && isPurchaseContractList)"
+              id="client-2" style="width: 100%;">
+              <app-billing-component-purchase-contract-list>
+              </app-billing-component-purchase-contract-list>
+            </div>
+            <div *ngIf="(canAccess_feature_ViewContracts && selectedTab == 'supplier' && isPurchaseShipemntList)"
+              id="client-2" style="width: 100%;">
+              <app-billing-component-shipment-execution-list></app-billing-component-shipment-execution-list>
+            </div>
+            <div *ngIf="(selectedTab == 'buyer' && isBuyersList)" id="client-2" style="width: 100%;">
+              <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize"
+                [selectedTab]="selectedTab" [selectedRowValue]="selectedRowValue" [pageCount]="pageCount"
+                [isArchived]="isArchived" [searchText]="searchText" [branchName]="branchName"
+                [productName]="productName" [anyOperationInProgress]="anyOperationInProgress"
+                (setPageEmit)="setPage($event)" (onSortEmit)="onSort($event)" (searchEmit)="search($event)"
+                (closeSearchEmit)="closeSearch()" (exportAsXLSXEmit)="exportAsXLSX()"
+                (clearBranchFilterEmit)="clearBranchFilter()" (clearProjectFilterEmit)="clearProjectFilter()"
+                (clearArchiveFilterEmit)="clearArchiveFilter()" (editClientDetailsEmit)="editClientDetails($event)"
+                (onSelectEmit)="onSelect($event)" (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()"
+                (refreshEmit)="getClients()">
+              </app-clients-table>
+            </div>
+            <div *ngIf="isLeadsList && selectedTab == 'buyer'" style="width: 98%;">
+              <app-billing-component-leads-list></app-billing-component-leads-list>
+            </div>
+            <div *ngIf="isContractList && selectedTab == 'buyer'">
+              <app-billing-component-contract-list></app-billing-component-contract-list>
+            </div>
+            <div *ngIf="(canAccess_feature_AddOrUpdateClient && (selectedTab != 'buyer' && selectedTab != 'supplier'))"
+              id="client-2">
+              <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize" [selectedTab]="'other'"
+                [selectedRowValue]="selectedRowValue" [pageCount]="pageCount" [isArchived]="isArchived"
+                [searchText]="searchText" [branchName]="branchName" [productName]="productName"
+                [anyOperationInProgress]="anyOperationInProgress" (setPageEmit)="setPage($event)"
+                (onSortEmit)="onSort($event)" (searchEmit)="search($event)" (closeSearchEmit)="closeSearch()"
+                (exportAsXLSXEmit)="exportAsXLSX()" (clearBranchFilterEmit)="clearBranchFilter()"
+                (clearProjectFilterEmit)="clearProjectFilter()" (clearArchiveFilterEmit)="clearArchiveFilter()"
+                (editClientDetailsEmit)="editClientDetails($event)" (onSelectEmit)="onSelect($event)"
+                (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()" (refreshEmit)="getClients()">
+              </app-clients-table>
+            </div>
+          </ng-template>
+        </mat-tab>
+      </ng-container>
+    </mat-tab-group>
+    <!-- <mat-tab-group class="pt-1" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabClick($event)"
+      class="client-height client-mat-tab-body" style="width: 100%;">
+      <mat-tab label="supplier">
+        <ng-template mat-tab-label>
+          {{ 'CONTRACT.SUPPLIER' | translate }}
+        </ng-template>
+        <ng-template matTabContent>
+
+          <div *ngIf="(canAccess_feature_AddOrUpdateClient && selectedTab == 'supplier' && isSupplierList)"
+            id="client-2" style="width: 100%;">
+            <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize"
+              [selectedTab]="selectedTab" [selectedRowValue]="selectedRowValue" [pageCount]="pageCount"
+              [isArchived]="isArchived" [searchText]="searchText" [branchName]="branchName" [productName]="productName"
+              [anyOperationInProgress]="anyOperationInProgress" (setPageEmit)="setPage($event)"
+              (onSortEmit)="onSort($event)" (searchEmit)="search($event)" (closeSearchEmit)="closeSearch()"
+              (exportAsXLSXEmit)="exportAsXLSX()" (clearBranchFilterEmit)="clearBranchFilter()"
+              (clearProjectFilterEmit)="clearProjectFilter()" (clearArchiveFilterEmit)="clearArchiveFilter()"
+              (editClientDetailsEmit)="editClientDetails($event)" (onSelectEmit)="onSelect($event)"
+              (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()" (refreshEmit)="getClients()">
+            </app-clients-table>
+          </div>
+          <div *ngIf="isContarctList" style="width: 100%;">
+            <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'force'" [headerHeight]="35"
+              [footerHeight]="50" [rowHeight]="50" [limit]="100" [rows]="contractsSubmissionDetails"
+              [loadingIndicator]="leadsLoadingIndicator"
+              [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+              <ngx-datatable-column minWidth="150" name="Client" [flexGrow]="1" [sortable]="true" prop="clientId">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row?.fullName }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <button class="text-center" title="{{ 'PROBATION.PREVIEWFORM' | translate}}" mat-icon-button
+                    (click)="openDialog(row,'supplier')">
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1 pull-right" icon="eye"
+                      matTooltip="{{ 'PROBATION.PREVIEWFORM' | translate}}"></fa-icon>
+                  </button>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+          <div *ngIf="(canAccess_feature_ViewContracts && selectedTab == 'supplier' && isPurchaseContractList)"
+            id="client-2" style="width: 100%;">
+            <app-billing-component-purchase-contract-list>
+            </app-billing-component-purchase-contract-list>
+          </div>
+          <div *ngIf="(canAccess_feature_ViewContracts && selectedTab == 'supplier' && isPurchaseShipemntList)"
+            id="client-2" style="width: 100%;">
+            <app-billing-component-shipment-execution-list></app-billing-component-shipment-execution-list>
+          </div>
+        </ng-template>
+      </mat-tab>
+      <mat-tab label="buyer">
+        <ng-template mat-tab-label>
+          {{ 'CONTRACT.BUYER' | translate }}
+        </ng-template>
+        <ng-template matTabContent>
+
+          <div *ngIf="(selectedTab == 'buyer' && isBuyersList)" id="client-2" style="width: 100%;">
+            <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize"
+              [selectedTab]="selectedTab" [selectedRowValue]="selectedRowValue" [pageCount]="pageCount"
+              [isArchived]="isArchived" [searchText]="searchText" [branchName]="branchName" [productName]="productName"
+              [anyOperationInProgress]="anyOperationInProgress" (setPageEmit)="setPage($event)"
+              (onSortEmit)="onSort($event)" (searchEmit)="search($event)" (closeSearchEmit)="closeSearch()"
+              (exportAsXLSXEmit)="exportAsXLSX()" (clearBranchFilterEmit)="clearBranchFilter()"
+              (clearProjectFilterEmit)="clearProjectFilter()" (clearArchiveFilterEmit)="clearArchiveFilter()"
+              (editClientDetailsEmit)="editClientDetails($event)" (onSelectEmit)="onSelect($event)"
+              (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()" (refreshEmit)="getClients()">
+            </app-clients-table>
+          </div>
+          <div *ngIf="isLeadsList" style="width: 98%;">
+            <app-billing-component-leads-list></app-billing-component-leads-list>
+          </div>
+          <div *ngIf="isContractList">
+            <app-billing-component-contract-list></app-billing-component-contract-list>
+          </div>
+        </ng-template>
+      </mat-tab>
+      <mat-tab label="other">
+        <ng-template mat-tab-label>
+          {{ 'CONTRACT.OTHERS' | translate }}
+        </ng-template>
+        <ng-template matTabContent>
+          <div *ngIf="(canAccess_feature_AddOrUpdateClient && selectedTab == 'other')" id="client-2">
+            <app-clients-table [clientsList]="clientsList" [page]="page" [pageSize]="pageSize"
+              [selectedTab]="selectedTab" [selectedRowValue]="selectedRowValue" [pageCount]="pageCount"
+              [isArchived]="isArchived" [searchText]="searchText" [branchName]="branchName" [productName]="productName"
+              [anyOperationInProgress]="anyOperationInProgress" (setPageEmit)="setPage($event)"
+              (onSortEmit)="onSort($event)" (searchEmit)="search($event)" (closeSearchEmit)="closeSearch()"
+              (exportAsXLSXEmit)="exportAsXLSX()" (clearBranchFilterEmit)="clearBranchFilter()"
+              (clearProjectFilterEmit)="clearProjectFilter()" (clearArchiveFilterEmit)="clearArchiveFilter()"
+              (editClientDetailsEmit)="editClientDetails($event)" (onSelectEmit)="onSelect($event)"
+              (archiveEmit)="archive($event)" (archiveAllEmit)="archiveAll()" (refreshEmit)="getClients()">
+            </app-clients-table>
+          </div>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group> -->
+  </div>
+  <app-common-message-box *ngIf="(!(clientTypeList.length>0))&&!ClientTypesLoading"
+    textToDisplay="{{ 'COUNTERPARTYTYPE.YOUDONTHAVEANYCLIENTTYPES' | translate | softLabelsPipe : softLabels}}">
+  </app-common-message-box>
+</mat-card>
+
+<sat-popover #archiveclient verticalAlign="start" hasBackdrop horizontalAlign="before">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05" *ngIf="!isArchived">
+        {{'CLIENTS.ARCHIVECLIENTS' | translate | softLabelsPipe : softLabels}}</div>
+      <div class="card-title-text mat-bg-primary p-05" *ngIf="isArchived">
+        {{'CLIENTS.UNARCHIVECLIENTS' | translate | softLabelsPipe : softLabels}}</div>
+    </mat-card-title>
+    <p class="p-05 m-0" *ngIf="!isArchived">{{ 'CLIENTS.AREYOUSUREYOUWANTTOARCHIVETHISCLIENTS'| translate |
+      softLabelsPipe : softLabels}}
+    </p>
+    <p class="p-05 m-0" *ngIf="isArchived">
+      {{ 'CLIENTS.AREYOUSUREYOUWANTTOUNARCHIVETHISCLIENTS'| translate | softLabelsPipe : softLabels}}</p>
+    <div class="text-center p-05">
+      <button type="button" mat-raised-button color="primary" class="mr-1" (click)="archiveAll();archiveclient.close()">
+        <fa-icon icon="check" class="mr-05"></fa-icon> {{'YES' | translate}}
+      </button>
+      <button mat-raised-button class="mr-1" (click)="archiveclient.close()" [disabled]="anyOperationInProgress">
+        <fa-icon icon="times" class="mr-05"></fa-icon> {{'PERMISSIONHISTORY.NO' | translate}}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrUpdateClient) &&!(canAccess_feature_ViewRecentlyActiveClients) "
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate | softLabelsPipe : softLabels}}">
+</app-common-message-box>

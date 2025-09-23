@@ -1,0 +1,1935 @@
+<div fxLayout="row" *ngIf="(canAccess_feature_ManageCustomApps)">
+    <div fxFlex>
+        <ul class="widget-progressbar mt-1" [ngClass]="isProc || isApi ? 'three-wizards' : 'five-wizards'">
+            <li [ngClass]="{'active': selectedTabIndex >= 0}"> {{'APP.MAINDETAILS' | translate}} </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 1}" *ngIf="!isProc && !isApi"> {{'APP.COLUMNS' | translate}}
+            </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 2}" *ngIf="!isProc && !isApi && !isMongoQuery">
+                {{'APP.FILTERS' | translate}}
+            </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 3}"> {{'APP.PREVIEW' | translate}} </li>
+            <li [ngClass]="{'active': selectedTabIndex >= 4}"> {{'APP.SCHEDULER' | translate}} </li>
+        </ul>
+    </div>
+</div>
+<div fxLayout="row" *ngIf="(canAccess_feature_AddDashboard)">
+    <div fxFlex class="custom-app-title-height">
+        <div *ngIf="selectedTabIndex == 0">
+            <div class="p-0 ml-1 mr-1 custom-app-card-height" id="style-1">
+                <form [formGroup]="customWidgetForm" novalidate #formDirective="ngForm">
+                    <div [ngClass]="!isProc ? 'custom-app-details-height' : ''" id="style-1" fxLayout="column">
+                        <div fxLayout="row" fxLayoutGap="10px">
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="customWidgetName"
+                                        placeholder="{{ 'APP.APPNAME' | translate }}" required>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('customWidgetName').hasError('required') && customWidgetForm.get('customWidgetName').touched">
+                                        {{ 'APP.CUSTOMAPPNAMEREQUIREDERROR' | translate }}
+                                    </mat-error>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('customWidgetName').hasError('maxlength') && customWidgetForm.get('customWidgetName').touched">
+                                        {{ 'APP.CUSTOMAPPNAMEMAXLENGTHERROR' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="selectedRoles" [compareWith]="compareSelectedRolesFn"
+                                        placeholder="{{ 'USERMANAGEMENT.ROLE' | translate }}" multiple required>
+                                        <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown"
+                                            #allSelected (click)="toggleRolesPerOne()">
+                                            {{ roles.roleName }}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('selectedRoles').hasError('required') && customWidgetForm.get('selectedRoles').touched">
+                                        {{ 'APP.SELECTANYROLE' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="33.33">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="selectedModules"
+                                        [compareWith]="compareSelectedModuleFn"
+                                        placeholder="{{ 'APP.MODULEPLACEHOLDER' | translate }}" multiple required>
+                                        <mat-option #allModuleSelected (click)="toggleAllModuleSelected()" [value]="0">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <mat-option [value]="module.moduleId" *ngFor="let module of modulesDropDown"
+                                            #allModuleSelected (click)="toggleModulePerOne()">
+                                            {{ module.moduleName | softLabelsPipe :softLabels}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('selectedModules').hasError('required') && customWidgetForm.get('selectedModules').touched">
+                                        {{ 'APP.SELECTANYMODULE' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div>
+                            <mat-form-field class="full-width">
+                                <textarea matInput formControlName="description" rows="3"
+                                    placeholder="{{ 'COMPANYSETTINGS.DESCRIPTION' | translate }}"></textarea>
+                                <mat-error
+                                    *ngIf="customWidgetForm.get('description').hasError('maxlength') && customWidgetForm.get('description').touched">
+                                    {{ 'APP.CUSTOMAPPDESCRIPTIONMAXLENGTHERROR' | translate }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <custom-app-component-tags [referenceId]="customWidgetId" [isFromCustomApp]=true
+                            [tagsModel]="inputTagsList" (getCustomTags)="getTagsList($event)">
+                        </custom-app-component-tags>
+
+                        <div fxLayout="row">
+                            <div fxFlex="100" class="custom-radio">
+                                <mat-radio-group aria-label="Select an option" formControlName="dataOption"
+                                    [(ngModel)]="dataOptionValue" (change)="onChange($event)">
+                                    <div class="pl-05 mt-05" fxLayout="row">
+                                        <mat-radio-button value="widgetQuery" fxFlex>
+                                            Query
+                                        </mat-radio-button>
+                                        <mat-radio-button value="mongoQuery" fxFlex>
+                                            Mongo Query
+                                        </mat-radio-button>
+                                        <mat-radio-button value="proc" fxFlex>
+                                            Proc
+                                        </mat-radio-button>
+                                        <mat-radio-button value="api" fxFlex>
+                                            Api
+                                        </mat-radio-button>
+                                    </div>
+                                </mat-radio-group>
+                            </div>
+                        </div>
+
+                        <div class="pl-05" *ngIf="dataOptionValue == 'widgetQuery'">
+                            <mat-form-field class="full-width">
+                                <textarea matInput formControlName="widgetQuery" rows="18" placeholder="Query"
+                                    required></textarea>
+                            </mat-form-field>
+                            <mat-error
+                                *ngIf="customWidgetForm.get('widgetQuery').hasError('required') && customWidgetForm.get('widgetQuery').touched">
+                                {{ 'APP.APPQUERYREQUIREDERROR' | translate }}
+                            </mat-error>
+                        </div>
+                        <div class="pl-05" *ngIf="dataOptionValue == 'mongoQuery'">
+                            <div fxLayout="row" fxLayoutGap="10px" class="pl-05">
+                                <div fxFlex="25">
+                                    <mat-form-field class="full-width">
+                                        <mat-select formControlName="collectionName" placeholder="Select collection"
+                                            required (selectionChange)="getCollectionChange($event.value)">
+                                            <mat-option *ngFor="let collection of collections"
+                                                value="{{collection}}">{{collection}}</mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="customWidgetForm.get('collectionName').hasError('required') && customWidgetForm.get('collectionName').touched">
+                                            Please select collection name
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="5"></div>
+                                <div fxFlex>
+                                    <mat-form-field class="full-width">
+                                        <textarea matInput formControlName="mongoQuery" rows="15" placeholder="Query"
+                                            required></textarea>
+                                    </mat-form-field>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('mongoQuery').hasError('required') && customWidgetForm.get('mongoQuery').touched">
+                                        Mongo query is required
+                                    </mat-error>
+                                    <mat-hint>Please add project stage for each query</mat-hint>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="10px" class="pl-05" *ngIf="dataOptionValue == 'proc'">
+                            <div fxFlex="30">
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="procName"
+                                        placeholder="{{ 'APP.SPNAME' | translate }}" required>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('procName').hasError('required') && customWidgetForm.get('procName').touched">
+                                        {{ 'APP.SPVALIDATION' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div>
+                                <button mat-button mat-raised-button (click)="fetchParameters()" type="button"
+                                    color="primary" *ngIf="!(customWidgetForm.get('procName').hasError('required'))">
+                                    <mat-progress-bar color="primary" mode="indeterminate"
+                                        *ngIf="isFetchOperationIsInprogress">
+                                    </mat-progress-bar>
+                                    {{ 'APP.FETCH' | translate}}
+                                </button>
+                            </div>
+                        </div>
+                        <div fxLayout="row" class="mr-05 ml-05" *ngIf="dataOptionValue == 'api'">
+                            <div fxFlex="150px" class="mr-1">
+                                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="httpMethod"
+                                        (selectionChange)="onHttpMethodChange($event.value)"
+                                        placeholder="{{ 'APIAPP.HTTPMETHOD' | translate }}" required>
+                                        <mat-option value="GET">GET</mat-option>
+                                        <mat-option value="POST">POST</mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('httpMethod').hasError('required') && customWidgetForm.get('httpMethod').touched">
+                                        {{ 'APIAPP.HTTPMETHODISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex>
+                                <mat-form-field class="full-width">
+                                    <input matInput formControlName="apiUrl" (input)="urlValueChange()"
+                                        placeholder="{{ 'APIAPP.APIURL' | translate }}" required>
+                                    <mat-error
+                                        *ngIf="customWidgetForm.get('apiUrl').hasError('required') && customWidgetForm.get('apiUrl').touched">
+                                        {{ 'APIAPP.APIURLISREQUIRED' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div fxFlex="row" class="mr-05 ml-05" *ngIf="dataOptionValue == 'api'">
+                            <mat-tab-group class="app-tabs">
+                                <mat-tab title="{{ 'APIAPP.INPUTPARAMETERS' | translate }}">
+                                    <ng-template mat-tab-label>
+                                        {{ 'APIAPP.INPUTPARAMETERS' | translate }} <span *ngIf="inputParamsCount > 0">
+                                            ({{inputParamsCount}}) </span>
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <div *ngIf="inputParamsCount == 0" fxLayout="row" fxLayoutAlign="center center"
+                                            class="mt-1">
+                                            <button mat-flat-button color="primary" (click)="addApiInputItem(-1)">
+                                                <fa-icon icon="plus" class="mr-05">
+                                                </fa-icon> {{ 'APIAPP.ADDPARAM' | translate }}
+                                            </button>
+                                        </div>
+                                        <div *ngIf="!(inputParamsCount == 0)">
+                                            <form [formGroup]="addInputParamsForm" novalidate
+                                                #inputParamsformDirective="ngForm">
+                                                <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                                                    <div formArrayName="apiInputParams"
+                                                        *ngFor="let item of addInputParamsForm.get('apiInputParams')['controls']; let i = index;">
+                                                        <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                                                            <div [formGroupName]="i" style="display: flex">
+                                                                <div class="align-center mt-1 ml-05" fxFlex="2"
+                                                                    style="height: 40px;">
+                                                                    <span
+                                                                        class="badge-item test-case-step-count count-padding">{{i
+                                                                        + 1}}</span>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36"
+                                                                    class="mr-05">
+                                                                    <mat-form-field class="full-width">
+                                                                        <input matInput formControlName="key"
+                                                                            autocomplete="off"
+                                                                            (input)="inputParamsChange()"
+                                                                            placeholder="{{ 'APIAPP.KEY' | translate }}">
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('key').hasError('required') && item.get('key').touched">
+                                                                                {{ 'APIAPP.KEYISREQUIRED' | translate
+                                                                                }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36">
+                                                                    <mat-form-field class="full-width">
+                                                                        <input matInput formControlName="value"
+                                                                            autocomplete="off"
+                                                                            (input)="inputParamsChange()"
+                                                                            placeholder="{{ 'APIAPP.VALUE' | translate }}">
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('value').hasError('required') && item.get('value').touched">
+                                                                                {{ 'APIAPP.VALUEISREQUIRED' | translate
+                                                                                }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="17"
+                                                                    fxLayout="column" fxLayoutAlign="center center"
+                                                                    fxLayoutGap="4px">
+                                                                    <span>
+                                                                        <a class="padding-p5 icon-hover"
+                                                                            matTooltip="{{'APIAPP.ADDPARAM' | translate}}"
+                                                                            (click)="addApiInputItem(i);inputParamsChange()">
+                                                                            <fa-icon icon="plus"></fa-icon>
+                                                                        </a>
+                                                                        <a class="padding-p5 icon-hover ml-1"
+                                                                            matTooltip="{{'APIAPP.DELETEPARAM' | translate}}"
+                                                                            (click)="removeApiInputParamAtIndex(i);inputParamsChange()">
+                                                                            <fa-icon icon="minus"></fa-icon>
+                                                                        </a>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </ng-template>
+                                </mat-tab>
+                                <mat-tab title="{{ 'APIAPP.HEADERS' | translate }}">
+                                    <ng-template mat-tab-label>
+                                        {{ 'APIAPP.HEADERS' | translate}} <span *ngIf="inputHeadersCount > 0">
+                                            ({{inputHeadersCount}}) </span>
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <div *ngIf="inputHeadersCount == 0" fxLayout="row" fxLayoutAlign="center center"
+                                            class="mt-1">
+                                            <button mat-flat-button color="primary" (click)="addApiHeaderItem(-1)">
+                                                <fa-icon icon="plus" class="mr-05">
+                                                </fa-icon> {{ 'APIAPP.ADDHEADER' | translate }}
+                                            </button>
+                                        </div>
+                                        <div *ngIf="!(inputHeadersCount == 0)">
+                                            <form [formGroup]="addInputHeadersForm" novalidate
+                                                #inputHeadersformDirective="ngForm">
+                                                <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                                                    <div formArrayName="apiHeaderParams"
+                                                        *ngFor="let item of addInputHeadersForm.get('apiHeaderParams')['controls']; let i = index;">
+                                                        <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                                                            <div [formGroupName]="i" style="display: flex">
+                                                                <div class="align-center mt-1 ml-05" fxFlex="2"
+                                                                    style="height: 40px;">
+                                                                    <span
+                                                                        class="badge-item test-case-step-count count-padding">{{i
+                                                                        + 1}}</span>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36"
+                                                                    class="mr-05">
+                                                                    <mat-form-field class="full-width">
+                                                                        <input matInput formControlName="key"
+                                                                            autocomplete="off"
+                                                                            placeholder="{{ 'APIAPP.KEY' | translate }}">
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('key').hasError('required') && item.get('key').touched">
+                                                                                {{ 'APIAPP.KEYISREQUIRED' | translate
+                                                                                }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36">
+                                                                    <mat-form-field class="full-width">
+                                                                        <input matInput formControlName="value"
+                                                                            autocomplete="off"
+                                                                            placeholder="{{ 'APIAPP.VALUE' | translate }}">
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('value').hasError('required') && item.get('value').touched">
+                                                                                {{ 'APIAPP.VALUEISREQUIRED' | translate
+                                                                                }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="17"
+                                                                    fxLayout="column" fxLayoutAlign="center center"
+                                                                    fxLayoutGap="4px">
+                                                                    <span>
+                                                                        <a class="padding-p5 icon-hover"
+                                                                            matTooltip="{{'APIAPP.ADDHEADER' | translate}}"
+                                                                            (click)="addApiHeaderItem(i)">
+                                                                            <fa-icon icon="plus"></fa-icon>
+                                                                        </a>
+                                                                        <a class="padding-p5 icon-hover ml-1"
+                                                                            matTooltip="{{'APIAPP.DELETEHEADER' | translate}}"
+                                                                            (click)="removeApiInputHeaderAtIndex(i)">
+                                                                            <fa-icon icon="minus"></fa-icon>
+                                                                        </a>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </ng-template>
+                                </mat-tab>
+                                <mat-tab title="{{ 'APIAPP.JSONBODY' | translate }}" *ngIf="isBodyVisible">
+                                    <ng-template mat-tab-label>
+                                        {{ 'APIAPP.JSONBODY' | translate }}
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <mat-form-field class="full-width">
+                                            <textarea matInput formControlName="bodyJson" rows="10"
+                                                placeholder="{{ 'APIAPP.PLACEYOURJSONBODYHERE' | translate }}"></textarea>
+                                        </mat-form-field>
+                                    </ng-template>
+                                </mat-tab>
+                                <mat-tab title="{{ 'APIAPP.OUTPUTROOT' | translate }}">
+                                    <ng-template mat-tab-label>
+                                        {{ 'APIAPP.OUTPUTROOT' | translate }}
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <mat-form-field class="full-width">
+                                            <input matInput formControlName="outputRoot" autocomplete="off"
+                                                placeholder="{{ 'APIAPP.PLACEYOUROUTPUTHERE' | translate }}">
+                                        </mat-form-field>
+                                    </ng-template>
+                                </mat-tab>
+                                <mat-tab title="{{ 'APP.OUTPUTS' | translate }}">
+                                    <ng-template mat-tab-label>
+                                        {{ 'APP.OUTPUTS' | translate }} <span *ngIf="outputParamsCount > 0">
+                                            ({{outputParamsCount}}) </span>
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <div *ngIf="outputParamsCount == 0" fxLayout="row" fxLayoutAlign="center center"
+                                            class="mt-1">
+                                            <button mat-flat-button color="primary" (click)="addApiOutputItem(-1)">
+                                                <fa-icon icon="plus" class="mr-05">
+                                                </fa-icon> {{ 'APP.ADDOUTPUT' | translate }}
+                                            </button>
+                                        </div>
+                                        <div *ngIf="!(outputParamsCount == 0)">
+                                            <form [formGroup]="addOutputParamsForm" novalidate
+                                                #outputParamsformDirective="ngForm">
+                                                <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                                                    <div formArrayName="apiOutputParams"
+                                                        *ngFor="let item of addOutputParamsForm.get('apiOutputParams')['controls']; let i = index;">
+                                                        <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                                                            <div [formGroupName]="i" style="display: flex">
+                                                                <div class="align-center mt-1 ml-05" fxFlex="2"
+                                                                    style="height: 40px;">
+                                                                    <span
+                                                                        class="badge-item test-case-step-count count-padding">{{i
+                                                                        + 1}}</span>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36"
+                                                                    class="mr-05">
+                                                                    <mat-form-field class="full-width">
+                                                                        <input matInput formControlName="field"
+                                                                            autocomplete="off"
+                                                                            placeholder="{{ 'NAME' | translate }}">
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('field').hasError('required') && item.get('field').touched">
+                                                                                {{ 'APP.OUTPUTNAMEREQUIREd' | translate
+                                                                                }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36">
+                                                                    <mat-form-field class="full-width">
+                                                                        <mat-select formControlName="filter"
+                                                                            placeholder="{{ 'APP.DATATYPE' | translate }}"
+                                                                            required>
+                                                                            <mat-option value="date">date</mat-option>
+                                                                            <mat-option value="datetime">datetime
+                                                                            </mat-option>
+                                                                            <mat-option value="decimal">decimal
+                                                                            </mat-option>
+                                                                            <mat-option value="float">float</mat-option>
+                                                                            <mat-option value="int">int</mat-option>
+                                                                            <mat-option value="money">money</mat-option>
+                                                                            <mat-option value="numeric">numeric
+                                                                            </mat-option>
+                                                                            <mat-option value="nvarchar">nvarchar
+                                                                            </mat-option>
+                                                                            <mat-option value="time">time</mat-option>
+                                                                            <mat-option value="uniqueidentifier">
+                                                                                uniqueidentifier</mat-option>
+                                                                            <mat-option value="varchar">varchar
+                                                                            </mat-option>
+                                                                        </mat-select>
+                                                                        <mat-error>
+                                                                            <span
+                                                                                *ngIf="item.get('filter').hasError('required') && item.get('filter').touched">
+                                                                                {{ 'APP.OUTPUTDATATYPEREQUIREd' |
+                                                                                translate }}</span>
+                                                                        </mat-error>
+                                                                    </mat-form-field>
+                                                                </div>
+                                                                <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="17"
+                                                                    fxLayout="column" fxLayoutAlign="center center"
+                                                                    fxLayoutGap="4px">
+                                                                    <span>
+                                                                        <a class="padding-p5 icon-hover"
+                                                                            matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}"
+                                                                            (click)="addApiOutputItem(i);">
+                                                                            <fa-icon icon="plus"></fa-icon>
+                                                                        </a>
+                                                                        <a class="padding-p5 icon-hover ml-1"
+                                                                            matTooltip="{{'TESTMANAGEMENT.DELETEFIELD' | translate}}"
+                                                                            (click)="removeApiOutputParamAtIndex(i);">
+                                                                            <fa-icon icon="minus"></fa-icon>
+                                                                        </a>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </ng-template>
+                                </mat-tab>
+                            </mat-tab-group>
+                        </div>
+                    </div>
+                </form>
+                <div class="card-title-text p-05 ml-05"
+                    *ngIf="dataOptionValue == 'proc' && storedProcParams && storedProcParams.length > 0">
+                    <span>{{ 'APP.INPUTS' | translate }}</span>
+                </div>
+                <div class="activity-data" id="style-1"
+                    *ngIf="dataOptionValue == 'proc' && storedProcParams && storedProcParams.length > 0">
+                    <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35"
+                        [footerHeight]="60" [rowHeight]="50" [limit]="100" [rows]="storedProcParams"
+                        [loadingIndicator]="isAnyOperationIsInprogress"
+                        [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+                        <ngx-datatable-column name="{{ 'APP.PARAMETER' | translate }}" [flexGrow]="1"
+                            prop="parameterName">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <div class="hide-content-overflow"><span matTooltip="{{ row?.parameterName }}"
+                                        matTooltipClass="tooltip-overflow">{{ row?.parameterName | sentenceCase
+                                        }}</span>
+                                </div>
+                            </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column name="{{ 'APP.TYPE' | translate }}" [flexGrow]="1" prop="type">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <div class="hide-content-overflow"><span matTooltip="{{ row?.dataType }}"
+                                        matTooltipClass="tooltip-overflow">{{ row?.dataType }}</span></div>
+                            </ng-template>
+                        </ngx-datatable-column>
+
+                        <ngx-datatable-column name="{{ 'APP.INPUTS' | translate }}" [flexGrow]="1" prop="type">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <div *ngIf="(row.type == 'boolean')">
+                                    <mat-form-field class="full-width">
+                                        <input matInput [(ngModel)]="row.inputData">
+                                    </mat-form-field>
+                                </div>
+                                <div *ngIf="(row.type == 'text')">
+                                    <mat-form-field class="full-width">
+                                        <input matInput [(ngModel)]="row.inputData">
+                                    </mat-form-field>
+                                </div>
+                                <div *ngIf="(row.type == 'date')" style="height:70px">
+                                    <mat-form-field>
+                                        <input matInput [(ngModel)]="row.inputData">
+                                        <mat-hint>{{ 'APP.DATEFORMATHINT' | translate}}</mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </ng-template>
+                        </ngx-datatable-column>
+                    </ngx-datatable>
+                </div>
+                <div class="card-title-text p-05 ml-05"
+                    *ngIf="storedProcParams.length > 0 && dataOptionValue == 'proc'">
+                    <span>{{ 'APP.OUTPUTS' | translate }}</span>
+                </div>
+                <form [formGroup]="addProcOutputForm" novalidate #formDirective="ngForm"
+                    *ngIf="dataOptionValue == 'proc' && storedProcParams.length > 0">
+                    <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                        <div formArrayName="procOutputs"
+                            *ngFor="let item of addProcOutputForm.get('procOutputs')['controls']; let i = index;">
+                            <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                                <div [formGroupName]="i" style="display: flex">
+                                    <div class="align-center mr-05 pt-lg-2" fxFlex="100" fxFlex="2"
+                                        style="height: 40px;">
+                                        <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                                    </div>
+                                    <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36" class="mr-05">
+                                        <!-- <textarea rows="3" placeholder="Output name" formControlName="field"
+                                            style="width: 100%"></textarea> -->
+                                        <mat-form-field class="full-width">
+                                            <input matInput formControlName="field" required autocomplete="off"
+                                                placeholder="{{ 'NAME' | translate }}">
+                                            <mat-error>
+                                                <span
+                                                    *ngIf="item.get('field').hasError('required') && item.get('field').touched">
+                                                    {{ 'APP.OUTPUTNAMEREQUIREd' | translate }}</span>
+                                            </mat-error>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36">
+                                        <mat-form-field class="full-width">
+                                            <input matInput formControlName="filter" required autocomplete="off"
+                                                placeholder="{{ 'APP.DATATYPE' | translate }}">
+                                            <mat-error>
+                                                <span
+                                                    *ngIf="item.get('filter').hasError('required') && item.get('filter').touched">
+                                                    {{ 'APP.OUTPUTDATATYPEREQUIREd' | translate }}</span>
+                                            </mat-error>
+                                        </mat-form-field>
+                                    </div>
+                                    <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="17" fxLayout="column"
+                                        fxLayoutAlign="center center" fxLayoutGap="4px">
+                                        <span>
+                                            <a class="padding-p5 icon-hover"
+                                                matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}"
+                                                (click)="addItem(i)">
+                                                <fa-icon icon="plus"></fa-icon>
+                                            </a>
+                                            <a class="padding-p5 icon-hover ml-1"
+                                                matTooltip="{{'TESTMANAGEMENT.DELETEFIELD' | translate}}"
+                                                (click)="removeItemAtIndex(i)">
+                                                <fa-icon icon="minus"></fa-icon>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- </div> -->
+                        <div class="text-right" fxflex="100" fxflex.gt-sm="100" *ngIf="stepsCount == 0">
+                            <a (click)="addItem(addProcOutputForm['controls'].procOutputs['controls'].length - 1)"
+                                style="text-decoration: underline">{{ 'APP.ADDOUTPUT' | translate }}</a>
+                        </div>
+                    </div>
+                    <button mat-raised-button color="primary" type="submit"
+                        (click)="saveProcOutputDetails();saveMessage()" [disabled]="!addProcOutputForm.valid"
+                        *ngIf="(storedProcParams.length > 0 || procOutputsData || outputData) && dataOptionValue == 'proc'">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>{{ 'SAVE' | translate }}
+                    </button>
+                </form>
+                <div class="mt-1">
+                    <button class="pull-right" mat-button mat-raised-button (click)="navigatetocustomwidgets(false)"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button mat-raised-button color="primary" class="mr-1 pull-right" [disabled]="checkDisabled()"
+                        (click)="getCustomwidgetData()">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar> {{ 'APP.NEXT' | translate }} <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button mat-raised-button color="primary" class="mr-1 pull-right" (click)="upsertWidget()"
+                        *ngIf="(customWidgetId && (originalQuery == customWidgetForm.get('widgetQuery').value) || originalQuery == customWidgetForm.get('mongoQuery').value) && !isProc"
+                        [disabled]="!customWidgetForm.valid || isAnyOperationIsInprogress || isValidationInProgress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar> {{'APP.SAVEANDGOBACK' | translate}}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="selectedTabIndex == 1">
+            <div class="activity-data custom-app-details-height" id="style-1">
+                <ngx-datatable class="material bg-white" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="50"
+                    [rowHeight]="50" [limit]="100" [rows]="queryOutput.headers"
+                    [loadingIndicator]="isAnyOperationIsInprogress"
+                    [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+                    <ngx-datatable-column name="{{ 'APP.COLUMNNAME' | translate }}" [flexGrow]="1" prop="columnName">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div class="hide-content-overflow"><span matTooltip="{{ row?.field }}"
+                                    matTooltipClass="tooltip-overflow">{{ row?.field }}</span></div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'APP.TYPE' | translate }}" [flexGrow]="1" prop="type">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div class="hide-content-overflow"><span matTooltip="{{ row?.filter }}"
+                                    matTooltipClass="tooltip-overflow">{{ row?.filter }}</span></div>
+                        </ng-template>
+                    </ngx-datatable-column>
+
+                    <ngx-datatable-column name="{{ 'APP.COLUMNNAME' | translate }}" [flexGrow]="1" prop="columnAltName">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <input matInput [(ngModel)]="row.columnAltName"
+                                placeholder="{{ 'APP.COLUMNNAME' | translate }}">
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'APP.FORMAT' | translate }}" [flexGrow]="1" prop="formatType">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <span *ngIf="row.columnFormatTypes && row.columnFormatTypes.length >0 ">
+                                <mat-select placeholder="{{ 'APP.FORMATPLACEHOLDER' | translate }}"
+                                    [(ngModel)]="row.columnFormatTypeId">
+                                    <mat-option value="">{{ 'SELECT' | translate }}</mat-option>
+                                    <mat-option *ngFor="let cf of row.columnFormatTypes"
+                                        [value]="cf.columnFormatTypeId">
+                                        {{ cf.columnFormatType | translate }}</mat-option>
+                                    <span
+                                        *ngIf="row.filter.toLowerCase()=='float' || row.filter.toLowerCase()=='nvarchar' || row.filter.toLowerCase()=='int'||
+                            row.filter.toLowerCase()=='decimal' || row.filter.toLowerCase()=='numeric' || row.filter.toLowerCase()=='varchar'||
+                            row.filter.toLowerCase()=='char' || row.filter.toLowerCase()=='bigint' || row.filter.toLowerCase()=='longint'|| row.filter.toLowerCase()=='money' ">
+                                        <mat-option value="">
+                                            <mat-select placeholder="{{ 'APP.CURRENCYFORMATPLACEHOLDER' | translate }}"
+                                                [(ngModel)]="row.columnFormatTypeId">
+                                                <!-- <mat-option value="">{{ 'SELECT' | translate }}</mat-option> -->
+                                                <mat-option *ngFor="let cg of currencyColumnFormatTypes"
+                                                    [value]="cg.columnFormatTypeId">
+                                                    {{ cg.columnFormatType | translate }} </mat-option>
+                                            </mat-select>
+                                        </mat-option>
+                                    </span>
+                                </mat-select>
+                            </span>
+                            {{ row?.filter }}
+
+                        </ng-template>
+                    </ngx-datatable-column>
+
+                    <ngx-datatable-column name="{{ 'APP.INCLUDEINFILTERS' | translate }}" [flexGrow]="1"
+                        prop="includeInFilters">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <div *ngIf="(row.isAvailableForFiltering)">
+                                <mat-checkbox [(ngModel)]="row.includeInFilters"
+                                    class="checkbox-text full-width pull-left">
+                                </mat-checkbox>
+                            </div>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'APP.HIDDEN' | translate }}" [flexGrow]="1" prop="hidden">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <mat-checkbox [(ngModel)]="row.hidden" class="checkbox-text full-width pull-left">
+                            </mat-checkbox>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'APP.WIDTH' | translate }}" [flexGrow]="1" prop="width">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <input kendoTextBox [(ngModel)]="row.width"
+                                style="background: linear-gradient(90deg, rgba(239,239,245,0.22) 0%, #e7edf1 .5%, rgba(255,251,251,0.83) 99%, #eae6e6 100%) !important;"
+                                class="checkbox-text full-width pull-left" />
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="{{ 'APP.SUBQUERYTYPE' | translate }}" [flexGrow]="1"
+                        prop="Subquerytype">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <mat-select [(ngModel)]="row.subQueryTypeId"
+                                placeholder="{{ 'APP.SUBQUERYTYPEPLACEHOLDER' | translate }}">
+                                <mat-option value="">{{ 'SELECT' | translate }}</mat-option>
+                                <mat-option *ngFor="let sq of subQueryTypes" [value]="sq.subQueryTypeId">
+                                    {{ sq.subQueryType | translate }} </mat-option>
+                            </mat-select>
+                        </ng-template>
+                    </ngx-datatable-column>
+
+                    <ngx-datatable-column name="{{ 'APP.SUBQUERY' | translate }}" [flexGrow]="1" prop="subQuery">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <input matInput [(ngModel)]="row.subQuery" placeholder="{{ 'APP.APPQUERY' | translate }}">
+                        </ng-template>
+                    </ngx-datatable-column>
+
+                </ngx-datatable>
+
+
+                <!-- <form [formGroup]="subQueryForm" class="px-4">
+                    <mat-form-field>
+                        <mat-label>Select Any App to Dispaly</mat-label>
+                        <mat-select formControlName="typeOfQuery">
+                            <mat-option value="">Select</mat-option>
+                            <mat-option value="Goal">Goal</mat-option>
+                            <mat-option value="Goals">Goals</mat-option>
+                            <mat-option value="Userstory">Userstory</mat-option>
+                            <mat-option value="Userstories">Userstories</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="full-width" *ngIf="selectCustomQuery">
+                        <textarea matInput rows="10" formControlName="query"
+                            placeholder="{{ 'APP.APPQUERY' | translate }}" required></textarea>
+                    </mat-form-field>
+                    <mat-error
+                        *ngIf="subQueryForm.get('query').hasError('required') && subQueryForm.get('query').touched">
+                        {{ 'APP.APPQUERYREQUIREDERROR' | translate }}
+                    </mat-error>
+                </form> -->
+            </div>
+            <div class="m-1">
+                <button class="pull-right" mat-button mat-raised-button (click)="navigatetocustomwidgets(false)"
+                    type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+                <button mat-raised-button color="primary" class="mr-1 pull-right"
+                    (click)="navigateToFilterDetails(true,false)">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar> {{ 'APP.NEXT' | translate }} <fa-icon class="ml-05" icon="arrow-right">
+                    </fa-icon>
+                </button>
+                <button class="mr-1 pull-right" mat-button mat-raised-button (click)="navigatetoMainDetails()"
+                    type="button">
+                    <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="selectedTabIndex == 2">
+            <div class="p-0 custom-app-card-height" id="style-1">
+                <div class="custom-app-details-height" id="style-1">
+                    <customwidget-query-builder [widgetQueryColumns]="previewGridColumns" [widgetQuery]="filterQuery"
+                        (querBuilderResult)="builderOutput($event)">
+                    </customwidget-query-builder>
+                </div>
+                <div class="m-1">
+                    <button class="pull-right" mat-button mat-raised-button (click)="navigatetocustomwidgets(false)"
+                        type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button (click)="navigateToOverviewDetails()"
+                        color="primary" type="button">
+                        {{ 'APP.NEXT' | translate }}
+                        <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button
+                        (click)="navigatetoColumnDetails(false)" type="button">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="selectedTabIndex == 3">
+            <mat-card class="p-0 ml-1 mr-1 custom-app-details-height" id="style-1">
+                <div fxFlex="100" fxLayout="row" fxFlex.gt-sm="100" fxFlex.gt-md="calc(100% - 300px)"
+                    class="my-profiletabs widget-tab-static-label">
+                    <div fxFlex="40px" class="workspac-add-tab-button mb-05" style="height: 40px;">
+                        <button mat-icon-button matTooltip="{{ 'APP.CLICKHERETOADDVISUALIZATION' | translate }}"
+                            [satPopoverAnchorFor]="addVisualization" #addVisualizationPopup="satPopoverAnchor"
+                            (click)="createNewVisualizationType(addVisualizationPopup)">
+                            <mat-icon class="mat-color-accent">add_to_queue</mat-icon>
+                        </button>
+                    </div>
+                    <div fxFlex="97" class="visualization-change-tab">
+                        <mat-tab-group (selectedTabChange)="visualizationTabChange($event)"
+                            *ngIf="allChartsDetails.length > 0" [(selectedIndex)]="selectedVisualizationTabIndex">
+                            <div *ngFor="let charts of allChartsDetails;let i = index">
+                                <mat-tab>
+                                    <ng-template mat-tab-label>
+                                        <div fxLayout="row wrap" style="max-width: 210px;">
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'table'">
+                                                <fa-icon icon="table"
+                                                    class="mat-color-accent filter-operation cursor-pointer">
+                                                </fa-icon>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'Heat map'">
+                                                <fa-icon icon="calendar-alt"
+                                                    class="mat-color-accent filter-operation cursor-pointer">
+                                                </fa-icon>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'stackedarea'">
+                                                <svg height="30" version="1.1" viewbox="0 0 512 512" width="30"
+                                                    xmlns="http://www.w3.org/2000/svg">
+                                                    <g transform="translate(1.7,2.7)">
+                                                        <g transform="scale(0.05)">
+                                                            <rect class="visual-svg-fill" height="290" rx="5px"
+                                                                stroke-width="3" width="25" x="51" y="109">
+                                                            </rect>
+                                                            <rect class="visual-svg-fill" height="25" rx="5px"
+                                                                stroke-width="3" width="358" x="51" y="388">
+                                                            </rect>
+                                                            <g>
+                                                                <path
+                                                                    d="M130,200    l70 -70 l90 60      l20 -50 l30 70    v90 h-220 z"
+                                                                    fill="#EFF0F2" class="visual-svg" stroke-width="15">
+                                                                </path>
+                                                                <path
+                                                                    d="M130,290 l70 -70 l20 30 l 20 -70 l50 70 l30 -30 l50 50 v60 h-250 z"
+                                                                    class="visual-fill" stroke="gray" stroke-width="3">
+                                                                </path>
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'area'">
+                                                <fa-icon icon="chart-area"
+                                                    class="mat-color-accent filter-operation cursor-pointer">
+                                                </fa-icon>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'line'">
+                                                <fa-icon icon="chart-line"
+                                                    class="mat-color-accent filter-operation cursor-pointer">
+                                                </fa-icon>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'stackedbar'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(1.7,2.7)">
+                                                        <g transform="scale(0.05)">
+                                                            <rect x="51" y="61" width="25" height="338" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="51" y="388" width="358" height="25" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="107" width="72" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="185" y="107" width="51" height="60" rx="1px"
+                                                                fill="#EFF0F2" class="visual-svg" stroke-width="3" />
+                                                            <rect x="246" y="107" width="102" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="200" width="198" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="297" width="150" height="60" rx="1px"
+                                                                fill="#EFF0F2" class="visual-svg" stroke-width="3" />
+                                                            <rect x="260" y="297" width="125" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'bar'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(1.7,2.7)">
+                                                        <g transform="scale(0.05)">
+                                                            <rect x="51" y="61" width="20" height="338" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="51" y="388" width="358" height="20" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="107" width="72" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="107" width="152" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="200" width="278" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="102" y="297" width="200" height="60" rx="1px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'pie'">
+                                                <fa-icon icon="chart-pie"
+                                                    class="mat-color-accent filter-operation cursor-pointer">
+                                                </fa-icon>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'stackedcolumn'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(1.7,2.7)">
+                                                        <g transform="scale(0.05)">
+                                                            <rect x="51" y="61" width="25" height="338" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="51" y="388" width="358" height="25" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <g transform="rotate(270 230 220) ">
+                                                                <rect x="102" y="107" width="72" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="185" y="107" width="51" height="60" rx="1px"
+                                                                    fill="#EFF0F2" class="visual-svg"
+                                                                    stroke-width="3" />
+                                                                <rect x="246" y="107" width="102" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="102" y="200" width="198" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="102" y="297" width="150" height="60" rx="1px"
+                                                                    fill="#EFF0F2" class="visual-svg"
+                                                                    stroke-width="3" />
+                                                                <rect x="260" y="297" width="125" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="30px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'column'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(1.7,2.7)">
+                                                        <g transform="scale(0.05)">
+                                                            <rect x="51" y="61" width="20" height="338" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <rect x="51" y="388" width="358" height="20" rx="5px"
+                                                                class="visual-svg-fill" stroke-width="3" />
+                                                            <g transform="rotate(270 230 220) ">
+                                                                <rect x="102" y="107" width="72" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="102" y="107" width="152" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="102" y="200" width="278" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                                <rect x="102" y="297" width="200" height="60" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="3" />
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'donut'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(2,7)">
+                                                        <g transform="scale(0.4)">
+                                                            <circle class="donut-hole" cx="21" cy="21"
+                                                                r="15.91549430918954" fill="transparent"></circle>
+                                                            <circle class="donut-ring" cx="21" cy="21"
+                                                                r="15.91549430918954" fill="transparent"
+                                                                stroke="transparent" stroke-width="7"></circle>
+                                                            <circle class="donut-segment visual-svg" cx="21" cy="21"
+                                                                r="15.91549430918954" fill="transparent"
+                                                                stroke-width="7" stroke-dasharray="50 57"
+                                                                stroke-dashoffset="41" />
+                                                            <circle class="donut-segment visual-svg" cx="21" cy="21"
+                                                                r="15.91549430918954" fill="transparent"
+                                                                stroke-width="7" stroke-dasharray="19 80"
+                                                                stroke-dashoffset="87" />
+                                                            <circle class="donut-segment visual-svg" cx="21" cy="21"
+                                                                r="15.91549430918954" fill="transparent"
+                                                                stroke-width="7" stroke-dasharray="29 70"
+                                                                stroke-dashoffset="65" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="30px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'kpi'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(0,5)">
+                                                        <g transform="scale(0.05)">
+                                                            <g transform="scale(10)">
+                                                                <rect x="5" y="5" width="40" height="30" rx="5px"
+                                                                    fill="transparent" class="visual-svg"
+                                                                    stroke-width="3" />
+                                                                <rect x="15" y="40" width="20" height="2" rx="5px"
+                                                                    fill="transparent" class="visual-svg"
+                                                                    stroke-width="2" />
+                                                                <text x="15" y="27" class="visual-fill" font-size="20"
+                                                                    font-weight="bold" font-family="Super Sans">0</text>
+                                                                <rect x="30" y="14" width="2" height="12.5" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="1" />
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="30px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'radialgauge'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(0,3)">
+                                                        <g transform="scale(0.05)">
+                                                            <path class="visual-svg-fill" stroke-width="77"
+                                                                d="M50,357 a1 1,0,0 1, 402,0 " stroke-dashoffset="4" />
+                                                            <path fill="#eff0f2" class="visual-svg" stroke-width="3"
+                                                                d="M73,357 a1 1,0,0 1, 357,0 " />
+                                                            <circle cx="255" cy="335" r="22" class="visual-fill" />
+                                                            <path class="visual-svg-fill" stroke-width="3"
+                                                                d="M245,347 l20 -20 l-110 -110" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="25px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'lineargauge'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(1,3)">
+                                                        <g transform="scale(0.045)">
+                                                            <g transform="scale(10)">
+                                                                <text x="7" y="10" class="visual-fill" font-size="14"
+                                                                    font-weight="bold">1</text>
+                                                                <rect x="15" y="4.9" width="20" height="3" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="1" />
+                                                                <rect x="34.3" y="5" width="3" height="42" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="1" />
+                                                                <text x="7" y="46.4" class="visual-fill" font-size="14"
+                                                                    font-weight="bold">0</text>
+                                                                <rect x="15" y="44" width="20" height="3" rx="1px"
+                                                                    class="visual-svg-fill" stroke-width="1" />
+                                                                <path class="visual-svg-fill" stroke-width="3"
+                                                                    d="M22,15 h15" />
+                                                                <path class="visual-svg-fill" stroke-width="3"
+                                                                    d="M22,24.5 h15" />
+                                                                <path class="visual-svg-fill" stroke-width="3"
+                                                                    d="M22,34 h15" />
+                                                                <path class="visual-svg-fill" stroke-width="2"
+                                                                    d="M25.7,10.5 h12" />
+                                                                <path class="visual-svg-fill" stroke-width="2"
+                                                                    d="M25.7,19.5 h12" />
+                                                                <path class="visual-svg-fill" stroke-width="2"
+                                                                    d="M25.7,29.5 h12" />
+                                                                <path class="visual-svg-fill" stroke-width="2"
+                                                                    d="M25.7,39.5 h12" />
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div fxFlex="30px" fxLayoutAlign="center center"
+                                                *ngIf="charts.gridData.visualizationType == 'arcgauge'">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="30" viewbox="0 0 512 512">
+                                                    <g transform="translate(0,1)">
+                                                        <g transform="scale(0.05)">
+                                                            <g transform="translate(-25,0)">
+                                                                <path
+                                                                    d="M51,408 h51 q0,-200 207,-190 l7 -51 Q 41,165 51,411.5 "
+                                                                    class="visual-svg-fill" stroke-width="7" />
+                                                                <path
+                                                                    d="M310,218 q150,50 150,193 h50 c 0,-10 0,-199 -200,-245"
+                                                                    fill="none" class="visual-svg" stroke-width="7" />
+                                                            </g>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <div matTooltip="{{charts.gridData.visualizationName}}" fxFlex
+                                                style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+                                                {{charts.gridData.visualizationName}}
+                                            </div>
+                                        </div>
+                                    </ng-template>
+                                    <ng-template matTabContent>
+                                        <div fxLayout="row" fxLayoutGap="5px">
+                                            <div fxFlex="35" class="ml-1 mt-1 p-0">
+                                                <button class="pull-right mb-1 floating-right-delete-button"
+                                                    type="button" mat-button mat-raised-button
+                                                    #deleteVisualizationTypePopover="satPopoverAnchor"
+                                                    [satPopoverAnchorFor]="deleteVisualizationType"
+                                                    (click)="opendeleteVisualizationTypePopover(deleteVisualizationTypePopover,charts)">
+                                                    <mat-icon style="padding-left: 10px"
+                                                        class="mat-color-accent tab-icon">
+                                                        delete</mat-icon>
+                                                </button>
+                                                <form class="mt-1" [formGroup]="visualizationDetailsForm"
+                                                    #formDirective="ngForm" novalidate>
+                                                    <div>
+                                                        <mat-form-field class="full-width">
+                                                            <mat-select formControlName="selectedvisualizationType"
+                                                                placeholder="{{'APP.VISUALIZATIONTYPE' | translate}}"
+                                                                required
+                                                                (selectionChange)="visualizationTypeChange($event.value)">
+                                                                <mat-option value="option"
+                                                                    *ngFor="let type of visualizationTypes"
+                                                                    [value]="type.value">
+                                                                    {{ type.name }}</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('selectedvisualizationType').hasError('required') && visualizationDetailsForm.get('selectedvisualizationType').touched">
+                                                                {{'APP.VISUALIZATIONTYPESELECTERROR' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="chartType == 'gauge' || chartType == 'lineargauge' || chartType == 'radialgauge' || chartType == 'arcgauge'">
+                                                            <mat-select formControlName="gaugeChartType"
+                                                                placeholder="{{'APP.GAUGECHARTTYPE' | translate}}"
+                                                                required (selectionChange)="GaugeTypeSelected($event)">
+                                                                <mat-option [value]="0">Linear</mat-option>
+                                                                <mat-option [value]="1">Radial</mat-option>
+                                                                <mat-option [value]="2">Arc</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('gaugeChartType').hasError('required') && visualizationDetailsForm.get('gaugeChartType').touched">
+                                                                {{'APP.GAUGETYPESELECTERROR' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+                                                        <mat-form-field class="full-width">
+                                                            <input matInput formControlName="visualizationName"
+                                                                placeholder="{{'APP.VISUALIZATIONNAME' | translate}}"
+                                                                required>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('visualizationName').hasError('maxlength')">
+                                                                {{'APP.VISUALIZATIONNAMECANNOTEXCEEDTHAN100CHARACTERS' |
+                                                                translate}}
+                                                            </mat-error>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('visualizationName').hasError('required') && visualizationDetailsForm.get('visualizationName').touched">
+                                                                {{'APP.VISUALIZATIONNAMEREQUIRED' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="isChartTypeVisualization && (chartType != 'kpi' && chartType != 'gauge' && chartType != 'lineargauge' && chartType != 'radialgauge' && chartType != 'arcgauge'&& chartType != 'pivot' && chartType != 'Heat map' && chartType != 'box chart')">
+                                                            <mat-select formControlName="xAxisColumnName"
+                                                                placeholder="{{'APP.XCOLUMN' | translate}}" required
+                                                                (selectionChange)="xAxisSelected($event)">
+                                                                <mat-option value="option"
+                                                                    *ngFor="let column of xAxisColumnsList"
+                                                                    [value]="column.field">
+                                                                    {{ column.columnAltName }}</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('xAxisColumnName').hasError('required') && visualizationDetailsForm.get('xAxisColumnName').touched">
+                                                                {{'APP.PLEASESELECTXAXIS' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="isChartTypeVisualization && (chartType != 'kpi' && chartType != 'gauge' && chartType != 'lineargauge' && chartType != 'radialgauge' && chartType != 'arcgauge' && chartType != 'pivot' && chartType != 'Heat map' && chartType != 'box chart')">
+                                                            <mat-select formControlName="yAxisColumnName"
+                                                                placeholder="{{'APP.YCOLUMN' | translate}}" required
+                                                                (selectionChange)="yAxisSelected($event)" multiple>
+                                                                <mat-option value="option"
+                                                                    *ngFor="let column of yAxisColumnsList"
+                                                                    [value]="column.field">
+                                                                    {{ column.columnAltName }}</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('yAxisColumnName').hasError('required') && visualizationDetailsForm.get('yAxisColumnName').touched">
+                                                                {{'APP.PLEASESELECTYAXIS' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="(chartType == 'Heat map')">
+                                                            <mat-select formControlName="date" placeholder="Date column"
+                                                                required (selectionChange)="xAxisSelected($event)">
+                                                                <mat-option value="option"
+                                                                    *ngFor="let column of xAxisColumnsList"
+                                                                    [value]="column.field">
+                                                                    {{ column.columnAltName }}</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('date').hasError('required') && visualizationDetailsForm.get('date').touched">
+                                                                Please select date column
+                                                            </mat-error>
+                                                        </mat-form-field>
+
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="(chartType == 'Heat map')">
+                                                            <mat-select formControlName="value" placeholder="Value"
+                                                                required (selectionChange)="yAxisSelected($event)">
+                                                                <mat-option value="option"
+                                                                    *ngFor="let column of yAxisColumnsList"
+                                                                    [value]="column.field">
+                                                                    {{ column.columnAltName }}</mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('value').hasError('required') && visualizationDetailsForm.get('value').touched">
+                                                                Please select value
+                                                            </mat-error>
+                                                        </mat-form-field>
+
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="(chartType == 'Heat map')">
+                                                            <input matInput formControlName="cellSize"
+                                                                placeholder="Cell size">
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('cellSize').hasError('min') && visualizationDetailsForm.get('cellSize').touched">
+                                                                Cell size should be greater than 20
+                                                            </mat-error>
+                                                        </mat-form-field>
+
+                                                        <mat-form-field class="full-width"
+                                                            *ngIf="chartType == 'kpi' || chartType == 'gauge' || chartType == 'lineargauge' || chartType == 'radialgauge' || chartType == 'arcgauge'">
+                                                            <mat-select formControlName="kpiSelectedData"
+                                                                placeholder="{{'APP.SELECTCOLUMNTOSHOW' | translate}}"
+                                                                required (selectionChange)="kpiSelectedData($event)">
+                                                                <mat-option value="option"
+                                                                    *ngFor="let column of yAxisColumnsList"
+                                                                    [value]="column.field">
+                                                                    {{ column.columnAltName }}
+                                                                </mat-option>
+                                                            </mat-select>
+                                                            <mat-error
+                                                                *ngIf="visualizationDetailsForm.get('kpiSelectedData').hasError('required') && visualizationDetailsForm.get('kpiSelectedData').touched">
+                                                                {{'APP.PLESAESELECTCOLUMN' | translate}}
+                                                            </mat-error>
+                                                        </mat-form-field>
+                                                        <div *ngIf="chartType == 'pivot'">
+                                                            <button type='button' mat-button class="pull-right"
+                                                                [satPopoverAnchorFor]="addMeasurer"
+                                                                #addMeasurerPopup="satPopoverAnchor"
+                                                                (click)="openAddMeasurerPopup(addMeasurerPopup,i)">
+                                                                {{ 'APP.ADDMEASURER' | translate}}
+                                                            </button>
+                                                        </div>
+                                                        <div *ngIf="chartType == 'pivot'">
+                                                            <div class="mat-chip-list-stacked"
+                                                                aria-orientation="vertical">
+                                                                <mat-chip-list aria-label="Measurer fields">
+                                                                    <mat-chip
+                                                                        *ngFor="let measurerColumn of charts.gridData.pivotMeasurersToDisplay"
+                                                                        [removable]="removable"
+                                                                        (removed)="removeMeasurer(measurerColumn,i)">
+                                                                        {{ measurerColumn.measurerName }}
+                                                                        <mat-icon matChipRemove *ngIf="removable"
+                                                                            class="pull-right">cancel</mat-icon>
+                                                                    </mat-chip>
+                                                                </mat-chip-list>
+                                                            </div>
+                                                        </div>
+
+                                                        <div
+                                                            *ngIf="chartType == 'area' || chartType == 'bar' || chartType == 'line' || chartType == 'column' || chartType == 'stackedbar' || chartType == 'stackedarea' || chartType == 'stackedcolumn'">
+                                                            <button type='button' mat-button mat-raised-button
+                                                                color="primary" [satPopoverAnchorFor]="addColor"
+                                                                #addColorPopup="satPopoverAnchor"
+                                                                (click)="openAddColorPopup(addColorPopup)">
+                                                                Add colors for chart
+                                                            </button>
+                                                        </div>
+                                                        <mat-checkbox class="mt-05 pr-05" mat-primary
+                                                            formControlName="isDefault"
+                                                            (change)='checkIsDefaultExisted()'>
+                                                            {{'APP.ISDEFAULT' | translate}}
+                                                        </mat-checkbox>
+                                                        <mat-checkbox class="mt-05" mat-primary
+                                                            formControlName="showDataInCell"
+                                                            *ngIf="(chartType == 'Heat map')">
+                                                            Show data in cell
+                                                        </mat-checkbox>
+                                                    </div>
+                                                </form>
+                                                <form [formGroup]="legendForm" novalidate #formDirective="ngForm"
+                                                    *ngIf="chartType == 'Heat map'">
+                                                    <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                                                        <div formArrayName="legends"
+                                                            *ngFor="let item of legendForm.get('legends')['controls']; let i = index;">
+                                                            <div class="Step-description" fxFlex="100"
+                                                                fxFlex.gt-sm="100">
+                                                                <div [formGroupName]="i" style="display: flex">
+                                                                    <div class="align-center mr-05 pt-lg-2" fxFlex="100"
+                                                                        fxFlex="6" style="height: 40px;">
+                                                                        <span
+                                                                            class="badge-item test-case-step-count count-padding">{{i
+                                                                            + 1}}</span>
+                                                                    </div>
+                                                                    <div fxFlex="100" fxFlex.gt-xs="24" fxFlex.xs="26"
+                                                                        class="mr-05">
+                                                                        <mat-form-field class="full-width">
+                                                                            <input matInput formControlName="legendName"
+                                                                                required autocomplete="off"
+                                                                                placeholder="Name">
+                                                                            <mat-error>
+                                                                                <span
+                                                                                    *ngIf="item.get('legendName').hasError('required') && item.get('legendName').touched">
+                                                                                    Legend name required</span>
+                                                                            </mat-error>
+                                                                        </mat-form-field>
+                                                                    </div>
+                                                                    <div fxFlex="100" fxFlex.gt-xs="24" fxFlex.xs="26"
+                                                                        class="mr-05">
+                                                                        <mat-form-field class="full-width">
+                                                                            <input matInput formControlName="value"
+                                                                                required autocomplete="off"
+                                                                                placeholder="Value">
+                                                                            <mat-error>
+                                                                                <span
+                                                                                    *ngIf="item.get('value').hasError('required') && item.get('value').touched">
+                                                                                    Legend value required</span>
+                                                                            </mat-error>
+                                                                        </mat-form-field>
+                                                                    </div>
+                                                                    <div fxFlex="100" fxFlex.gt-xs="24" fxFlex.xs="26">
+                                                                        <mat-form-field class="full-width">
+                                                                            <input formControlName="legendColor"
+                                                                                matInput autocomplete="off"
+                                                                                placeholder="Legend color"
+                                                                                [(colorPicker)]="item.get('legendColor').value"
+                                                                                [cpPosition]="'bottom'"
+                                                                                [style.background]="color"
+                                                                                [value]="item.get('legendColor').value"
+                                                                                (colorPickerChange)="item.get('legendColor').setValue($event)" />
+                                                                            <mat-error>
+                                                                                <span
+                                                                                    *ngIf="item.get('legendColor').hasError('maxlength')">
+                                                                                    {{'USERSTORYSTATUS.COLORCANNOTEXCEED50CHARACTERS'|translate}}</span>
+                                                                            </mat-error>
+                                                                        </mat-form-field>
+                                                                    </div>
+                                                                    <div fxFlex="100" fxFlex.gt-xs="16" fxFlex.xs="17"
+                                                                        fxLayout="column" fxLayoutAlign="center center"
+                                                                        fxLayoutGap="4px">
+                                                                        <span>
+                                                                            <a class="padding-p5 icon-hover"
+                                                                                matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}"
+                                                                                (click)="addLegendItem(i)">
+                                                                                <fa-icon icon="plus"></fa-icon>
+                                                                            </a>
+                                                                            <a class="padding-p5 icon-hover ml-1"
+                                                                                matTooltip="{{'TESTMANAGEMENT.DELETEFIELD' | translate}}"
+                                                                                (click)="removeLegendItemAtIndex(i)">
+                                                                                <fa-icon icon="minus"></fa-icon>
+                                                                            </a>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- </div> -->
+                                                        <div class="text-right" fxflex="100" fxflex.gt-sm="100"
+                                                            *ngIf="legendStepsCount == 0">
+                                                            <a (click)="addLegendItem(legendForm['controls'].legends['controls'].length - 1)"
+                                                                style="text-decoration: underline">Add Legend</a>
+                                                        </div>
+                                                    </div>
+                                                </form>
+
+                                                <button class="pull-right"
+                                                    [disabled]="!visualizationDetailsForm.valid || !legendForm.valid || (chartType == 'Heat map' && !(legendStepsCount > 0))"
+                                                    type="submit" mat-button mat-raised-button color="primary"
+                                                    (click)="drawChart(charts)">
+                                                    {{'UPDATE' | translate}}
+                                                </button>
+                                            </div>
+                                            <div fxFlex="65" class="ml-1 gridster-item-border">
+                                                <app-customwidget-table [isMongoQuery]="isMongoQuery"
+                                                    [collectionName]="collectionName" [widgetData]="charts.gridData"
+                                                    [chartsLength]="allChartsDetails.length"
+                                                    (fileBytes)="fileBytes($event)" [procName]="procName"
+                                                    (persistanceJson)="setPersistance($event)" [openDialog]="false"
+                                                    [paramsData]="paramsData" [showHeaderInPopUp]="showHeaderInPopUp"
+                                                    [apiInputModel]="apiInputModel" [isApi]="isApi">
+                                                </app-customwidget-table>
+                                                <!-- <app-calendar-chart
+                                                    *ngIf="charts.gridData.visualizationType == 'Heat map'"  [procName]="procName" [reCreateChart]="reCreateChart" [widgetData]="charts.gridData">
+                                                </app-calendar-chart> -->
+                                            </div>
+                                        </div>
+                                    </ng-template>
+                                </mat-tab>
+                            </div>
+                        </mat-tab-group>
+                        <app-common-message-box *ngIf="allChartsDetails.length == 0"
+                            textToDisplay="{{ 'APP.NOVISUALIZATIONSAVAILABLE' | translate }}">
+                        </app-common-message-box>
+                    </div>
+                </div>
+            </mat-card>
+            <div class="m-1">
+                <button class="pull-right" mat-button mat-raised-button (click)="navigatetocustomwidgets(false)"
+                    type="button">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+                <button class="mr-1 pull-right" mat-button mat-raised-button color="primary"
+                    (click)="navigateToScheduler()" type="button">
+                    {{'APP.SCHEDULING' | translate}}
+                    <fa-icon class="ml-05" icon="arrow-right"></fa-icon>
+                </button>
+                <button class="mr-1 pull-right" mat-button mat-raised-button (click)="upsertWidget()" color="primary"
+                    type="button" [disabled]="enableFinish() || isUpsertInProgress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertInProgress">
+                    </mat-progress-bar>
+                    {{ 'FINISH' | translate }}
+                </button>
+                <button class="mr-1 pull-right" mat-button mat-raised-button
+                    (click)="navigateToFilterDetails(false,true)" type="button">
+                    <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="selectedTabIndex == 4">
+            <mat-card class="p-0 ml-1 mr-1 custom-app-card-height" id="style-1">
+                <div class="custom-app-details-height">
+                    <form [formGroup]="scheduleForm" #formDirective="ngForm" novalidate>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                            <div fxFlex="50" fxFlex.xs="100">
+                                <mat-form-field class="full-width pl-1">
+                                    <input matInput formControlName="cronExpressionName" type="text"
+                                        placeholder="{{'APP.CRONEXPRESSIONNAME' | translate}}" required>
+                                    <mat-error *ngIf="scheduleForm.get('cronExpressionName').hasError('required')">
+                                        {{'APP.PLEASEENTERCRONEXPRESSIONNAME' | translate}}
+                                    </mat-error>
+                                    <mat-error *ngIf="scheduleForm.get('cronExpressionName').hasError('maxlength')">
+                                        {{'APP.CRONEXPRESSIONNAMESHOULDBELESSTHAN50CHARACTERS' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50" fxFlex.xs="100">
+                                <mat-form-field class="full-width pr-1" (click)="$event.stopPropagation();">
+                                    <mat-select formControlName="charts" [compareWith]="compareSelectedChartsFn"
+                                        placeholder="{{'APP.CHARTS' | translate}}" multiple required
+                                        (selectionChange)="getSelectedCharts()">
+                                        <mat-select-trigger>
+                                            {{selectedChartDetailsNames}}
+                                        </mat-select-trigger>
+                                        <mat-option #allSelectedCharts (click)="toggleAllChartsSelected()" [value]="-1">
+                                            {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                        <div *ngFor="let charts of allChartsDetails">
+                                            <mat-option [value]="charts.gridData.chartNumber"
+                                                *ngIf="charts.gridData.visualizationType !='kpi'"
+                                                (click)="toggleChartsPerOne();">
+                                                {{ charts.gridData.visualizationName }}
+                                            </mat-option>
+                                        </div>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="scheduleForm.get('charts').hasError('required') && scheduleForm.get('charts').touched">
+                                        {{'APP.PLEASESELECTCHARTS' | translate}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <mat-form-field class="full-width p-1">
+                            <mat-select formControlName="templateType" placeholder="{{'APP.TEMPLATETYPE' | translate}}"
+                                required (selectionChange)="enableSchedulingDetails($event.value)">
+                                <mat-option [value]="templateType.value"
+                                    *ngFor="let templateType of templateTypeDropDown">
+                                    {{ templateType.name }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="scheduleForm.get('templateType').hasError('required') && scheduleForm.get('charts').touched">
+                                {{'APP.PLEASESELECTTEMPLATETYPE' | translate}}
+                            </mat-error>
+                        </mat-form-field>
+                    </form>
+                    <mat-form-field class="full-width p-1" *ngIf="enableGmailField"
+                        hintLabel="{{'HRMANAGAMENT.PRESSCOMMAAFTEREMAIL' | translate}}">
+                        <input matInput [formControl]="email" type="email" placeholder="Email" [(ngModel)]="emailField"
+                            required>
+                        <mat-error>
+                            <span *ngIf="email.hasError('required') && email.touched">
+                                {{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}} </span>
+                            <span *ngIf="email.hasError('pattern') && !email.hasError('maxlength')">
+                                {{'HRMANAGAMENT.PLEASEENTERVALIDEMAIL' | translate}} </span>
+                            <span
+                                *ngIf="email.hasError('maxlength')">{{'HRMANAGAMENT.COMPANYNAMESHOULDNOTEXCEED100CHARACTERS'
+                                | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width p-1" *ngIf="enableWebHookField">
+                        <mat-select [formControl]="webUrl" placeholder="Webhook url" required [(ngModel)]="webUrlField">
+                            <mat-option [value]="webhook.webHookUrl" *ngFor="let webhook of webhook">
+                                {{ webhook.webHookUrl }}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="webUrl.hasError('required') && webUrl.touched">
+                            {{'APP.PLEASESELECTWEBHOOKURL' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <!-- <mat-form-field class="full-width p-1" *ngIf="enableWebHookField">
+                        <input matInput [formControl]="webUrl" placeholder="Webhook url" required>
+                        <mat-error>
+                            <span *ngIf="email.hasError('required') && email.touched">
+                                {{'APP.PLEASEENTERWEBHOOKURL' | translate}} </span>
+                            <span
+                                *ngIf="email.hasError('maxlength')">{{'APP.WEBHOOKURLCANNOTEXCEED100CHARACTERS' | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field> -->
+                    <div class="m-1 row">
+                        <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled" [options]="cronOptions">
+                        </cron-editor>
+                        <button class="mr-1" mat-button mat-raised-button *ngIf="customWidgetId && cronExpressionId"
+                            style="margin-top: 5px; margin-left:20px; height:35px"
+                            [satPopoverAnchorFor]="addCronExpressionPopovers" (click)="openPopOver()"
+                            #addCronExpressionPopUp="satPopoverAnchor" type="button">
+                            {{ 'APP.REMOVESCHEDULING' | translate }}
+                        </button>
+                    </div>
+                    <!-- <div class="m-1 row">
+                        <cron-editor [(cron)]="cronExpression" [disabled]="isCronDisabled"
+                        [options]="cronOptions">
+                    </cron-editor>
+                    </div> -->
+
+                    <!-- <h5 class="p-1">The resulting Cron expression: <strong>{{cronExpression}}</strong></h5> -->
+                    <!-- <h5 class="p-1">The resulting Cron expression: <strong>{{cronExpression | cronValueConverter}}</strong></h5> -->
+                </div>
+                <div class="m-1">
+                    <button class="mr-1 pull-right" mat-button mat-raised-button
+                        (click)="navigatetocustomwidgets(false)" type="button">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" [disabled]="enableButtons() || isUpsertInProgress" mat-button
+                        mat-raised-button color="primary" (click)="upsertWidget()" type="button">
+                        {{ 'FINISH' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button color="primary" (click)="runNowCron()"
+                        [disabled]="enableButtons() || isUpsertInProgress" type="button">
+                        {{'APP.RUNNOW' | translate}}
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button (click)="navigateToOverviewDetails()"
+                        type="button">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                    </button>
+                </div>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" hasBackdrop #addVisualization verticalAlign="below" horizontalAlign="end"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'APP.ADDVISUALIZATIONTYPE' | translate}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <form [formGroup]="visualizationDetailsForm" #addFormDirective="ngForm" novalidate>
+                <div>
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="selectedvisualizationType"
+                            placeholder="{{'APP.VISUALIZATIONTYPE' | translate}}" required
+                            (selectionChange)="visualizationTypeChange($event.value)">
+                            <mat-option value="option" *ngFor="let type of visualizationTypes" [value]="type.value">
+                                {{ type.name }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('selectedvisualizationType').hasError('required') && visualizationDetailsForm.get('selectedvisualizationType').touched">
+                            {{'APP.VISUALIZATIONTYPESELECTERROR' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width"
+                        *ngIf="chartType == 'gauge' || chartType == 'lineargauge' || chartType == 'radialgauge' || chartType == 'arcgauge'">
+                        <mat-select formControlName="gaugeChartType" placeholder="{{'APP.GAUGECHARTTYPE' | translate}}"
+                            required (selectionChange)="GaugeTypeSelected($event)">
+                            <mat-option [value]="0">Linear</mat-option>
+                            <mat-option [value]="1">Radial</mat-option>
+                            <mat-option [value]="2">Arc</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('gaugeChartType').hasError('required') && visualizationDetailsForm.get('gaugeChartType').touched">
+                            {{'APP.GAUGETYPESELECTERROR' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input matInput formControlName="visualizationName"
+                            placeholder="{{'APP.VISUALIZATIONNAME' | translate}}" required>
+                        <mat-error *ngIf="visualizationDetailsForm.get('visualizationName').hasError('maxlength')">
+                            {{'APP.VISUALIZATIONNAMECANNOTEXCEEDTHAN100CHARACTERS' | translate}}
+                        </mat-error>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('visualizationName').hasError('required') && visualizationDetailsForm.get('visualizationName').touched">
+                            {{'APP.VISUALIZATIONNAMEREQUIRED' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width"
+                        *ngIf="isChartTypeVisualization && (chartType != 'kpi' && chartType != 'gauge' && chartType != 'lineargauge' && chartType != 'radialgauge' && chartType != 'arcgauge' && chartType != 'Heat map' && chartType != 'box chart')">
+                        <mat-select formControlName="xAxisColumnName" placeholder="{{'APP.XCOLUMN' | translate}}"
+                            required (selectionChange)="xAxisSelected($event)">
+                            <mat-option value="option" *ngFor="let column of xAxisColumnsList" [value]="column.field">
+                                {{ column.columnAltName }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('xAxisColumnName').hasError('required') && visualizationDetailsForm.get('xAxisColumnName').touched">
+                            {{'APP.PLEASESELECTXAXIS' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width"
+                        *ngIf="isChartTypeVisualization && (chartType != 'kpi' && chartType != 'gauge' && chartType != 'lineargauge' && chartType != 'radialgauge' && chartType != 'arcgauge' && chartType != 'Heat map' && chartType != 'box chart')">
+                        <mat-select formControlName="yAxisColumnName" placeholder="{{'APP.YCOLUMN' | translate}}"
+                            required (selectionChange)="yAxisSelected($event)" multiple>
+                            <mat-option value="option" *ngFor="let column of yAxisColumnsList" [value]="column.field">
+                                {{ column.columnAltName }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('yAxisColumnName').hasError('required') && visualizationDetailsForm.get('yAxisColumnName').touched">
+                            {{'APP.PLEASESELECTYAXIS' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width" *ngIf="isChartTypeVisualization && (chartType == 'Heat map')">
+                        <mat-select formControlName="date" placeholder="Date column" required
+                            (selectionChange)="xAxisSelected($event)">
+                            <mat-option value="option" *ngFor="let column of xAxisColumnsList" [value]="column.field">
+                                {{ column.columnAltName }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('date').hasError('required') && visualizationDetailsForm.get('date').touched">
+                            Please select date column
+                        </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field class="full-width" *ngIf="isChartTypeVisualization && (chartType == 'Heat map')">
+                        <mat-select formControlName="value" placeholder="Value" required
+                            (selectionChange)="yAxisSelected($event)">
+                            <mat-option value="option" *ngFor="let column of yAxisColumnsList" [value]="column.field">
+                                {{ column.columnAltName }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('value').hasError('required') && visualizationDetailsForm.get('value').touched">
+                            Please select value
+                        </mat-error>
+                    </mat-form-field>
+
+
+
+                    <!-- <mat-form-field class="full-width" *ngIf="isChartTypeVisualization && (chartType == 'Heat map')">
+                        <input matInput formControlName="cellSize" placeholder="Cell size">
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('cellSize').hasError('min') && visualizationDetailsForm.get('cellSize').touched">
+                            Cell size should be greater than 20
+                        </mat-error>
+                    </mat-form-field> -->
+                    <mat-form-field class="full-width"
+                        *ngIf="chartType == 'kpi' || chartType == 'gauge' || chartType == 'lineargauge' || chartType == 'radialgauge' || chartType == 'arcgauge'">
+                        <mat-select formControlName="kpiSelectedData"
+                            placeholder="{{'APP.SELECTCOLUMNTOSHOW' | translate}}" required
+                            (selectionChange)="kpiSelectedData($event)">
+                            <mat-option value="option" *ngFor="let column of yAxisColumnsList" [value]="column.field">
+                                {{ column.columnAltName }}</mat-option>
+                        </mat-select>
+                        <mat-error
+                            *ngIf="visualizationDetailsForm.get('kpiSelectedData').hasError('required') && visualizationDetailsForm.get('kpiSelectedData').touched">
+                            {{'APP.PLESAESELECTCOLUMN' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <div *ngIf="chartType == 'pivot'">
+                        <button type='button' mat-button class="pull-right" [satPopoverAnchorFor]="addMeasurer"
+                            #addMeasurerPopup="satPopoverAnchor" (click)="openAddMeasurerPopup(addMeasurerPopup,null)">
+                            {{ 'APP.ADDMEASURER' | translate}}
+                        </button>
+                    </div>
+
+                    <div *ngIf="chartType == 'pivot'">
+                        <div class="mat-chip-list-stacked" aria-orientation="vertical">
+                            <mat-chip-list #chipList aria-label="Measurer fields">
+                                <mat-chip *ngFor="let measurerColumn of selectedMeasurerList" [removable]="removable"
+                                    (removed)="removeMeasurer(measurerColumn,null)">
+                                    {{ measurerColumn.measurerName }}
+                                    <mat-icon matChipRemove *ngIf="removable" class="pull-right">cancel</mat-icon>
+                                </mat-chip>
+                            </mat-chip-list>
+                        </div>
+                    </div>
+
+                    <mat-checkbox class="mt-05 pr-05" mat-primary formControlName="isDefault"
+                        (change)='checkIsDefaultExisted()'>
+                        {{'APP.ISDEFAULT' | translate}}
+                    </mat-checkbox>
+                    <mat-checkbox class="mt-05" mat-primary formControlName="showDataInCell"
+                        *ngIf="(chartType == 'Heat map')">
+                        Show data in cell
+                    </mat-checkbox>
+                </div>
+            </form>
+            <form [formGroup]="legendForm" novalidate #formDirective="ngForm" *ngIf="chartType == 'Heat map'">
+                <div class="mt-05" fxFlex="100" fxFlex.gt-sm="100">
+                    <div formArrayName="legends"
+                        *ngFor="let item of legendForm.get('legends')['controls']; let i = index;">
+                        <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                            <div [formGroupName]="i" style="display: flex">
+                                <div class="align-center mr-05 pt-lg-2" fxFlex="100" fxFlex="6" style="height: 40px;">
+                                    <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="32" fxFlex.xs="36" class="mr-05">
+                                    <mat-form-field class="full-width">
+                                        <input matInput formControlName="legendName" required autocomplete="off"
+                                            placeholder="Name">
+                                        <mat-error>
+                                            <span
+                                                *ngIf="item.get('legendName').hasError('required') && item.get('legendName').touched">
+                                                Legend name required</span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="32" fxFlex.xs="36">
+                                    <mat-form-field class="full-width">
+                                        <input matInput formControlName="value" required autocomplete="off"
+                                            placeholder="Value">
+                                        <mat-error>
+                                            <span
+                                                *ngIf="item.get('value').hasError('required') && item.get('value').touched">
+                                                Legend value required</span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <mat-form-field class="full-width status-color mb-05">
+                                    <input formControlName="legendColor" matInput autocomplete="off"
+                                        placeholder="Legend color" [(colorPicker)]="color" [cpPosition]="'bottom'"
+                                        [style.background]="color" [value]="color"
+                                        (colorPickerChange)="item.get('legendColor').setValue($event)" />
+                                    <mat-error>
+                                        <span *ngIf="item.get('legendColor').hasError('maxlength')">
+                                            {{'USERSTORYSTATUS.COLORCANNOTEXCEED50CHARACTERS'|translate }}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                                <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="16" fxLayout="column"
+                                    fxLayoutAlign="center center" fxLayoutGap="4px">
+                                    <span>
+                                        <a class="padding-p5 icon-hover"
+                                            matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}"
+                                            (click)="addLegendItem(i)">
+                                            <fa-icon icon="plus"></fa-icon>
+                                        </a>
+                                        <a class="padding-p5 icon-hover ml-1"
+                                            matTooltip="{{'TESTMANAGEMENT.DELETEFIELD' | translate}}"
+                                            (click)="removeLegendItemAtIndex(i)">
+                                            <fa-icon icon="minus"></fa-icon>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- </div> -->
+                    <div class="text-right" fxflex="100" fxflex.gt-sm="100" *ngIf="legendStepsCount == 0">
+                        <a (click)="addLegendItem(legendForm['controls'].legends['controls'].length - 1)"
+                            style="text-decoration: underline">Add Legend</a>
+                    </div>
+                </div>
+            </form>
+            <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px" class="pb-1">
+                <button type="button" mat-button mat-raised-button (click)="closeVisualizationForm()">
+                    Cancel
+                </button>
+                <button type="submit" mat-button mat-raised-button color="primary"
+                    [disabled]="!visualizationDetailsForm.valid|| !legendForm.valid" (click)="drawChart(null)">
+                    Preview
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #deleteVisualizationType hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+    verticalAlign="below" [interactiveClose]="false" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1">
+                {{ 'APP.DELETEVISUALIZATION' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="accent"
+                    (click)="deleteSelectedVisualizationType()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'TESTMANAGEMENT.DELETE' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteVisualizationPopover()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addMeasurer hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1">{{ 'APP.MEASURERS' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <form [formGroup]="addMeasurerForm" #addMeasurerDirective="ngForm" novalidate>
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="measurerName" type="text"
+                        placeholder="{{'APP.PLEASEENTERMEASURERNAME' | translate }}" required>
+                    <mat-error>
+                        <span
+                            *ngIf="addMeasurerForm.get('measurerName').hasError('required') && addMeasurerForm.get('measurerName').touched">
+                            {{'APP.ENTERAMEASURERNAMEREQUIRED' | translate}} </span>
+                        <span *ngIf="addMeasurerForm.get('measurerName').hasError('maxlength')">
+                            {{'APP.MEASURERNAMECANNOTEXCEED50CHARACTERS' | translate}} </span>
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="measurerField"
+                        placeholder="{{'APP.PLEASESELECTAMEASURERFEILD' | translate }}" required>
+                        <mat-option value="option" *ngFor="let column of totalTableColumns" [value]="column.field">
+                            {{ column.columnAltName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addMeasurerForm.get('measurerField').hasError('required') && addMeasurerForm.get('measurerField').touched">
+                        {{'APP.MEASURERFEILDREQUIRED' | translate}}
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="full-width">
+                    <mat-select formControlName="aggregateFunction"
+                        placeholder="{{'APP.PLEASESELECTAGGREGATEFUNCTION' | translate }}" required>
+                        <mat-option value="option" *ngFor="let column of aggregateFunctionsList" [value]="column.value">
+                            {{ column.field }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addMeasurerForm.get('aggregateFunction').hasError('required') && addMeasurerForm.get('aggregateFunction').touched">
+                        {{'APP.PLEASESELECTAGGREGATEFUNCTION' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px" class="pb-1">
+                    <button type="button" mat-button mat-raised-button (click)="closeMeasurerForm()">
+                        Cancel
+                    </button>
+                    <button type="button" mat-button mat-raised-button color="primary"
+                        [disabled]="!addMeasurerForm.valid" (click)="addMeasurerToList()">
+                        Add measurer
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!( canAccess_feature_ManageCustomApps)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<sat-popover #addCronExpressionPopovers verticalAlign="below" hasBackdrop horizontalAlign="start"
+    backdropClass="backdrop-color">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div>
+                <div class="card-title-text mat-bg-primary p-05">
+                    {{ 'APP.REMOVESCHEDULING' | translate}}</div>
+            </div>
+        </mat-card-title>
+        <p class="p-05 m-0">
+            {{ 'APP.AREYOUSUREWANTTOREMOVETHESCHEDULING' | translate}}</p>
+        <div class="text-center p-05">
+            <button mat-raised-button color="primary" class="mr-05"
+                (click)="isRemoveScheduling(); $event.stopPropagation()" [disabled]="isLoadingInProgress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="">
+                </mat-progress-bar>
+                <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+            </button>
+            <button mat-raised-button (click)="closeSchedulingDialog()" [disabled]="isLoadingInProgress">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addColor verticalAlign="center" hasBackdrop horizontalAlign="center" backdropClass="backdrop-color"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0" style="max-height: 400px !important; overflow-y: scroll !important;"id="style-1">
+        <mat-card-content>
+            <form [formGroup]="visualisationColorForm" novalidate #formDirective="ngForm">
+                    <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+                        <div fxFlex="100" fxFlex.gt-sm="100">
+                            <div formArrayName="visualisationColorList"
+                                *ngFor="let item of visualisationColorForm.get('visualisationColorList')['controls']; let i = index;">
+                                <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                                    <div [formGroupName]="i" style="display: flex">
+                                        <div class="align-center mr-05 pt-lg-2" fxFlex="100" fxFlex="6"
+                                            style="height: 40px;">
+                                            <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                                        </div>
+                                        <div fxLayout="row">
+                                            <div fxFlex="50" class="mr-05">
+                                                <mat-form-field class="full-width">
+                                                    <input matInput formControlName="yAxisColumnName" autocomplete="off"
+                                                        disabled placeholder="Name">
+                                                </mat-form-field>
+                                            </div>
+                                            <div>
+                                                <mat-form-field class="full-width status-color mb-05">
+                                                    <input formControlName="selectedColor" matInput autocomplete="off"
+                                                        placeholder="Visualisation color" [(colorPicker)]="color"
+                                                        [cpPosition]="'bottom'"
+                                                        [style.background]="getColorPickerColour(item)"
+                                                        (colorPickerChange)="item.get('selectedColor').setValue($event)" />
+                                                </mat-form-field>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- </div> -->
+                        </div>
+                    </div>
+                    <div class="text-center p-05">
+                        <button mat-raised-button type="submit" color="primary" class="mr-05"
+                            (click)="saveColorsForChart()">
+                            <fa-icon icon="save" class="mr-05"></fa-icon> Save
+                        </button>
+                        <button mat-raised-button (click)="closeColorPalateDialog()">
+                            <fa-icon icon="times" class="mr-05"></fa-icon>Cancel
+                        </button>
+                    </div>
+            </form>
+        </mat-card-content>
+
+    </mat-card>
+</sat-popover>

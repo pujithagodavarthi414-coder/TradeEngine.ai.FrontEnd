@@ -1,0 +1,293 @@
+<div class="full-height" *ngIf="(canAccess_feature_ViewEmployeeLoanInstallment)">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayout.xs="column">
+        <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow"
+            matTooltip="{{ 'PAYROLLBRANCHCONFIGURATION.EMPLOYEELOANINSTALLMENT' | translate | titlecase | softLabelsPipe : softLabels }}">
+            {{ 'PAYROLLBRANCHCONFIGURATION.EMPLOYEELOANINSTALLMENT' | translate | titlecase | softLabelsPipe : softLabels }}</span>
+        </div>
+        <div fxFlex fxLayout="row" fxLayout.xs="column">
+          <div fxFlex="calc(100% - 220px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+            <!-- <mat-slide-toggle
+                  [matTooltip]="(isArchivedTypes == false) ? ('TAXALLOWANCE.SEEARCHIVEDITEMS' | translate) : ('TAXALLOWANCE.SEEUNARCHIVEDITEMS' | translate)"
+                  class="mr-1 archive-switch" [(ngModel)]="isArchivedTypes" [checked]="isArchivedTypes"
+                  (change)="getEmployeeLoanInstallment()">
+                </mat-slide-toggle>
+              </div>
+              <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput ml-1" fxLayoutAlign="end center"
+                fxLayoutAlign.xs="start center">
+                <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                  <mat-form-field class="full-width">
+                    <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                      [(ngModel)]="searchText">
+                  </mat-form-field>
+                </div>
+                <span class="close_icon masterdata-search-close" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                  <span *ngIf="!searchText"></span>
+                  <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false" (click)="closeSearch()"
+                    style="cursor:pointer">
+                    close</mat-icon>
+                </span>
+                 upsertEmployeeLoanPopover -->
+            <button mat-icon-button
+              matTooltip="{{ 'PAYROLLBRANCHCONFIGURATION.CREATEEMPLOYEELOANINSTALLMENT' | translate | softLabelsPipe : softLabels }}"
+              [satPopoverAnchorFor]="addEmployeeLoanPopover" #addEmployeeLoanPopUp="satPopoverAnchor"
+              (click)="createAddEmployeeLoan(addEmployeeLoanPopUp);"
+              *ngIf="!isArchivedTypes && (canAccess_feature_AddOrEditEmployeeLoanInstallment)">
+              <fa-icon icon="plus" class="filter mat-color-accent">
+              </fa-icon>
+            </button>
+            <div fxFlex="36px" *ngIf="isArchivedTypes"></div>
+          </div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+    </mat-card-title>
+  </mat-card>
+  <div class="activity-data no-drag">
+    <mat-progress-bar mode="indeterminate" *ngIf="isAnyOperationIsInprogress"></mat-progress-bar>
+    <ngx-datatable #myTable class="material bg-white" [columnMode]="'force'" [headerHeight]="50" [footerHeight]="50"
+      [rowHeight]="50" [limit]="50" [rows]="employeeLoanList" [scrollbarH]="true" [scrollbarV]="false"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [groupRowsBy]="'employeeLoanId'" [groupExpansionDefault]="true">
+      <ngx-datatable-group-header [rowHeight]="50" #myGroupHeader>
+        <ng-template let-group="group" let-expanded="expanded" ngx-datatable-group-header-template>
+          <div>
+            <span>
+              <span style="padding-left:5px;" title="Expand/Collapse Group" (click)="toggleExpandGroup(group)">
+                <span><span [class.datatable-icon-right]="!expanded"
+                    [class.datatable-icon-down]="expanded"></span></span>
+                <span><b>&nbsp;&nbsp;&nbsp;Loan name: {{group.value[0].loanName}}</b></span>
+                <span><b>&nbsp;&nbsp;&nbsp;Loan taken on:
+                    {{group.value[0].loanTakenOn | date:'dd-MMM-yyyy'  }}</b></span>
+                <span><b>&nbsp;&nbsp;&nbsp;Start date: {{group.value[0].loanPaymentStartDate | date:'dd-MMM-yyyy' }}</b>
+                </span>
+                <span><b>&nbsp;&nbsp;&nbsp;Percentage: {{group.value[0].loanInterestPercentagePerMonth}}</b></span>
+                <span><b>&nbsp;&nbsp;&nbsp;Time period: {{group.value[0].timePeriodInMonths}}</b></span>
+              </span>
+            </span>
+            <span class="pull-right">
+              <a class="m-1" (click)="downloadEmployeeLoanStatement(group.value[0].employeeLoanId);">
+                <fa-icon class="mr-05" icon="download"></fa-icon> Download statement
+              </a>
+            </span>
+          </div>
+        </ng-template>
+      </ngx-datatable-group-header>
+      <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.PRINCIPALAMOUNT' | translate }}" prop="branchName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedPrincipalAmount }}">{{ row?.modifiedPrincipalAmount }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.INSTALLMENTAMOUNT' | translate }}" prop="weekDayName">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.modifiedInstallmentAmount }}">{{ row?.modifiedInstallmentAmount }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.INSTALLMENTDATE' | translate }}"
+        prop="partsOfDayName ">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span
+            matTooltip="{{ row?.installmentDate | date:'dd-MMM-yyyy'  }}">{{ row?.installmentDate | date:"dd-MMM-yyyy"  }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <!-- <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.PAIDAMOUNTOFPARTICULARINSTALLMENT' | translate }}"
+        [sortable]="true" prop="isWeekend">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span matTooltip="{{ row?.paidAmount }}">{{ row?.paidAmount }}</span>
+        </ng-template>
+      </ngx-datatable-column> -->
+      <ngx-datatable-column name="{{ 'PAYROLLBRANCHCONFIGURATION.ISTOBEPAID' | translate }}" prop="isWeekend">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row?.isTobePaid == true" matTooltip="Yes">Yes</span>
+          <span *ngIf="row?.isTobePaid == false" matTooltip="No">No</span>
+          <span *ngIf="row?.isTobePaid == null" matTooltip="No">Paid</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="{{'ACTIONS'|translate}}" [flexGrow]="1" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.EDITDAYOFWEEKCONFIGURATION' | translate }}"
+            *ngIf="!isArchivedTypes && (canAccess_feature_AddOrEditEmployeeLoanInstallment)"
+            [satPopoverAnchorFor]="upsertEmployeeLoanPopover" #upsertEmployeeLoanPopUp="satPopoverAnchor"
+            (click)="createUpsertEmployeeLoan(row, upsertEmployeeLoanPopUp);" mat-icon-button>
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <!-- <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEDAYOFWEEKCONFIGURATION' | translate }}"
+              *ngIf="!isArchivedTypes"
+                [satPopoverAnchorFor]="deleteDaysOfWeekPopover" #deleteDaysOfWeekPopUp="satPopoverAnchor"
+                (click)="deleteDaysOfWeekPopUpOpen(row, deleteDaysOfWeekPopUp)" mat-icon-button>
+                <mat-icon style="cursor: pointer;" class="mat-color-accent">archive</mat-icon>
+              </button>
+              <button class="text-center" title="{{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEDAYOFWEEKCONFIGURATION' | translate }}"
+              [satPopoverAnchorFor]="deleteDaysOfWeekPopover" #deleteDaysOfWeekPopUp="satPopoverAnchor"
+                (click)="deleteDaysOfWeekPopUpOpen(row, deleteDaysOfWeekPopUp)" *ngIf="isArchivedTypes" mat-icon-button>
+              <mat-icon style="cursor: pointer;" class="mat-color-accent">unarchive</mat-icon>
+            </button> -->
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+
+  <sat-popover backdropClass="backdrop-color" #addEmployeeLoanPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex.gt-sm="600px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{'PAYROLLBRANCHCONFIGURATION.ADDNEWINSTALLMENT' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="addemployeeLoanForm" #formDirective="ngForm" novalidate
+          (submit)="addemployeeLoanForm.valid && addemployeeLoan(formDirective)">
+          <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+            <div fxFlex="48.5">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{'EMPLOYEELOAN.EMPLOYEELOANTITLE' | translate | softLabelsPipe : softLabels}}"
+                  formControlName="employeeLoanId" required>
+                  <mat-option *ngFor="let employeeLoan of employeeLoans" [value]="employeeLoan.employeeLoanId">
+                    {{ employeeLoan.loanAmount }} ({{ employeeLoan.name }})
+                  </mat-option>
+                </mat-select>
+                <mat-error class="P-06"
+                  *ngIf="addemployeeLoanForm.get('employeeLoanId').hasError('required') && addemployeeLoanForm.get('employeeLoanId').touched">
+                  {{ 'PAYROLLBRANCHCONFIGURATION.PRINCIPLEAMOUNTISREQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="48.5">
+              <mat-form-field class="full-width">
+                <input formControlName="installmentAmount"
+                  placeholder="{{'PAYROLLBRANCHCONFIGURATION.INSTALLMENTAMOUNT' | translate}}" matInput type="number"
+                  (keypress)="omitSpecialChar($event)" min="0" required />
+                <mat-error class="P-06"
+                  *ngIf="addemployeeLoanForm.get('installmentAmount').hasError('required') && addemployeeLoanForm.get('installmentAmount').touched">
+                  {{ 'PAYROLLBRANCHCONFIGURATION.INSTALLMENTAMOUNTREQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="mt-1 mb-05 text-center">
+            <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+              [disabled]="!addemployeeLoanForm.valid||isAnyOperationIsInprogress">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+            </button>
+            <button mat-button type="button" mat-raised-button (click)="closeAddEmployeeLoan(formDirective)"
+              type="button">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+
+  <sat-popover backdropClass="backdrop-color" #upsertEmployeeLoanPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" fxFlex.gt-sm="600px">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{'PAYROLLBRANCHCONFIGURATION.UPDATEEMPLOYEELOANINSTALLMENT' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="employeeLoanForm" #formDirective1="ngForm" novalidate
+          (submit)="employeeLoanForm.valid && upsertemployeeLoan(formDirective1)">
+          <div>
+            <div fxLayout="row wrap" fxLayoutGap="5px" class="p-05">
+              <div fxFlex="48.5">
+                <mat-form-field class="full-width">
+                  <input formControlName="principalAmount"
+                    placeholder="{{'PAYROLLBRANCHCONFIGURATION.PRINCIPALAMOUNT' | translate}}" matInput type="number"
+                    (keypress)="omitSpecialChar($event)" min="0" [readonly]="true" required />
+                  <mat-error class="P-06"
+                    *ngIf="employeeLoanForm.get('principalAmount').hasError('required') && employeeLoanForm.get('principalAmount').touched">
+                    {{ 'PAYROLLBRANCHCONFIGURATION.PRINCIPLEAMOUNTISREQUIRED' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="48.5">
+                <mat-form-field class="full-width">
+                  <input formControlName="installmentAmount"
+                    placeholder="{{'PAYROLLBRANCHCONFIGURATION.INSTALLMENTAMOUNT' | translate}}" matInput type="number"
+                    (keypress)="omitSpecialChar($event)" min="0" required />
+                  <mat-error class="P-06"
+                    *ngIf="employeeLoanForm.get('installmentAmount').hasError('required') && employeeLoanForm.get('installmentAmount').touched">
+                    {{ 'PAYROLLBRANCHCONFIGURATION.INSTALLMENTAMOUNTREQUIRED' | translate }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div fxFlex="48.5" class="mt-1-05" *ngIf="employeeLoanForm.get('installmentDate').value != null">
+                <mat-checkbox formControlName="isTobePaid">
+                  {{ 'PAYROLLBRANCHCONFIGURATION.ISTOBEPAID' | translate }}</mat-checkbox>
+              </div>
+            </div>
+            <div class="mt-1 mb-05 text-center">
+              <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                [disabled]="!employeeLoanForm.valid||isAnyOperationIsInprogress">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+              </button>
+              <button mat-button type="button" mat-raised-button (click)="closeUpsertEmployeeLoan(formDirective)"
+                type="button">
+                <fa-icon class="mr-05" icon="times"></fa-icon>
+                {{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+
+
+  <!--  <sat-popover backdropClass="backdrop-color" #deleteDaysOfWeekPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+      <mat-card-title class="text-center mat-bg-primary">
+        <div class="card-title-text mb-1" *ngIf="!isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEDAYSOFWEEK' | translate }}</div>
+          <div class="card-title-text mb-1" *ngIf="isArchivedTypes">
+            {{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEDAYSOFWEEK' | translate }}</div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1" *ngIf="!isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.ARCHIVEDAYSOFWEEKTEXT' | translate }}
+        </div>
+        <div class="card-content mb-1" *ngIf="isArchivedTypes">
+          {{ 'PAYROLLBRANCHCONFIGURATION.UNARCHIVEDAYSOFWEEKTEXT' | translate }}
+        </div>
+        <div class="text-center">
+          <button class="mr-1" *ngIf="!isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteDaysOfWeek();">
+            <mat-icon style="cursor: pointer;">archive</mat-icon> {{ 'ARCHIVE' | translate }}
+          </button>
+          <button class="mr-1" *ngIf="isArchivedTypes" mat-button mat-raised-button color="primary"
+            [disabled]="isAnyOperationIsInprogress" (click)="deleteDaysOfWeek();">
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closeDeleteDaysOfWeekDialog();">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover> -->
+
+</div>
+
+<app-common-message-box
+  *ngIf="!(canAccess_feature_ViewEmployeeLoanInstallment)"
+  textToDisplay="{{ 'DONTHAVEANYPERMISSIONS' | translate }}">
+</app-common-message-box>

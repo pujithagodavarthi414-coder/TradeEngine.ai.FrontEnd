@@ -1,0 +1,171 @@
+<div class="test-run-item-padding testrail-summary" (contextmenu)="openContextMenu($event)"
+  [ngClass]="{'selected-panel-header': testRunSelected == true}"
+  [ngStyle]="{'border-left': testRunData.isCompleted == true ? '2px solid rgb(6, 172, 193)' : '' }">
+
+  <mat-accordion>
+    <mat-expansion-panel hideToggle="true" class="primary-text" [expanded]="panelOpenState">
+      <mat-expansion-panel-header class="p-05" (click)="expandClick()" [collapsedHeight]="'45px'"
+        [expandedHeight]="'45px'">
+        <div fxFlex="100" fxLayout="row wrap">
+          <div fxFlex="20px">
+            <mat-icon class="ml-n1 expansion-icon" (click)="$event.stopPropagation();togglePanel()">
+              {{expansionIcon  ? 'keyboard_arrow_down' : 'keyboard_arrow_right' }}</mat-icon>
+          </div>
+          <div fxFlex="54.5" fxFlex.md="68" fxFlex.sm="69" class="mb-05 testrun-title-overflow" #testRunTitle
+            (mouseover)="checkTitleTooltipStatus()">
+            <span class="testruns-on-hover" matTooltip="{{testRunData.testRunName}}" matTooltipShowDelay="500">
+              {{testRunData.testRunName}}
+            </span>
+          </div>
+          <div fxFlex="53px" class="mt-02">
+            <span class="pull-right testrun-header-count"
+              matTooltip="{{'TESTMANAGEMENT.TOTALCASES' | translate}} - {{testRunData.casesCount}}
+                      , {{'TESTMANAGEMENT.UNTESTED' | translate}} - {{testRunData.untestedPercent}}%
+                      , {{'TESTMANAGEMENT.PASSED' | translate}} - {{testRunData.passedPercent}}%
+                      , {{'TESTMANAGEMENT.BLOCKED' | translate}} - {{testRunData.blockedPercent}}%
+                      , {{'TESTMANAGEMENT.RETEST' | translate}} - {{testRunData.retestPercent}}%
+                      , {{'TESTMANAGEMENT.FAILED' | translate}} - {{testRunData.failedPercent}}%">{{testRunData.passedPercent}}%
+            </span>
+          </div>
+          <!-- <div fxFlex="20px"  *ngIf="testRunData.totalEstimate > 0" class="ml-02">
+                    <span>
+                      <fa-icon icon="clock" class="clock-icon mat-color-accent" matTooltip="{{testRunData.totalEstimate | estimationTime}}">
+                      </fa-icon>
+                    </span>
+                  </div>
+                  <div fxFlex="20px"  *ngIf="testRunData.totalEstimate == null || testRunData.totalEstimate == '0'" class="ml-02">
+                    <span>
+                      <fa-icon icon="clock" class="clock-icon mat-color-accent" matTooltip="0h">
+                      </fa-icon>
+                    </span>
+                  </div> -->
+          <div fxFlex="20px" class="mt-02 ml-02">
+            <app-avatar
+              matTooltip="{{'TESTMANAGEMENT.CREATEDBY' | translate}} {{testRunData.createdBy}} - {{testRunData.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+              [name]="testRunData.createdBy | removeSpecialCharacters" [src]="testRunData.createdByProfileImage"
+              [isRound]="true" size="22">
+            </app-avatar>
+          </div>
+          <mat-icon (click)="$event.stopPropagation()"
+            *ngIf="((canAccess_entityType_feature_AddOrUpdateRun) || (canAccess_entityType_feature_DeleteRun)) || (canAccess_entityType_feature_AddOrUpdateTestReport)"
+            class="card-control right-click testrun-operations" [matMenuTriggerFor]="testRunsMenu"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y" (click)="$event.stopPropagation()">
+          </mat-icon>
+        </div>
+      </mat-expansion-panel-header>
+
+      <div class="p-03" fxLayout="row wrap" *ngIf="testRunData.totalEstimate > 0">
+        <span fxFlex>{{'TESTMANAGEMENT.TOTALESTIMATE' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span matTooltip="{{testRunData.totalEstimate | estimationTime}}"
+            class="hide-content-overflow">{{testRunData.totalEstimate | estimationTime}}</span></div>
+      </div>
+      <div class="p-03" fxLayout="row wrap"
+        *ngIf="testRunData.totalEstimate == null || testRunData.totalEstimate == '0'">
+        <span fxFlex>{{'TESTMANAGEMENT.TOTALESTIMATE' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span>0h</span></div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.PASSEDCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testrun-sections-count testrun-passed-count"
+            matTooltip="{{'TESTMANAGEMENT.PASSEDCOUNT' | translate}} - {{testRunData.passedPercent}}%">{{testRunData.passedCount}}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.BLOCKEDCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testrun-sections-count testrun-blocked-count"
+            matTooltip="{{'TESTMANAGEMENT.BLOCKEDCOUNT' | translate}} - {{testRunData.blockedPercent}}%">{{testRunData.blockedCount}}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.RETESTCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testrun-sections-count testruns-retest-count"
+            matTooltip="{{'TESTMANAGEMENT.RETESTCOUNT' | translate}} - {{testRunData.retestPercent}}%">{{testRunData.retestCount}}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.FAILEDCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testrun-sections-count testruns-failed-count"
+            matTooltip="{{'TESTMANAGEMENT.FAILEDCOUNT' | translate}} - {{testRunData.failedPercent}}%">{{testRunData.failedCount}}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.UNTESTEDCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testrun-sections-count testruns-untested-count"
+            matTooltip="{{'TESTMANAGEMENT.UNTESTEDCOUNT' | translate}} - {{testRunData.untestedPercent}}%">{{testRunData.untestedCount}}</span>
+        </div>
+      </div>
+
+    </mat-expansion-panel>
+  </mat-accordion>
+  <mat-menu class="goal-options" #testRunsMenu="matMenu" (click)="$event.stopPropagation()">
+    <button mat-menu-item [satPopoverAnchorFor]="editTestRun" (click)="editTestRunData()"
+      *ngIf="(canAccess_entityType_feature_AddOrUpdateRun) && !testRunData.isCompleted">
+      <mat-icon>edit</mat-icon> <span>{{'TESTMANAGEMENT.EDIT' | translate}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="deleteTestRun" (click)="deleteTestRun.toggle()"
+      *ngIf="(canAccess_entityType_feature_DeleteRun) && !testRunData.isCompleted">
+      <mat-icon>delete</mat-icon> <span>{{'TESTMANAGEMENT.DELETE' | translate}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="addReport" (click)="openReportDialog()"
+      *ngIf="(canAccess_entityType_feature_AddOrUpdateTestReport)">
+      <mat-icon>assignment</mat-icon>
+      <span>{{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}</span>
+    </button>
+  </mat-menu>
+</div>
+
+<sat-popover backdropClass="testrun-popover" #editTestRun hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'TESTMANAGEMENT.EDITTESTRUN' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <testrun-add-new *ngIf="editingTestRun" (editedRunData)="getEditedRunData($event)"
+        (updatedId)="getUpdatedId($event)" (updatedDescription)="getUpdatedDescription($event)"
+        [editTestRunData]="testRunData" (closeTestRun)="closeEditTestRun()">
+      </testrun-add-new>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteTestRun hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'TESTMANAGEMENT.AREYOUSUREDEETETHETESTRUN' | translate | softLabelsPipe : softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-05" mat-button mat-raised-button color="primary" [disabled]="disableTestRunDelete"
+          (click)="deleteTheTestRun()">
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="deleteTestRun.close()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" hasBackdrop #addReport verticalAlign="below" [restoreFocus]="false"
+  horizontalAlign="end">
+  <mat-card class=" p-0">
+    <mat-card-title class="text-center  mat-bg-primary">
+      <div class="card-title-text p-05">
+        {{'TESTMANAGEMENT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <add-report *ngIf="loadAddReport" (closeReport)="closeReportDialog()" [hideMileStones]="hideMileStones"
+        [testRunId]="testRunData.testRunId" [isFromTestRun]="isFromTestRun">
+      </add-report>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

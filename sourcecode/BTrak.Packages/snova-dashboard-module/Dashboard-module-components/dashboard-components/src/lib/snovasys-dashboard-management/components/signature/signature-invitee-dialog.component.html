@@ -1,0 +1,102 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div mat-dialog-content class="project-dialogContent">
+    <div class="roles p-0 m-333">
+        <mat-card class="p-0 m-0">
+            <mat-card-title class="data-table-header">
+                <div fxLayout="row wrap" fxLayoutGap="0">
+                    <div fxFlex fxLayoutAlign="start center">
+                        <div class="card-title-text pl-05 ml-05">{{ 'SIGNATURE.SIGNATUREINVITEES' | translate | titlecase}}</div>
+                    </div>
+                    <div fxFlex="50px">
+                        <button mat-icon-button matTooltip="{{ 'SIGNATURE.CLICKHERETOINVITEFORSIGNATURE' | translate}}"
+                            [matMenuTriggerFor]="userMenu" (click)="openMenu()" class="mt-02">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                        <mat-menu #userMenu="matMenu" xPosition="before" class="custom-matpanel">
+                            <mat-card class="filter-data">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="{{ 'FORMSUBMISSION.SELECTAUSER' | translate }}"
+                                        (click)="$event.stopPropagation()"
+                                        (selectionChange)="inviteeSelected($event.value)" [(ngModel)]="inviteeUserId">
+                                        <mat-select-trigger>
+                                            {{inviteeName}}
+                                        </mat-select-trigger>
+                                        <mat-option value="selectone">
+                                            {{ 'FORMSUBMISSION.SELECTAUSER' | translate }}
+                                        </mat-option>
+                                        <mat-option *ngFor="let type of users" [value]="type.id">
+                                            <app-avatar class="employee_img" *ngIf="!type.profileImage"
+                                                [name]="type.fullName | removeSpecialCharacters" [isRound]="true"
+                                                size="30">
+                                            </app-avatar>
+                                            <img class="employee_img" src="{{type.profileImage}}"
+                                                *ngIf="type.profileImage">{{type.fullName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-card>
+                        </mat-menu>
+                    </div>
+                </div>
+                <mat-divider></mat-divider>
+            </mat-card-title>
+        </mat-card>
+        <div *ngIf="signatures.length > 0" id="style-1" style="height: calc(100vh - 265px);">
+            <div class="m-0 p-0" *ngFor="let signature of signatures">
+                <div class="m-1" fxLayout="row">
+                    <div fxFlex="40px" fxLayoutAlign="start center">
+                        <app-avatar class="employee_img" *ngIf="!signature.inviteeImage"
+                            [name]="signature.inviteeName | removeSpecialCharacters" [isRound]="true" size="30">
+                        </app-avatar>
+                        <img class="employee_img" src="{{signature.inviteeImage}}" *ngIf="signature.inviteeImage">
+                    </div>
+                    <div fxFlex fxLayoutAlign="start center">
+                        {{signature.inviteeName}}
+                    </div>
+                    <div fxFlex="40px" fxLayoutAlign="end center">
+                        <button mat-icon-button [satPopoverAnchorFor]="deleteInviteePopover"
+                            #deleteInviteePopup="satPopoverAnchor"
+                            matTooltip="{{ 'SIGNATURE.UNINVITEUSER' | translate}}"
+                            (click)="openDeletePopup(signature,deleteInviteePopup)" class="mr-05 pull-right">
+                            <fa-icon icon="trash-alt" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button>
+                    </div>
+                </div>
+                <div class="m-1" *ngIf="(signature.signatureUrl == null)">
+                    {{ 'SIGNATURE.NOSIGNATUREFOUND' | translate }}
+                </div>
+                <div *ngIf="!(signature.signatureUrl == null)">
+                    <img [src]="(signature.signatureUrl | fetchSizedAndCachedImage: '850':'250')" alt="Signature"
+                        height="250" width="862">
+                </div>
+                <hr>
+            </div>
+        </div>
+        <app-common-message-box *ngIf="!isAnyOperationIsInprogress && signatures.length === 0"
+            textToDisplay="{{'SIGNATURE.NOINVITEESYET' | translate}}">
+        </app-common-message-box>
+    </div>
+</div>
+
+<sat-popover #deleteInviteePopover hasBackdrop horizontalAlign="end">
+    <mat-card class="p-1">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mb-1">{{ 'SIGNATURE.UNIVITEMESSAGE' | translate }}
+            </div>
+        </mat-card-title>
+        <div class="text-center">
+            <button mat-button mat-raised-button color="primary" class="mr-1" (click)="deleteInvitation();">
+                <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+            </button>
+            <button mat-button mat-raised-button (click)="closeDeletePopup();">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,149 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="start center">
+                <div class="card-title-text full-width p-05" fxFlex *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!(canAccess_feature_DragApps)">
+                        {{ dashboardName | titlecase }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+                    <button type="submit" mat-icon-button class="pull-right" *ngIf="observationTypes.length > 0"
+                        [matMenuTriggerFor]="filterMenu" (click)="openMenu()">
+                        <fa-icon icon="plus" class="filter mat-color-accent"
+                            matTooltip="{{'RESIDENT.ADDOBSERVATION' | translate}}">
+                        </fa-icon>
+                    </button>
+                    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                        <mat-card class="filter-data">
+                            <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                                <mat-label>{{ 'GENERICFORM.OBSERVATIONTYPE' | translate }}</mat-label>
+                                <mat-select [satPopoverAnchorFor]="upsertObservationTypePopover"
+                                    #upsertObservationTypePopUp="satPopoverAnchor" [(ngModel)]="observationTypeId"
+                                    placeholder="{{ 'GENERICFORM.OBSERVATIONTYPE' | translate }}"
+                                    (selectionChange)="observationTypeSelected($event.value,upsertObservationTypePopUp)">
+                                    <mat-option value="selectone">Select a observation type..</mat-option>
+                                    <mat-option *ngFor="let observationType of observationTypes"
+                                        [value]="observationType.observationTypeId">
+                                        {{observationType.observationTypeName}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </mat-card>
+                    </mat-menu>
+                </div>
+            </div>
+        </mat-card-title>
+    </mat-card>
+    <mat-card-content class="no-drag">
+        <div class="p-0 m-0 grid-wrapper" *ngIf="formIdFound == true">
+            <!-- <div *ngFor="let report of reports">
+                <div class="p-1" *ngIf="report.submittedCustomFields.length > 0">
+                    <b class="app-dialog-title">{{report.observationName}}</b>
+                </div>
+                <div fxLayout="row wrap" *ngIf="report.submittedCustomFields.length > 0">
+                    <div fxFlex="100" fxFlex.sm="50" fxFlex.md="33" fxFlex.lg="33" fxFlex.gt-sm="50"
+                        *ngFor="let custom of report.submittedCustomFields"
+                        style="border-style: solid; border-color: #eff0f2;">
+                        <div class="resident-observation">
+                            <div>{{ custom.createdDateTime | date: "dd-MMM-yyyy, h:mm a" }}</div>
+                            <hr>
+                            <formio [form]="custom.formJson" [submission]="custom.formData" [readOnly]="true">
+                            </formio>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+            <kendo-grid [data]="observationDetails" [columnMenu]="true" [filterable]="false" [reorderable]="true"
+                [pageable]="true" [skip]="skip" [pageSize]="pageSize" (pageChange)="pageChange($event)" [sortable]="{
+                    mode: 'single'
+                    }" [sort]="sort" (sortChange)="sortChange($event)">
+                <kendo-grid-column field="observationName" title="{{'RESIDENT.OBSERVATIONNAME' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer" [satPopoverAnchorFor]="viewObservationPopover"
+                            #viewObservationPopUp="satPopoverAnchor"
+                            (click)="cellClickHandler(dataItem,viewObservationPopUp)">{{ dataItem.observationName }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="createdBy" title="{{'RESIDENT.SUBMITTEDBY' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">{{ dataItem.submittedByUser }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="createdDateTime" title="{{'TESTMANAGEMENT.CREATEDON' | translate}}">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="cursor-pointer">{{ dataItem.createdDateTime | date: "dd-MMM-yyyy, h:mm a" }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+            <div class="k-i-loading" *ngIf="isAnyOperationIsInprogress"></div>
+        </div>
+        <div *ngIf="formIdFound == false && !isAnyOperationIsInprogress">
+            <app-common-message-box textToDisplay="{{ 'RESIDENT.NOOBSERVATIONSFOUND' | translate}}">
+            </app-common-message-box>
+        </div>
+    </mat-card-content>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #upsertObservationTypePopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0" style="width: 1000px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05">{{ 'GENERICFORM.SUBMITOBSERVATION' | translate }}
+            </div>
+        </mat-card-title>
+        <a class="detail_close mt-05" color="warn" (click)="closePopOver()">
+            <fa-icon icon="times"></fa-icon>
+        </a>
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="gettingFormInProgress">
+        </mat-progress-bar>
+        <mat-card-content class="P-05 custom-height" id="style-1">
+            <div *ngIf="!gettingFormInProgress && customFields?.length > 0">
+                <div *ngFor="let customField of customFields">
+                     <app-custom-view-form-component *ngIf="customField" [customField]="customField"
+                        [referenceId]="formId" [isEditFieldPermission]="true" [isMultipleInsert]="true"
+                        (closeViewPopup)="closePopOver();getObservationTypes()">
+                    </app-custom-view-form-component>
+                </div>
+            </div>
+            <div *ngIf="!gettingFormInProgress">
+                <app-common-message-box *ngIf="customFields?.length == 0"
+                    textToDisplay="{{ 'RESIDENT.NOFORMSFOUND' | translate}}">
+                </app-common-message-box>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #viewObservationPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="start">
+    <mat-card class="p-0 mr-0" style="width: 1000px;">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ selectedObservationName }}
+            </div>
+        </mat-card-title>
+        <a class="detail_close mt-05" color="warn" (click)="closeviewPopOver()">
+            <fa-icon icon="times"></fa-icon>
+        </a>
+        <mat-card-content class="P-05 custom-height" id="style-1">
+            <formio [form]="formJson" [submission]="formData" [readOnly]="true">
+            </formio>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

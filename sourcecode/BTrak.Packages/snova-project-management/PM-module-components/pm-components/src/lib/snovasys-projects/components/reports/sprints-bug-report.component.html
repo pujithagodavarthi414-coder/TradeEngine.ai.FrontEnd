@@ -1,0 +1,179 @@
+<mat-card class="full-height p-0 custom-box m-0" *ngIf="isSprintsEnable && isBugBoardEnable" fxLayout="column">
+    <mat-card-title class="full-width data-table-header">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05 drag-handler" fxFlex fxLayoutAlign="start center">
+                <span class="assets-comments" matTooltip="{{ 'BUGREPORT.BUGREPORT' | translate | titlecase}}">
+                    {{'BUGREPORT.BUGREPORT' | translate | titlecase}}
+                </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="sprintId">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="sprintId">
+                <button type="submit" mat-icon-button [matMenuTriggerFor]="filterMenu"
+                    matTooltip=" {{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+
+            <!-- FILTERS -->
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="searchSprint" *ngIf="sprintId">
+                    {{'SPRINT' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="nameSearch">
+                    {{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+            </mat-menu>
+
+            <mat-menu #searchSprint="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'SPRINT' |translate}}"
+                                (selectionChange)="selectSprintId($event.value)" [(ngModel)]="sprintId">
+                                <mat-option *ngFor="let sprint of (sprintsList)" [value]="sprint.sprintId">
+                                    {{ sprint.sprintName  }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #nameSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05 p-03" *ngIf="bugReportModel">
+                        <mat-form-field>
+                            <mat-select
+                                placeholder="{{'WORKLOGGING.SELECTEMPLOYEENAME' | translate | softLabelsPipe : softLabels}}"
+                                [(ngModel)]="selectedEmployeeId"
+                                (selectionChange)="selectedEmployeesId($event.value, $event)">
+                                <mat-option
+                                    *ngFor="let employee of (bugReportModel | bugReportFilter| sortByComponent:'sprintOwner')"
+                                    [value]="employee.ownerUserId">
+                                    <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                                        [name]="employee.assignee | removeSpecialCharacters" [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="employee.profileImage"
+                                        src="{{employee.profileImage}}">{{employee.assignee}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <!-- FILTERS -->
+
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+
+    <div fxFlex class="p-05" fxLayout="row">
+        <mat-chip disableRipple matRipple class="mr-08" *ngIf="employeeName">
+            <b>{{'WORKLOGGING.EMPLOYEE' | translate | softLabelsPipe : softLabels}}:&nbsp;</b>
+            {{ employeeName }}
+            <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer"
+                (click)="selectedEmployeesId('all',null)">
+            </fa-icon>
+        </mat-chip>
+    </div>
+
+    <ng-container *ngIf="sprintId">
+        <div class="projects-list-grid grid-wrapper p-05 paging-move" id="style-1">
+            <kendo-grid #grid [kendoGridBinding]="(bugReportModel  | resultfilter: selectedEmployeeId:'bugReport')"
+                id="style-1" [pageSize]="take" [sortable]="true" [pageable]="true" [filterable]="showFilters"
+                [resizable]="true" [scrollable]="true">
+                <kendo-grid-column field="userStoryName">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        {{ 'BUGREPORT.USERSTORYNAME' | translate | softLabelsPipe : softLabels }}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                        <div class="icon-button" fxLayout="row">
+                            <span class="hide-content-overflow" matTooltip="{{dataItem.userStoryName}}"
+                                matTooltipShowDelay="400" fxFlex>
+                                {{ dataItem?.userStoryName }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="userStoryUniqueName">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        {{ 'BUGREPORT.USERSTORYUNIQUENAME' | translate | softLabelsPipe : softLabels }}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                        <div class="icon-button" fxLayout="row">
+                            <span class="hide-content-overflow" matTooltip="{{dataItem.userStoryUniqueName}}"
+                                matTooltipShowDelay="400" fxFlex>
+                                {{ dataItem?.userStoryUniqueName }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="assignee">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        {{ 'BUGREPORT.ASSIGNEE' | translate | softLabelsPipe : softLabels }}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                        <div class="icon-button" fxLayout="row">
+                            <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != ''">
+                                <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''"
+                                    [isRound]="true" size="30">
+                                </app-avatar>
+                            </div>
+                            <div *ngIf="dataItem.profileImage == null || dataItem.profileImage == ''">
+                                <app-avatar [name]="dataItem.assignee | removeSpecialCharacters" [isRound]="true"
+                                    size="30">
+                                </app-avatar>
+                            </div>
+                            <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.assignee}}"
+                                matTooltipShowDelay="400" fxFlex>
+                                {{ dataItem?.assignee }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="ragStatuss">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        {{ 'USERDETAIL.RAGSTATUS' | translate }}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                        <div *ngIf="dataItem.ragStatus" style="display: flex; place-content: center;">
+                            <div [ngStyle]="{ 'background' : dataItem.ragStatus }"
+                                style="width:100px;">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-column field="bugsCount">
+                    <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                        {{ 'BUGREPORT.BUGSCOUNT' | translate }}
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                        <span class="badge-item ml-1"
+                            [ngClass]="dataItem.bugsCount == 0 ? 'mat-bg-green' : 'mat-bg-red'"
+                            matTooltip="{{'BUGREPORT.BUGSCOUNT' | translate | softLabelsPipe : softLabels}}">{{dataItem.bugsCount}}
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+            <div [ngClass]="{'k-i-loading': anyOperationInProgress}"></div>
+        </div>
+    </ng-container>
+
+    <div class="p-1" *ngIf="!sprintId">
+        <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+            <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+            {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+        </span>
+    </div>
+
+</mat-card>
+
+
+<app-common-message-box *ngIf="!isSprintsEnable" textToDisplay="{{'PROJECTS.PLEASECONFIGURESPRINTSETTINGS'|translate}}">
+</app-common-message-box>
+
+<app-common-message-box *ngIf="!isBugBoardEnable" textToDisplay="{{'PROJECTS.PLEASECONFIGUREBUGSETTINGS'|translate}}">
+</app-common-message-box>

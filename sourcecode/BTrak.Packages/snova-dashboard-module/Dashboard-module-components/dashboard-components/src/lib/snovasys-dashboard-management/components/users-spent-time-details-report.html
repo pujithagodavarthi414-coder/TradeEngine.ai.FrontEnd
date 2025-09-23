@@ -1,0 +1,111 @@
+<div class="default full-height" class="p-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+        <div fxLayout="row wrap" fxLayoutAlign="start center">
+            <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                matTooltip="{{'HISTORICALREPORT.USERSSPENTTIMEDETAILS' | translate | titlecase}}">
+                <span fxFlex="100" class="hide-content-overflow">
+                    {{'HISTORICALREPORT.USERSSPENTTIMEDETAILS' | translate | titlecase}} </span>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()">
+                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                </button>
+            </div>
+            <div fxFlex="40px" fxLayoutAlign="end center">
+                <button type="submit" mat-icon-button (click)="filterClick()" [matMenuTriggerFor]="filterMenu"
+                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                    <fa-icon icon="filter" [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                    </fa-icon>
+                </button>
+            </div>
+            <mat-menu #filterMenu="matMenu" class="filter-panel" (click)="$event.stopPropagation()">
+                <button mat-menu-item [matMenuTriggerFor]="lineManagerSearch" *ngIf="lineManager">
+                    {{'LOGTIMEREPORT.LINEMANAGER' | translate}}</button>
+                <button mat-menu-item [matMenuTriggerFor]="dateSearch">
+                    {{ 'WORKLOGGING.DATE' | translate}}</button>
+            </mat-menu>
+            <mat-menu #lineManagerSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <mat-form-field>
+                            <mat-select placeholder="{{'HRMANAGAMENT.SELECTLINEMANAGER'|translate}}"
+                                [(ngModel)]="teamLeadId" (selectionChange)="selectedLineManagerId($event.value,$event)">
+                                <mat-select-trigger>
+                                    {{selecteduserName}}
+                                </mat-select-trigger>
+                                <mat-option value="0">All</mat-option>
+                                <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                                    <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                                        [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="person.profileImage"
+                                        src="{{person.profileImage}}">{{person.userName}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
+            </mat-menu>
+            <mat-menu #dateSearch="matMenu">
+                <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                    <div fxFlex="180px" class="ml-05 mr-05">
+                        <span fxFlex fxLayoutAlign="center center">
+                            <fa-icon (click)="getWeekBasedOnDate('left')" class="icon-button" icon="chevron-left">
+                            </fa-icon>
+                            <b>&nbsp;{{selectedWeek | date: "MMM-yyyy"}}&nbsp;</b><span
+                                *ngIf="weekNumber"><b>W{{weekNumber}}&nbsp;</b></span>
+                            <fa-icon (click)="getWeekBasedOnDate('right')" class="icon-button" icon="chevron-right">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </mat-card>
+            </mat-menu>
+        </div>
+    </mat-card-title>
+</div>
+<div class="activity-data no-drag">
+    <mat-card-content class="p-0 m-0">
+        <div class="activity-data paging-move">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <kendo-grid [data]="gridData" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                [scrollable]="true" [filter]="state.filter" [sortable]="true" [pageable]="true"
+                [filterable]="false" (dataStateChange)="dataStateChange($event)">
+                <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+                    pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+                </kendo-grid-messages>
+                <kendo-grid-column *ngFor="let column of FieldsList" field="{{column.fieldname}}"
+                    title="{{column.title | translate | softLabelsPipe : softLabels}}" width="200">
+                    <ng-template *ngIf="column.fieldname == 'developer'" kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.developer != null"
+                            (click)="navigateToUserProfile(dataItem.userStoryOwnerId);$event.stopPropagation();"
+                            class="icon-button" fxLayout="row">
+                            <a matTooltip="{{ dataItem.developer }}">
+                                <app-avatar class="employee_img m-0" *ngIf="!dataItem.ownerProfileImage"
+                                    [name]="dataItem.developer | removeSpecialCharacters" [isRound]="true" size="30">
+                                </app-avatar>
+                                <img class="employee_img m-0" *ngIf="dataItem.ownerProfileImage"
+                                    src="{{dataItem.ownerProfileImage}}"> &nbsp;
+                            </a>
+                            <span class="ml-05 hide-content-overflow" fxFlex>
+                                {{dataItem.developer}}
+                            </span>
+                        </div>
+                    </ng-template>
+                    <ng-template *ngIf="column.fieldname.includes('-')" kendoGridCellTemplate let-dataItem>
+                        <span *ngIf="dataItem[column.fieldname] != null" class="text-underline">
+                            <a *ngFor="let column of getlist(dataItem[column.fieldname]);let lastItem = last;"
+                                (click)="navigateToUserStoriesPage(column);$event.stopPropagation();"
+                                matTooltip="{{'USERSTORYUNIQUE.CLICKHERETOGOUSERSTORYDETAILPAGE' | translate}}">
+                                {{ getDataValueString(column) }}<span *ngIf="!lastItem">,<br></span>
+                            </a>
+                        </span>
+                    </ng-template>
+                </kendo-grid-column>
+            </kendo-grid>
+        </div>
+    </mat-card-content>
+</div>
+<ng-template #uniqueUserstoryDialogUser let-data>
+    <unique-userstory-dialog [data]=[data]></unique-userstory-dialog>
+  </ng-template>

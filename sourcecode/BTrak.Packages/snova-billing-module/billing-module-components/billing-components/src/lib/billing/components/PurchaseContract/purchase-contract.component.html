@@ -1,0 +1,204 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow"
+                        matTooltip="{{ 'CONTRACT.CONTRACTLIST' |  translate }}">{{ 'CONTRACT.CONTRACTLIST' | translate
+                        }}</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 250px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="getContracts()">
+                        </mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput mr-3" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" style="right: 0px !important;"
+                            fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+    </mat-progress-bar>
+    <div class="activity-data no-drag buyers-table-height">
+        <kendo-grid [data]="contractListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+            [pageSize]="state.take" [sort]="state.sort" [sortable]="true" [pageable]="true"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="contractNumber" title="{{ 'CONTRACT.CONTRACTNUMBER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="counterParty" title="{{ 'CONTRACT.SUPPLIERNAME' |  translate }}">
+            </kendo-grid-column>
+            <!-- <kendo-grid-column field="product" title="{{ 'CONTRACT.PRODUCT' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="grade" title="{{ 'CONTRACT.GRADE' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column field="usedQuantity" title="{{ 'CONTRACT.USEDQUANTITY(MT)' |  translate }}">
+            </kendo-grid-column>
+             -->
+            <kendo-grid-column field="contractDateFrom" title="Start Date">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.contractDateFrom | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="contractDateTo" title="End Date">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.contractDateTo | date: 'dd-MMM-yyyy' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="contractQuantity" title="Total Quantity(MT)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.contractQuantity | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="remaningQuantity" title="Remaining Quantity(MT)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.remaningQuantity | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="rateOrTon" title="Price(USD/TON)">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.rateOrTon | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="usedQuantity" title="Total Amount">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.contractQuantity * dataItem.rateOrTon | number: '1.2-2'}}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="100" title="Documents">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="Documents"
+                        *ngIf="dataItem.receipts?.length > 0"
+                        (click)="showReceiptsPopupOpen(dataItem,showReceiptsPopUp);$event.stopPropagation();"
+                        [satPopoverAnchorFor]="showReceiptsPopover" #showReceiptsPopUp="satPopoverAnchor"
+                        mat-icon-button>
+                        <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                        <span>({{receiptsCount(dataItem)}})</span>
+                    </button>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}" [width]="180">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" matTooltip="Create purchase shipment execution" mat-icon-button
+                        (click)="selectedRow(dataItem)" *ngIf="!isArchived && canAccess_feature_AddPurchaseExecution && dataItem.remaningQuantity != 0">
+                        <fa-icon icon="chalkboard" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.EDITCONTRACT' |  translate }}" mat-icon-button
+                        (click)="editContractPopupOpen(dataItem)"
+                        *ngIf="!isArchived && canAccess_feature_EditContracts">
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.ARCHIVECONTRACT' |  translate }}"
+                        [satPopoverAnchorFor]="deletecontractPopover" #deleteContractPopup="satPopoverAnchor"
+                        (click)="deleteContractPopUpOpen(dataItem,deleteContractPopup)"
+                        *ngIf="!isArchived && canAccess_feature_ArchiveContracts" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'CONTRACT.UNARCHIVECONTRACT' |  translate }}"
+                        [satPopoverAnchorFor]="deletecontractPopover" #deleteContractPopup="satPopoverAnchor"
+                        (click)="deleteContractPopUpOpen(dataItem,deleteContractPopup)" *ngIf="isArchived"
+                        mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+</div>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deletecontractPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="isContractArchived">
+                {{ 'CONTRACT.ARCHIVECONTRACT' | translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="!isContractArchived">
+                {{ 'CONTRACT.UNARCHIVECONTRACT' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="isContractArchived">
+                {{ 'CONTRACT.AREYOUSUREYOUWANTTOARCHIVETHISCONTRACT?' | translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="!isContractArchived">
+                {{ 'CONTRACT.AREYOUSUREYOUWANTTOUNARCHIVETHISCONTRACT' | translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isContractArchived"
+                    [disabled]="isInProgress" (click)=" deleteContract();">
+                    <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button color="primary" *ngIf="!isContractArchived"
+                    [disabled]="isInProgress" (click)=" deleteContract();">
+                    <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closedeleteContractPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #showReceiptsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0 expense-recipts-width">
+        <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+            <div fxFlex class="text-center">
+                {{'HRMANAGAMENT.RECEIPTS' | translate}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center">
+                <span class="inline_edit_close_btn" (click)="closeReceiptsPopup()">
+                    <fa-icon icon="times"></fa-icon>
+                </span>
+            </div>
+        </div>
+        <mat-card-content class="p-05 mobile-view-popover">
+            <div *ngIf="galleryImages && galleryImages.length > 0">
+                <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+            </div>
+            <div fxLayout="column" fxLayoutGap="0">
+                <div fxLayout="row wrap" class="p-05" fxLayoutGap="5px" *ngFor="let file of receiptsPdfForAnOrder">
+                    <span fxFlex="15px">
+                        <fa-icon icon="file" class="icon-button mat-color-accent" (click)="downloadFile(file.filePath)">
+                        </fa-icon>
+                    </span>
+                    <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button"
+                        [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+                        (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

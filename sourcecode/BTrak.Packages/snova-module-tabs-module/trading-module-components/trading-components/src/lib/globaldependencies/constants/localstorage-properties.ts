@@ -1,0 +1,21 @@
+export const LocalStorageProperties = {
+    CurrentUserId: 'CurrentUserId',
+    CurrentUser: 'CurrentUser',
+    CurrentCulture: 'CurrentCulture',
+    CompanyId: 'CompanyId',
+    CompanyName: 'CompanyName',
+    CompanyMainLogo:'CompanyMainLogo',
+    CompanyMiniLogo:'CompanyMiniLogo',
+    DefaultDashboard: 'DefaultDashboard',
+    CompanyDetails: 'CompanyDetails',
+    FromLogIn: 'FromLogIn',
+    CompanyTheme: 'CompanyTheme',
+    SearchClick: 'SearchClick',
+    RoleFeatures:'RoleFeatures',
+    SoftLabels: 'SoftLabels',
+    RecentSearches: 'RecentSearches',
+    Dashboards: 'Dashboards',
+    ExpensesFileCount: 'ExpensesFilesCount',
+    Environment: 'Environment',
+    Modules: 'Modules'
+}

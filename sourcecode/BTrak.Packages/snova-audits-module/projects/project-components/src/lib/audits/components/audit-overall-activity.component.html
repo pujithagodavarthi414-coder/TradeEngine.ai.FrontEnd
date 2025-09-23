@@ -1,0 +1,1453 @@
+<div class="full-height">
+    <div class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header">
+            <div fxLayout="row wrap" fxLayoutAlign="start center">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center">
+                    <span *ngIf="!isFromDashboard" class="hide-content-overflow custom-name-bg p-05">
+                        {{'AUDIT.OVERALLACTIVITY' | translate}}
+                    </span>
+                    <span *ngIf="isFromDashboard" class="hide-content-overflow custom-name-bg p-05">
+                        {{'AUDIT.AUDITACTIVITY' | translate}}
+                    </span>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                    <button mat-icon-button (click)="resetAllFilters()">
+                        <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo">
+                        </fa-icon>
+                    </button>
+                </div>
+                <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-05">
+                    <button type="button" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu">
+                        <fa-icon icon="user-cog" class="filter mat-color-accent"
+                            matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}">
+                        </fa-icon>
+                    </button>
+                </div>
+                <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+                    <mat-card class="filter-data" (click)="$event.stopPropagation()">
+                        <div class="full-width mt-1">
+                            <form [formGroup]="selectAudit">
+                                <mat-form-field class="goal-replan full-width custom-select-matform">
+                                    <mat-select placeholder="{{ 'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels }}" formControlName="auditId"
+                                        panelClass="dropdown-custom-class" multiple>
+                                        <mat-select-trigger>
+                                            {{selectedAudit}}
+                                        </mat-select-trigger>
+                                        <mat-option [value]="0" #allAuditSelected (click)="toggleAllAuditSelection()">
+                                            {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                        <mat-option [value]="audit.auditId"
+                                            (click)="getActivitylistByAudit();toggleAuditSelectionPerOne()"
+                                            *ngFor="let audit of auditList">
+                                            {{audit.auditName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </form>
+                        </div>
+                        <div class="full-width mt-1-05">
+                            <form [formGroup]="selectUser">
+                                <mat-form-field class="goal-replan full-width custom-select-matform">
+                                    <mat-select placeholder="{{ 'ACTIVITYTRACKER.USER' | translate }}"
+                                        formControlName="userId" panelClass="dropdown-custom-class" multiple>
+                                        <mat-select-trigger>
+                                            {{selectedUser}}
+                                        </mat-select-trigger>
+                                        <mat-option [value]="0" #allUserSelected (click)="toggleAllUserSelection()">
+                                            {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                        <mat-option [value]="user.id"
+                                            (click)="getActivitylistByUser();toggleUserSelectionPerOne()"
+                                            *ngFor="let user of userList">
+                                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                                <div fxFlex="35px">
+                                                    <app-avatar [name]="user.fullName | removeSpecialCharacters"
+                                                        [src]="user.profileImage" [isRound]="true" size="30">
+                                                    </app-avatar>
+                                                </div>
+                                                <div fxFlex="75">
+                                                    <p class="mat-body-2">
+                                                        {{ user.fullName }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </form>
+                        </div>
+                        <div class="full-width mt-1-05">
+                            <form [formGroup]="selectBranch">
+                                <mat-form-field class="goal-replan full-width custom-select-matform">
+                                    <mat-select placeholder="{{ 'ACTIVITYTRACKER.BRANCH' | translate }}"
+                                        formControlName="branchId" panelClass="dropdown-custom-class" multiple>
+                                        <mat-select-trigger>
+                                            {{selectedBranch}}
+                                        </mat-select-trigger>
+                                        <mat-option [value]="0" #allBranchSelected (click)="toggleAllBranchSelection()">
+                                            {{'ADVANCEDSEARCH.SELECTALL' | translate}}</mat-option>
+                                        <mat-option [value]="branch.branchId"
+                                            (click)="getActivitylistByBranch();toggleBranchSelectionPerOne()"
+                                            *ngFor="let branch of branchList">
+                                            {{branch.branchName}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </form>
+                        </div>
+                        <div class="full-width mt-1-05">
+                            <span
+                                class="mr-1">{{'AUDIT.ISINCLUDEACTION' | translate | softLabelsPipe : softLabels}}</span>
+                            <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isIncludeAction"
+                                (change)="getGoalAcTivity()">
+                            </mat-slide-toggle>
+                        </div>
+                        <div class="full-width mt-05" style="position: relative;">
+                            <mat-form-field class="mr-05">
+                                <mat-label> {{'TESTMANAGEMENT.DATEFROM' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate"
+                                    (click)="picker1.open()" readonly class="date-picker" [(ngModel)]="dateFrom"
+                                    (dateChange)="changeDeadline(dateFrom,dateTo)">
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                            </mat-form-field>
+                            <div class="close_icon" style="top: 19px !important; right: -9px !important;">
+                                <mat-icon *ngIf="dateFrom" class="icon-button" aria-hidden="false"
+                                    (click)="closeDateFromFilter()" style="cursor:pointer">close</mat-icon>
+                            </div>
+                        </div>
+                        <div class="full-width" style="position: relative;">
+                            <mat-form-field class="mr-05">
+                                <mat-label> {{'TESTMANAGEMENT.TODATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="dateFrom"
+                                    [max]="maxDate" (click)="picker2.open()" readonly class="date-picker"
+                                    [(ngModel)]="dateTo" (dateChange)="changeToDeadline()">
+                                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                            </mat-form-field>
+                            <div class="close_icon" style="top: 19px !important; right: -9px !important;">
+                                <mat-icon *ngIf="dateTo" class="icon-button" aria-hidden="false"
+                                    (click)="closeDateToFilter()" style="cursor:pointer">close</mat-icon>
+                            </div>
+                        </div>
+                    </mat-card>
+                </mat-menu>
+            </div>
+        </mat-card-title>
+        <div fxFlex class="p-05" fxLayout="row" *ngIf="filter()">
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="filterAuditNames">
+                <b>{{'AUDIT.AUDITNAME' | translate | softLabelsPipe :softLabels}}:&nbsp;</b>
+                {{ filterAuditNames }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeAuditChip()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="filterBranchNames">
+                <b>{{'AUDIT.BRANCHNAME' | translate}}:&nbsp;</b>
+                {{ filterBranchNames }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeBranchChip()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="filterUserNames">
+                <b>{{'AUDIT.EMPLOYEE' | translate}}:&nbsp;</b>
+                {{ filterUserNames }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeUserChip()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="isIncludeAction">
+                <b>{{'AUDIT.ISINCLUDEACTION' | translate | softLabelsPipe :softLabels }}:&nbsp;</b>
+                {{ isIncludeActionText }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeActionInclude()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="dateFrom">
+                <b>{{'AUDIT.DATEFROM' | translate}}:&nbsp;</b>
+                {{ dateFrom | date}}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateFromChip()">
+                </fa-icon>
+            </mat-chip>
+            <mat-chip disableRipple matRipple class="mr-08" *ngIf="dateTo">
+                <b>{{'AUDIT.DATETO' | translate}}:&nbsp;</b>
+                {{ dateTo | date }}
+                <fa-icon icon="times" class="ml-05 mat-color-accent cursor-pointer" (click)="closeDateToChip()">
+                </fa-icon>
+            </mat-chip>
+        </div>
+    </div>
+    <div *ngIf="!anyOperationInProgress" class="overall-activity">
+        <mat-card class="fit-content-overall-activity" id="style-1"
+            style="padding: 8px !important; max-height: calc(100vh - 145px); margin: 0.11rem !important;">
+            <div class="mb-05" *ngFor="let queHistory of activityList" style="border-bottom: 1px solid #e0dbdb;">
+                <div fxLayout="row wrap" fxLayoutGap="10px">
+                    <div mat-card-avatar fxFlex="3">
+                        <app-avatar matTooltip="{{ queHistory.performedByUserName }}"
+                            [name]="queHistory.performedByUserName | removeSpecialCharacters"
+                            [src]="queHistory.performedByUserProfileImage | fetchSizedAndCachedImage: '40':''"
+                            [isRound]="true" size="35">
+                        </app-avatar>
+                    </div>
+                    <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                        <div fxLayout="row">
+                            <div fxFlex="65">
+                                <b>{{queHistory.performedByUserName}}</b>
+                            </div>
+                            <div fxFlex>
+                                <!-- <span
+                                    class="pull-right">{{queHistory.createdDateTime | utcToLocalTime | timeago: live }}</span> -->
+                                <span
+                                    class="pull-right">{{queHistory.createdDateTime | utcToLocalTime | timeago }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditCreated'">
+                            <span>
+                                {{'AUDIT.CREATEDTHEAUDIT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditVersionAdded'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.ADDEDAUDITVERSION' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditFolderCreated'">
+                            <span>
+                                {{'AUDIT.CREATEDTHEFOLDER' | translate}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditFolderDeleted'">
+                            <span>
+                                {{'AUDIT.DELETEDTHEFOLDER' | translate}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditFolderUpdated'">
+                            <span>
+                                {{'AUDIT.AUDITFOLDERUPDATEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditCloned'">
+                            <span>
+                                {{'AUDIT.CLONEDTHEAUDIT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditNameUpdated'">
+                            <span>
+                                {{'AUDIT.AUDITNAMEUPDATEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditRAGUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.newValue == 'marked'">
+                                    {{'AUDIT.AUDITMARKEDRAG' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                                <span *ngIf="queHistory.newValue == 'unmarked'">
+                                    {{'AUDIT.AUDITUNMARKEDRAG' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditLogTimeUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.newValue == 'marked'">
+                                    {{'AUDIT.AUDITMARKEDLOGTIME' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                                <span *ngIf="queHistory.newValue == 'unmarked'">
+                                    {{'AUDIT.AUDITUNMARKEDLOGTIME' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditInboundUpated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.INBOUNDUPDATED' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditOutboundUpated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.OUTBOUNDUPDATED' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditDescriptionUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONCHANGEDTO' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONCHANGEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditUserUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITUSERCHANGEDTO' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITUSERCHANGEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionDeadLinePriority'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONDEADLINECHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionEstimate'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONESTIMATECHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionName'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONNAMECHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionStatus'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONSTATUSCHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionBugPriority'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONBUGCHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionUser'">
+                            <div fxLayout="row" *ngIf="queHistory?.userStoryName">
+                                <span class="mr-05">{{'ACTIVITYTRACKER.ACTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.userStoryName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ACTIONUSERCHANGEDFROM' | translate | softLabelsPipe :softLabels  }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCronUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITCRONCHANGEDTO' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{constructCron(queHistory?.newValue)}}</b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITCRONCHANGEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{constructCron(queHistory?.oldValue)}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b>{{constructCron(queHistory?.newValue)}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCronRemoved'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description">
+                                    {{ 'AUDIT.AUDITCRONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditScheduleEndDateUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITENDDATECHANGEDTO' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{queHistory?.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITENDDATECHANGEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITENDDATEREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditConductEndDateUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.AUDITCONDUCTUPDATEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditPauseUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.newValue == 'marked'">
+                                    {{'AUDIT.AUDITMARKEDPAUSE' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                                <span *ngIf="queHistory.newValue == 'unmarked'">
+                                    {{'AUDIT.AUDITUNMARKEDPAUSE' | translate | softLabelsPipe :softLabels}}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditTagsUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITTAGSCHANGEDTO' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITTAGSCHANGEDFROM' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITTAGSREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ConductTagsUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITTAGSCHANGEDTO' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITTAGSCHANGEDFROM' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITTAGSREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditArchived'">
+                            <span>
+                                {{'AUDIT.ARCHIVEDTHEAUDIT' | translate | softLabelsPipe :softLabels}}: <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'UserstoryArchived'">
+                            <span>
+                                {{'AUDIT.ARCHIVEDTHEACTION' | translate | softLabelsPipe :softLabels }}: <b>{{queHistory?.userStoryName}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'UserstoryUnArchived'">
+                            <span>
+                                {{'AUDIT.UNARCHIVEDTHEACTION' | translate | softLabelsPipe :softLabels }}: <b>{{queHistory?.userStoryName}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditUnArchived'">
+                            <span>
+                                {{'AUDIT.UNARCHIVEDTHEAUDIT' | translate | softLabelsPipe :softLabels}}: <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCategoryCreated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.CREATEDTHECATEGORY' | translate}} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCategoryNameUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.AUDITCATEGORYNAMEUPDATEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCategoryDescriptionUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.field">
+                                <span class="mr-05">{{'AUDIT.CATEGORY' | translate}}:</span>
+                                <b>{{queHistory?.field}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITCATEGORYDESCRIPTIONCHANGEDTO' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITCATEGORYDESCRIPTIONCHANGEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.AUDITCATEGORYDESCRIPTIONREMOVED' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditCategoryArchived'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.ARCHIVEDTHECATEGORY' | translate}} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'UnInstalledApp'">
+                            <div fxLayout="row" *ngIf="queHistory.conductId == null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory.conductId != null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.UNINSTALLEDAPP' | translate}} <b> {{queHistory?.oldValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'InstalledApp'">
+                            <div fxLayout="row" *ngIf="queHistory.conductId == null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory.conductId != null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.INSTALLEDAPP' | translate}} <b> {{queHistory?.oldValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionViewed'">
+                            <div fxLayout="row" *ngIf="queHistory.conductId == null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory.conductId != null && queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.HADSEENTHEQUESTION' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.questionName}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionCreated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.CREATEDTHEQUESTION' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.questionName}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionDeleted'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.DELETEDTHEQUESTION' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionTypeUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.QUESTIONTYPECHANGEDFROM' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionTitleUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.TITLECHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionOriginalScoreMarked'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.newValue == 'marked'">
+                                    {{'AUDIT.QUESTIONMARKEDASORIGINAL' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                                <span *ngIf="queHistory.newValue == 'unmarked'">
+                                    {{'AUDIT.QUESTIONUNMARKEDASORIGINAL' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionMandatoryMarked'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.newValue == 'marked'">
+                                    {{'AUDIT.QUESTIONMARKEDASMANDATORY' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                                <span *ngIf="queHistory.newValue == 'unmarked'">
+                                    {{'AUDIT.QUESTIONMARKEDASNOTMANDATORY' | translate | softLabelsPipe :softLabels }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionHintUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.HINTCHANGEDTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.HINTCHANGEDFROM' | translate }} <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.HINTREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionEstimateUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.ESTIMATEDTIMECHANGEDTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.ESTIMATEDTIMEFROM' | translate }} <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.ESTIMATEDTIMEREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionResponsiblePersonUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.RESPONSIBLEPERSONCHANGEDTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.RESPONSIBLEPERSONUPDATEDFROM' | translate }}
+                                    <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.RESPONSIBLEPERSONREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionAuditImpactUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITIMPACTCHANGEDTO' | translate | softLabelsPipe :softLabels }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITIMPACTUPDATEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionAuditPriorityUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITPRIORITYCHANGEDTO' | translate | softLabelsPipe :softLabels }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITPRIORITYUPDATEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionAuditRiskUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.AUDITRISKCHANGEDTO' | translate | softLabelsPipe :softLabels }} <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.AUDITRISKUPDATEDFROM' | translate | softLabelsPipe :softLabels }}
+                                    <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionDescriptionUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'BILLINGMANAGEMENT.DESCRIPTIONCHANGEDTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'BILLINGMANAGEMENT.DESCRIPTIONCHANGEDFROM' | translate }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'BILLINGMANAGEMENT.DESCRIPTIONREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionOptionResultUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span
+                                    *ngIf="(queHistory.oldValue == null || queHistory.oldValue.trim() == '') && (queHistory.newValue != null && queHistory.newValue.trim() != '')">
+                                    {{'AUDIT.RESULTCHANGEDFROM' | translate}} <b>null</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{'AUDIT.RESULTCHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{'AUDIT.RESULTCHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>null</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionOptionScoreUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span
+                                    *ngIf="(queHistory.oldValue == null || queHistory.oldValue.trim() == '') && (queHistory.newValue != null && queHistory.newValue.trim() != '')">
+                                    {{'AUDIT.SCORECHANGEDFROM' | translate}} <b>null</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{'AUDIT.SCORECHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{'AUDIT.SCORECHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>null</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionMovedToAudit'">
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.AUDITMOVEDCHANGEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionCopiedToAudit'">
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.AUDITCOPIEDCHANGEDFROM' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionMovedToCategory'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.CATEGORYCHANGEDFROM' | translate}} <b>{{queHistory?.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }} <b>{{queHistory?.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditConductCreated'">
+                            <span>
+                                {{'AUDIT.CREATEDTHECONDUCT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditConductArchived'">
+                            <span>
+                                {{'AUDIT.ARCHIVEDTHECONDUCT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionConductCreated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.CREATEDTHEQUESTION' | translate | softLabelsPipe :softLabels }} <b>{{queHistory?.questionName}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05 audit-description" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionCommentUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.COMMENTCHANGEDTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.COMMENTCHANGEDFROM' | translate }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                                <span
+                                    *ngIf="(queHistory.oldValue != null && queHistory.oldValue.trim() != '') && (queHistory.newValue == null || queHistory.newValue.trim() == '')">
+                                    {{ 'AUDIT.COMMENTREMOVED' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05 audit-description" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionPriorityUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null">
+                                    {{ 'AUDIT.PRIORITYCHANGEDTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.PRIORITYCHANGEDFROM' | translate }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05 audit-description" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionImpactUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.AUDIT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.IMPACTCHANGEDTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                </span>
+                                <span class="audit-description"
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.IMPACTCHANGEDFROM' | translate }}
+                                    <b><span [innerHtml]="queHistory.oldValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b><span [innerHtml]="queHistory.newValue"></span></b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'QuestionConductResultUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span *ngIf="queHistory.oldValue == null || queHistory.oldValue.trim() == ''">
+                                    {{ 'AUDIT.RESULTCHANGEDTO' | translate }}
+                                    <b>{{queHistory.newValue}}</b>
+                                </span>
+                                <span
+                                    *ngIf="queHistory.oldValue != null && queHistory.oldValue.trim() != '' && queHistory.newValue != null && queHistory.newValue.trim() != ''">
+                                    {{ 'AUDIT.RESULTCHANGEDFROM' | translate }}
+                                    <b>{{queHistory.oldValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.SMALLTO' | translate }}
+                                    <b>{{queHistory.newValue}}</b>
+                                    {{ 'BILLINGMANAGEMENT.DONE' | translate }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionAdded'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{ 'AUDIT.ACTION' | translate | softLabelsPipe :softLabels  }} -
+                                    <b>{{queHistory.newValue}}</b>
+                                    {{'AUDIT.SMALLADDED' | translate}}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'ActionRemoved'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row" *ngIf="queHistory?.questionName">
+                                <span class="mr-05">{{'AUDIT.QUESTION' | translate | softLabelsPipe :softLabels }}:</span>
+                                <b>{{queHistory?.questionName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{ 'AUDIT.ACTIONSREMOVED' | translate | softLabelsPipe :softLabels  }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditConductSubmitted'">
+                            <span>
+                                {{'AUDIT.SUBMITTEDTHECONDUCT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.auditName}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="column" fxLayoutGap="5px"
+                            *ngIf="queHistory.description == 'AuditRatingUpdated'">
+                            <div fxLayout="row" *ngIf="queHistory?.auditName">
+                                <span class="mr-05">{{'AUDIT.CONDUCT' | translate | softLabelsPipe :softLabels}}:</span>
+                                <b>{{queHistory?.auditName}}</b>
+                            </div>
+                            <div fxLayout="row">
+                                <span>
+                                    {{'AUDIT.RATINGCHANGEDTO' | translate}} <b>{{queHistory?.newValue}}</b>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditReportCreated'">
+                            <span>
+                                {{'AUDIT.CREATEDTHEREPORT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditReportPdfDownloaded'">
+                            <span>
+                                {{'AUDIT.DOWNLOADEDTHEREPORT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditReportPdfShared'">
+                            <span>
+                                {{'AUDIT.SHAREDTHEREPORT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                        <div class="mb-05" fxLayout="row" *ngIf="queHistory.description == 'AuditReportArchived'">
+                            <span>
+                                {{'AUDIT.ARCHIVEDTHEREPORT' | translate | softLabelsPipe :softLabels}} <b>{{queHistory?.newValue}}</b>
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <app-common-message-box *ngIf="!activityList || activityList.length == 0"
+                textToDisplay="No data to display">
+            </app-common-message-box>
+            <div fxLayout="row wrap" fxLayoutAlign="center center"
+                *ngIf="(activityListCount > 25) && !(anyOperationInProgress)">
+                <mat-paginator [length]="activityListCount" [pageSize]="pageSize" [pageIndex]="pageIndex"
+                    [pageSizeOptions]="pageSizeOptions" (page)="getMyActivity($event)" class="mr-6">
+                </mat-paginator>
+            </div>
+        </mat-card>
+    </div>
+    <div *ngIf="anyOperationInProgress">
+        <div *ngFor="let item of [1,2,3,4,5]">
+            <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+                <div mat-card-avatar fxFlex="5" fxFlex.md="7" fxFlex.gt-lg="7" fxFlex.xs="13">
+                    <span class="app-user-img"><img class="employee_img"
+                            src="../../../../assets/images/faces/18.png"></span>
+                </div>
+                <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                    <div fxLayout="row" fxLayoutGap="5px">
+                        <div fxFlex="85" fxFlex.gt-xs="80">
+                            <div fxFlex="25">
+                                <p class="mat-body-1 empty-text loading-bg"></p>
+                            </div>
+                            <div fxFlex="75" class="text-center"> </div>
+                        </div>
+                        <div fxFlex="15">
+                            <p class="mat-body-1 empty-text loading-bg"></p>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutGap="5px">
+                        <div fxFlex="50">
+                            <p class="mat-body-1 empty-text loading-bg"></p>
+                        </div>
+                        <div fxFlex="50" class="text-center"> </div>
+                    </div>
+                    <div fxLayout="row" fxLayoutGap="5px">
+                        <div fxFlex="70">
+                            <p class="mat-body-1 empty-text loading-bg"></p>
+                        </div>
+                        <div fxFlex="30" class="text-center"> </div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </div>
+    </div>
+</div>

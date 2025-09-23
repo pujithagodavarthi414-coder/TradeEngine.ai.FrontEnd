@@ -1,0 +1,170 @@
+<mat-card class="p-0 mr-0" fxFlex>
+  <mat-card-title>
+    <div class="custom-dialog">
+      <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+      </div>
+    </div>
+    <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'EMPLOYEEGRADE.EDITEMPLOYEEGRADECONFIGURATION' | translate }}
+    </div>
+  </mat-card-title>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+  </mat-progress-bar>
+  <div class="activity-data no-drag">
+    <kendo-grid [data]="gridDataList" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+      [scrollable]="'none'" [filter]="state.filter" [sortable]="true" [pageable]="pageable" [filterable]="false"
+      (dataStateChange)="dataStateChange($event)" [selectable]="false">
+      <kendo-grid-column field="employeeName" title="Employee name">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          <div class="icon-button" fxLayout="row" (click)="goToUserProfile(dataItem.userId)">
+            <div *ngIf="dataItem.profileImage != null && dataItem.profileImage != ''">
+              <app-avatar [src]="dataItem.profileImage | fetchSizedAndCachedImage: '30':''" [isRound]="true" size="30">
+              </app-avatar>
+            </div>
+            <div *ngIf="dataItem.profileImage == null || dataItem.profileImage == ''">
+              <app-avatar [name]="dataItem.employeeName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+            </div>
+            <span class="ml-05 hide-content-overflow" matTooltip="{{dataItem.employeeName}}" matTooltipShowDelay="400"
+              fxFlex>
+              {{ dataItem?.employeeName }}
+            </span>
+          </div>
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="gradeName" title="{{ 'EMPLOYEEGRADE.GRADENAME' | translate }}">
+      </kendo-grid-column>
+      <kendo-grid-column field="activeFrom" title="{{ 'EMPLOYEEGRADE.ACTIVEFROM' | translate }}">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          {{ dataItem.activeFrom | date: "dd-MMM-yyyy" }}
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-column field="activeTo" title="{{ 'EMPLOYEEGRADE.ACTIVETO' | translate }}">
+        <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+          {{ dataItem.activeTo | date: "dd-MMM-yyyy" }}
+        </ng-template>
+      </kendo-grid-column>
+      <kendo-grid-command-column field="action" title="{{'ACTIONS' | translate}}">
+        <ng-template kendoGridCellTemplate let-dataItem>
+          <button class="text-center" title="{{ 'EMPLOYEEGRADE.EDITEMPLOYEEGRADE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="upsertGradePopover" #upsertGradePopUp="satPopoverAnchor"
+            (click)="editGradePopupOpen(dataItem,upsertGradePopUp)">
+            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+          <button class="text-center" title="{{ 'EMPLOYEEGRADE.DELETEGRADE' | translate }}" *ngIf="!isArchived"
+            mat-icon-button [satPopoverAnchorFor]="deleteGradePopover" #deleteGradePopUp="satPopoverAnchor"
+            (click)="deleteEmployeeGradePopUp(dataItem,deleteGradePopUp)">
+            <fa-icon icon="trash" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+
+          <button class="text-center" title="Unarchive employee grade" *ngIf="isArchived" mat-icon-button
+            [satPopoverAnchorFor]="deleteGradePopover" #deleteGradePopUp="satPopoverAnchor"
+            (click)="deleteEmployeeGradePopUp(dataItem,deleteGradePopUp)">
+            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+          </button>
+        </ng-template>
+      </kendo-grid-command-column>
+    </kendo-grid>
+  </div>
+</mat-card>
+
+<sat-popover backdropClass="backdrop-color" #upsertGradePopover [autoFocus]="false" hasBackdrop [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below" horizontalAlign="start">
+  <mat-card class="p-0 mr-0" fxFlex="450px">
+    <mat-card-title class="text-center">
+      <div class="card-title-text  mat-bg-primary p-05 mb-1">{{gradeEdit}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="P-05">
+      <form [formGroup]="gradeForm" #formDirective="ngForm" novalidate
+        (submit)="gradeForm.valid && upsertGrade(formDirective)">
+        <div class="mobile-view-popover p-1">
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'PAYROLLREPORTS.SELECTGRADE' |  translate }}" formControlName="gradeId">
+                  <mat-option *ngFor="let grade of grades" value="option" [value]="grade.gradeId">
+                    {{grade.gradeName}}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="gradeForm.get('gradeId').hasError('required') && gradeForm.get('gradeId').touched">
+                  {{ 'EMPLOYEEGRADE.PLEASESELECTEMPLOYEEGRADE' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="picker" (click)="picker.open()" formControlName="activeFrom"
+                  (input)="startDate()" (dateChange)="startDate()" required  [min]="minDate"
+                  placeholder="{{ 'EMPLOYEEGRADE.ACTIVEFROM' | translate }}" required autocomplete="off">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <mat-error>
+                  <span *ngIf="gradeForm.get('activeFrom').hasError('required') && gradeForm.get('activeFrom').touched">
+                    {{ 'EMPLOYEEGRADE.PLEASESELECTACTIVEFROM' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+            <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <input matInput [matDatepicker]="picker1" (click)="picker1.open()" formControlName="activeTo"
+                  [min]="minDateForEndDate" disabled={{endDateBool}} [readonly]="true"
+                  placeholder="{{ 'EMPLOYEEGRADE.ACTIVETO' | translate }}" required autocomplete="off">
+                <mat-datepicker-toggle matSuffix [for]="picker1" disabled={{endDateBool}}></mat-datepicker-toggle>
+                <mat-datepicker #picker1></mat-datepicker>
+                <mat-error>
+                  <span *ngIf="gradeForm.get('activeTo').hasError('required') && gradeForm.get('activeTo').touched">
+                    {{ 'EMPLOYEEGRADE.PLEASESELECTACTIVETO' | translate }}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div class="mt-1 text-center mb-05">
+          <button mat-raised-button color="primary" class="mr-1"
+            [disabled]="!gradeForm.valid||isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+          </button>
+          <button mat-button mat-raised-button (click)="closePopup(formDirective)" type="button">
+            <fa-icon class="mr-05" icon="times"></fa-icon>
+            {{ 'CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #deleteGradePopover hasBackdrop backdropClass="backdrop-color"
+  verticalAlign="below" horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text mb-1" *ngIf="!isArchived"> {{ 'EMPLOYEEGRADE.DELETEGRADE' | translate }}</div>
+      <div class="card-title-text mb-1" *ngIf="isArchived">{{ 'EMPLOYEEGRADE.UNARCHIVEGRADE' | translate }}</div>
+    </mat-card-title>
+    <mat-card-content>
+      <div class="card-content mb-1" *ngIf="!isArchived">
+        {{ 'EMPLOYEEGRADE.AREYOUSUREWANTTODELETETHISRECORD' | translate }}
+      </div>
+      <div class="card-content mb-1" *ngIf="isArchived">
+        {{ 'EMPLOYEEGRADE.AREYOUSUREWANTTOUNARCHIVETHISRECORD' | translate }}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+          (click)="deleteGrade();" *ngIf="!isArchived">
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{ 'DELETE' | translate }}
+        </button>
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="isAnyOperationIsInprogress"
+          (click)="deleteGrade();" *ngIf="isArchived">
+          <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteGradeDialog();">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

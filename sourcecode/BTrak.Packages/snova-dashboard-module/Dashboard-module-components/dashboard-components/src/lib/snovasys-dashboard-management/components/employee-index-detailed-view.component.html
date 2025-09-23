@@ -1,0 +1,129 @@
+<mat-card-title class="text-center">
+    <div fxLayout="row">
+        <div fxFlex class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center center">
+            Detailed view
+        </div>
+        <!-- <div fxFlex="40px" fxLayoutAlign="end center" class="mat-bg-primary p-05">
+            <button mat-icon-button (click)="exportToExcel()" matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="excelLoading">
+                </mat-progress-bar>
+                <fa-icon class="mat-color-accent cursor-pointer" icon="file-excel">
+                </fa-icon>
+            </button>
+        </div> -->
+        <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary" (click)="exportToExcel()" style="padding-right: 17px;">
+            
+            <fa-icon class="icon-button" icon="file-excel" style="color: white;"
+                matTooltip="{{ 'APP.EXPORTDATATOEXCEL' | translate }}"></fa-icon>
+        </div>
+        <div fxFlex="20px" fxLayoutAlign="end center" class="mat-bg-primary" (click)="onClose()" style="padding-right: 10px;">
+            <fa-icon class="icon-button" icon="times" style="color: white;"></fa-icon>
+        </div>
+    </div>
+</mat-card-title>
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress">
+</mat-progress-bar>
+<mat-progress-bar color="primary" mode="indeterminate" *ngIf="excelLoading">
+</mat-progress-bar>
+<div class="activity-data filter-margin m-0 paging-move mat-dialog-padding detailed-view-height">
+    <kendo-grid [data]="employeeIndex" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort" [sortable]="true"
+        [pageable]="true" [filterable]="false" [scrollable]="true" [columnMenu]="true"
+        (dataStateChange)="dataStateChange($event)" (columnVisibilityChange)="onVisibilityChange($event)">
+        <kendo-grid-messages noRecords="{{'NODATATODISPLAY' | translate}}"
+            pagerItems="{{'HISTORICALREPORT.ITEMS' | translate}}">
+        </kendo-grid-messages>
+        <kendo-grid-column field="userName" title="{{'PRODUCTIVITYDASHBOARD.DEVELOPERNAME' | translate}}"
+            [hidden]="checkVisibility('userName')" width="100">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row" (click)="goToProfile(dataItem.userId)">
+                    <div *ngIf="dataItem.userProfileImage != null && dataItem.userProfileImage != ''">
+                        <app-avatar [src]="dataItem.userProfileImage | fetchSizedAndCachedImage: '30':''"
+                            [isRound]="true" size="30">
+                        </app-avatar>
+                    </div>
+                    <div *ngIf="dataItem.userProfileImage == null || dataItem.userProfileImage == ''">
+                        <app-avatar [name]="dataItem.userName | removeSpecialCharacters" [isRound]="true" size="30">
+                        </app-avatar>
+                    </div>
+                    <span class="ml-05 mt-02 hide-content-overflow" matTooltip="{{dataItem.userName}}"
+                        matTooltipShowDelay="400" fxFlex>
+                        {{ dataItem?.userName }}
+                    </span>
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="productivityIndex" title="{{'PRODUCTIVITYDASHBOARD.PRODUCTIVITYINDEX' | translate}}"
+            width="150" [hidden]="checkVisibility('productivityIndex')" width="100">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'ProductivityIndex');$event.stopPropagation();">
+                    {{ dataItem?.productivityIndex }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="grpIndex" title="{{'PRODUCTIVITYDASHBOARD.GRPINDEX' | translate}}" width="130"
+            [hidden]="checkVisibility('grpIndex')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'GrpIndex');$event.stopPropagation();">
+                    {{ dataItem?.grpIndex }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="CompletedUserStoriesCount"
+            title="{{'PRODUCTIVITYDASHBOARD.COMPLETEDUSERSTORIESCOUNT' | translate}}" width="170"
+            [hidden]="checkVisibility('CompletedUserStoriesCount')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'Completed');$event.stopPropagation();">
+                    {{ dataItem?.completedUserStoriesCount }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="percentageOfBouncedUserStories"
+            title="{{'PRODUCTIVITYDASHBOARD.PERCENTAGEOFBOUNCEDUSERSTORIES' | translate}}" width="150"
+            [hidden]="checkVisibility('percentageOfBouncedUserStories')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'BouncedStories');$event.stopPropagation();">
+                    {{ dataItem?.percentageOfBouncedUserStories }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="userStoriesBouncedBackOnceCount"
+            title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKONCE' | translate}}" width="190"
+            [hidden]="checkVisibility('userStoriesBouncedBackOnceCount')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'BouncedOnce');$event.stopPropagation();">
+                    {{ dataItem?.userStoriesBouncedBackOnceCount }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="userStoriesBouncedBackMoreThanOnceCount"
+            title="{{'PRODUCTIVITYDASHBOARD.USERSTORIESBOUNCEDBACKMORETHANONCE' | translate}}" width="225"
+            [hidden]="checkVisibility('userStoriesBouncedBackMoreThanOnceCount')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'BouncedMoreThenOnce');$event.stopPropagation();">
+                    {{ dataItem?.userStoriesBouncedBackMoreThanOnceCount }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+        <kendo-grid-column field="avgReplan" title="{{'PRODUCTIVITYDASHBOARD.NUMBEROFREPLANS' | translate}}" width="150"
+            [hidden]="checkVisibility('avgReplan')">
+            <ng-template kendoGridCellTemplate let-dataItem>
+                <div class="icon-button" fxLayout="row"
+                    (click)="openUserStoriesDailog(dataItem,'Replan');$event.stopPropagation();">
+                    {{ dataItem?.avgReplan }}
+                </div>
+            </ng-template>
+        </kendo-grid-column>
+    </kendo-grid>
+</div>
+
+<ng-template #drillDownUserStoryPopupComponent let-data>
+    <app-profile-component-drilldownuserstoryPopup [data]=[data] (closeParentDialog)="closeCurrentDialog()"
+        (exportExcel)="exportDrillDownExcel()" [excelDrillDownLoading]="excelDrillDownLoading">
+    </app-profile-component-drilldownuserstoryPopup>
+</ng-template>

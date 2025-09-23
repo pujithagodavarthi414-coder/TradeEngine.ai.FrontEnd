@@ -1,0 +1,197 @@
+<mat-card
+    *ngIf="(canAccess_feature_ViewEmployeePersonalDetails) || (canAccess_feature_CanEditOtherEmployeeDetails )"
+    class="p-0 m-0 edit_employee full-height">
+    <mat-card-title class="data-table-header drag-handler" *ngIf="isForm">
+        <div class="p-1">{{'HRMANAGAMENT.EDITPERSONALDETAILS' | translate | titlecase}}</div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-title class="data-table-header drag-handler" *ngIf="isView">
+        <div class="p-1" fxLayout="row wrap">
+            <div fxFlex>
+                {{'HRMANAGAMENT.VIEWPERSONALDETAILS' | translate | titlecase}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center"
+                *ngIf="(((canAccess_feature_AddOrUpdateEmployeePersonalDetails) && permission) || (canAccess_feature_CanEditOtherEmployeeDetails)) && !(operationInProgress$ | async)">
+                <span *ngIf="!selectedEmployeeData" (click)="enableDisableForm()"
+                    matTooltip="{{'HRMANAGAMENT.ADDPERSONALDETAILS' | translate}}" class="mat-color-accent">
+                    <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                </span>
+                <span *ngIf="selectedEmployeeData" (click)="enableDisableForm()"
+                    matTooltip="{{'HRMANAGAMENT.EDITPERSONALDETAILS' | translate}}" class="accordion-handle">
+                    <fa-icon icon="edit" class="mat-color-accent"></fa-icon>
+                </span>
+                <!-- <span (click)="openCustomForm()" class="accordion-handle ml-05" matTooltip="Add custom fields">
+                    <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                </span> -->
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content class="p-1 no-drag">
+        <app-hr-component-view-employee-personal-details *ngIf="isView" [selectedEmployeeData]="selectedEmployeeData" [macApplicable]="isMACApplicable" [maritalStatus]="maritalStatus">
+        </app-hr-component-view-employee-personal-details>
+        <div *ngIf="isData && isView" class="p-1">
+            {{'LOADINGPLEASEWAIT' | translate}}
+        </div>
+        <div class="p-0 m-0" id="personal-details-form">
+            <form [formGroup]="employeePersonalDetailsForm" *ngIf="isForm" novalidate
+                (submit)="employeePersonalDetailsForm.valid && saveEmployeePersonalDetails()">
+                <div class="masonry-with-columns" fxLayoutAlign="space-between none">
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="firstName" removeSpecialCharacters
+                                placeholder="{{'HRMANAGAMENT.FIRSTNAME' | translate}}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('firstName').hasError('required') && employeePersonalDetailsForm.get('firstName').touched">
+                                    {{'HRMANAGAMENT.PLEASEENTERFIRSTNAME' | translate}}</span>
+                                <span *ngIf="employeePersonalDetailsForm.get('firstName').hasError('maxlength')">
+                                    {{'HRMANAGAMENT.FIRSTNAMESHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="surName" removeSpecialCharacters
+                                placeholder="{{'HRMANAGAMENT.LASTNAME' | translate}}" required>
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('surName').hasError('required') && employeePersonalDetailsForm.get('surName').touched">
+                                    {{'HRMANAGAMENT.PLEASEENETERSURNAME' | translate}}</span>
+                                <span *ngIf="employeePersonalDetailsForm.get('surName').hasError('maxlength')">
+                                    {{'HRMANAGAMENT.SURNAMESHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="email" placeholder="{{'HRMANAGAMENT.EMAIL' | translate}}"
+                                required>
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('email').hasError('required') && employeePersonalDetailsForm.get('email').touched">
+                                    {{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}}</span>
+                                <span *ngIf="employeePersonalDetailsForm.get('email').hasError('pattern')">
+                                    {{'EMPLOYEECONTACTDETAILS.VALIDEMAIL' | translate }}</span>
+                                <span *ngIf="employeePersonalDetailsForm.get('email').hasError('maxlength')">
+                                    {{'HRMANAGAMENT.EMAILSHOULDNOTEXCEED50CHARACTERS' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="dateOfBirth" [matDatepicker]="picker"
+                                (click)="picker.open()" placeholder="{{'HRMANAGAMENT.DATEOFBIRTH' | translate}}"
+                                [max]="maxDate" [min]="minDate" autocomplete="off">
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('dateOfBirth').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('dateOfBirth').hasError('matDatepickerMax')">{{'HRMANAGAMENT.SELECTEDDATESHOULDBELESSTHANTODAYSDATE' | translate}}</span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="genderId" placeholder="{{'HRMANAGAMENT.GENDER' | translate}}">
+                                <mat-option value="option" *ngFor="let gender of gendersList$ | async"
+                                    [value]="gender.genderId">
+                                    {{gender.gender}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="maritalStatusId"
+                                placeholder="{{'HRMANAGAMENT.MARTIALSTATUS' | translate}}" (selectionChange)="maritalStatusChange($event)">
+                                <mat-option value="option" *ngFor="let maritalStatus of maritalStatusesList$ | async"
+                                    [value]="maritalStatus.maritalStatusId">
+                                    {{maritalStatus.maritalStatus}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24" *ngIf="maritalStatus">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="marriageDate" [matDatepicker]="picker1"
+                                (click)="picker1.open()" placeholder="{{'HRMANAGAMENT.MARRIAGEDATE' | translate}}"
+                                [max]="maxDate" [min]="minDate" autocomplete="off">
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('marriageDate').hasError('required') && employeePersonalDetailsForm.get('marriageDate').touched">
+                                    {{'HRMANAGAMENT.PLEASEENTEREMAIL' | translate}}</span>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('marriageDate').hasError('matDatepickerMin')">{{'HRMANAGAMENT.PLEASEENTERDATEGREATERTHAN' | translate}}</span>
+                                <!-- <span
+                                    *ngIf="employeePersonalDetailsForm.get('marriageDate').hasError('matDatepickerMax')">{{'HRMANAGAMENT.SELECTEDDATESHOULDBELESSTHANTODAYSDATE' | translate}}</span> -->
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="nationalityId"
+                                placeholder="{{'HRMANAGAMENT.NATIONALITY' | translate}}">
+                                <mat-option value="option" *ngFor="let nationality of nationalitiesList$ | async"
+                                    [value]="nationality.nationalityId">
+                                    {{nationality.nationality}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <!-- <div fxFlex.lt-md="100" fxFlex.md="49" fxFlex.lg="32.6" fxFlex="24">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="macAddress" placeholder="{{'ACTIVITYTRACKER.MACADDRESS' | translate}}">
+                            <mat-error>
+                                <span
+                                    *ngIf="employeePersonalDetailsForm.get('macAddress').hasError('maxlength')">{{'ACTIVITYTRACKER.MACADDRESSCANNOTEXCEED' | translate}}
+                                </span>
+                            </mat-error>
+                        </mat-form-field>
+                    </div> -->
+                </div>
+                <div class="mb-1">
+                    <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId"
+                        [getFilesByReferenceId]="true" [referenceId]="employeePersonalReferenceId"
+                        [selectedParentFolderId]="selectedParentFolderId" [selectedStoreId]="selectedStoreId"
+                        [isButtonVisible]="false" (isFilesExist)="filesExist($event)"
+                        (closeFilePopup)="closeFilePopup()" [isToUploadFiles] = "isToUploadFiles">
+                    </app-dropzone>
+                </div>
+                <div class="text-center" style="margin-bottom:15px">
+                    <button mat-button type="submit" mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!employeePersonalDetailsForm.valid || (upsertEmployeePersonalDetailsInProgress$ | async) || (anyOperationInProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate"
+                            *ngIf="upsertEmployeePersonalDetailsInProgress$ | async">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="pen"></fa-icon> {{'UPDATE' | translate}}
+                    </button>
+                    <button type="button" mat-button mat-raised-button
+                        [disabled]="(upsertEmployeePersonalDetailsInProgress$ | async)"
+                        (click)="resetPersonalDetails()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{'CANCEL' | translate}}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </mat-card-content>
+</mat-card>
+<mat-card class="p-0 m-0 edit_employee full-height"
+    *ngIf="!((canAccess_feature_ViewEmployeePersonalDetails) || (canAccess_feature_CanEditOtherEmployeeDetails ))">
+    <mat-card-title class="data-table-header drag-handler">
+        <div class="p-1" fxLayout="row wrap">
+            <div fxFlex>
+                {{'HRMANAGAMENT.VIEWPERSONALDETAILS' | translate}}
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content>
+        <app-common-message-box textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+        </app-common-message-box>
+    </mat-card-content>
+</mat-card>

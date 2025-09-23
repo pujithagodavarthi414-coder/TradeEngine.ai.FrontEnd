@@ -1,0 +1,182 @@
+<app-common-message-box *ngIf="!isFromDashboard && !canAccess_entityType_feature_ViewAuditConductTimelineReport"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<div class="full-height" *ngIf="canAccess_entityType_feature_ViewAuditConductTimelineReport">
+  <mat-card class="p-0 canteen-manage m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutAlign="start center">
+        <div class="card-title-text p-05 full-width ml-05" fxFlex fxLayoutAlign="start center">
+          <span fxFlex="100" class="hide-content-overflow">
+            {{ 'AUDITTIMELINE.BRYNTUMVIEWTITLE' | translate | softLabelsPipe :softLabels | titlecase}}
+          </span>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="!isFromDashboard">
+          <button type="button" mat-icon-button (click)="zoomOut()"
+            matTooltip="{{'AUDITTIMELINE.ZOOMOUT' | translate}}">
+            <fa-icon icon="search-minus">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="!isFromDashboard">
+          <button type="button" mat-icon-button (click)="zoomIn()" matTooltip="{{'AUDITTIMELINE.ZOOMIN' | translate}}">
+            <fa-icon icon="search-plus">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayoutAlign="end center" *ngIf="!isFromDashboard">
+          <button type="button" mat-icon-button (click)="backToConduct()"
+            matTooltip="{{'AUDITTIMELINE.GOBACK' | translate}}">
+            <fa-icon icon="arrow-left">
+            </fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center" *ngIf="!isFromDashboard">
+          <button mat-icon-button matTooltip="{{'AUDITTIMELINE.SHOWFILTERS' | translate}}" (click)="showFilter()"
+            *ngIf="isSubmitted">
+            <fa-icon class="filter mat-color-accent" icon="filter"></fa-icon>
+          </button>
+          <button mat-icon-button matTooltip="{{'AUDITTIMELINE.CLOSEFILTER' | translate}}" (click)="closeFilter()"
+            *ngIf="!isSubmitted">
+            <fa-icon class="filter mat-color-accent" icon="times"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-title>
+    <mat-divider></mat-divider>
+  </mat-card>
+  <div class="activity-data" id="style-1" *ngIf="!isFromDashboard">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loading$| async">
+    </mat-progress-bar>
+    <div *ngIf="!isSubmitted" class="m-2">
+      <form [formGroup]="auditTimelineInputForm" #formDirective="ngForm" novalidate
+        (submit)="auditTimelineInputForm.valid && getAuditConductTimelineList()">
+        <div>
+          <div fxLayout="row wrap" class="mt-05" fxLayoutGap.lt-md="3px" fxLayoutGap.md="5px" fxLayoutGap.gt-md="8px">
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="startDate" [matDatepicker]="inputpicker1" (click)="inputpicker1.open()"
+                  readonly placeholder="{{'AUDITTIMELINE.STARTDATE' | translate}}" (input)="inputFormstartDateChange();"
+                  (dateChange)="inputFormstartDateChange();" autocomplete="off" required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker1"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker1></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="auditTimelineInputForm.get('startDate').hasError('required') && auditTimelineInputForm.get('startDate').touched">
+                    {{'AUDITTIMELINE.PLEASESELECTSTARTDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <input matInput formControlName="endDate" [matDatepicker]="inputpicker2" (click)="inputpicker2.open()"
+                  readonly [min]="minDateForEndDateForInput" placeholder="{{'AUDITTIMELINE.ENDDATE' | translate}}"
+                  autocomplete="off" required>
+                <mat-datepicker-toggle matSuffix [for]="inputpicker2"></mat-datepicker-toggle>
+                <mat-datepicker #inputpicker2></mat-datepicker>
+                <mat-error>
+                  <span
+                    *ngIf="auditTimelineInputForm.get('endDate').hasError('required') && auditTimelineInputForm.get('endDate').touched">
+                    {{'AUDITTIMELINE.PLEASESELECTENDDATE' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'AUDITTIMELINE.BRANCH' | translate }}" formControlName="branchId"
+                  panelClass="dropdown-custom-class" multiple required>
+                  <mat-option #allBranchSelected
+                    (click)="toggleAllBranchSelected($event);$event.preventDefault();$event.stopPropagation();"
+                    [value]="0">
+                    {{ 'AUDITTIMELINE.SELECTALL' | translate }}</mat-option>
+                  <mat-option [value]="component.branchId" (click)="tosslePerOne(allBranchSelected.viewValue)"
+                    *ngFor="let component of branchesList">
+                    {{ component.branchName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>
+                  <span
+                    *ngIf="auditTimelineInputForm.get('branchId').hasError('required') && auditTimelineInputForm.get('branchId').touched">
+                    {{'AUDITTIMELINE.PLEASESELECTBRANCH' | translate}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <!-- <div fxFlex="50" fxFlex.xs="100">
+              <mat-form-field class="full-width">
+                <mat-select formControlName="businessUnitIds" placeholder="{{'BUSINESSUNIT.SELECTBUSINESSUNIT' | translate}}"
+                  multiple>
+                  <mat-select-trigger>
+                    {{selectedBusinessUnits}}
+                  </mat-select-trigger>
+                  <mat-option [value]="0" #businessUnitsSelected (click)="toggleAllBusinessUnitsSelected()">
+                    Select all
+                  </mat-option>
+                  <mat-option *ngFor="let businessUnit of businessUnitsList" [value]="businessUnit.businessUnitId"
+                    (click)="getSelectedBusinessUnits();toggleBusinessUnitsPerOne()">
+                    {{businessUnit.businessUnitName}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div> -->
+            <div fxFlex fxFlex.gt-sm="49" fxFlex.sm="49" fxFlex.lt-sm="98">
+              <mat-form-field class="full-width">
+                <mat-select placeholder="{{ 'AUDITTIMELINE.AUDIT' | translate | softLabelsPipe :softLabels }}" formControlName="audit"
+                  panelClass="dropdown-custom-class" multiple required>
+                  <mat-option #allAuditSelected (click)="toggleAllAuditSelected($event)" [value]="0">
+                    {{ 'AUDITTIMELINE.SELECTALL' | translate }}</mat-option>
+                  <mat-option [value]="component.auditId" *ngFor="let component of auditList">
+                    {{ component.auditName }}
+                  </mat-option>
+                </mat-select>
+
+                <mat-error>
+                  <span
+                    *ngIf="auditTimelineInputForm.get('audit').hasError('required') && auditTimelineInputForm.get('audit').touched">
+                    {{'AUDITTIMELINE.PLEASESELECTAUDIT' | translate | softLabelsPipe :softLabels}}</span>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mt-05 pull-right mb-05" fxLayoutGap.xs="3px" fxLayoutGap="5px">
+          <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="auditTimelineInputForm.invalid">
+            <fa-icon class="mr-05" icon="edit"></fa-icon> {{'AUDITTIMELINE.FILTER' | translate}}
+          </button>
+          <!-- <button type="button" mat-button mat-raised-button (click)="closecreateRostrNamePopup()"
+            matTooltip="{{'AUDITTIMELINE.CANCEL' | translate}}"> -->
+          <button type="button" mat-button mat-raised-button matTooltip="{{'AUDITTIMELINE.CANCEL' | translate}}"
+            (click)="closeFilter()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'AUDITTIMELINE.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </div>
+    <div style="clear: both;" id="audit-conduct-scheduler">
+      <audit-conduct-bry-scheduler #scheduler1 [columns]="schedulerConfig.columns" [endDate]="schedulerConfig.endDate"
+        [events]="schedulerConfig.events" [minHeight]="schedulerConfig.minHeight"
+        [resources]="schedulerConfig.resources" [startDate]="schedulerConfig.startDate"
+        [eventContextMenuFeature]="schedulerConfig.eventContextMenuFeature" [viewPreset]="schedulerConfig.viewPreset"
+        [treeFeature]="schedulerConfig.treeFeature" [stripeFeature]="schedulerConfig.stripeFeature"
+        [eventTooltipFeature]="schedulerConfig.eventTooltipFeature" [auditList]="filteredAuditList"
+        [conductData]="auditConductTimelineList" [requestData]="auditTimelineInputForm.value"
+        [satPopoverAnchorFor]="openConductsPage" #openConductsPagePopover="satPopoverAnchor"
+        (selectedConduct)="getSelectedConduct($event)">
+      </audit-conduct-bry-scheduler>
+    </div>
+  </div>
+  <div class="p-1" *ngIf="dashboardFilters && isFromDashboard">
+    <span>{{'PROJECTS.YOUCANTACCESSHERE' | translate}}
+      <a class="add-test-case" (click)="navigateToProjects()">{{'TIMEPUNCHCARD.CLICKHERE' | translate}}</a>
+      {{'PROJECTS.TONAVIGATETOPROJECTS' | translate | softLabelsPipe : softLabels}}
+    </span>
+  </div>
+</div>
+
+<sat-popover #openConductsPage [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition">
+  <div style="width: calc(88vw)">
+    <app-conduct-unique-detail [conductId]="conductId" *ngIf="conductId && loadPopover"
+      (closePopover)="closeSatPopover($event)">
+    </app-conduct-unique-detail>
+  </div>
+</sat-popover>

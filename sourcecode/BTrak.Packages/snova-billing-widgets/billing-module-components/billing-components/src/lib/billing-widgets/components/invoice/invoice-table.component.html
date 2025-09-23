@@ -1,0 +1,138 @@
+<!-- 
+<div fxLayout="row wrap " fxLayoutgap="2%" fxLayout.xs="column">
+    <div fxFlex="23" fxFlex.sm="49" fxFlex.md="49">
+      <mat-card class="bliing_custom-card cursor" [routerLink]="['/billingmanagement/addclient']">
+        <mat-card-header fxLayoutAlign="center center" class="ptb-3">
+          <p class="billing_card_fontsize">
+            <fa-icon icon="plus" class="mr-05">
+            </fa-icon>
+            <span> {{ 'CLIENTS.NEWCLIENT' | translate }}</span>
+          </p>
+        </mat-card-header>
+      </mat-card>
+    </div>
+    <mat-card class="bliing_custom-card cursor p-05" *ngFor="let clientDetails  of invoiceList" fxFlex="23"
+      fxFlex.sm="48"  fxFlex.md="48" (click)="addedClientspage(clientDetails)">
+      <div fxLayout="row wrap" class="mt-1">
+        <div fxFlex="23"><img class="img-rectangular"  src="{{clientDetails?.profileImage}}" /></div>
+        <div fxFlex="72" class="mt-05 ml-05">
+          <p class="billing_card_fontsize ">
+            <fa-icon icon="user" class="mr-05">
+            </fa-icon> {{clientDetails.firstName}} {{clientDetails.lastName}}
+          </p>
+          <p class="billing_card_fontsize ">
+            <fa-icon icon="briefcase" class="mr-05">
+            </fa-icon> {{clientDetails.companyName}}
+          </p>
+          <p class="billing_card_fontsize ">
+            <fa-icon icon="at" class="mr-05">
+            </fa-icon> {{clientDetails.email}}
+          </p>
+        </div>
+      </div>
+    </mat-card>
+  </div> -->
+<div>
+    <div class="m-2">
+        <mat-card class="p-0 m-2">
+            <mat-card-title>
+                <div fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex fxLayoutAlign="start center">
+                        <div class="filter-section">
+                            <div fxLayout="row" fxFlex="10" class="archive-toggle p-05">
+                                <div>{{ 'ARCHIVE' | translate }}</div>
+                                <div class="mr-05">
+                                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isArchived"
+                                        [checked]="isArchived" (change)="getInvoices()"></mat-slide-toggle>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div fxFlex fxLayoutAlign.xs="start center" fxLayoutAlign="end center" class="p-05">
+                        <mat-checkbox mat-primary>Display Only for Active projects</mat-checkbox>
+                    </div>
+                </div>
+            </mat-card-title>
+            <mat-divider></mat-divider>
+        </mat-card>
+    </div>
+    <div class="m-2">
+        <ngx-datatable class="btrak m-2" [rows]="invoiceList" (select)='onSelect($event)' [sortType]="'multi'"
+            [headerHeight]="35" [footerHeight]="35" [rowHeight]="'auto'" [columnMode]="'force'" [limit]="5"
+            [selectionType]="'single'" [loadingIndicator]="loadingIndicator">
+            <ngx-datatable-column [width]="50" [sortable]="false" [canAutoResize]="false" [draggable]="false"
+                [resizeable]="false" name="Select all">
+                <ng-template ngx-datatable-header-template>
+                    <mat-checkbox #allSelected [checked]="allRowsSelected" (change)="selectAllInvoices()">
+                    </mat-checkbox>
+                </ng-template>
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <mat-checkbox [checked]="RowSelect" (click)="$event.stopPropagation(); singleSelect()">
+                    </mat-checkbox>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.CLIENT' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <p class="mb-05">{{row.clientName}}</p>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.INVOICENUMBER' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <p class="mb-05">{{row.invoiceNumber}}</p>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.PROJECT' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{row.projectName}}
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.ISSUEDATE' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <p class="mb-05">{{row.issueDate | date :'dd/mm/yyyy'}}</p>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.DUEDATE' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <p class="mb-05">{{row.dueDate | date :'dd/mm/yyyy'}}</p>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.AMOUNT/STATUS' | translate}}" [width]="150">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <div [ngStyle]="{ 'background' : row.colorCode, 'width':'150px' }" class="text-center">
+                        <p class="mb-05">{{row.currencyCode}}. {{row.totalAmount}}</p>
+                        <p class="mb-05"> {{row.status}}</p>
+
+                        <!-- <mat-form-field class="full-width">
+                            <mat-select placeholder="Client" (selectionChange)="employeeSelected($event.value)">
+                                <mat-option value="">John Marsh</mat-option>
+                                <mat-option value="">Josh Thompson</mat-option>
+                            </mat-select>
+                        </mat-form-field> -->
+                    </div>
+                </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="{{'BILLINGMANAGEMENT.ACTION' | translate}}">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class=" mat-icon-button" matTooltip="Edit Invoice">
+                        <fa-icon class="mat-color-accent" icon="edit"></fa-icon>
+                    </button>
+                    <button class=" mat-icon-button" matTooltip="Archive Invoice">
+                        <fa-icon class="mat-color-accent" icon="archive"></fa-icon>
+                    </button>
+                    <button class=" mat-icon-button" matTooltip="Print Invoice">
+                        <fa-icon class="mat-color-accent" icon="print"></fa-icon>
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+        </ngx-datatable>
+    </div>
+</div>
+
+<div class="floating-right-fab-button">
+    <div class="handle">
+        <button mat-fab color="accent" matTooltip="Add Invoice" routerLink="/billingmanagement/invoice/new">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div>

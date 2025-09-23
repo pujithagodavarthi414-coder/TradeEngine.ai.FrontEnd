@@ -1,0 +1,178 @@
+<kendo-scheduler #kendoScheduler [kendoSchedulerBinding]="solutionData" style="height: calc(100vh - 168px);"
+  [editable]="isEditable" [selectedViewIndex]="1" [slotFill]="1" [selectedDate] = "selectedDate"
+  (save)="saveHandler($event)" (dragEnd)="dragEndHandler($event)" (resizeEnd)="resizeEndHandler($event)"
+  (remove)="removeHandler($event)" (cancel)="cancelHandler($event)" (navigate)="navigate($event)"
+  (slotDblClick)="slotDblClickHandler($event)" (eventDblClick)="eventDblClickHandler($event)"
+  [satPopoverAnchorFor]="editRoster" #editRosterPopover="satPopoverAnchor">
+  <kendo-scheduler-messages
+  today= "{{'ROSTER.TODAY' | translate}}"
+  dayViewTitle="{{'ROSTER.DAY' | translate}}"
+  weekViewTitle="{{'ROSTER.WEEK' | translate}}"
+  monthViewTitle="{{'ROSTER.MONTH' | translate}}"
+  agendaViewTitle="{{'ROSTER.AGENDA' | translate}}"
+  showWorkDay="{{'ROSTER.SHOWBUSINESSHOURS' | translate}}"
+  showFullDay="{{'ROSTER.SHOWFULLDAY' | translate}}"
+  >  
+  </kendo-scheduler-messages>
+
+  <kendo-scheduler-day-view>
+    <ng-template kendoSchedulerEventTemplate let-event="event" let-dataItem="dataItem">
+      <div fxLayout="row wrap" class="pt-3" fxLayoutGap.xs="0px" fxLayoutGap="15px" id="style-1"
+        [ngClass]="isActual === 2 ? 'roster-actual' : 'roster-planned'" style="overflow: auto;">
+        <div class="full-width">
+          <div *ngFor="let emp of event.dataItem.dataItem" fxFlex>
+            <mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05">
+              <mat-card-title class="full-width data-table-header">
+                <div style="display: flex;">
+                  <div style="padding: 5px 2px 5px 2px">
+                    <ngx-avatar matTooltip="{{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}"
+                      name="{{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}"
+                      src="{{emp.employeeProfileImage || emp.plannedEmployeeProfileImage || emp.actualEmployeeProfileImage}}"
+                      initialsSize="2" size="30" round="true" bgColor="#008000"></ngx-avatar>
+                  </div>
+                  <div style="padding: 5px 2px 1px 2px">
+                    {{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}
+                  </div>
+                </div>
+
+              </mat-card-title>
+              <mat-card-content>
+                <span> <b>{{'ROSTER.EVENTDEPARTMENT' | translate}}</b>:
+                  {{emp.departmentName}}</span><br>
+                <span> <b>{{'ROSTER.EVENTRATE' | translate}}</b>:
+                  {{loadRate(emp)}}</span><br>
+                <span> <b>{{ (isActual === 2 ? 'ROSTER.TOTALWORKED' : 'ROSTER.TOTALWORK') | translate}}</b>:
+                  {{loadWorkHours(emp)| number:'1.0-2'}} {{'ROSTER.HOURS' | translate}}</span>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </kendo-scheduler-day-view>
+
+  <kendo-scheduler-week-view>
+    <ng-template kendoSchedulerEventTemplate let-event="event" let-dataItem="dataItem">
+      <div fxLayout="row wrap" class="pt-3" fxLayoutGap.xs="0px" fxLayoutGap="15px" id="style-1"
+        [ngClass]="isActual === 2 ? 'roster-actual' : 'roster-planned'" style="overflow: auto;">
+        <div class="full-width">
+          <div *ngFor="let emp of event.dataItem.dataItem" fxFlex>
+            <mat-card class="p-0 canteen-manage m-0 ml-05 mr-05 mt-05">
+              <mat-card-title class="full-width data-table-header">
+                <div style="display: flex;">
+                  <div style="padding: 5px 2px 5px 2px">
+                    <ngx-avatar matTooltip="{{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}"
+                      name="{{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}"
+                      src="{{emp.employeeProfileImage || emp.plannedEmployeeProfileImage || emp.actualEmployeeProfileImage}}"
+                      initialsSize="2" size="30" round="true" bgColor="#008000"></ngx-avatar>
+                  </div>
+                  <div style="padding: 5px 2px 1px 2px">
+                    {{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}}
+                  </div>
+                </div>
+
+              </mat-card-title>
+              <mat-card-content>
+                <span> <b>{{'ROSTER.EVENTDEPARTMENT' | translate}}</b>:
+                  {{emp.departmentName}}</span><br>
+                <span> <b>{{'ROSTER.EVENTRATE' | translate}}</b>:
+                  {{loadRate(emp) | currency : emp.currencyCode}}</span><br>
+                <span *ngIf="isActual === 2"> <b>{{ 'ROSTER.TOTALWORKED' | translate}}</b>:
+                  {{loadWorkHours(emp)| number:'1.0-2'}} {{'ROSTER.HOURS' | translate}}</span>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </kendo-scheduler-week-view>
+
+  <kendo-scheduler-month-view>
+    <ng-template kendoSchedulerEventTemplate let-event="event" let-dataItem="dataItem">
+      <div fxLayout="row wrap" class="pl-2" fxLayoutGap.xs="0px" fxLayoutGap="15px" id="style-1"
+        [ngClass]="isActual === 2 ? 'roster-actual' : 'roster-planned'" style="overflow: auto;">
+        <div class="full-width">
+          <div *ngFor="let emp of event.dataItem.dataItem" fxFlex>
+            <span> {{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}} :
+              {{loadRate(emp) | currency : emp.currencyCode}}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </kendo-scheduler-month-view>
+
+  <kendo-scheduler-agenda-view [numberOfDays]="30">
+    <ng-template kendoSchedulerEventTemplate let-event="event" let-dataItem="dataItem">
+      <div fxLayout="row wrap" fxLayoutGap.xs="0px" fxLayoutGap="15px" id="style-1"
+        [ngClass]="isActual === 2 ? 'roster-actual' : 'roster-planned'" style="overflow: auto;">
+        <div class="full-width">
+          <div *ngFor="let emp of event.dataItem.dataItem" fxFlex>
+            <span> {{emp.employeeName || emp.plannedEmployeeName || emp.actualEmployeeName}} :
+              {{loadRate(emp) | currency : emp.currencyCode}}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </kendo-scheduler-agenda-view>
+  <!-- <ng-template kendoSchedulerEditDialogTemplate autoFocusedElement=".title-input" let-formGroup="formGroup"
+    let-isNew="isNew" let-editMode="editMode" let-dataItem="dataItem" let-event="event">
+
+    <div class="k-form-inline">
+      <div class="k-form-field">
+        <span>{{'ROSTER.DEPARTMENTNAME' | translate}}</span>
+        <kendo-dropdownlist [value]="isNew ? null: dataItem.dataItem.departmentId" [valuePrimitive]="true"
+          [defaultItem]="defaultDepartmentItem" [formControl]="formGroup.get('departmentId')"
+          [data]="filteredDepartmentList" [filterable]="true" (filterChange)="handleDepartmentFilter($event)"
+          textField="departmentName" (selectionChange)="departmentChange($event, formGroup)" valueField="departmentId">
+        </kendo-dropdownlist>
+      </div>
+      <div class="k-form-field">
+        <span>{{'ROSTER.SHIFTNAME' | translate}}</span>
+        <kendo-dropdownlist [value]="isNew ? null: dataItem.dataItem.shiftId" [valuePrimitive]="true"
+          [defaultItem]="defaultShiftItem" [formControl]="formGroup.get('shiftId')" [data]="filteredShiftTimeList"
+          [filterable]="true" (filterChange)="handleShiftFilter($event)"
+          (selectionChange)="shiftChange($event, formGroup)" textField="shift" valueField="shiftTimingId">
+        </kendo-dropdownlist>
+      </div>
+      <div class="k-form-field">
+        <span>{{'ROSTER.EMPLOYEE' | translate}}</span>
+        <kendo-multiselect #employeeList [value]="isNew ? null: dataItem.dataItem.employeeId" [valuePrimitive]="true"
+          [formControl]="formGroup.get('employeeId')" [data]="filteredEmployeeList" [filterable]="true" required
+          (open)="onOpen($event)" textField="fullName" valueField="employeeId"
+          (valueChange)="employeeChange($event, formGroup)">
+        </kendo-multiselect>
+      </div>
+      <div class="k-form-field k-datetime-picker-wrapper">
+        <span>{{'ROSTER.START' | translate}}</span>
+        <kendo-datepicker [formControl]="formGroup.get('start')">
+        </kendo-datepicker>
+        <kendo-timepicker [formControl]="formGroup.get('start')" *ngIf='!formGroup.controls.isAllDay.value'>
+        </kendo-timepicker>
+      </div>
+      <div class="k-form-field k-datetime-picker-wrapper">
+        <span>{{'ROSTER.END' | translate}}</span>
+        <kendo-datepicker [formControl]="formGroup.get('end')">
+        </kendo-datepicker>
+        <kendo-timepicker [formControl]="formGroup.get('end')" *ngIf='!formGroup.controls.isAllDay.value'>
+        </kendo-timepicker>
+      </div>
+    </div>
+  </ng-template> -->
+</kendo-scheduler>
+
+
+<sat-popover #editRoster hasBackdrop [interactiveClose]="false" backdropClass="backdrop-color" verticalAlign="center"
+  horizontalAlign="center">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{(isNew ? 'ROSTER.ADDEVENT':  'ROSTER.EDITEVENT') | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="editedEvent">
+      <scheduler-edit-form [event]="editedEvent" [editMode]="editMode" [isNew]="isNew" (save)="saveHandler($event)"
+        (cancel)="cancelHandler(null)" style="display: block; margin-top: 20px;" [departments]="departmentList"
+        [employeeListDataDetails]="employeeListData" [shifts]="shiftTimeList" [selectedPlan]="selectedPlan"
+        [dateFormat]="dateFormat" [priorInputData]="priorInputData" [requestDetails]="requestDetails">
+      </scheduler-edit-form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>

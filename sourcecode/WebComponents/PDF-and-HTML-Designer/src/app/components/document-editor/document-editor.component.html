@@ -1,0 +1,794 @@
+<div class="pdf-document-editor-container designer-font-size">
+    <div fxLayout="row wrap" fxLayoutAlign="start center" class="margin-top-20 full-width">
+        <div fxLayout="row" fxFlex.lt-md="50" fxFlex.md="50" fxFlex.gt-md="10" fxLayoutAlign="start center">
+            <button class="e-control e-btn doc-editor-button margin-left-5" (click)="backbuttonclick()">Back</button>
+        </div>
+        <div fxLayout="row" fxFlex.lt-md="50" fxFlex.md="50" fxFlex.gt-md="40" fxLayoutAlign="center center">
+            <form [formGroup]="TemplateNameForm" novalidate #formDirective="ngForm" class="full-width margin-right-5">
+                <div fxLayout="row" fxLayoutAlign="center center" class="form-group template-sm-margin">
+                    <label fxFlex="35" class="margin-bottom-5 template-label" for="name">Template Name 
+                        <span class="validation-error">*</span>
+                    </label>
+                    <input fxFlex="65" type="text" autocomplete="off" class="form-control"
+                        [ngStyle]="{'border-color': (TemplateNameForm.controls.templateName.touched)  && TemplateNameForm.controls.templateName.errors?.required ? 'red' : '' }"
+                        id="name" formControlName="templateName" required />
+                </div>
+            </form>
+        </div>
+        
+        <div fxLayout="row" fxFlex.lt-md="100" fxFlex.md="50" fxFlex.gt-md="50" fxLayoutAlign="end center">
+            <div class="full-width">
+                <div fxLayout="row" fxLayoutAlign="start center" class="doc-edit-right-buttons-container">
+                    <button mat-flat-button class="hover-button doc-editor-button-icon" matTooltip="Template permissions"
+                        (click)="openTemplatePermissions()">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <i class="fa fa-cog designer-action-icons margin-left-0" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                    </button>
+                    <button *ngIf="templateId != null" class="e-control e-btn doc-editor-button new-button"
+                        (click)="newTemplate()">New</button>
+                    <select class="e-control e-btn doc-editor-button update-botton"
+                        (change)="previewTypeChange($event)">
+                        <option value="" disabled [selected]="previewType == null" hidden>Preview</option>
+                        <option value="pdf" [selected]="previewType == 'pdf'">Preview as Pdf</option>
+                        <option value="html" [selected]="previewType == 'html'">Preview as Html</option>
+                    </select>
+                    <button mat-flat-button class="hover-button doc-editor-button-icon" matTooltip="Preview"
+                        (click)="previewTemplate()">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <i class="fa fa-eye designer-action-icons margin-left-0" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                    </button>
+                    <select *ngIf="templateId == null" class="e-control e-btn doc-editor-button save-botton"
+                        (change)="templateTypeChange($event)">
+                        <option value="" disabled [selected]="templateType == null" hidden>Save</option>
+                        <option value="pdf" [selected]="templateType == 'pdf'">Save as Pdf</option>
+                        <option value="html" [selected]="templateType == 'html'">Save as Html</option>
+                    </select>
+                    <select *ngIf="templateId != null" class="e-control e-btn doc-editor-button save-botton"
+                        (change)="templateTypeChange($event)">
+                        <option value="" disabled [selected]="templateType == null" hidden>Update</option>
+                        <option value="pdf" [selected]="templateType == 'pdf'">Update as Pdf</option>
+                        <option value="html" [selected]="templateType == 'html'">Update as Html</option>
+                    </select>
+                    <button mat-flat-button class="hover-button doc-editor-button-icon margin-right-5"
+                        (click)="saveTemplate()" matTooltip="{{templateId == null?'Save':'Update'}}">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <i class="fa fa-save designer-action-icons margin-left-0" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div fxLayout="row"  fxLayoutAlign="end center" fxLayoutGap="10px">
+        <input type="checkbox" [(ngModel)]="allowAnonymous" (change)="anonymousCheckboxChange($event)" style="margin-right:6px"> 
+        <span style="padding:0px 12px 0px 6px">Can allow anonymous</span>
+    </div>
+    <div class="control-section">
+        <div>
+            <div id="default_title_bar" class="e-de-ctn-title" style = "background-color: #4cb2b2;
+            color: white !important;">
+            </div>
+            <div class="display_flex full-width">
+                <div fxLayout="row" fxLayoutAlign="start start" class="full-width">
+                    <div *ngIf="showDataSourceDiv" fxFlex="15" fxFlex.lg="20" fxFlex.lt-lg="30">
+                        <div class="control_wrapper">
+                            <div class="data-sources-text"><span>Data Sources</span>
+                                <span class="data-sorce-add-icon" (click)="openAddDataSource()">
+                                    <i class="fa fa-plus-circle pdf-designer-theme-color"
+                                        title="Add data source"></i></span>
+                            </div>
+                            <div *ngIf="addDataSource">
+                                <app-mongo-query-editor [templateId]="templateId ? templateId : newTemplateId"
+                                    [editDataSourceValues]="editDataSourceValues"
+                                    (refreshTreeData)="refreshTreeDataEvent($event)"
+                                    (closeDataSource)="closeDataSourceEvent($event)"></app-mongo-query-editor>
+                            </div>
+                            <hr class="hr-line">
+                            <ejs-treeview #treeview id="editing" [fields]="field" allowDragAndDrop="true">
+                                <ng-template #nodeTemplate="" let-data="">
+                                    <span fxLayout="row" fxLayoutAlign="start start">
+                                        <span fxFlex="150px" class="hide-content-overflow"
+                                            title="{{data.name}}">{{data.name}}</span>
+                                        <span *ngIf="data.htmlAttributes.draggable==false" fxFlex="40px">
+                                            <i class="fa fa-edit designer-menu-action-icons" title="Edit"
+                                                aria-hidden="true" (click)="editDataSource(data)"></i>
+                                            <i class="fa fa-trash designer-menu-action-icons" title="Delete"
+                                                aria-hidden="true" (click)="archiveDataSource(data)"></i>
+                                        </span>
+                                    </span>
+                                </ng-template>
+                            </ejs-treeview>
+                        </div>
+                    </div>
+                    <a class="sidenav-open-arrow sidenav-arrow pointer"
+                        [ngClass]="showDataSourceDiv?'arrow-open' :'arrow-closed'" matTooltipPosition="below"
+                        matTooltip="{{showDataSourceDiv?'Hide data sources':'Open data sources'}}"
+                        matTooltipClass="snova-tooltip arrow-below" (click)="toggleDataSourcesDiv(!showDataSourceDiv)">
+                        <svg id="Group_159898" data-name="Group 159898" xmlns="http://www.w3.org/2000/svg"
+                            width="15.065" height="8.958" viewBox="0 0 15.065 8.958">
+                            <path id="keyboard_double_arrow_right_FILL1_wght400_GRAD0_opsz48"
+                                d="M234.326,356.771a.57.57,0,0,0,0-.826l-3.481-3.481,3.5-3.481a.521.521,0,0,0,.167-.4.594.594,0,0,0-.187-.4.57.57,0,0,0-.826,0l-3.874,3.874a.6.6,0,0,0-.138.2.578.578,0,0,0-.039.216.657.657,0,0,0,.039.226.57.57,0,0,0,.138.206l3.894,3.894a.521.521,0,0,0,.4.167A.594.594,0,0,0,234.326,356.771Zm-4.975,0a.57.57,0,0,0,0-.826l-3.481-3.481,3.5-3.481a.521.521,0,0,0,.167-.4.594.594,0,0,0-.187-.4.57.57,0,0,0-.826,0l-3.874,3.874a.6.6,0,0,0-.138.2.578.578,0,0,0-.039.216.657.657,0,0,0,.039.226.57.57,0,0,0,.138.206l3.894,3.894a.521.521,0,0,0,.4.167A.594.594,0,0,0,229.351,356.771Z"
+                                transform="translate(-219.449 -348)" />
+                            <path id="keyboard_double_arrow_right_FILL1_wght400_GRAD0_opsz48-2"
+                                data-name="keyboard_double_arrow_right_FILL1_wght400_GRAD0_opsz48"
+                                d="M229.351,356.771a.57.57,0,0,0,0-.826l-3.481-3.481,3.5-3.481a.521.521,0,0,0,.167-.4.594.594,0,0,0-.187-.4.57.57,0,0,0-.826,0l-3.874,3.874a.6.6,0,0,0-.138.2.578.578,0,0,0-.039.216.657.657,0,0,0,.039.226.57.57,0,0,0,.138.206l3.894,3.894a.521.521,0,0,0,.4.167A.594.594,0,0,0,229.351,356.771Z"
+                                transform="translate(-224.474 -348)" />
+                        </svg>
+                    </a>
+                    <div fxFlex="{{dynamicDocumentEditorFlexValue}}" fxFlex.lg="{{dynamicDocumentEditorFlexValueLg}}"
+                        fxFlex.lt-lg="{{dynamicDocumentEditorFlexValueLtLg}}">
+                        <ejs-documenteditorcontainer #documenteditor_default (created)="onCreate()"
+                            (contentChange)="onContentChange()" (documentChange)="onDocumentChange()"
+                            [toolbarItems]=items (toolbarClick)="onToolbarClick($event)" (enableLocalPaste)="false"
+                            [enableToolbar]=true [enableSpellCheck]=false [documentEditorSettings]="settings"
+                            height="750" style="display:block;">
+                        </ejs-documenteditorcontainer>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+<ng-template #openAppPreview let-data class="pdf-designer-custom-popup">
+    <div style="position: relative;">
+    <button class="close-button" (click)="closeAppPreview()">
+        <span>&times;</span>
+    </button>
+    </div>
+    <h3 class="pdf-designer-theme-color mb-4 text-align-center">Template preview</h3>
+    <app-preview [sfdtdata]="sfdtdata" [previewType]="previewType"></app-preview>
+</ng-template>
+
+<ng-template #addButtonDialog class="pdf-designer-custom-popup">
+    <div>
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Add button</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeAddButtonDialog()"> close
+            </span>
+        </div>
+        <div class="mx-3 p-3 f-14 font-color-2">
+            <form [formGroup]="addButton" #addFormDirective="ngForm" (submit)="addButton.valid && addButtonToEditor()"
+                novalidate>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="buttonName" class="fw-semibold">Button name
+                            <span class="font-color-19">*</span>
+                        </label>
+                        <input #addButtonFirstField list="custom_buttons" type="text" formControlName="buttonName"
+                            [placeholder]="'enter button name'" class="bg-3 border-style-1 mt-1 p-2 w-100" (input)="onExistingButtonSelected($event)">
+                        <datalist id="custom_buttons">
+                            <option *ngFor="let button of existingButtons" [value]="button">
+                        </datalist>
+                        <div *ngIf="(addButton.controls.buttonName.touched || addButtonClicked)  && addButton.controls.buttonName.errors?.required"
+                            >
+                            <span class="validation-error">Button
+                                name is required</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="buttonShape" class="fw-semibold">Button shape
+                        </label>
+
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="buttonShape">
+                            <option *ngFor="let item of buttonShapes" [value]="item">{{item}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="backgroundColor" class="fw-semibold">Background color
+                        </label>
+                        <input type="text" formControlName="backgroundColor"
+                            [placeholder]="'Enter hexadecimal color code'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                        <div *ngIf="(addButton.controls.backgroundColor.touched || addButtonClicked)  && addButton.controls.backgroundColor.dirty
+                            && addButton.controls.backgroundColor.hasError('invalidColor')" >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label for="borderColor" class="fw-semibold">Border color
+                        </label>
+                        <input type="text" formControlName="borderColor" [placeholder]="'Enter hexadecimal color code'"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100">
+                        <div *ngIf="(addButton.controls.borderColor.touched || addButtonClicked)  && addButton.controls.borderColor.dirty 
+                            && addButton.controls.borderColor.hasError('invalidColor')" >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="fontColor" class="fw-semibold">Font color
+                        </label>
+                        <input type="text" formControlName="fontColor" [placeholder]="'Enter hexadecimal color code'"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100">
+                        <div *ngIf="(addButton.controls.fontColor.touched || addButtonClicked)  && addButton.controls.fontColor.dirty
+                            && addButton.controls.fontColor.hasError('invalidColor')" >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label for="eventType" class="fw-semibold">Event name
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="eventType" required>
+                            <option *ngFor="let item of buttonEventTypes" [value]="item">{{item}}</option>
+                        </select>
+                        <div *ngIf="(addButton.controls.eventType.touched || addButtonClicked)  && addButton.controls.eventType.errors?.required"
+                            >
+                            <span class="validation-error">Event type is required</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label *ngIf="addButton.controls.eventType.value== 'Page navigation'"
+                            for="customButtonFunctionlity" class="fw-semibold">Navigation url</label>
+                        <label *ngIf="addButton.controls.eventType.value== 'Trigger'" for="customButtonFunctionlity"
+                            class="fw-semibold">Typescript code</label>
+                        <label *ngIf="addButton.controls.eventType.value== 'Workflow'" for="customButtonFunctionlity"
+                            class="fw-semibold">Select workflow</label>
+                        <input *ngIf="addButton.controls.eventType.value== 'Page navigation'" type="text"
+                            formControlName="customButtonFunctionlity" [placeholder]="'Enter navigation url'"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100">
+                        <textarea *ngIf="addButton.controls.eventType.value== 'Trigger'"
+                            formControlName="customButtonFunctionlity" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            rows="6"></textarea>
+                        <select *ngIf="addButton.controls.eventType.value== 'Workflow' && workflows.length > 0"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="customButtonFunctionlity"
+                            required>
+                            <option *ngFor="let workflow of workflows" [value]="workflow.id">{{workflow.workflowName}}
+                            </option>
+                        </select>
+                    </div>
+                    <div *ngIf="addButton.controls.eventType.value== 'Workflow'" class="col-6">
+                        <label for="btnNavigationUrl" class="fw-semibold">Button navigation url
+                        </label>
+                        <input type="text" formControlName="btnNavigationUrl"
+                            [placeholder]="'Enter button navigation url'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                    </div>
+
+                    <div *ngIf="(addButton.controls.customButtonFunctionlity.touched || addButtonClicked)  && addButton.controls.customButtonFunctionlity.errors?.required"
+                        >
+                        <span *ngIf="addButton.controls.eventType.value== 'Page navigation'"
+                            class="validation-error">Navigation url is required</span>
+                        <span *ngIf="addButton.controls.eventType.value== 'Trigger'" class="validation-error">Typescript
+                            code is required</span>
+                    </div>
+
+                </div>
+                <div *ngIf="addButton.controls.eventType.value== 'Workflow'" class="row pb-2">
+                    <div class="col-6">
+                        <label for="customMessage" class="fw-semibold">Custom message
+                        </label>
+                        <textarea formControlName="customMessage" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            rows="4"></textarea>
+                    </div>
+
+                    <div class="col-6">
+                        <label for="csFontSize" class="fw-semibold">Font size
+                        </label>
+                        <input type="number" formControlName="csFontSize" min="1" max="100"
+                            [placeholder]="'custom message font size'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                    </div>
+
+                </div>
+
+                <div class="d-flex flex-row align-items-center gap-3 mt-4 justify-content-end">
+                    <button type="submit" mat-flat-button
+                        [ngStyle]="{'cursor': (!addButton.valid? 'not-allowed':'pointer')}"
+                        class="m-3 mb-2 hover-button pdf-save-designer-button">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <span class="font_weight_lg">Add</span>
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</ng-template>
+<ng-template #addFormDialog class="pdf-designer-custom-popup">
+    <div>
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Add form</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeAddFormDialog()"> close
+            </span>
+        </div>
+        <div class="mx-3 p-3 f-14 font-color-2">
+            <form [formGroup]="addForm" #addFormDirective="ngForm" (submit)="addForm.valid && addFormToEditor()"
+                novalidate>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="customApplicationName" class="fw-semibold">Custom application
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="customApplicationName"
+                            (change)="customApplicationSelected($event)" required>
+                            <option *ngFor="let item of customApplicationsData" [value]="item.customApplicationId">
+                                {{item.customApplicationName}}</option>
+                        </select>
+
+                        <div *ngIf="(addForm.controls.customApplicationName.touched || addFormTouched)  && addForm.controls.customApplicationName.errors?.required"
+                            >
+                            <span class="validation-error">Custom application is required</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="formName" class="fw-semibold">Form Name
+                        </label>
+
+                        <input #addFormFirstField type="text" formControlName="formName"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" [attr.disabled]="true" readonly required>
+                        <div *ngIf="(addForm.controls.formName.touched || addFormTouched)  && addForm.controls.formName.errors?.required"
+                            >
+                            <span class="validation-error">Form name is required</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="customApplicationId" class="fw-semibold">Custom application Id
+                        </label>
+
+                        <input type="text" formControlName="customApplicationId"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" [attr.disabled]="true" readonly required>
+                        <div *ngIf="(addForm.controls.customApplicationId.touched || addFormTouched)  && addForm.controls.customApplicationId.errors?.required"
+                            >
+                            <span class="validation-error">Custom application Id is required</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="formId" class="fw-semibold">Form Id
+                        </label>
+
+                        <input type="text" formControlName="formId" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            [attr.disabled]="true" readonly required>
+                        <div *ngIf="(addForm.controls.formId.touched || addFormTouched)  && addForm.controls.formId.errors?.required"
+                            >
+                            <span class="validation-error">Form Id is required</span>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="eventType" class="fw-semibold">Form mode
+                        </label>
+
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="formMode" required>
+                            <option value="edit">Edit</option>
+                            <option value="submit">Submit</option>
+                            <option value="view">View</option>
+                        </select>
+                        <div *ngIf="(addForm.controls.formMode.touched || addFormTouched)  && addForm.controls.formMode.errors?.required"
+                            >
+                            <span class="validation-error">Form mode is required</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-row align-items-center gap-3 mt-4 justify-content-end">
+                    <button type="submit" mat-flat-button
+                        [ngStyle]="{'cursor': (!addForm.valid? 'not-allowed':'pointer')}"
+                        class="m-3 mb-2 hover-button pdf-save-designer-button">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <span class="font_weight_lg">Add</span>
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</ng-template>
+<ng-template #dynamicTableDialog class="pdf-designer-custom-popup">
+    <div>
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Add dynamic table</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeDynamicTablePropertiesDialog()"> close
+            </span>
+        </div>
+        <div class="mx-3 p-3 f-14 font-color-2">
+            <form [formGroup]="dynamicTablePropertiesForm" #addFormDirective="ngForm"
+                (submit)="addDynamicTablePropertiesToEditor()" novalidate>
+                <div class="row pb-2">
+                    <div class="col-6">
+                        <label for="tableName" class="fw-semibold">Select table
+                            <span class="font-color-19">*</span>
+                        </label>
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="tableName"
+                            (change)="onDynamicTableNameChange($event.target.value)" required>
+                            <option [value]=null disabled selected hidden>Select a table name</option>
+                            <option *ngFor="let table of dynamicTables" [value]="table">
+                                {{table}}</option>
+                        </select>
+
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableName.touched || dynamicTablePropertiesTouched)  && dynamicTablePropertiesForm.controls.tableName.errors?.required"
+                            >
+                            <span class="validation-error">Table name is required</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="tableWidth" class="fw-semibold">Table width
+                        </label>
+                        <input type="number" formControlName="tableWidth" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            placeholder="Enter table width in px">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableWidth.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.tableWidth.dirty && dynamicTablePropertiesForm.controls.tableWidth.hasError('invalidNumber')"
+                            >
+                            <span class="validation-error">Please enter a number</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="headerFontColor" class="fw-semibold">Header font color</label>
+                        <input #dynamicTableFirstField type="text" formControlName="headerFontColor"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" placeholder="Enter hexadecimal color code">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.headerFontColor.touched || dynamicTablePropertiesTouched) && 
+                            (dynamicTablePropertiesForm.controls.headerFontColor.dirty) && dynamicTablePropertiesForm.controls.headerFontColor.hasError('invalidColor')"
+                            >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="headerFontSize" class="fw-semibold">Header font size
+                        </label>
+                        <input type="number" formControlName="headerFontSize" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            placeholder="Enter a number in px">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.headerFontSize.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.headerFontSize.dirty && dynamicTablePropertiesForm.controls.headerFontSize.hasError('invalidNumber')"
+                            >
+                            <span class="validation-error">Please enter a number</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="headerFontBold" class="fw-semibold">Header font bold</label>
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="headerFontBold">
+                            <option [value]=null disabled selected hidden>Select an option</option>
+                            <option [value]=true>Yes</option>
+                            <option [value]=false>No</option>
+                        </select>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="headerBackGroundColor" class="fw-semibold">Header background color
+                        </label>
+                        <input type="text" formControlName="headerBackGroundColor"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" placeholder="Enter hexadecimal color code">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.headerBackGroundColor.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.headerBackGroundColor.dirty && dynamicTablePropertiesForm.controls.headerBackGroundColor.hasError('invalidColor')"
+                            >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="tableBodyFontColor" class="fw-semibold">Body font color</label>
+                        <input type="text" formControlName="tableBodyFontColor"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" placeholder="Enter hexadecimal color code">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableBodyFontColor.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.tableBodyFontColor.dirty && dynamicTablePropertiesForm.controls.tableBodyFontColor.hasError('invalidColor')"
+                            >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="tableBodyFontSize" class="fw-semibold">Body font size
+                        </label>
+                        <input type="number" formControlName="tableBodyFontSize"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" placeholder="Enter a number in px">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableBodyFontSize.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.tableBodyFontSize.dirty && dynamicTablePropertiesForm.controls.tableBodyFontSize.hasError('invalidNumber')"
+                            >
+                            <span class="validation-error">Please enter a number</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="tableBodyAlternateRowColor" class="fw-semibold">Body alternate row color</label>
+                        <input type="text" formControlName="tableBodyAlternateRowColor"
+                            class="bg-3 border-style-1 mt-1 p-2 w-100" placeholder="Enter hexadecimal color code">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableBodyAlternateRowColor.touched || dynamicTablePropertiesTouched)  && 
+                            dynamicTablePropertiesForm.controls.tableBodyAlternateRowColor.dirty && dynamicTablePropertiesForm.controls.tableBodyAlternateRowColor.hasError('invalidColor')"
+                            >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6 pb-2">
+                        <label for="tableBorderColor" class="fw-semibold">Border color
+                        </label>
+                        <input type="text" formControlName="tableBorderColor" class="bg-3 border-style-1 mt-1 p-2 w-100"
+                            placeholder="Enter hexadecimal color code">
+                        <div *ngIf="(dynamicTablePropertiesForm.controls.tableBorderColor.touched || dynamicTablePropertiesTouched)  &&
+                            dynamicTablePropertiesForm.controls.tableBorderColor.dirty && dynamicTablePropertiesForm.controls.tableBorderColor.hasError('invalidColor')"
+                            >
+                            <span class="validation-error">Invalid color format</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="textAlign" class="fw-semibold">Text align</label>
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="textAlign">
+                            <option [value]=null disabled selected hidden>Select an option</option>
+                            <option [value]="'left'">left</option>
+                            <option [value]="'center'">center</option>
+                            <option [value]="'right'">right</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="d-flex flex-row align-items-center gap-3 mt-4 justify-content-end">
+                    <button type="submit" mat-flat-button
+                        [ngStyle]="{'cursor': (!dynamicTablePropertiesForm.valid? 'not-allowed':'pointer')}"
+                        class="m-3 mb-2 hover-button pdf-save-designer-button">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <span class="font_weight_lg">Add</span>
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #tileViewDialog class="pdf-designer-custom-popup">
+    <div>
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Tile view</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeTileViewDialog()"> close
+            </span>
+        </div>
+        <div class="mx-3 p-3 f-14 font-color-2">
+            <form [formGroup]="tileViewFormGroup" #addFormDirective="ngForm" (submit)="tileViewFormGroup.valid && addTileViewToEditor()"
+                novalidate>
+                <div class="row pb-2">
+                    <div >
+                        <label for="customApplicationName" class="fw-semibold">Tile view template
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <select class="bg-3 border-style-1 mt-1 p-2 w-100" formControlName="headerFontBold">
+                            <option [value]=null disabled selected hidden>Select an option</option>
+                            <option [value]=true>Yes</option>
+                            <option [value]=false>No</option>
+                        </select>    
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #dynamicImageDialog class="pdf-designer-custom-popup">
+    <div>
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Dynamic Image</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeDynamicImageDialog()"> close
+            </span>
+        </div>
+        <div class="mx-3 p-3 f-14 font-color-2">
+            <form [formGroup]="dynamicImageFormGroup" #addFormDirective="ngForm" (submit)="dynamicImageFormGroup.valid && addDynamicImageToEditor()"
+                novalidate>
+                <div class="row pb-2">
+                    <div class="col-12 pb-2">
+                        <label for="width" class="fw-semibold">Image name
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <input type="text" formControlName="name"
+                        [placeholder]="'Enter image name'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                    </div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-6 pb-2">
+                        <label for="width" class="fw-semibold">Width
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <input type="text" formControlName="width"
+                        [placeholder]="'Enter image width in px'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                    </div>
+                    <div class="col-6 pb-2">
+                        <label for="height" class="fw-semibold">Height
+                            <span class="font-color-19">*</span>
+                        </label>
+
+                        <input type="text" formControlName="height"
+                        [placeholder]="'Enter image height in px'" class="bg-3 border-style-1 mt-1 p-2 w-100">
+                    </div>
+                </div>
+
+                <div class="d-flex flex-row align-items-center gap-3 mt-4 justify-content-end">
+                    <button type="submit" mat-flat-button
+                        [ngStyle]="{'cursor': (!dynamicTablePropertiesForm.valid? 'not-allowed':'pointer')}"
+                        class="m-3 mb-2 hover-button pdf-save-designer-button">
+                        <div class="bottom-margin-negative">
+                            <span>
+                                <span class="font_weight_lg">Add</span>
+                            </span>
+                        </div>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #templatePermissionsPopUp class="pdf-designer-custom-popup">
+    <div class="template-permissions-container">
+        <div class="d-flex flex-row justify-content-between align-items-start p-3 bg-6 font-color-14">
+            <h4 class="fw-semibold my-4 ms-3">
+                <span class="font-size-24"> Template Permissions</span>
+            </h4>
+            <span class="material-icons-round close-icon cursor-pointer p-2 rounded-circle text-white"
+                (click)="closeTemplatePermissionsDialog()"> close
+            </span>
+        </div>
+        <div mat-dialog-content id="style-1" class="project-dialogContent mx-3 p-3 f-14 font-color-2">
+             
+            <div class="row pb-2" style="justify-content: center;">
+                <div class="col-8">
+                    <mat-form-field class="example-chip-list">
+                        <mat-chip-list #chipListRoles aria-label="Roles selection">
+                            <mat-chip *ngFor="let option of roles" [selectable]="selectable" [removable]="removable"
+                                (removed)="removeRole(option)">
+                                {{option.roleName }}
+                                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                            </mat-chip>
+                            <input placeholder="Add roles" #roleInput [formControl]="rolesCtrl"
+                                [matAutocomplete]="autoRole" [matChipInputFor]="chipListRoles"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
+                                (matChipInputTokenEnd)="addRole($event)">
+                        </mat-chip-list>
+                        <mat-autocomplete #autoRole="matAutocomplete" (optionSelected)="selectedRole($event)">
+                            <mat-option *ngFor="let option of filteredRoles | async " [value]="option">
+                                {{option.roleName }}
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+                </div>
+                <div class="col-3">
+                    <select class="bg-3 border-style-1 mt-1 p-2 w-100 permissions-select" style="padding: 12px 8px !important;
+                                margin-top: 0px !important;" [formControl]="rolesPermCtrl">
+                        <option [value]="'edit'">Edit</option>
+                        <option [value]="'view'">View</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row pb-2" style="justify-content: center;">
+                <div class="col-8">
+                    <mat-form-field class="example-chip-list">
+                        <mat-chip-list #chipListUsers aria-label="Users selection">
+                            <mat-chip *ngFor="let option of users" [selectable]="selectable" [removable]="removable"
+                                (removed)="removeUser(option)">
+                                {{option.userName}}
+                                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                            </mat-chip>
+                            <input placeholder="Add users" #userInput [formControl]="usersCtrl"
+                                [matAutocomplete]="autoUser" [matChipInputFor]="chipListUsers"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
+                                (matChipInputTokenEnd)="addUser($event)">
+                        </mat-chip-list>
+                        <mat-autocomplete #autoUser="matAutocomplete" (optionSelected)="selectedUser($event)">
+                            <mat-option *ngFor="let option of filteredUsers | async " [value]="option">
+                                {{ option.userName}}
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+                </div>
+                <div class="col-3">
+                    <select class="bg-3 border-style-1 mt-1 p-2 w-100 permissions-select" style="padding: 12px 8px !important;
+                                margin-top: 0px !important;" [formControl]="usersPermCtrl">
+                        <option [value]="'edit'">Edit</option>
+                        <option [value]="'view'">View</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row" >
+                <span class="access-text">Roles or people with access</span>
+             </div>
+
+            <div *ngIf="templatePermissions" >
+                <div *ngFor="let permission of templatePermissions ; let i = index">
+                    <div class="row" style="justify-content: center;">
+                        <div class="col-8 gap-2 d-flex align-items-center">
+                            <ng-container *ngIf="permission && permission.roleId">
+                                <div class="contact-profile-image d-flex align-items-center justify-center" [ngStyle]="{'background-color': randomColors[i]}">
+                                    <div class="font-color-14 f-12">{{ permission.roleName | profile }}</div>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="permission && permission.userId">
+                                <div class="contact-profile-image d-flex align-items-center justify-center" [ngStyle]="{'background-color':  randomColors[i]}">
+                                    <div class="font-color-14 f-12">{{ permission.userName | profile }}</div>
+                                </div>
+                            </ng-container>
+                        
+                            <div class="overflow-elipsis padding-y-8 fw-semibold cursor-pointer ml-3" style ="color:rgb(60,64,67)">
+                                <ng-container *ngIf="permission && permission.roleId">
+                                    <span >{{ permission.roleName }}</span>
+                                </ng-container>
+                                <ng-container *ngIf="permission && permission.userId">
+                                    <span >{{ permission.userName }}</span>
+                                </ng-container>
+                            </div>
+                        </div>
+                        
+                            <div class="col-3">
+                                <select [(ngModel)]="permission.permission"class="mt-1 p-2 permissions-select"  
+                                style="width: 100%; padding: 12px 8px !important; margin-top: 0px !important;border:none"
+                                [(ngModel)]="permission.permission" (change)="onPermissionChange($event ,permission)">
+                                    <option [value]="'edit'">Edit</option>
+                                    <option [value]="'view'">View</option>
+                                    <option [value]="'remove'">Remove access</option>
+                                </select>
+                            </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div *ngIf ="(roles && roles.length > 0 ) || (templatePermissions || templatePermissions.length > 0)" class="d-flex flex-row align-items-center gap-3 justify-content-end">
+                <button mat-flat-button (click)="savePermissions()" class="m-3 mb-2 hover-button pdf-save-designer-button">
+                    <div class="bottom-margin-negative">
+                        <span>
+                            <span class="font_weight_lg">Save</span>
+                        </span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-template>

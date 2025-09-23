@@ -1,0 +1,33 @@
+export const moduleLoader: any = {
+   modules: {
+        AdminPackageModule: () => import('app/packageModules/admin-package.module').then(m => m.AdminPackageModule),
+        TrainingMatrixPacakgeModule: () => import('app/packageModules/training-matrix-package.module').then(m => m.TrainingMatrixPacakgeModule),
+        DashboardPackageModule: () => import('app/packageModules/dashboard-package.module').then(m => m.DashboardPackageModule),
+        LeavesManagementPackageModule: () => import('app/packageModules/leavemanagement-package.module').then(m => m.LeavesManagementPackageModule),
+        AppBuilderPacakgeModule: () => import('app/packageModules/app-builder-package.module').then(m => m.AppBuilderPacakgeModule),
+        AuditsPackageModule: () => import('app/packageModules/audits-package.module').then(m => m.AuditsPackageModule),
+        ExpensePackageModule: () => import('app/packageModules/expense-package.module').then(m => m.ExpensePackageModule),
+        PayRollWidgetPackageModule: () => import('app/packageModules/payroll-widgets-package.module').then(m => m.PayRollWidgetPackageModule),
+        ActivityTrackerWidgetPackageModule: () => import('app/packageModules/activity-tracker-widget.module').then(m => m.ActivityTrackerWidgetPackageModule),
+        HrmanagmentPackageModule: () => import('app/packageModules/hr-management-package.module').then(m => m.HrmanagmentPackageModule),
+        InvoicePackageModule: () => import('app/packageModules/invoice-package.module').then(m => m.InvoicePackageModule),
+        DocumentManagementPackageModule: () => import('app/packageModules/documentmanagement-package.module').then(m => m.DocumentManagementPackageModule),
+        AssetmanagementAppPackageModule: () => import('app/packageModules/assetmanagement-app-package.module').then(m => m.AssetmanagementAppPackageModule),
+        PayrollPackageModule: () => import('app/packageModules/payroll-package.module').then(m => m.PayrollPackageModule),        
+        RecruitmentModule: () => import('app/packageModules/recruitment-package.module').then(m => m.RecruitmentModule),
+        CanteenPackageModule: () => import('app/packageModules/canteen-package.module').then(m => m.CanteenPackageModule),
+        FoodOrderPackageModule: () => import('app/packageModules/food-order-package.module').then(m => m.FoodOrderPackageModule),
+        ProjectPackageModule: () => import('app/packageModules/project-management-package.module').then(m => m.ProjectPackageModule),
+        TestRepoPackageModule: () => import('app/packageModules/test-repo-package.module').then(m => m.TestRepoPackageModule),
+        CustomFieldsPackageModule: () => import('app/packageModules/custom-field-package.module').then(m => m.CustomFieldsPackageModule),
+        FeedbackPackageModule: () => import('app/packageModules/feedback-package.module').then(m => m.FeedbackPackageModule),
+        RoleManagementPackageModule: () => import('app/packageModules/role-management-package.module').then(m => m.RoleManagementPackageModule),
+        TimesheetPackageModule: () => import('app/packageModules/time-sheet-package.module').then(m => m.TimesheetPackageModule),
+        StatusReportPackageModule: () => import('app/packageModules/status-reports.module').then(m => m.StatusReportPackageModule),
+        RosterWidgetPackageModule: () => import('app/packageModules/roster-widget-package.module').then(m => m.RosterWidgetPackageModule),
+        AppStorePacakgeModule: () => import('app/packageModules/appStore-package.module').then(m => m.AppStorePacakgeModule),
+        WidgetPackageModule: () => import('app/packageModules/widget-package.module').then(m => m.WidgetPackageModule),
+        ProfileManagementModule: () => import('app/packageModules/profile.module').then(m => m.ProfileManagementModule),
+        TradingWidgetPackageModule: () => import('app/packageModules/trading-widget.module').then(m => m.TradingWidgetPackageModule)
+    }
+};

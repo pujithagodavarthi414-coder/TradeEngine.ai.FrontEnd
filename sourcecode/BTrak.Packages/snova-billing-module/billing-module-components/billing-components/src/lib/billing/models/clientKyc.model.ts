@@ -1,0 +1,54 @@
+export class KYCModel {
+    ClientKycId: string;
+    configurationId: string;
+    configurationName: string;
+    assignedById: string;
+    assignedByUser: string;
+    assignedByImage: string;
+    assignedOn: Date;
+    formJson: string;
+    formData: string;
+    isDraft: boolean;
+    isSubmitted: boolean;
+    isApproved: boolean;
+    approvedBy: string;
+    approvedByName: string;
+    waitingForApproval: boolean;
+    approvedOn: Date;
+    submittedBy: string;
+    submittedByUser: string;
+    submittedOn: Date;
+    includeApproved: boolean;
+    pageSize: number;
+    pageNumber: number;
+    totalNumber: number;
+}
+export class KycConfigurationModel {
+    clientKycId: string;
+    clientKycName: string;
+    formData: string;
+    clientId: string;
+    clientTypeId :any;
+    legalEntityTypeId :any;
+    legalEntityTypeName :any;
+    clientType :string;
+    formJson: string;
+    timeStamp: any;
+    isArchived: boolean;
+    createdByUserId: string;
+    createdBy: string;
+    createdByImage: string;
+    createdDatetime: Date;
+    isDraft: boolean;
+    isFromApp: boolean;
+    considerRole: boolean;
+    selectedRoleIds: any[];
+    selectedLegalEntityIds: any[];
+    roleNames: string;
+    ofUserId: string;
+    companyId: string;
+    kycSubmittedDate: string;
+    userId: string;
+    fullName: string;
+    formBgColor: string;
+}

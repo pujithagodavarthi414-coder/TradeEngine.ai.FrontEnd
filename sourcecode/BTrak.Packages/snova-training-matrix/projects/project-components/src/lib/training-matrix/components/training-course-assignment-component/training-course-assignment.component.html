@@ -1,0 +1,164 @@
+<div *ngIf="canAccess_feature_ViewTrainingAssignments" class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-0 full-width ml-05" fxFlex fxLayoutAlign="start center"
+                    *ngIf="!isEditAppName">
+                    <span class="hide-content-overflow custom-name-bg p-05" (click)="editAppName()"
+                        *ngIf="canAccess_feature_DragApps">
+                        {{ dashboardName }}
+                    </span>
+                    <span class="hide-content-overflow p-05" *ngIf="!canAccess_feature_DragApps">
+                        {{ dashboardName }}
+                    </span>
+                </div>
+                <div class="ml-05 search_goalinput" fxFlex fxLayoutAlign="start center" *ngIf="isEditAppName">
+                    <mat-form-field>
+                        <input matInput class="search_goal" placeholder="{{'WIDGETS.APPNAME' | translate}}"
+                             [(ngModel)]="changedAppName"  (blur)="updateAppName()" (keyup)="keyUpFunction($event)"
+                            matInputAutofocus />
+                    </mat-form-field>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column" fxLayoutAlign="end center">
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput" fxLayoutAlign="start center"
+                        fxLayoutAlign.xs="start center">
+                        <!-- <mat-slide-toggle
+                            [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="searchTrainingCourses();updateExpenseDashboardFilter();">
+                        </mat-slide-toggle> -->
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center" *ngIf="!profilePage">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (keydown)="searchByInput($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close mr-lg-n3" fxLayoutAlign="end center"
+                            fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxFlex="40px" fxLayoutAlign="start center"
+                    *ngIf="!isArchived && canAccess_feature_AddOrUpdateTrainingCourse">
+                    <button mat-icon-button matTooltip="{{ 'TRAININGMANAGEMENT.CREATECOURSE' | translate }}"
+                        (click)="openCreateTrainingCourseDialog(null)"
+                        *ngIf="!isArchived && canAccess_feature_AddOrUpdateTrainingCourse">
+                        <fa-icon icon="plus" class="filter mat-color-accent">
+                        </fa-icon>
+                    </button>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag" fxLayout="column">
+        <div>
+            <kendo-grid [data]="userAssignments" [pageSize]="state.take" [skip]="state.skip" [sort]="state.sort"
+                [filter]="state.filter" [sortable]="true" [pageable]="true" [filterable]="false"
+                (dataStateChange)="dataStateChange($event)" [selectable]="true" [loading]="isAnyOperationIsInprogress"
+                [scrollable]="true">
+                <kendo-grid-column field="userFullName"
+                    title="{{('SOFTLABELS.EMPLOYEELABEL' | translate) + ' ' + ('TRAININGMANAGEMENT.NAME' | translate)}}"
+                    width="250">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div [matTooltip]="dataItem.userFullName" (click)="navigateToProfile(dataItem)">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <app-avatar *ngIf="!dataItem.userProfileImage" style="padding-right:10px;"
+                                        [name]="dataItem.userFullName | removeSpecialCharacters" [isRound]="true"
+                                        size="30" class="pull-left">
+                                    </app-avatar>
+                                    <img class="employee_img" *ngIf="dataItem.userProfileImage"
+                                        src="{{dataItem.userProfileImage}}">
+                                </div>
+                                <div class="col-sm-10">
+                                    <div [matTooltip]="dataItem.userFullName" class="cursor-pointer">
+                                        {{ dataItem.userFullName }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <kendo-grid-command-column field="assignments"
+                    title="{{'TRAININGMANAGEMENT.TRAININGASSIGNMENTS' | translate}}" width="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <mat-chip-list #tagsList>
+                            <mat-chip *ngFor="let assignment of dataItem.assignments" [selectable]="selectable"
+                                [removable]="removable" (removed)="removeAssignment(assignment, dataItem.userId)"
+                                class="assignments-tag">
+                                <span class="hide-content-overflow" matTooltip="{{ assignment.courseName }}"
+                                    matTooltipClass="tooltip-overflow">
+                                    {{ assignment.courseName }}
+                                </span>
+                                <mat-icon matChipRemove
+                                    *ngIf="removable && canAccess_feature_AssignOrUnassignTrainingCourse">cancel
+                                </mat-icon>
+                            </mat-chip>
+                        </mat-chip-list>
+                    </ng-template>
+                </kendo-grid-command-column>
+                <kendo-grid-command-column title="{{'TRAININGMANAGEMENT.ACTION' | translate}}"
+                    *ngIf="canAccess_feature_AssignOrUnassignTrainingCourse" width="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <button class="text-center" *ngIf="canAccess_feature_AssignOrUnassignTrainingCourse"
+                            [matTooltip]="('TRAININGMANAGEMENT.EDITASSIGNMENTS' | translate)" mat-icon-button
+                            [satPopoverAnchorFor]="editTrainingAssignmentsPopover"
+                            #archiveTrainingCoursePopUp="satPopoverAnchor"
+                            (click)="editTrainingAssignmentsPopupOpen(dataItem,archiveTrainingCoursePopUp);$event.stopPropagation();">
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-template>
+                </kendo-grid-command-column>
+            </kendo-grid>
+        </div>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #editTrainingAssignmentsPopover hasBackdrop
+        backdropClass="backdrop-color" verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+        <mat-card class="p-0">
+            <mat-card-title class="text-center mat-bg-primary">
+                <div class="card-title-text mb-1">
+                    {{'TRAININGMANAGEMENT.EDITASSIGNMENTS' | translate}}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <mat-form-field [formGroup]="assignmentsForm">
+                    <mat-label>{{'TRAININGMANAGEMENT.TRAININGCOURSES' | translate}}</mat-label>
+                    <mat-select formControlName="assignments" [(ngModel)]="selectedTrainingCourseIds"
+                        panelClass="dropdown-custom-class" multiple (selectionChange)="assignmentsChange()">
+                        <mat-option #allCoursesSelected (click)="toggleAllCoursesSelected($event)" [value]="0">
+                            {{ 'ACTIVITYTRACKER.SELECTALL' | translate }}</mat-option>
+                        <mat-option [value]="course.id" *ngFor="let course of trainingCourses">
+                            {{ course.courseName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <div class="text-center">
+                    <button class="mr-1" mat-button mat-raised-button color="primary"
+                        [disabled]="isAnyOperationIsInprogress" (click)="configureAssignents();">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'TRAININGMANAGEMENT.ASSIGN' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeEditTrainingAssignmentseDialog();"
+                        [disabled]="isUpsertExpenseInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+<ng-template #addTrainingCourse let-data>
+    <custom-app-add-new-training-course [data]=[data]></custom-app-add-new-training-course>
+</ng-template>
+
+<app-common-message-box *ngIf="!canAccess_feature_ViewTrainingAssignments"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

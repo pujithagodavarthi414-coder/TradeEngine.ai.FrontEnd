@@ -1,0 +1,44 @@
+<mat-card-content class="card-content p-05">
+    <div fxFlex="80" fxFlex.gt-md="700px" fxFlex.md="500px">
+        <mat-form-field class="full-width tags-popup"
+            hintLabel="{{ 'USERSTORY.PLEASEPRESSCOMMAORENTERFORNEXTTAG' | translate }}">
+            <mat-chip-list #tagsList>
+                <mat-chip *ngFor="let tags of userStoryInputTags" [selectable]="selectable" [removable]="removable"
+                    (removed)="removeProjectTags(tags)" class="userstory-tags">
+                    <span class="hide-content-overflow" matTooltip="{{ tags}}" matTooltipClass="tooltip-overflow">
+                        {{tags}}
+                    </span>
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                
+                <input placeholder="{{'USERSTORY.TAGS' | translate}}" [matAutocomplete]="auto" #tagInput
+                    [matChipInputFor]="tagsList" [(ngModel)]="tag"
+                    (keyup)="disabledButton($event.code,$event.target.value)"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (matChipInputTokenEnd)="addUserStoryTags($event)">
+                    <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon>
+            </mat-chip-list>
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedTagValue($event)">
+                <mat-option *ngFor="let tags of (customTagsModel$ | async)" [value]="tags.tagValue">
+                    {{tags.tagValue}}  ({{ tags.formName }})
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+        
+        <div class="text-center p-05">
+            <button type="button" mat-raised-button color="primary" class="mr-1 text-center"
+                [disabled]="(anyOperationIsInProgress$ | async) || (count == 0)"
+                (click)="saveUserStoryTags();">
+                <mat-progress-bar color="primary" mode="indeterminate"
+                    *ngIf="(anyOperationIsInProgress$ | async)">
+                </mat-progress-bar>
+                <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+            </button>
+            
+            <button mat-raised-button class="mr-1" (click)="closeDialog()"
+                [disabled]="(anyOperationIsInProgress$ | async)">
+                <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+        </div>
+    </div>
+</mat-card-content>

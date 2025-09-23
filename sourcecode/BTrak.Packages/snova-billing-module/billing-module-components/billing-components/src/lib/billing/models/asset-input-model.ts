@@ -1,0 +1,29 @@
+export class AssetInputModel {
+    pageNumber: number;
+    pageSize: number;
+    searchText: string;
+    sortBy: string;
+    sortDirectionAsc: boolean;
+    allAssigned: boolean;
+    byUser: boolean;
+    allDamaged: boolean;
+    productDetailsId: string;
+    supplierId: string;
+    assignedToEmployeeId: string;
+    isEmpty: boolean;
+    isVendor: boolean;
+    userId: string;
+    branchId: string;
+    searchAssetCode: string;
+    allPurchasedAssets: boolean;
+    seatingId: string;
+    assetId: string;
+    entityId: string;
+    activeAssignee: boolean;
+    purchasedDate: Date;
+    assignedDate: Date;
+    isUpdateMultipleAssignee: boolean;
+    assetIds: string;
+    approvedByUserId: string;
+    isListOfAssetsPage: boolean;
+}

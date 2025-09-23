@@ -1,0 +1,34 @@
+export class CandidateUpsertModel {
+    isArchived: any;
+    timeStamp: any;
+    candidateId: string;
+    firstName: string;
+    lastName: string;
+    fatherName: string;
+    email: string;
+    profile: string;
+    secondaryEmail: string;
+    mobile: string;
+    phone: string;
+    addressJson: string;
+    currentSalary: string;
+    expectedSalary: string;
+    experienceInYears: number;
+    skypeId: string;
+    assignedToManagerId: string;
+    hiringStatusId: string;
+    countryId: string;
+    currentDesignation: string;
+    sourceId: string;
+    sourcePersonId: string;
+    fax: string;
+    website: string;
+    twitterId: string;
+    description: string;
+    closedById: string;
+    jobOpeningId: string;
+    candidateJobOpeningId: string;
+    candidateJson: any;
+    isJobLink: boolean;
+    isJob: boolean;
+}

@@ -1,0 +1,215 @@
+<div class="testsuite-tab ng-star-inserted" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="5px">
+    <div fxFlex="25" fxFlex.sm="40" fxFlex.md="38">
+        <mat-card class="p-0 mat-card custom-box" style="height: calc(100vh - 110px)!important;" >
+            <div *ngIf="(canAccess_feature_ViewStatusReports)" id="ar-1">
+                <div fxLayout="row wrap" fxLayoutGap="0" class="mb-1 mt-05 ml-05 mr-05">
+                    <div fxFlex="48" fxFlex.sm="48" fxFlex.md="48" class="search_goalinput" ngClass.xs="full-width" id="ar-2">
+                        <input type="text" name="search" class="full-width search_goal"
+                            placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]='searchText'
+                            (keyup)="getStatusReportsFromFilter()">
+                        <span class="close_icon mt-n3" [ngStyle]="{ 'display': !searchText ? 'none' : '' }">
+                            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+                                style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                    </div>
+
+                    <div fxFlex="75px" fxLayoutAlign="end center"
+                        class="select_users goals-selectusers selectuser_counthigh mr-1 m-0">
+                        <span class="members_count" (click)="showUsersList.toggle()" *ngIf="(usersList.length > 1)"
+                            [satPopoverAnchorFor]="showUsersList" [ngClass]="{'countActive': divActivate}">
+                            <fa-icon icon="plus"></fa-icon>
+                        </span>
+                        <div class="project_member" *ngFor="let member of (usersList | slice:0:1);let k=index">
+                            <div (click)="getSelectedMember(member.teamMemberId,k);"
+                                [ngClass]="{memberhide: !isSelectedMembers[k], membershow: isSelectedMembers[k]}"
+                                matTooltip="{{member.teamMemberName}}">
+                                <app-avatar [name]="member.teamMemberName | removeSpecialCharacters"
+                                    [src]='member.profileImage' [isRound]="true" size="30">
+                                </app-avatar>
+                            </div>
+                        </div>
+                        <sat-popover #showUsersList hasBackdrop verticalAlign="below"
+                            horizontalAlign="end" [autoFocus]="false" [restoreFocus]="false">
+                            <mat-card class="p-0">
+                                <div class="projectmembers_list p-03" id="style-1" style="max-height: 175px;">
+                                    <div class="single_projectmember p-05"
+                                        *ngFor="let member of (usersList | slice:1);let j=index"
+                                        [ngClass]="{membershow: isSelected[j]}">
+                                        <div fxLayout="row wrap" fxLayoutAlign="center" style="width: 210px;">
+                                            <div fxFlex="10" class="mt-02">
+                                                <mat-checkbox class="pull-left" [(ngModel)]="isSelected[j]"
+                                                    (change)="GetReportedPerson(member.teamMemberId, isSelected[j],j)">
+                                                </mat-checkbox>
+                                            </div>
+                                            <div fxFlex="15" fxFlex.md="12" class="mr-05">
+                                                <app-avatar matTooltip="{{member.teamMemberName}}"
+                                                    [name]="member.teamMemberName| removeSpecialCharacters"
+                                                    [src]='member.profileImage' [isRound]="true" size="30">
+                                                </app-avatar>
+                                            </div>
+                                            <div fxFlex="70" fxFlex.md="74" class="mt-03">
+                                                <p class="m-0">{{member.teamMemberName}}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </mat-card>
+                        </sat-popover>
+                    </div>
+                    <div fxFlex="30px" class="ml-05" fxLayoutAlign="end center" [satPopoverAnchorFor]="datePopover"
+                        hasBackdrop (click)="datePopover.toggle()">
+                        <div class="mr-05" fxFlex>
+                            <span class="date-filter" id="ar-3">
+                                <fa-icon matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}" icon="filter"
+                                    class="mat-color-accent filter-operation">
+                                </fa-icon>
+                            </span>
+                        </div>
+                        <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                            <mat-card class="filter-data">
+                                <a [ngClass]="{ 'active': (createdOn) }">
+                                    {{'TESTMANAGEMENT.CREATEDDATE' | translate}}:
+                                </a>
+                                <br>
+                                <div class="mr-1 mt-02">
+                                    <mat-form-field class="mr-05">
+                                        <mat-label> {{'TESTMANAGEMENT.CREATEDON' | translate}}</mat-label>
+                                        <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate"
+                                            (click)="picker1.open()" readonly class="date-picker"
+                                            [(ngModel)]="createdOn" (dateChange)="getStatusReportsFromFilter()">
+                                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                        <mat-datepicker #picker1></mat-datepicker>
+                                    </mat-form-field>
+                                </div>
+                                <div class="close_icon date_search mt-1-05">
+                                    <mat-icon *ngIf="createdOn" class="icon-button" aria-hidden="false"
+                                        (click)="closeDateFilter()" style="cursor:pointer">close</mat-icon>
+                                </div>
+                                <div>
+                                    <span class="mr-1">{{ 'STATUSREPORT.UNREAD' | translate }}</span>
+                                    <mat-slide-toggle class="mr-1 archive-switch" [(ngModel)]="isUnread"
+                                        (change)="getStatusReportsFromFilter()"></mat-slide-toggle>
+                                </div>
+                            </mat-card>
+                        </sat-popover>
+                    </div>
+                    <div fxFlex="20px" fxLayoutAlign="start center">
+                        <fa-icon class="filter mat-color-accent" icon="undo" matTooltip="{{'RESET' | translate}}"
+                            (click)="resetAllFilters()" style="cursor: pointer;"></fa-icon>
+                    </div>
+                </div>
+                <div *ngIf="isAnyOperationIsInprogress">
+                    <div class="custom-card" *ngFor="let array of Arr(num).fill(1)">
+                        <mat-card class="project-card project-dtl p-05">
+                            <div fxLayout="row wrap" fxLayoutGap="5px">
+                                <div fxFlex fxFlex="20" class="img-bg loading-bg">
+                                    <div class="img"></div>
+                                </div>
+                                <div fxFlex fxFlex="74">
+                                    <div fxLayout="row wrap" fxLayoutGap="2px">
+                                        <div fxFlex fxFlex="79"><a class="mat-body-1 empty-text loading-bg"></a></div>
+                                        <div fxFlex fxFlex="19" class="text-center"> </div>
+                                    </div>
+                                    <p class="mat-body-1 empty-text loading-bg"></p>
+                                    <p class="mat-small empty-text loading-bg"></p>
+                                </div>
+                            </div>
+                        </mat-card>
+                    </div>
+                </div>
+                <div *ngIf="!isAnyOperationIsInprogress">
+                    <div id="style-1" [ngStyle]="{'height' : statusReportsCount > 20 ?  'calc(100vh - 230px)' : 'calc(100vh - 170px)'}">
+                        <mat-list-item *ngFor="let statusReport of (statusReportsDetails)">
+                            <mat-card class="project-card status-report-card p-05"
+                                (click)="reportDetails(statusReport, true)"
+                                [ngStyle]="{ 'background-color': statusReport.id == selectedReportId ? '#eaeaea' : '' }"
+                                [ngClass]="statusReport.seen == false ? 'report-unread' : ''">
+                                <div fxLayout="row wrap" fxLayoutGap="5px">
+                                    <div fxFlex="26" fxFlex.xl="20" fxFlex.sm="26" fxFlex.md="27" fxFlex.xs="28">
+                                        <app-avatar initialsSize="2" [name]="statusReport.formName" [isRound]="false"
+                                            size="60">
+                                        </app-avatar>
+                                    </div>
+                                    <div fxFlex="70" fxFlex.xl="76" fxFlex.sm="72" fxFlex.md="70" fxFlex.xs="67">
+                                        <div fxLayout="row wrap" fxLayoutGap="2px">
+                                            <div fxFlex="80" class="testsuite-title-overflow">
+                                                <span class="testsuites-on-hover" [matTooltip]="statusReport.fileName"
+                                                    title="{{ 'STATUSREPORT.UPLOADEDFILENAME' | translate }}"
+                                                    matTooltipClass="tooltip-overflow">{{statusReport.fileName}}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div fxLayout="row wrap">
+                                            <div fxFlex=95 class="hide-content-overflow">
+                                                <span class="mat-body-1 person-name">
+                                                    {{statusReport.createdByUserName}}
+                                                </span>
+                                            </div>
+                                            <div fxFlex=5>
+                                                <span>
+                                                    <fa-icon class="float-right report-seen"
+                                                        *ngIf="(statusReport.seen == false)"
+                                                        matTooltip="{{ 'STATUSREPORT.MARKASREAD' | translate }}"
+                                                        (click)="changeSeenStatus(statusReport);$event.stopPropagation();"
+                                                        icon="envelope-open-text">
+                                                    </fa-icon>
+                                                    <fa-icon class="float-right report-seen"
+                                                        *ngIf="(statusReport.seen == true)"
+                                                        matTooltip="{{ 'STATUSREPORT.MARKASUNREAD' | translate }}"
+                                                        (click)="changeSeenStatus(statusReport);$event.stopPropagation();"
+                                                        icon="envelope">
+                                                    </fa-icon>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div fxLayout="row wrap">
+                                            <div fxFlex=100 class="hide-content-overflow">
+                                                <span class="mat-body-1"
+                                                    matTooltip="{{ 'STATUSREPORT.FORMNAME' | translate }}">
+                                                    {{statusReport.formName}}</span>
+                                            </div>
+                                        </div>
+                                        <div fxLayout="row wrap">
+                                            <div fxFlex="90">
+                                                <p class="mat-small hide-content-overflow">
+                                                    {{statusReport.createdDateTime | utcToLocalTime | date: "dd-MMM-yyyy h:mm a"}}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </mat-card>
+                        </mat-list-item>
+                        <mat-card *ngIf="(statusReportsDetails).length === 0" class="p-0 test-display" fxFlex="100"
+                            fxFlex.gt-sm="100">
+                            <div fxLayout="row" fxFlex="100">
+                                <div fxFlex="8" class="p-05">
+                                    <fa-icon icon="info-circle"></fa-icon>
+                                </div>
+                                <div fxFlex="90" class="p-05 ml-1">
+                                    <p class="m-0">
+                                        {{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}
+                                    </p>
+                                </div>
+                            </div>
+                        </mat-card>
+                    </div>
+                </div>
+                <div class="reports-paginator">
+                    <mat-paginator *ngIf="statusReportsCount > 20" [length]="statusReportsCount"
+                        [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="pageSizeOptions"
+                        (page)="getStatusReportsPagination($event)">
+                    </mat-paginator>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+    <div fxFlex>
+        <div>
+            <app-dashboard-component-viewindividualreports [report]="selectedReport">
+            </app-dashboard-component-viewindividualreports>
+        </div>
+    </div>
+</div>

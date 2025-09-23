@@ -1,0 +1,430 @@
+<div fxLayout="row" (click)="getSelectedCandidate(candidate,$event)" (contextmenu)="openContextMenu($event,candidate)"
+  class="userstory-summary "
+  [ngClass]="(candidate.tag) ? 'tag-superagile-summary': 'superagile-summary'"
+  [ngStyle]="{ 'background-color': candidateSelected == true && (selectedCandidateJob == candidate.jobOpeningId || selectedCandidateJob == null || selectedCandidateJob == undefined)? '#e6f5ff' : '' }">
+  <div fxLayout="row" fxFlex="100" class="userstory-list">
+    <div fxFlex="2px" class="userstory-left"
+      [style.backgroundColor]="candidate.isOnTrack ? 'red' : candidate.userStoryStatusColor">
+      &nbsp;
+    </div>
+    <input matInput [value]="true" #accessForUserstoryEdit hidden />
+
+    <div fxLayout="row" fxLayoutAlign="space-between center" fxFlex="4" fxFlex.md="13">
+      <span class="mb-1 mt-1">
+        <fa-icon icon="eye" (click)="getResumePreview();$event.stopPropagation();" class="mat-color-accent"
+          matTooltip="{{'CANDIDATES.PREVIEWRESUME'|translate}}"></fa-icon>
+      </span>
+    </div>
+    <div fxFlex fxLayout="row" class="mr-05 userStory-name-pm" fxLayoutAlign="space-between center">
+      <div fxFlex="30" *ngIf="isSkillBoard">
+        <span class="allgoals_txt userStory-name-control"
+          [ngClass]="(candidate.tag)? 'userStory-tag-control': ''"
+          matTooltip="{{'CANDIDATEJOB.JOBNAME'|translate}}" matTooltipShowDelay="1000"
+          matTooltipClass="tooltip-overflow">
+          <b> {{ candidate.jobOpeningTitle }} </b>
+        </span>
+      </div>
+      <div fxFlex="70" *ngIf="isSkillBoard">
+        <span class="allgoals_txt userStory-name-control"
+          [ngClass]="(candidate.tag)? 'userStory-tag-control': ''"
+          matTooltip="{{ candidate.firstName }} {{candidate.lastName}}" matTooltipShowDelay="1000"
+          matTooltipClass="tooltip-overflow">
+          {{ candidate.firstName }} {{candidate.lastName}}
+        </span>
+      </div>
+
+      <span class="allgoals_txt userStory-name-control" *ngIf="!isSkillBoard"
+        [ngClass]="(candidate.tag)? 'userStory-tag-control': ''"
+        matTooltip="{{ candidate.firstName }} {{candidate.lastName}}" matTooltipShowDelay="1000"
+        matTooltipClass="tooltip-overflow">
+        {{ candidate.firstName }} {{candidate.lastName}}
+      </span>
+    </div>
+    <div fxFlex="20" fxLayoutAlign="space-between center" class="mr-2 hide-content-overflow" fxShow.lt-lg="false" fxShow.gt-md="true">
+      <a matTooltip="{{ candidate.email }}" class="hide-content-overflow">
+        <fa-icon icon="envelope" class="mr-05"></fa-icon> <span>{{candidate.email}}</span>
+      </a>
+    </div>
+    <div fxFlex="10" fxLayoutAlign="space-between center" class="mr-2 hide-content-overflow" fxShow.lt-lg="false" fxShow.gt-md="true">
+      <a matTooltip="{{ candidate.phone }}" class="hide-content-overflow">
+        <fa-icon icon="phone" class="mr-05"></fa-icon> <span>{{candidate.phone}}</span>
+      </a>
+    </div>
+    <div fxFlex="10" fxLayoutAlign="space-between center" class="mr-2 hide-content-overflow" fxShow.lt-lg="false" fxShow.gt-md="true">
+      <a matTooltip="{{'CANDIDATES.ExperienceInyears'|translate}}" class="hide-content-overflow">
+        <span>{{candidate.experienceInYears}}</span>
+      </a>
+    </div>
+    <div fxLayoutAlign="space-between center">
+    <app-avatar class="mr-05 mt-2p" [name]="candidate.firstName | removeSpecialCharacters" [src]="img" [isRound]="true"
+      size="20" (click)="openAssignee()">
+    </app-avatar>
+    </div>
+
+    <div fxFlex="8" fxLayoutAlign="space-between center" class="m-0 mr-05 mt-03 hide-content-overflow" fxShow.lt-lg="false" fxShow.gt-md="true">
+      <a matTooltip="{{ candidate.CandidateUniqueName }}" class="hide-content-overflow"
+        (click)="$event.stopPropagation();navigateToCandidatesPage()">
+        <span [ngClass]="applyClassForUniqueName(candidate.color)"
+          [ngStyle]="{ 'background-color': candidate.color ? candidate.color : ''}">{{candidate.candidateUniqueName}}</span>
+      </a>
+    </div>
+
+    <div fxLayout="row" fxLayoutAlign="space-between center" fxFlex="9" fxFlex.md="13" fxShow.lt-md="false"
+    fxShow.gt-sm="true">
+      <span *ngIf="canAccess_feature_HiredDocuments" class="mb-1 mt-02"
+        matTooltip="{{'CANDIDATEJOB.HIREDDOCUMENTS'|translate}}">
+        <fa-icon icon="envelope-open-text" fxLayoutAlign="center" class="mat-color-accent"
+          [satPopoverAnchorFor]="addHiredpopup" #addHiredPopover="satPopoverAnchor"
+          (click)="AddHiredDocumentPopover(addHiredPopover);$event.stopPropagation()" style="border-radius: 0px !important;font-size: 17px !important;
+        padding-top: 5px !important;"></fa-icon>
+      </span>
+       <span *ngIf="canAccess_feature_SendOfferLetter" class="mb-1 mt-02" matTooltip="{{'OFFERLETTER.SUBMISSIONS'|translate}}">
+        <fa-icon class="mat-color-accent" icon="thumbs-up" fxLayoutAlign="center"
+          [satPopoverAnchorFor]="addSubmissionpopup" #addSubmissionPopover="satPopoverAnchor"
+          (click)="AddSubmissionPopover(addSubmissionPopover);$event.stopPropagation()" style="border-radius: 0px !important;font-size: 17px !important;
+        padding-top: 5px !important;"></fa-icon>
+      </span>
+      <span *ngIf="canAccess_feature_ConvertCamdidateToEmployee" class="mb-1 mr-1 mt-02" 
+        matTooltip="{{ 'CANDIDATES.CONVERTTOEMPLOYEE' | translate }}">
+        <fa-icon class="mat-color-accent" icon="external-link-alt" fxLayoutAlign="center"
+          [satPopoverAnchorFor]="addEmployeePopovers" #addEmployeePopover="satPopoverAnchor"
+          (click)="AddEmployeePopover(addEmployeePopover);$event.stopPropagation()" style="border-radius: 0px !important;font-size: 17px !important;
+      padding-top: 5px !important;"></fa-icon>
+      </span>
+    </div>
+
+    <mat-icon class="more_vert card-control" matTooltip="{{ 'MENU' | translate }}" [matMenuTriggerFor]="EditCandidate"
+      (click)="$event.stopPropagation();" [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+    </mat-icon>
+    <div fxLayoutAlign="space-between center" fxShow.lt-lg="false" fxShow.gt-md="true">
+    <mat-chip fxFlex="15" fxFlex.gt-md="150px" [satPopoverAnchorFor]="inLineEditCandidatePopover"
+      #inLineEditCandidatePopup="satPopoverAnchor"
+      (click)="$event.stopPropagation();saveCandidateStatus(inLineEditCandidatePopup,candidate)"
+      class="ml-05 mr-2 allgoals_process text-center goal-cursor userstory_color mt-03" mat-sm-chip
+      [style.backgroundColor]="candidate.color" matTooltip="{{candidate.hiringStatusName}} ">
+      {{ candidate.hiringStatusName }}
+    </mat-chip>
+    </div>
+
+    <mat-menu class="goal-options" #EditCandidate="matMenu" (click)="$event.stopPropagation()">
+      <div *ngIf="canAccess_feature_ArchiveCandidate">
+        <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="archiveCandidatePopover"
+          #archiveCandidatePopup="satPopoverAnchor"
+          *ngIf="canAccess_feature_EditCandidateDetails && showIcons && !isArchived"
+          (click)="archiveCandidatePopover.open(); $event.stopPropagation()">
+          <mat-icon>archive</mat-icon> {{ 'CANDIDATES.ARCHIVECANDIDATE' | translate }}
+        </button>
+      </div>
+      <div *ngIf="canAccess_feature_ViewCandidates">
+        <button mat-menu-item class="allgoals_icons" (click)="copyLink(); $event.stopPropagation()">
+          <mat-icon>file_copy</mat-icon>{{'USERSTORY.CLICKHERETOCOPYLINK' | translate}}
+        </button>
+      </div>
+      <div *ngIf="canAccess_feature_ViewCandidates">
+        <button mat-menu-item class="allgoals_icons" (click)="openInNewTab(); $event.stopPropagation()">
+          <mat-icon>web_asset</mat-icon>{{'USERSTORY.CLICKHERETOOPENINNEWTAB' | translate}}
+        </button>
+      </div>
+      <button mat-menu-item class="allgoals_icons" (click)="openInterviewProcess(); $event.stopPropagation();"
+        *ngIf="canAccess_feature_LinkInterviewProcess">
+        <mat-icon>link</mat-icon><span>{{ 'INTERVIEWPROCESS.TITLE' | translate }}</span>
+      </button>
+      <button mat-menu-item class="allgoals_icons" (click)="openScheduleInterview(); $event.stopPropagation();"
+        *ngIf="canAccess_feature_ManageCancelInterviewSchedule || canAccess_feature_AddInterviewSchedule">
+        <mat-icon>schedule</mat-icon><span>{{ 'CANDIDATES.SCHEDULORCANCEL' | translate }}</span>
+      </button>
+      <div *ngIf="canAccess_feature_LinkJobOpeningToCandidate && !isJobOpeningDraft && !isJobOpeningClosed">
+        <button mat-menu-item class="allgoals_icons" (click)="openJoBCandidate(); $event.stopPropagation();">
+          <mat-icon>link</mat-icon><span>{{'CANDIDATES.LINKJOB' | translate }}</span>
+        </button>
+      </div>
+    </mat-menu>
+
+    <sat-popover #archiveCandidatePopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+      backdropClass="backdrop-color">
+      <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text p-05">
+            {{ 'CANDIDATES.ARCHIVECANDIDATE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+          {{ 'CANDIDATES.DESIGNA' | translate }} </mat-card-content>
+
+        <div class="text-center p-05">
+          <button mat-raised-button color="primary" class="mr-05"
+            (click)="archivedCandidate(); $event.stopPropagation()" [disabled]="archiveProgress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="archiveProgress">
+            </mat-progress-bar>
+            <fa-icon icon="check" class="mr-05"></fa-icon> {{ 'YES' | translate }}
+          </button>
+          <button mat-raised-button (click)="closeArchiveCandidaatePopup()" [disabled]="archiveProgress">
+            <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'NO' | translate }}
+          </button>
+        </div>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #inLineEditCandidatePopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false"
+      hasBackdrop horizontalAlign="start" backdropClass="backdrop-color">
+
+      <mat-card class="filter-data p-0">
+        <div>
+          <button class="inline_edit_close btn" color="warn" (click)="closeCandidateDialogWindow()">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+          <mat-card-title class="text-center">
+            <div class="card-title-text p-1 mat-bg-primary">
+              {{'GOALS.UPDATESTATUS' |translate}}
+            </div>
+          </mat-card-title>
+          <div class="card-content p-05">
+            <span class="hide-mat-form-label">
+              <mat-form-field class="full-width" (click)="$event.stopPropagation()">
+                <mat-select placeholder="{{'STATUS'|translate}}" [(ngModel)]="candidateStatusId"
+                  (selectionChange)="changeHiringStatus($event.value)">
+                  <mat-option *ngFor="let hiring of hiringStatus" [value]="hiring.hiringStatusId">
+                    {{ hiring.status }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </span>
+          </div>
+        </div>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #addHiredpopup hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text p-05"> {{'CANDIDATEJOB.ADDHIREDDOCUMENT'|translate}}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+          <form [formGroup]="hiredForm" novalidate #basicJobDetailFormDirective="ngForm"
+            (submit)="hiredForm.valid && addHiredDetails()">
+            <div class="card-content p-05 mt-05">
+              <mat-form-field style="width: 100% !important;">
+                <mat-select formControlName="candidateDocumentId" [compareWith]="compareSelectedDocumentFn"
+                  placeholder="{{'DOCUMENT.LISTOFDOCUMENTS'|translate}}" multiple required
+                  (click)="getCandidateDocuments()">
+                  <mat-option #allOptionalSkillsSelected (click)="toggleAllDocumentSelected()" [value]="0">
+                    Select All</mat-option>
+                  <mat-option [value]="document.candidateDocumentId" *ngFor="let document of candidateDocument"
+                    #allOptionalSkillsSelected (click)="toggleDocumentPerOne()">
+                    {{document.document}}
+                  </mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="hiredForm.get('candidateDocumentId').hasError('required') && hiredForm.get('candidateDocumentId').touched">
+                  {{ 'CANDIDATEJOB.HIREDDOCUMENTSREQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+
+            </div>
+            <div class="text-center mt-05">
+              <button mat-raised-button color="primary" class="mr-1" [disabled]="!hiredForm.valid">
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'CANDIDATEJOB.SENDEMAIL' | translate }}
+              </button>
+              <button mat-raised-button (click)="closeHiredPopover(); (false)">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #addSubmissionpopup hasBackdrop backdropClass="backdrop-color" [interactiveClose]="false"
+      verticalAlign="below" horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text p-05"> {{'OFFERLETTER.SUBMISSIONS'|translate}}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+          <form [formGroup]="submissionForm" novalidate #basicJobDetailFormDirective="ngForm"
+            (submit)="submissionForm.valid">
+
+            <div class="card-content p-05 mt-05" fxLayout="column">
+                <div fxLayout="row">
+                  <div>{{'CANDIDATEJOB.DOWNLOADOFFER'|translate}} </div>
+                  <div>&nbsp; &nbsp;</div>
+                  <div>
+                    <mat-slide-toggle class="mr-1 archive-switch" (change)=selectdownload($event)
+                      [checked]="selectedDownload"> </mat-slide-toggle>
+                  </div>
+                </div>
+                  <mat-form-field class="pr-1" (click)="$event.stopPropagation();" *ngIf="selectedDownload">
+                    <input matInput formControlName="offeredDate" [owlDateTimeTrigger]="offeredDatePicker"
+                      [owlDateTime]="offeredDatePicker" required placeholder="{{'OFFERLETTER.OFFERDATE'|translate}}">
+                    <fa-icon icon="calendar" [owlDateTimeTrigger]="offeredDatePicker"
+                      style="float:right;position:absolute;right:0">
+                    </fa-icon>
+                    <owl-date-time #offeredDatePicker></owl-date-time>
+                    <mat-error
+                      *ngIf="submissionForm.get('offeredDate').hasError('required') && submissionForm.get('offeredDate').touched">
+                      {{ 'OFFERLETTER.OFFERDATEREQUIRED' | translate }}
+                    </mat-error>
+                  </mat-form-field>
+                  <div fxFlex="100" fxFlex.sm="100" fxFlex.xs="100" *ngIf="selectedDownload">
+                    <mat-form-field style="width: 100% !important;">
+                      <input matInput formControlName="package" placeholder="{{'OFFERLETTER.PACKAGE'|translate}}" required
+                        type="number" min="0" />
+                        <mat-error
+                          *ngIf="submissionForm.get('package').hasError('required') && submissionForm.get('package').touched">
+                          {{ 'OFFERLETTER.PACKAGEREQUIRED' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                  </div>
+            </div>
+            <div class="custom-hrm-dropzone" style="padding: 10px; width: 350px;" *ngIf="!selectedDownload">
+              <div fxLayout="column">
+                <div *ngIf="storeConfigurations" class="custom-dropzone" ngx-dropzone (change)="filesSelected($event)"
+                  [accept]="fileExtensions" [maxFileSize]="maxFileSize" [disabled]="(anyOperationInProgress)"
+                  [multiple]="false">
+                  <ngx-dropzone-label>
+                    <span> {{'TESTMANAGEMENT.UPLOADFILES' | translate}} </span>
+                  </ngx-dropzone-label>
+                  <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+                    (removed)="onRemove(f)">
+                    <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">{{ f.name }} ({{ f.type
+                      }})
+                    </ngx-dropzone-label>
+                  </ngx-dropzone-preview>
+                </div>
+                <div class="m-05 text-muted" style="text-align: center;">
+                  <span>{{'DOCUMENTMANAGEMENT.ALLOWEDFILEEXTENSIONS' | translate}} :
+                    {{setAllowedFileExtensions()}}</span>
+                </div>
+                <mat-progress-bar color="primary" mode="determinate" [value]="progressValue" *ngIf="progressValue > 0">
+                </mat-progress-bar>
+                <div *ngIf="progressValue > 0">
+                  {{progressValue}}% {{'DOCUMENTMANAGEMENT.COMPLETED' | translate}} (Uploading {{fileCounter}}
+                  {{'DOCUMENTMANAGEMENT.OF' | translate}} {{fileNames.length}} {{'DOCUMENTMANAGEMENT.FILES' |
+                  translate}})
+                </div>
+                <div class="mt-05" fxLayoutAlign="center end">
+                  <button mat-button mat-raised-button color="primary" (click)="saveFiles()"
+                    *ngIf="isButtonVisible && filesPresent"
+                    [disabled]="((anyOperationInProgress) || progressValue > 0)">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(anyOperationInProgress)">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="save"></fa-icon>{{'UPLOAD' | translate}}
+                  </button>
+                  <button class="ml-1" mat-button mat-raised-button (click)="removeAllFiles();"
+                    [disabled]="(anyOperationInProgress)" *ngIf="isButtonVisible && filesPresent">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>{{'DOCUMENTMANAGEMENT.CLEARFILES' | translate}}
+                  </button>
+                </div>
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(getFilesInProgress)">
+                </mat-progress-bar>
+                <ng-container *ngIf="uploadedFilesLength">
+                  <div *ngIf="(uploadedFiles) != null && (uploadedFiles).length > 0">
+                    <div class="mt-05">
+                      <mat-label><b>{{'USERSTORY.UPLOADEDFILES' | translate}}: ({{uploadedFilesLength}})</b>
+                      </mat-label>
+                    </div>
+                    <div class="fileupload-text mb-05" id="style-1">
+                      <mat-list-item *ngFor="let file of (uploadedFiles)">
+                        <mat-label class="userstory-filepath">
+                          <ng-container
+                            *ngIf="(file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF')">
+                            <span class="icon-button" (click)="openPreview(file)">{{file.fileName? file.fileName :
+                              file.filePath}}</span>
+                          </ng-container>
+                          <ng-container
+                            *ngIf="!((file.fileExtension == '.jpeg') || (file.fileExtension == '.jpg') || (file.fileExtension == '.png') || (file.fileExtension == '.gif') || (file.fileExtension == '.JPEG') || (file.fileExtension == '.JPG') || (file.fileExtension == '.PNG') || (file.fileExtension == '.GIF'))">
+                            <span class="icon-button" (click)="downloadFile(file)">{{file.fileName? file.fileName :
+                              file.filePath}}</span>
+                          </ng-container>
+                          <ng-container *ngIf="galleryImages && galleryImages.length > 0">
+                            <ngx-gallery [options]="galleryOptions" [images]="galleryImages" #onlyPreviewGallery>
+                            </ngx-gallery>
+                          </ng-container>
+                        </mat-label>
+                        <fa-icon icon="trash" class="mat-color-accent pull-right mr-05 goal-cursor"
+                          matTooltip="{{'DOCUMENTMANAGEMENT.DELETEFILE' | translate}}"
+                          (click)="deleteSelectedFile(file)">
+                        </fa-icon>
+                      </mat-list-item>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+            <div class="text-center mt-05">
+              <button mat-raised-button color="primary" class="mr-1" (click)="addSubmissionDetails()"
+                *ngIf="!selectedDownload" [disabled]="uploadedFilesLength == 0">
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{'OFFERLETTER.SENDOFFER'|translate}}
+              </button>
+              <button mat-raised-button color="primary" class="mr-1"
+                (click)="downloadOfferLetter(basicJobDetailFormDirective)" *ngIf="selectedDownload"
+                [disabled]="!submissionForm.valid">
+                <fa-icon class="mr-05" icon="download"></fa-icon> {{'CANDIDATEJOB.DOWNLOAD'|translate}}
+              </button>
+              <button mat-raised-button (click)="closeSubmissionPopover(basicJobDetailFormDirective);">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>
+
+    <sat-popover #addEmployeePopovers [autoFocus]="false" hasBackdrop backdropClass="backdrop-color"
+      [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+      horizontalAlign="end">
+      <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+          <div class="card-title-text p-05"> {{'HRMANAGAMENT.ADDEMPLOYEE'|translate}}
+          </div>
+        </mat-card-title>
+        <mat-card-content class="p-05">
+          <div style="margin-top: 5px;text-align: center;">
+            {{'SCHEDULE.DESIGNA'|translate}}
+          </div>
+          <form [formGroup]="interviewTypeForm" #interviewTypeFormDirective="ngForm" novalidate
+            (submit)="interviewTypeForm.valid && addEmployeeIntoSystem(interviewTypeFormDirective)">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="roleId" placeholder="{{'INTERVIEWTYPES.ROLE' | translate }}" multiple
+                required>
+                <mat-option #allRolesSelected (click)="toggleAllRolesSelection()" [value]="0">
+                  {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                <mat-option [value]="role.roleId" *ngFor="let role of roleList; let i = index" #allInterviewsSelected
+                  (click)="toggleRolePerOne()">
+                  {{ role.roleName }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="interviewTypeForm.get('roleId').hasError('required') && interviewTypeForm.get('roleId').touched">
+                {{ 'HRMANAGAMENT.PLEASESELECTROLENUMBER' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="locations" placeholder="{{ 'HRMANAGAMENT.BRANCH' | translate }}" required>
+
+                <mat-option [value]="role.branchId" *ngFor="let role of locationList; let i = index"
+                  #allInterviewsSelected (click)="toggleLocationPerOne()">
+                  {{ role.branchName }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="interviewTypeForm.get('locations').hasError('required') && interviewTypeForm.get('locations').touched">
+                {{ 'ACTIVITYTRACKER.PLEASESELECTBRANCH' | translate }}
+              </mat-error>
+            </mat-form-field>
+            <div class="text-center mt-05">
+              <button [disabled]="!interviewTypeForm.valid" mat-raised-button color="primary" class="mr-1">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isSave"></mat-progress-bar>
+                <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'SAVE' | translate }}
+
+              </button>
+              <button mat-raised-button (click)="closeEmployeePopover(interviewTypeFormDirective); (false)">
+                <fa-icon icon="times" class="mr-05"></fa-icon>{{ 'CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </sat-popover>

@@ -1,0 +1,170 @@
+<div fxLayout="row" (contextmenu)="openContextMenu($event,userStory)" class="userstory-summary superagile-summary"
+    [ngStyle]="{ 'background-color': isSelected == true ? '#e6f5ff' : '' }">
+    <div fxLayout="row" fxFlex="100" class="userstory-list">
+        <div fxFlex="2px" class="userstory-left" [style.backgroundColor]="userStory.userStoryStatusColor">
+            &nbsp;
+        </div>
+        <div fxFlex="70" class="mr-05 userStory-name">
+            <span class="allgoals_txt userStory-name-control" matTooltip="{{ userStory.userStoryName }}"
+                matTooltipShowDelay="1000" matTooltipClass="tooltip-overflow"> {{ userStory.userStoryName }}</span>
+        </div>
+
+        <div fxFlex="20" class="m-0 mr-05 mt-03" *ngIf="userStory.userStoryUniqueName">
+            <a matTooltip="{{ userStory.userStoryUniqueName }}"
+                class="userstory-unique unique-numbers-hover hide-content-overflow"
+                (click)="navigateToUserStoriesPage(userStory);$event.stopPropagation();">
+                <span [ngClass]="applyClassForUniqueName(userStory.userStoryTypeColor)"
+                    [ngStyle]="{ 'background-color': userStory.userStoryTypeColor ? userStory.userStoryTypeColor : ''}">{{userStory.userStoryUniqueName}}</span>
+            </a>
+        </div>
+
+        <mat-icon class="more_vert card-control" matTooltip="{{ 'MENU' | translate }}"
+            [matMenuTriggerFor]="EditUserStory" *ngIf="isArchivePermission" (click)="$event.stopPropagation();"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y">
+        </mat-icon>
+
+        <app-avatar *ngIf="userStory.dependencyUserId"
+            matTooltip="{{ 'USERSTORY.DEPENDENCYON' | translate }} {{ userStory.dependencyName }}" class="mr-05 mt-2p"
+            [name]="userStory.dependencyName | removeSpecialCharacters"
+            [src]="userStory.dependencyProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true" size="20">
+        </app-avatar>
+
+        <app-avatar *ngIf="userStory.bugCausedUserId"
+            matTooltip="{{ 'USERSTORY.CAUSEDBY' | translate }} {{ userStory.bugCausedUserName }}" class="mr-05 mt-2p"
+            [name]="userStory.bugCausedUserName | removeSpecialCharacters"
+            [src]="userStory.bugCausedUserProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true" size="20">
+        </app-avatar>
+
+        <app-avatar matTooltip="{{ 'USERSTORY.ASSIGNEDTO' | translate }} {{ userStory.ownerName }}" class="mt-2p mr-05"
+            [name]="userStory.ownerName | removeSpecialCharacters" *ngIf="userStory.ownerUserId"
+            [src]="userStory.ownerProfileImage | fetchSizedAndCachedImage: '20':''" [isRound]="true" size="20">
+        </app-avatar>
+
+        <app-avatar matTooltip="Owner" [name]="profileImage| removeSpecialCharacters" *ngIf="!userStory.ownerUserId"
+            class="mr-05" [src]='defaultProfileImage' [isRound]="true" size="20">
+        </app-avatar>
+
+        <!-- estimated time & deadline time display in mobile responsive starts-->
+        <div fxFlex="6" fxShow="true" fxShow.gt-sm="false" fxFlex.xs="30px">
+            <h6 class="m-0 mr-0 allgoals_txt" *ngIf="userStory.estimatedTime"
+                [matTooltip]="userStory.totalEstimatedTime | timefilter" matTooltipShowDelay="500">
+
+                {{userStory.totalEstimatedTime | timefilter}}
+            </h6>
+            <div class="ml-1 mt-03" *ngIf="!userStory.estimatedTime">
+                <fa-icon class="allgoals_txt" icon="minus" [matTooltip]="userStory.estimatedTime | timefilter">
+                </fa-icon>
+            </div>
+        </div>
+
+        <!-- <div fxFlex="8" fxShow="true" fxShow.gt-sm="false" fxFlex.xs="50px" class="deadline-overflow">
+        <h6 class="m-0 mr-03 allgoals_txt deadline-date" *ngIf="userStory.deadLineDate">
+
+            <input matInput [value]="userStory.deadLineDate|deadLineDateToIconFilter:userStory.isDateTimeConfiguration" #deadLineDate hidden />
+
+            <span *ngIf="deadLineDate.value == 'arrow-right'">
+                <fa-icon icon="arrow-right" class="mr-05"></fa-icon>
+            </span>
+            <span *ngIf="deadLineDate.value == 'arrow-left'">
+                <fa-icon icon="arrow-left" class="mr-05 absDaysCount"></fa-icon>
+            </span>
+            <span
+                matTooltip="{{ userStory.deadLineDate| date: 'dd-MMM-yyyy'}}">{{userStory.deadLineDate | deadLineDateFilter:userStory.isDateTimeConfiguration}}</span>
+        </h6>
+        <div class="mt-03" *ngIf="!userStory.deadLineDate">
+            <fa-icon class="m-0 mr-05 allgoals_txt" icon="minus"
+                matTooltip="{{ 'USERSTORY.DEADLINEDATE' | translate }}"></fa-icon>
+        </div>
+    </div> -->
+        <!--estimated time & deadline time display in mobile responsive ends-->
+
+
+        <div class="mr-05" fxFlex="10" *ngIf="userStory.estimatedTime">
+            <span class="m-0 ml-05 allgoals_txt text-center" [matTooltip]="userStory.estimatedTime | timefilter"
+                matTooltipShowDelay="500">
+                {{userStory.estimatedTime | timefilter}}
+            </span>
+        </div>
+
+        <!-- <div fxFlex="8"  *ngIf="userStory.deadLineDate">
+        <h6 class="m-0 mr-03 allgoals_txt">
+
+            <input matInput [value]="userStory.deadLineDate|deadLineDateToIconFilter :userStory.isDateTimeConfiguration" #deadLineDate hidden />
+
+            <span *ngIf="deadLineDate.value == 'arrow-right'">
+                <fa-icon icon="arrow-right" class="mr-05"></fa-icon>
+            </span>
+            <span *ngIf="deadLineDate.value == 'arrow-left'">
+                <fa-icon icon="arrow-left" class="mr-05 absDaysCount"></fa-icon>
+            </span>
+            <span [innerHTML]="userStory.deadLineDate | deadLineDateFilter:userStory.isDateTimeConfiguration"
+                matToolTip="userStory.deadLineDate | date: 'dd-MMM-yyyy'"></span>
+        </h6>
+    </div> -->
+
+        <div fxFlex="6" class="ml-1" *ngIf="!userStory.estimatedTime">
+            <div class="ml-1 mt-03">
+                <fa-icon class="allgoals_txt" icon="minus" matTooltip="{{ 'USERSTORY.ESTIMATEDTIME' | translate }}">
+                </fa-icon>
+                <span class="m-0 ml-05 mr-05 allgoals_txt text-center" *ngIf="userStory.totalEstimatedTime">
+                    ({{userStory.totalEstimatedTime | timefilter}})
+                </span>
+            </div>
+        </div>
+        <!-- <div fxFlex="4"  *ngIf="!userStory.deadLineDate" class="deadline-overflow">
+        <div class="mt-03">
+            <fa-icon class="m-0 mr-05 allgoals_txt deadline-date" icon="minus"
+                matTooltip="{{ 'USERSTORY.DEADLINEDATE' | translate }}"></fa-icon>
+        </div>
+    </div> -->
+
+        <mat-chip *ngIf="userStory.transitionDateTime" fxFlex="15" fxFlex.gt-md="130px"
+            class="ml-1 mr-2 allgoals_process userstory_status text-center link-status-small" mat-sm-chip
+            [style.backgroundColor]="userStory.userStoryStatusColor"
+            matTooltip="{{userStory.userStoryStatusName}}  before {{userStory.transitionDateTime | deadLineDateFilter:false}}">
+            {{ userStory.userStoryStatusName }}
+        </mat-chip>
+        <mat-chip *ngIf="!userStory.transitionDateTime" fxFlex="15" fxFlex.gt-md="130px"
+            class="ml-1 mr-2 allgoals_process text-center link-status-small" mat-sm-chip
+            [style.backgroundColor]="userStory.userStoryStatusColor" matTooltip="{{userStory.userStoryStatusName}} ">
+            {{ userStory.userStoryStatusName }}
+        </mat-chip>
+
+        <mat-menu class="goal-options" #EditUserStory="matMenu" (click)="$event.stopPropagation()">
+            <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="archiveUserstoryPopover"
+                #archivePopOver="satPopoverAnchor" *ngIf="isArchivePermission"
+                (click)="archiveUserstoryPopover.open(); $event.stopPropagation();openArchivePopUp()">
+                <mat-icon>archive</mat-icon>
+                {{ 'USERSTORY.ARCHIVEUSERSTORYLINK' | translate }}
+            </button>
+            <button mat-menu-item class="allgoals_icons" (click)="copyLink(); $event.stopPropagation()"
+                *ngIf="isArchivePermission">
+                <mat-icon>file_copy</mat-icon>{{'USERSTORY.CLICKHERETOCOPYLINK' | translate}}
+            </button>
+            <button mat-menu-item class="allgoals_icons" (click)="openInNewTab(); $event.stopPropagation()"
+                *ngIf="isArchivePermission">
+                <mat-icon>web_asset</mat-icon>{{'USERSTORY.CLICKHERETOOPENINNEWTAB' | translate}}
+            </button>
+        </mat-menu>
+
+
+        <!-- archive userstory popover start -->
+        <sat-popover #archiveUserstoryPopover verticalAlign="below" hasBackdrop horizontalAlign="start"
+            backdropClass="backdrop-color">
+            <mat-card class="filter-data p-0">
+                <mat-card-title class="text-center">
+                    <div>
+                        <div class="mat-bg-primary p-05">
+                            {{ 'USERSTORY.ARCHIVEUSERSTORYLINK' | translate}}</div>
+                    </div>
+                </mat-card-title>
+                <p class="p-05 m-0">
+                    {{ 'USERSTORY.AREYOUSUREWANTTODUNLINKTHISWORKITEM' | translate }} </p>
+                <app-pm-component-archive-user-story-link *ngIf="isArchivePopUp" [userStory]="userStory"
+                    [isSprintUserStories]="isSprintUserStories" [userStoryId]="userStoryId"
+                    (closePopup)="closeArchivePopUp();archiveUserstoryPopover.close()">
+                </app-pm-component-archive-user-story-link>
+            </mat-card>
+        </sat-popover>
+        <!-- archive userstory popover end -->
+    </div>

@@ -1,0 +1,414 @@
+<div class="expense-dialog-height" id="style-1" *ngIf="(canAccess_feature_AddOrUpdateExpense)">
+    <div fxFlex fxLayout="row" class="ml-1">
+        <mat-checkbox mat-primary [formControl]="isClamibedByOthers" (change)='checkIsClaimedByOthers()'
+            class="mt-1 mr-1">
+            {{ 'EXPENSEMANAGEMENT.CLAIMONBEHALF' | translate}}
+        </mat-checkbox>
+        <mat-form-field *ngIf="isClamibedByOthers.value == true">
+            <mat-select placeholder="{{'LEAVESLIST.SELECTEMPLOYEENAME' | translate}}" [formControl]="claimedByUser"
+                (selectionChange)="onUserSelected($event)">
+                <mat-select-trigger>
+                    {{selectedMember}}
+                </mat-select-trigger>
+                <div *ngFor="let employee of employeeList">
+                    <div *ngIf="employee.userId != loggedInUserId">
+                        <mat-option [value]="employee.userId">
+                            <app-avatar class="employee_img" *ngIf="!employee.profileImage"
+                                [name]="employee.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                            </app-avatar>
+                            <img class="employee_img" src="{{employee.profileImage}}"
+                                *ngIf="employee.profileImage">{{ employee.fullName}}
+                        </mat-option>
+                    </div>
+                </div>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <form [formGroup]="expenseForm" #formDirective="ngForm"
+        (submit)="expenseForm.valid && upsertExpenses(formDirective)">
+        <div class="p-05">
+            <div formArrayName="addExpenseElement" *ngFor="let item of getExpenseControls(); let i = index;">
+                <div [formGroupName]="i" style="display: flex">
+                    <div fxLayout="row" fxLayoutGap="10px" class="p-05">
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="expenseName" required [matAutocomplete]="auto"
+                                    placeholder="{{'EXPENSEMANAGEMENT.EXPENSENAME' | translate}}"
+                                    (keyup)="disabledButton($event.code,$event.target.value)">
+                                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedExpense($event,i)">
+                                    <mat-option *ngFor="let expense of expenses" [value]="expense.expenseName">
+                                        {{expense.expenseName}}
+                                    </mat-option>
+                                </mat-autocomplete>
+                                <mat-error>
+                                    <span
+                                        *ngIf="item.get('expenseName').hasError('required') && item.get('expenseName').touched">
+                                        {{'EXPENSEMANAGEMENT.EXPENSENAMEREQUIRED' | translate}}</span>
+                                </mat-error>
+                                <mat-error *ngIf="item.get('expenseName').hasError('maxlength')">
+                                    {{ 'EXPENSEMANAGEMENT.EXPENSENAMEMAXLENGTHERROR' | translate }}</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <input formControlName="expenseDate" matInput [matDatepicker]="picker"
+                                    placeholder="{{'EXPENSEMANAGEMENT.EXPENSEDATE' | translate}}"
+                                    (click)="picker.open()" (input)="startDate()" (dateChange)="startDate()" required>
+                                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                <mat-error>
+                                    <span
+                                        *ngIf="item.get('expenseDate').hasError('required') && item.get('expenseDate').touched">
+                                        {{'EXPENSEMANAGEMENT.EXPENSEDATEREQUIRED' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="13" fxLayout="row">
+                            <div fxFlex="90">
+                                <mat-form-field class="full-width">
+                                    <!-- <mat-select formControlName="merchantId"
+                                        placeholder="{{'EXPENSEMANAGEMENT.MERCHANT' | translate}}">
+                                        <mat-option *ngFor="let merchant of merchantsList"
+                                            [value]="merchant.merchantId">
+                                            {{merchant.merchantName}}</mat-option>
+                                    </mat-select> -->
+                                    <input matInput formControlName="merchantId" [matAutocomplete]="auto1"
+                                        placeholder="{{'EXPENSEMANAGEMENT.MERCHANT' | translate}}"
+                                        (blur)="onMerchantBlur($event.target.value,i)"
+                                        (keyup)="searchMerchants($event.code,$event.target.value)">
+                                    <mat-autocomplete #auto1="matAutocomplete"
+                                        [displayWith]="displayMerchantFn.bind(this)"
+                                        (optionSelected)="selectedMerchant($event,i)">
+                                        <mat-option *ngFor="let merchant of merchantsList" [value]="merchant">
+                                            {{merchant.merchantName}}
+                                        </mat-option>
+                                    </mat-autocomplete>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="10" fxFlex.xs="5.5" class="mt-1" *ngIf="(canAccess_feature_ManageMerchant)">
+                                <mat-icon class="add-icon-expense icon-button mat-primary"
+                                    [satPopoverAnchorFor]="addMerchantPopovers" (click)="addMerchantPopovers.open()">
+                                    add_box
+                                </mat-icon>
+                            </div>
+                        </div>
+                        <div fxFlex="13" fxLayout="row">
+                            <div fxFlex="90">
+                                <mat-form-field class="full-width">
+                                    <!-- <mat-select formControlName="expenseCategoryId" required
+                                        placeholder="{{'EXPENSEMANAGEMENT.CATEGORY' | translate}}">
+                                        <mat-option *ngFor="let category of expenseCategories"
+                                            [value]="category.expenseCategoryId">
+                                            {{category.categoryName}}
+                                        </mat-option>
+                                    </mat-select> -->
+                                    <input matInput formControlName="expenseCategoryId" required
+                                        [matAutocomplete]="auto2"
+                                        placeholder="{{'EXPENSEMANAGEMENT.CATEGORY' | translate}}"
+                                        (blur)="onCategoryBlur($event.target.value,i)"
+                                        (keyup)="searchExpenseCategories($event.code,$event.target.value)">
+                                    <mat-autocomplete #auto2="matAutocomplete"
+                                        [displayWith]="displayCategoryFn.bind(this)"
+                                        (optionSelected)="selectedCategory($event,i)">
+                                        <mat-option *ngFor="let category of expenseCategories" [value]="category">
+                                            {{category.categoryName}}
+                                        </mat-option>
+                                    </mat-autocomplete>
+                                    <mat-error>
+                                        <span
+                                            *ngIf="item.get('expenseCategoryId').hasError('required') && item.get('expenseCategoryId').touched">
+                                            {{'EXPENSEMANAGEMENT.CATEGORYREQUIRED' | translate}}</span>
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="10" fxFlex.xs="5.5" class="mt-1"
+                                *ngIf="(canAccess_feature_ManageExpenseCategory)">
+                                <mat-icon class="add-icon-expense icon-button mat-primary"
+                                    [satPopoverAnchorFor]="addCategoryPopovers" (click)="addCategoryPopovers.open()">
+                                    add_box
+                                </mat-icon>
+                            </div>
+                        </div>
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <mat-select formControlName="currencyId" required
+                                    placeholder="{{'EXPENSEMANAGEMENT.CURRENCY' | translate}}">
+                                    <mat-option [value]="currency.currencyId" *ngFor="let currency of currencyList">
+                                        {{currency.currencyName}}</mat-option>
+                                </mat-select>
+                                <mat-error>
+                                    <span
+                                        *ngIf="item.get('currencyId').hasError('required') && item.get('currencyId').touched">
+                                        {{'EXPENSEMANAGEMENT.CURRENCYREQUIRED' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="amount" required amountOnly autocomplete="off"
+                                    placeholder="{{'EXPENSEMANAGEMENT.AMOUNT' | translate}}">
+                                <mat-error>
+                                    <span *ngIf="item.get('amount').hasError('required') && item.get('amount').touched">
+                                        {{'EXPENSEMANAGEMENT.AMOUNTREQUIRED' | translate}}</span>
+                                </mat-error>
+                                <mat-error>
+                                    <span *ngIf="item.get('amount').hasError('maxlength')">
+                                        {{'EXPENSEMANAGEMENT.MAXIMUMAMOUNTERROR' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <!-- <mat-select formControlName="branchId" required
+                                    placeholder="{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}">
+                                    <mat-option [value]="branch.branchId" *ngFor="let branch of branchList">
+                                        {{branch.branchName}}</mat-option>
+                                </mat-select> -->
+                                <input matInput formControlName="branchId" required [matAutocomplete]="auto3"
+                                    placeholder="{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}"
+                                    (blur)="onBranchBlur($event.target.value,i)"
+                                    (keyup)="searchBranches($event.code,$event.target.value)">
+                                <mat-autocomplete #auto3="matAutocomplete" [displayWith]="displayBranchFn.bind(this)"
+                                    (optionSelected)="selectedBranch($event,i)">
+                                    <mat-option *ngFor="let branch of branchList" [value]="branch">
+                                        {{branch.branchName}}
+                                    </mat-option>
+                                </mat-autocomplete>
+                                <mat-error>
+                                    <span
+                                        *ngIf="item.get('branchId').hasError('required') && item.get('branchId').touched">
+                                        {{'EXPENSEMANAGEMENT.BRANCHREQUIRED' | translate}}</span>
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="11">
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="description" autocomplete="off"
+                                    placeholder="{{'EXPENSEMANAGEMENT.DESCRIPTION' | translate}}">
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30px" fxLayout="column" fxLayoutAlign="space-around center" class="ml-05"
+                            fxLayoutGap="8px">
+                            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                                <fa-icon icon="paperclip" class="mat-color-accent filter-operation mt-1"
+                                    matTooltip="{{'DOCUMENTMANAGEMENT.ADDRECEIPTSHERE' | translate}}"
+                                    [satPopoverAnchorFor]="receiptsFileUploadPopover"
+                                    #receiptsFileUploadPopup="satPopoverAnchor"
+                                    (click)="openStepExpectedPopover(i,receiptsFileUploadPopup)"></fa-icon>
+                                <span class="mt-1" *ngIf="item.get('filesCount').value"
+                                    matTooltip="{{'USERSTORY.UPLOADEDFILES' | translate}}">({{item.get('filesCount').value}})</span>
+                                <!-- <span>({{getReceiptsCount(i)}})</span> -->
+                                <a class="icon-hover mt-1"
+                                    matTooltip="{{'EXPENSEMANAGEMENT.ADDANOTHEREXPENSE' | translate}}"
+                                    (click)="addExpenseItem()" *ngIf="getExpenseFormLength() == i">
+                                    <fa-icon icon="plus" class="mat-color-accent"></fa-icon>
+                                </a>
+                                <a class="icon-hover mt-1" matTooltip="{{'EXPENSEMANAGEMENT.REMOVE' | translate}}"
+                                    (click)="removeItemAtIndex(i)" *ngIf="getAddExpenseFormLength() > 1">
+                                    <fa-icon icon="minus" class="mat-color-accent"></fa-icon>
+                                </a>
+                            </div>
+                        </div>
+
+                    
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center center" class="text-center mb-1">
+            <button type="submit"
+                [disabled]="!expenseForm.valid || isUpsertExpenseInprogress || !((isClamibedByOthers.value == true && claimedByUser.value != null) || (isClamibedByOthers.value == false))"
+                mat-button mat-raised-button color="primary" class="mr-1">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertExpenseInprogress">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="save"></fa-icon>{{'BILLINGMANAGEMENT.SAVE' | translate}}
+            </button>
+            <button mat-button mat-raised-button type="button" [disabled]="isUpsertExpenseInprogress"
+                [satPopoverAnchorFor]="confirmationPopOver" #confirmationPopup="satPopoverAnchor"
+                (click)="confirmationPopupOpen(confirmationPopup)">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{'BILLINGMANAGEMENT.CANCEL' | translate}}
+            </button>
+        </div>
+    </form>
+</div>
+
+<sat-popover #receiptsFileUploadPopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closereceiptsPopup()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="mobile-view-popover p-1">
+            <app-dropzone  [getFilesByReferenceId]="getFilesByReferenceId" [referenceId]="referenceId" [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" 
+                [selectedParentFolderId]="referenceId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="isButtonVisible"
+                [placeHolder]="'DOCUMENTMANAGEMENT.ADDRECEIPTSHERE'">
+            </app-dropzone>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #confirmationPopOver hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" interactiveClose="false">
+    <mat-card class="p-0">
+        <mat-card-content>
+            <div class="card-content mb-1 mt-05 ">
+                Unsaved changes will be lost.Are you sure to proceed?
+            </div>
+            <div class="text-center" fxLayout="row" fxLayoutGap="5px" fxLayout.xs="column"
+                fxLayoutAlign.xs="center center">
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeExpenseForm()" color="primary">
+                        <fa-icon class="mr-05" icon="check"></fa-icon> Yes
+                    </button>
+                </div>
+                <div fxFlex.gt-sm="49" fxFlex.xs="100">
+                    <button mat-button mat-raised-button type="button" (click)="closeconfirmationPopup()">
+                        <fa-icon class="mr-05" icon="times"></fa-icon> No
+                    </button>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addCategoryPopovers verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'EXPENSEMANAGEMENT.ADDCATEGORY' | translate}}</div>
+        </mat-card-title>
+        <form [formGroup]="expenseCategoryForm" class="full-width" #formDirective="ngForm" novalidate
+            (submit)="expenseCategoryForm.valid;upsertExpenseCategory(formDirective)">
+            <div class="p-1">
+                <div fxLayout="row" fxLayoutGap="10px">
+                    <div fxFlex="50">
+                        <mat-form-field class="full-width">
+                            <input matInput placeholder="{{'EXPENSEMANAGEMENT.CATEGORYNAME' | translate}}" required
+                                formControlName="expenseCategoryName" autocomplete="off">
+                            <mat-error>
+                                <span
+                                    *ngIf="expenseCategoryForm.get('expenseCategoryName').hasError('required') && expenseCategoryForm.get('expenseCategoryName').touched">
+                                    {{ 'EXPENSECATEGORY.CATEGORYNAMEREQUIREDERROR' | translate }}</span>
+                            </mat-error>
+                            <mat-error *ngIf="expenseCategoryForm.get('expenseCategoryName').hasError('maxlength')">
+                                {{ 'EXPENSECATEGORY.CATEGORYNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="50">
+                        <mat-form-field class="full-width">
+                            <input matInput placeholder="{{'EXPENSEMANAGEMENT.ACCOUNTCODE' | translate}}"
+                                formControlName="accountCode" required autocomplete="off">
+                            <mat-error *ngIf="expenseCategoryForm.get('accountCode').hasError('maxlength')">
+                                {{ 'EXPENSECATEGORY.ACCOUNTCODEMAXLENGTHERROR' | translate }}</mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div fxLayout="row">
+                    <mat-form-field class="full-width">
+                        <textarea matInput placeholder="{{'EXPENSEMANAGEMENT.DESCRIPTION' | translate}}"
+                            formControlName="description"></textarea>
+                        <mat-error *ngIf="expenseCategoryForm.get('description').hasError('maxlength')">
+                            {{ 'EXPENSECATEGORY.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+                    </mat-form-field>
+                </div>
+                <mat-checkbox mat-primary formControlName="isSubCategory">
+                    {{'EXPENSEMANAGEMENT.ISSUBCATEGORY' | translate}}
+                </mat-checkbox>
+            </div>
+            <div class="text-center">
+                <button mat-raised-button class="ml-05 mb-05 mat-primary"
+                    [disabled]="!expenseCategoryForm.valid || isUpsertConfigurationDetailsInprogress"
+                    (click)="addCategoryPopovers.close()">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="isUpsertConfigurationDetailsInprogress">
+                    </mat-progress-bar>
+                    <mat-icon class="mr-05">add</mat-icon>{{'EXPENSEMANAGEMENT.ADD' | translate}}
+                </button>
+                <button mat-raised-button type="button" class="ml-05 mb-05"
+                    (click)="clearExpenseCategoryForm(formDirective);addCategoryPopovers.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>{{'BILLINGMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addReportPopovers verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'EXPENSEMANAGEMENT.ADDREPORT' | translate}}</div>
+        </mat-card-title>
+        <div class="p-1">
+            <mat-form-field class="full-width">
+                <input matInput placeholder="{{'EXPENSEMANAGEMENT.REPORTNAME' | translate}}" autocomplete="off">
+            </mat-form-field>
+        </div>
+        <div>
+            <button mat-raised-button class="ml-05 mb-05" (click)="addReportPopovers.close()">
+                <mat-icon class="mr-05">add</mat-icon>{{'EXPENSEMANAGEMENT.ADD' | translate}}
+            </button>
+            <button mat-raised-button class="ml-05 mb-05" (click)="addReportPopovers.close()">
+                <fa-icon class="mr-05" icon="times"></fa-icon>{{'BILLINGMANAGEMENT.CANCEL' | translate}}
+            </button>
+        </div>
+    </mat-card>
+</sat-popover>
+
+<sat-popover #addMerchantPopovers verticalAlign="below" hasBackdrop horizontalAlign="end" backdropClass="backdrop-color"
+    [interactiveClose]="false">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">{{'EXPENSEMANAGEMENT.ADDMERCHANT' | translate}}</div>
+        </mat-card-title>
+        <form [formGroup]="merchantForm" class="full-width" #formDirective="ngForm" novalidate
+            (submit)="merchantForm.valid;upsertMerchant(formDirective)">
+            <div class="p-1">
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="merchantName" required autocomplete="off"
+                        placeholder="{{'EXPENSEMANAGEMENT.MERCHANTNAME' | translate}}">
+                    <mat-error>
+                        <span
+                            *ngIf="merchantForm.get('merchantName').hasError('required') && merchantForm.get('merchantName').touched">
+                            {{ 'MERCHANT.MERCHANTNAMEREQUIREDERROR' | translate }}</span>
+                    </mat-error>
+                    <mat-error *ngIf="merchantForm.get('merchantName').hasError('maxlength')">
+                        {{ 'MERCHANT.MERCHANTNAMEMAXLENGTHERROR' | translate }}</mat-error>
+                </mat-form-field>
+                <mat-form-field class="full-width">
+                    <input matInput formControlName="description" autocomplete="off"
+                        placeholder="{{'EXPENSEMANAGEMENT.DESCRIPTION' | translate}}">
+                    <mat-error *ngIf="merchantForm.get('description').hasError('maxlength')">
+                        {{ 'MERCHANT.DESCRIPTIONMAXLENGTHERROR' | translate }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div class="text-center">
+                <button mat-raised-button class="ml-05 mb-05 mat-primary" (click)="addMerchantPopovers.close()"
+                    [disabled]="!merchantForm.valid || isUpsertConfigurationDetailsInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="isUpsertConfigurationDetailsInprogress">
+                    </mat-progress-bar>
+                    <mat-icon class="mr-05">add</mat-icon>{{'EXPENSEMANAGEMENT.ADD' | translate}}
+                </button>
+                <button mat-raised-button class="ml-05 mb-05" type="button"
+                    (click)="clearMerchantForm(formDirective);addMerchantPopovers.close()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon>{{'BILLINGMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </form>
+    </mat-card>
+</sat-popover>
+
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrUpdateExpense)"
+    textToDisplay="{{'PERMISSIONMESSAGE' | translate}}">
+</app-common-message-box>

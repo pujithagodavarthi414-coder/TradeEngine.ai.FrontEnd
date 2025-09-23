@@ -1,0 +1,89 @@
+<div class="custom-dialog">
+    <div class="custom-close" mat-dialog-close (click)="onNoClick()">
+        <fa-icon icon="times" class="project-dialog"></fa-icon>
+    </div>
+</div>
+<div mat-dialog-content class="project-dialogContent">
+    <mat-card class="p-0">
+        <div *ngIf="isForConfiguration">
+            <form [formGroup]="probationForm">
+                <div fxLayout="row">
+                    <div fxFlex="45" class="mb-05 ml-1">
+                        <mat-form-field class="full-width">
+                            <input matInput formControlName="formName" type="text"
+                                placeholder="{{ 'PROBATION.PROBATIONNAME' | translate }}" required>
+                            <mat-error *ngIf="probationForm.get('formName').hasError('required')">
+                                {{ 'PROBATION.PROBATIONNAMEISREUIRED' | translate }}
+                            </mat-error>
+                            <mat-error *ngIf="probationForm.get('formName').hasError('maxlength')">
+                                {{ 'PROBATION.PROBATIONNAMEEXCEEDED' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex class="mb-05 ml-1 mr-1">
+                        <mat-form-field class="full-width">
+                            <mat-select formControlName="selectedRoles"
+                                placeholder="{{ 'USERMANAGEMENT.ROLE' | translate }}" multiple required>
+                                <app-select-all [model]="probationForm.get('selectedRoles')" [values]="roleIds">
+                                </app-select-all>
+                                <mat-option [value]="roles.roleId" *ngFor="let roles of rolesDropDown">
+                                    {{ roles.roleName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error
+                                *ngIf="probationForm.get('selectedRoles').hasError('required') && probationForm.get('selectedRoles').touched">
+                                {{ 'APP.SELECTANYROLE' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </form>
+            <div class="probation form-builder-height full-height" id="style-1">
+                <form-builder [form]="formJson" (change)="onChange($event)"></form-builder>
+            </div>
+            <button mat-button mat-raised-button class="m-1 pull-right" color="primary" type="button"
+                [disabled]="(isAnyOperationInProgress || !probationForm.valid)" (click)="UpsertProbation(false)">
+                <fa-icon class="mr-05" icon="save"></fa-icon>{{ 'SAVE' | translate }}
+            </button>
+            <button *ngIf="configurationId == null || isDraft == true" mat-button mat-raised-button
+                class="m-1 pull-right" color="primary" type="button"
+                [disabled]="(isAnyOperationInProgress || !probationForm.valid)" (click)="UpsertProbation(true)">
+                <fa-icon class="mr-05" icon="file"></fa-icon>{{ 'PROBATION.SAVEASDRAFT' | translate }}
+            </button>
+        </div>
+        <mat-card *ngIf="!isForConfiguration" class="p-0 m-0">
+            <mat-card-title class="data-table-header">
+                <div fxLayout="row wrap" fxLayoutGap="0">
+                    <div fxFlex fxLayoutAlign="start center">
+                        <div class="card-title-text pl-05 ml-05">{{ probationName }}</div>
+                    </div>
+                    <div fxFlex="50px" fxLayoutAlign="center center" *ngIf="isForApproval && !isEdit">
+                        <fa-icon icon="edit" class="mat-color-accent pull-right ml-05 goal-cursor"
+                            matTooltip="{{'GENERICFORM.EDITCUSTOMFIELD' | translate}}" (click)="editFormComponent()">
+                        </fa-icon>
+                        <br>
+                    </div>
+                </div>
+            </mat-card-title>
+        </mat-card>
+        <div *ngIf="!isForConfiguration" class="probation-form" id="style-1">
+            <div class="m-1">
+                <div *ngIf="!isEdit">
+                    <formio [form]="formJson" [submission]="formData" [readOnly]="true"></formio>
+                </div>
+                <div *ngIf="isEdit" class="custom-form form-class">
+                    <formio #customFormio [form]="formJson" [submission]="formData" (submit)="onDataSubmit(false)">
+                    </formio>
+                    <button *ngIf="!isForApproval" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                        type="button" (click)="onDataSubmit(true)">
+                        <fa-icon class="mr-05" icon="file"></fa-icon>{{ 'PROBATION.SAVEASDRAFT' | translate }}
+                    </button>
+                </div>
+                <button *ngIf="isForApproval" mat-button mat-raised-button class="m-1 pull-right" color="primary"
+                    type="button" (click)="onDataApproval()">
+                    <fa-icon class="mr-05" icon="thumbs-up"></fa-icon>{{ 'PROBATION.APPROVE' | translate }}
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</div>

@@ -1,0 +1,115 @@
+<div class="p-0">
+    <div class="p-0 m-0 reports-list fit-content-reports-list" id="style-1">
+        <div fxLayout="row" fxLayoutGap="0" class="mb-05 mt-05 ml-05 mr-05">
+            <div fxFlex class="custom-searchbar search-audits">
+                <input type="text" name="search" class="full-width p-03 search_goal"
+                    placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]='searchText'>
+                <div class="close_icon clear-search mt-02">
+                    <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">close
+                    </mat-icon>
+                </div>
+            </div>
+            <!-- <div fxFlex="30px" fxLayoutAlign="end center" [satPopoverAnchorFor]="datePopover" hasBackdrop
+                (click)="datePopover.toggle()">
+                <div class="mr-05" fxFlex>
+                    <span class="pull-right date-filter">
+                        <fa-icon matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}" icon="filter"
+                            class="mat-color-accent filter-operation">
+                        </fa-icon>
+                    </span>
+                </div>
+                <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                    <mat-card class="filter-data">
+                        <a [ngClass]="{ 'active': (dateFrom && dateTo) }">
+                            {{'TESTMANAGEMENT.CREATEDDATE' | translate}}:
+                        </a>
+                        <br>
+                        <div class="mr-1 mt-02">
+                            <mat-form-field class="mr-05">
+                                <mat-label> {{'TESTMANAGEMENT.DATEFROM' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate"
+                                    (click)="picker1.open()" readonly class="date-picker" [(ngModel)]="dateFrom"
+                                    (dateChange)="changeDeadline(dateFrom,dateTo)">
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                            </mat-form-field>
+                            <mat-form-field class="mr-05">
+                                <mat-label> {{'TESTMANAGEMENT.TODATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="dateFrom"
+                                    [max]="maxDate" (click)="picker2.open()" readonly class="date-picker"
+                                    [(ngModel)]="dateTo">
+                                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div class="close_icon date_search mt-1-05">
+                            <mat-icon *ngIf="dateFrom || dateTo" class="icon-button" aria-hidden="false"
+                                (click)="closeDateFilter()" style="cursor:pointer">close</mat-icon>
+                        </div>
+                    </mat-card>
+                </sat-popover>
+            </div> -->
+            <div class="ml-05" fxFlex="35px" fxLayoutAlign="end center" hasBackdrop
+                *ngIf="canAccess_entityType_feature_AddOrUpdateAuditReports && !isArchived">
+                <a class="add-test-case" matTooltip="{{'AUDIT.ADDREPORT' | translate | softLabelsPipe : softLabels}}"
+                    [satPopoverAnchorFor]="addReport" #addReportPopover="satPopoverAnchor"
+                    (click)="openReportDialog(addReportPopover)">
+                    <fa-icon class="mr-05 add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+                </a>
+            </div>
+            <div class="ml-05" fxFlex="35px" fxLayoutAlign="end center" hasBackdrop
+                *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAuditReports">
+                <mat-slide-toggle
+                    [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+                    [(ngModel)]="isArchived" [checked]="isArchived" (change)="loadReports()">
+                </mat-slide-toggle>
+            </div>
+        </div>
+        <div class="p-0">
+            <span *ngIf="!(anyOperationInProgress$ | async)">
+                <mat-list-item
+                    *ngFor="let report of (reportsList$ | async | auditName: searchText: 'auditreport'  | auditArchive: isArchived: 'auditreport')">
+                    <audit-report-item-summary class="full-width" (deleteId)="getDeletedReportId($event)"
+                        [report]="report" (click)="handleClickOnReportItem(report)"
+                        [reportSelected]="report.auditReportId === selectedReportId" [selectedReport]="selectedReport">
+                    </audit-report-item-summary>
+                </mat-list-item>
+                <mat-card
+                    *ngIf="(reportsList$ | async | auditName: searchText: 'auditreport'  | auditArchive: isArchived: 'auditreport').length === 0"
+                    class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                            <p class="m-0" *ngIf="isArchived == false">
+                                {{'AUDIT.NOACTIVEREPORTS' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                            <p class="m-0" *ngIf="!(isArchived == false)">
+                                {{'AUDIT.NOARCHIVEDREPORTS' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                        </div>
+                    </div>
+                </mat-card>
+            </span>
+            <span *ngIf="(anyOperationInProgress$ | async)">
+                <mat-list-item>
+                    <audit-list-loading class="full-width"></audit-list-loading>
+                </mat-list-item>
+            </span>
+        </div>
+    </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #addReport verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.ADDREPORT' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <add-audit-report *ngIf="loadAddReport" (closeReport)="closeReportDialog()">
+        </add-audit-report>
+    </mat-card>
+</sat-popover>

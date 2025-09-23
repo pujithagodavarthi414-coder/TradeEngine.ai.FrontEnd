@@ -1,0 +1,351 @@
+<div class="full-height" *ngIf="canAccess_feature_ViewActivityScreenshots">
+  <mat-divider></mat-divider>
+  <mat-card class="p-02 m-0">
+    <div class="ml-08 mr-08" fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign.xs="center center"
+      fxLayoutGap="10px">
+      <div class="mt-02" fxFlex fxLayout="row wrap" fxFlex.sm="100" fxLayoutAlign="center center">
+        <div fxFlex fxLayout="row wrap" fxLayoutAlign="center center" fxLayoutAlign.xs="center center"
+          fxLayoutAlign.sm="center center" *ngIf="day">
+          <div fxFlex="5" fxFlex.lg="7" fxFlex.md="10" fxFlex.sm="15" fxFlex.lt-sm="10" fxFlex.xs="20">
+            <fa-icon matTooltip="{{'TIMESHEET.ONEWEEKBACKWARD' | translate}}"
+              *ngIf="(!isTrailExpired || !isPreviousDisable) && (dayCount == 7)"
+              (click)="timeSheetDetailsForDay('backward','week')" class="mr-05 icon-button" icon="angle-double-left">
+            </fa-icon>
+            <fa-icon matTooltip="{{'TIMESHEET.ONEDAYBACKWARD' | translate}}"
+              *ngIf="!isTrailExpired || !isPreviousDisable"
+              (click)="timeSheetDetailsForDay('backward','day');previous()" class="mr-05 icon-button"
+              icon="chevron-left">
+            </fa-icon>
+          </div>
+          <div fxFlex="10" fxLayoutAlign="center center" fxFlex.lg="13" fxFlex.md="20" fxFlex.sm="19" fxFlex.lt-sm="30"
+            fxFlex.xs="35">
+            <input matInput [matDatepicker]="picker1" (dateChange)="onDateChange($event)" [max]="maxDate"
+              class="date-picker" (click)="picker1.open()" [(ngModel)]="todayDate" [readonly]="true">
+            <mat-datepicker #picker1></mat-datepicker>
+          </div>
+          <div fxFlex="5" fxFlex.lg="7" fxFlex.md="10" fxFlex.sm="15" fxFlex.lt-sm="20" fxFlex.xs="20"
+            [hidden]="!dispalyForward">
+            <fa-icon matTooltip="{{'TIMESHEET.ONEDAYFORWARD' | translate}}"
+              (click)="timeSheetDetailsForDay('forward','day');next()" class="ml-05 icon-button" icon="chevron-right">
+            </fa-icon>
+            <fa-icon matTooltip="{{'TIMESHEET.ONEWEEKFORWARD' | translate}}"
+              (click)="timeSheetDetailsForDay('forward','week')" class="ml-05 icon-button" icon="angle-double-right">
+            </fa-icon>
+          </div>
+        </div>
+        <div *ngIf="week" fxFlex fxLayoutAlign="center center">
+          <fa-icon (click)="getWeekBasedOnDate('left')" class="icon-button" icon="chevron-left" *ngIf="!isTrailExpired">
+          </fa-icon>
+          <span class="month-display-elsement">&nbsp;&nbsp;&nbsp;&nbsp;{{selectedWeek | date:
+            "MMM-yyyy"}}&nbsp;&nbsp;&nbsp;</span><span *ngIf="weekNumber"
+            class="month-display-elsement">W{{weekNumber}}&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <fa-icon (click)="getWeekBasedOnDate('right')" class="icon-button" icon="chevron-right"
+            [hidden]="!dispalyForward"></fa-icon>
+        </div>
+        <div *ngIf="month" fxFlex fxLayoutAlign="center center">
+          <fa-icon (click)="getScreenshotsBasedOnDate('left')" class="icon-button" icon="chevron-left">
+          </fa-icon>
+          <span class="month-display-elsement">&nbsp;&nbsp;&nbsp;&nbsp;{{selectedMonth | date:
+            "MMM-yyyy"}}&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <fa-icon (click)="getScreenshotsBasedOnDate('right')" class="icon-button" icon="chevron-right"
+            [hidden]="!dispalyForward">
+          </fa-icon>
+        </div>
+        <div *ngIf="dateRange" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px">
+          <div fxFlex="48" fxFlex.sm="50" fxFlex.xs="100">
+            <mat-form-field color="accent">
+              <mat-label>{{ 'PERMISSIONHISTORY.FROMDATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker2" autocomplete="off" (click)="picker2.open()"
+                [min]="minDateOnTrailExpired" (dateChange)="dateFromChanged($event)" class="date-picker"
+                [(ngModel)]="fromDate" [max]="maxDate" [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div fxFlex="47" fxFlex.sm="40" fxFlex.xs="100">
+            <mat-form-field color="accent">
+              <mat-label>{{ 'PERMISSIONHISTORY.TODATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker3" autocomplete="off" [min]="minDate" (click)="picker3.open()"
+                (dateChange)="dateToChanged($event)" class="date-picker" [max]="maxDate" [(ngModel)]="toDate"
+                [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+              <mat-datepicker #picker3></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      <div class="mt-02" fxFlex="30" fxFlex.md="50" fxLayout="row wrap" fxLayoutAlign="end center"
+        fxLayoutAlign.lt-md="center center" fxFlex.sm="100">
+        <div id="screen-3" fxLayout="row wrap">
+          <div class="mb-05">
+            <button mat-raised-button (click)="dayTypeForTimeUsage('day')"
+              color="{{primaryDay}}">{{'ACTIVITYTRACKER.DAY' | translate}}</button>
+          </div>
+          <div class="mb-05">
+            <button mat-raised-button (click)="dayTypeForTimeUsage('week')" *ngIf="!isTrailExpired"
+              color="{{primaryWeek}}">{{'ACTIVITYTRACKER.WEEK' | translate}}</button>
+          </div>
+          <div class="mb-05" *ngIf="false">
+            <button mat-raised-button (click)="dayTypeForTimeUsage('month')"
+              color="{{primaryMonth}}">{{'ACTIVITYTRACKER.MONTH' | translate}}</button>
+          </div>
+          <div class="mb-05" *ngIf="false">
+            <button mat-raised-button (click)="dayTypeForTimeUsage('daterange')"
+              color="{{primaryDateRange}}">{{'ACTIVITYTRACKER.DATERANGE' | translate}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <mat-divider *ngIf="filterStatus()"></mat-divider>
+    <div class="pt-2" *ngIf="filterStatus()" fxLayout="row wrap">
+      <mat-chip disableRipple matRipple *ngIf="fromDate && dateRange" class="ml-05 m03">
+        <div>
+          <b>{{'PERMISSIONHISTORY.FROMDATE' | translate}}:</b>&nbsp;{{fromDate | date:"d MMM, y"}}
+        </div>
+      </mat-chip>
+      <mat-chip disableRipple matRipple *ngIf="toDate && dateRange" class="ml-05 m03">
+        <div>
+          <b>{{'PERMISSIONHISTORY.TODATE' | translate}}:</b>&nbsp;{{toDate | date:"d MMM, y"}}
+        </div>
+      </mat-chip>
+      <mat-chip disableRipple matRipple *ngIf="selectedUser" class="ml-05 m03" fxLayout="row">
+        <div>
+          <b>{{'ACTIVITYTRACKER.USER' | translate}}:</b>&nbsp;{{selectedUser}}
+        </div>
+        <div (click)="resetUser()" class="cursor-pointer ml-01">
+          <fa-icon icon="times" class="times-on-hover"></fa-icon>
+        </div>
+      </mat-chip>
+    </div>
+  </mat-card>
+  <mat-divider></mat-divider>
+  <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+  <div fxLayout="row" fxLayout.sm="column" fxLayout.xs="column">
+    <div fxFlex="18" fxFlex.sm="100" id="screen-2">
+      <mat-progress-bar mode="indeterminate" *ngIf="liveScreenshotInProgress"></mat-progress-bar>
+      <mat-card class="p-0 m-0 tracker-screnshoot-bar">
+        <mat-card-title class="data-table-header">
+          <div class="p-05 search_goalinput" fxLayout="row">
+            <div fxFlex class="custom-position-relative" fxFlex.md="100px">
+              <mat-form-field class="full-width">
+                <input class="search_goal full-width" matInput placeholder="{{'SEARCH' | translate}}"
+                  [(ngModel)]="searchText" (input)="search($event)">
+              </mat-form-field>
+              <span class="close_icon" style="right:10px !important">
+                <span *ngIf="!searchText"></span>
+                <mat-icon *ngIf="searchText" class="icon-button cursor-pointer" aria-hidden="false"
+                  (click)="closeSearch()">
+                  close</mat-icon>
+              </span>
+            </div>
+            <div fxFlex="35px">
+              <fa-icon (click)="resetAllFilters()" mat-icon-button
+                class="filter mat-color-accent goal_clear ml-1 cursor-pointer" icon="undo">
+              </fa-icon>
+            </div>
+            <div fxFlex="30px" class="color-search mt-08">
+              <fa-icon icon="filter" mat-icon-button class="mat-color-accent icon-button ml-05"
+                [matMenuTriggerFor]="sortFilter">
+              </fa-icon>
+              <mat-menu #sortFilter="matMenu" class="p-05 hide-content-overflow" (click)="$event.stopPropagation();"
+                xPosition="after" yPosition="below">
+                <div style="width: 230px">
+                  <div class="color-search" (click)="$event.stopPropagation();">
+                    <mat-form-field class="goal-replan full-width mt-0 custom-select-matform"
+                      (click)="$event.stopPropagation();">
+                      <mat-select placeholder="{{'ACTIVITYTRACKER.SORTBYOPTION' | translate}}" [(ngModel)]="sortBy"
+                        (selectionChange)="onSortChange($event)">
+                        <mat-option [value]=0>{{ 'ACTIVITYTRACKER.SORTBYSCREENSHOTSCOUNTASC' | translate }}
+                        </mat-option>
+                        <mat-option [value]=1>{{ 'ACTIVITYTRACKER.SORTBYSCREENSHOTSCOUNTDESC' | translate }}
+                        </mat-option>
+                        <mat-option [value]=2>{{ 'ACTIVITYTRACKER.SORTBYNAMEASC' | translate }}</mat-option>
+                        <mat-option [value]=3>{{ 'ACTIVITYTRACKER.SORTBYNAMEDESC' | translate }}</mat-option>
+                        <mat-option [value]=4>{{ 'ACTIVITYTRACKER.SORTBYMOSTRECENTLYACTIVE' | translate }}
+                        </mat-option>
+                        <mat-option [value]=5>{{ 'ACTIVITYTRACKER.SORTBYLEASTRECENTLYACTIVE' | translate }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="color-search mb-05 mt-02" (click)="$event.stopPropagation();">
+                    <mat-form-field class="goal-replan full-width mt-0 custom-select-matform"
+                      (click)="$event.stopPropagation();">
+                      <mat-select placeholder="{{'ACTIVITYTRACKER.SORTBYOPTION' | translate}}" [(ngModel)]="isActive"
+                        (selectionChange)="changeState()">
+                        <mat-option [value]=0>{{ 'ACTIVITYTRACKER.SHOWAllUSERS' | translate }}
+                        </mat-option>
+                        <mat-option [value]=1>{{ 'ACTIVITYTRACKER.SHOWACTIVEUSERS' | translate }}
+                        </mat-option>
+                        <mat-option [value]=2>{{ 'ACTIVITYTRACKER.SHOWINACTIVEUSERS' | translate }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-menu>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        </mat-card-title>
+        <mat-card-content class="p-0 listof_roles roles-list tracker-screnshoot-sidebar" id="style-1">
+          <mat-list class="compact-list tracker-users-height" *ngIf="employeeList && employeeList.length > 0"
+            id="style-1">
+            <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+              (click)="getLatestScreenshots('');$event.stopPropagation()" [ngClass]="{ active: selectedAllUser == '' }">
+              <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center" class="entity-role"
+                style="padding: 4px 5px 4px 1rem !important;">
+                <div fxFlex="12">
+                  <app-avatar class="employee_img" [name]="AllUser | removeSpecialCharacters" [isRound]="true"
+                    size="30">
+                  </app-avatar>
+                </div>
+                <div fxFlex="87">
+                  <div fxFlex="100" fxLayout="row" class="hide-content-overflow">
+                    <span fxFlex class="hide-content-overflow pt-2" matTooltipClass="tooltip-overflow"
+                      matTooltip="{{ AllUser | capitalizeFirst : null }}">{{ AllUser | capitalizeFirst : null }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div fxLayout="column" fxLayoutGap="5px" fxLayoutAlign="space-around" class="role-card"
+              *ngFor="let user of employeeList" (click)="getScreenshotsBasedOnUser(user);$event.stopPropagation()"
+              [ngClass]="{ active: selectedUserId == user.userId }">
+              <div fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center" class="entity-role"
+                style="padding: 4px 5px 4px 1rem !important;">
+                <div fxFlex="12">
+                  <a class="tracker-badge-position">
+                    <span *ngIf="user.isLeave" class="leave-badge">B</span>
+                    <span *ngIf="user.isBreak && !user.status && !user.isLeave" class="break-badge">B</span>
+                    <span *ngIf="user.status && !user.isLeave" class="tracking-badge">B</span>
+                    <span *ngIf="!user.status && !user.isBreak && !user.isLeave" class="not-tracking-badge">B</span>
+                    <div *ngIf="user.profileImage != null && user.profileImage != ''">
+                      <app-avatar [src]="user.profileImage" [isRound]="true" size="34">
+                      </app-avatar>
+                    </div>
+                    <div *ngIf="user.profileImage == null || user.profileImage == ''">
+                      <app-avatar [name]="user.userName | removeSpecialCharacters" [isRound]="true" size="34">
+                      </app-avatar>
+                    </div>
+                  </a>
+                </div>
+                <div fxFlex="87">
+                  <div fxFlex="100" fxLayout="row" class="hide-content-overflow">
+                    <span fxFlex class="hide-content-overflow pt-2" matTooltipClass="tooltip-overflow"
+                      matTooltip="{{ user.userName | capitalizeFirst : null }}">{{ user.userName | capitalizeFirst :
+                      null }}&nbsp;</span>
+                    <span class="mt-03">
+                      ({{user.screenshotCount}})
+                    </span>
+                    <span
+                      *ngIf="canAccess_feature_CanViewLiveScreen && user.status && !user.isLeave && user.userId != loggedInUserId"
+                      fxFlex="10" fxFlex.sm="1.4" fxLayoutAlign="center" class="mt-03">
+                      <fa-icon [disabled]="liveScreenshotInProgress"
+                        matTooltip="{{'ACTIVITYTRACKER.TAKELIVESCREENSHOT' | translate}}"
+                        (click)="$event.stopPropagation();getLiveScreenshot(user, true, false)" class="times-on-hover"
+                        icon="camera">
+                      </fa-icon>
+                    </span>
+                    <span
+                      *ngIf="canAccess_feature_CanViewLiveScreen && user.status && !user.isLeave && user.userId != loggedInUserId"
+                      fxFlex="10" fxFlex.sm="1.4" fxLayoutAlign="center" class="mt-03">
+                      <fa-icon [disabled]="liveScreenshotStreamInProgress"
+                        matTooltip="{{'ACTIVITYTRACKER.TAKELIVESCREENSTREAM' | translate}}"
+                        (click)="$event.stopPropagation();getLiveScreenshot(user, false, true)" class="times-on-hover"
+                        icon="video">
+                      </fa-icon>
+                    </span>
+                  </div>
+                  <div fxFlex="100" class="hide-content-overflow pull-right" *ngIf="!user.status && !user.isBreak">
+                    <label class="mb-0 assets-name-control hide-content-overflow"
+                      matTooltip="{{'ACTIVITYTRACKER.ACTIVE'|translate}} {{user?.activeTime | utcToLocalTime | timeago}}"
+                      style="font-size: 10px !important; margin-bottom: -4px;"
+                      *ngIf="user?.activeTime">{{'ACTIVITYTRACKER.ACTIVE'|translate}}&nbsp;{{ user?.activeTime |
+                      utcToLocalTime | timeago }}</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-list>
+          <mat-card *ngIf="!loading && employeeList.length == 0" class="m-0 tracker-screnshoot-bar" id="style-1">
+            <div fxLayoutAlign="center center" fxLayout="column" class="no-data">
+              {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+            </div>
+          </mat-card>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    <div fxFlex="82" fxFlex.sm="100" id="screen-1">
+      <mat-card *ngIf="noData" class="m-0 tracker-screnshoot-bar" id="style-1">
+        <div fxLayoutAlign="center center" fxLayout="column" class="no-data">
+          {{ 'ACTIVITYTRACKER.NODATATODISPLAY' | translate }}
+        </div>
+      </mat-card>
+      <div class="tracker-screnshoot-bar" *ngIf="!noData" id="style-1">
+        <app-fm-component-screenshots [data]="userActivityScreenshots" [isAllUser]="isAllUser"
+          [screenshotPopups]="screen" (isDeleted)="onDeleted($event)">
+        </app-fm-component-screenshots>
+        <div class="pagination-position" style="margin-left: -7px;">
+          <mat-paginator *ngIf="(totalCount > 25)" class="paging-move" [length]="totalCount" [pageSize]="pageSize"
+            [pageIndex]="pageIndex" [pageSizeOptions]="pageSizeOptions" (page)="getScreenshots($event)">
+          </mat-paginator>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="myLiveModal" class="custom-live-modal">
+  <button class="pull-right button-top-screenshot" (click)="closeModal()"
+    matTooltip="{{ 'TIMEPUNCHCARD.CANCEL' | translate }}" mat-icon-button>
+    <fa-icon icon="times" class="mat-color-accent"></fa-icon>
+  </button>
+  <div class="modal-content" style="height: calc(100vh - 131px);">
+    <div class="my-live-slides">
+      <img [src]="liveImageUrl" style="width:100%;height:130%">
+    </div>
+  </div>
+  <div class="activity-screenshot-details">
+    <div class="ml-5">
+      <div fxLayout="row wrap" fxLayout.xs="column" class="mt-05">
+        <div fxFlex="30" fxFlex.sm="40" fxFlex.xs="100" class="mt-1-05">
+          <app-avatar class="employee_img" *ngIf="!liveImageUserProfileImage"
+            [name]="liveImageUserName | removeSpecialCharacters" [isRound]="true" size="30">
+          </app-avatar>
+          <img class="employee_img" src="{{liveImageUserProfileImage}}" *ngIf="liveImageUserProfileImage" />
+          <div>
+            <div><label class="mb-0 activity-screenshot-font-details">{{ liveImageUserName }}</label>
+            </div>
+            <div fxFlex><label class="mb-0 assets-name-control hide-content-overflow activity-screenshot-font-details"
+                matTooltip="{{ liveImageroleName }}">
+                {{ liveImageroleName }}</label>
+            </div>
+            <div class="mb-05"><label class="mb-0 activity-screenshot-font-details">{{ livescreenShotDateTime |
+                timeZoneData: 'medium'}}{{ ' ' + liveScreentimeZoneName }}</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<app-common-message-box *ngIf="!( canAccess_feature_ViewActivityScreenshots)"
+  textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<!-- <ng-template #liveCastDialog let-data>
+  <app-fm-component-live-cast-dialog [data]=[data] [liveImageUrl]="liveImageUrl">
+  </app-fm-component-live-cast-dialog>
+</ng-template>
+
+
+<div id="btrak-preloader" *ngIf="loader">
+  <span class="preloading-text" *ngIf="screenshot">
+    {{ 'ACTIVITYTRACKER.LOADINGLIVESCREENSHOT' | translate }} ({{totalLoadingTime}} {{ 'SECONDS' | translate }})
+  </span>
+  <span class="preloading-text" *ngIf="liveCast">
+    {{ 'ACTIVITYTRACKER.LOADINGLIVESTREAM' | translate }} ({{totalLoadingTime}} {{ 'SECONDS' | translate }})
+  </span>
+  <div id="btrak-loader" *ngIf="loader">
+  </div>
+</div> -->

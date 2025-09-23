@@ -1,0 +1,312 @@
+<mat-card-title class="mrl0604">
+    <div class="card-title-text mat-bg-primary p-05" fxLayoutAlign="center">
+        <span>{{'LEAVEFREQUENCY.LEAVEFREQUENCYTITLE' | translate}}</span>
+    </div>
+</mat-card-title>
+<mat-card class="mrl0604 leave-type-configmat" id="style-1">
+    <div class="p-05">
+        <form [formGroup]="leaveFrequencyForm" #formDirective="ngForm" novalidate
+            (submit)="leaveFrequencyForm.valid && upsertLeaveTypeFrequency()">
+            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px">
+                <div fxFlex="31" fxFlex.lt-md="100">
+                    <mat-form-field class="mt-1 full-width">
+                        <mat-label>{{'LEAVETYPES.FROMDATE' | translate}}</mat-label>
+                        <input matInput [matDatepicker]="picker1" (click)="picker1.open()" autocomplete="off"
+                            class="date-picker" [(ngModel)]="dateFrom" formControlName="dateFrom" [readonly]="true"
+                            (input)="startDate()" (dateChange)="startDate()">
+                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                        <mat-datepicker #picker1></mat-datepicker>
+                        <mat-error>
+                            <span
+                                *ngIf="!leaveFrequencyForm.get('dateFrom').valid && leaveFrequencyForm.get('dateFrom').touched">
+                                {{'LEAVETYPES.FROMDATEREQUIREDERROR' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="31" fxFlex.lt-md="100">
+                    <mat-form-field class="mt-1 full-width">
+                        <mat-label>{{'LEAVETYPES.TODATE' | translate}}</mat-label>
+                        <input matInput [matDatepicker]="picker2" (click)="picker2.open()" autocomplete="off"
+                            [readonly]="true" class="date-picker" [min]="minDateForEndDate" [(ngModel)]="dateTo"
+                            formControlName="dateTo">
+                        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                        <mat-datepicker #picker2></mat-datepicker>
+                        <mat-error>
+                            <span
+                                *ngIf="!leaveFrequencyForm.get('dateTo').valid && leaveFrequencyForm.get('dateTo').touched">
+                                {{'LEAVETYPES.TODATEREQUIREDERROR' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="31" fxFlex.lt-md="100">
+                    <mat-form-field class="mt-1 full-width">
+                        <input matInput formControlName="NoOfLeaves" type="number"
+                            placeholder="{{'LEAVETYPES.NOOFLEAVES' | translate}}" required>
+                        <mat-error *ngIf="leaveFrequencyForm.get('NoOfLeaves').hasError('required')">
+                            {{'LEAVETYPES.NOOFLEAVESREQUIREDERROR' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="7" fxFlex.lt-md="100" class="mt-1">
+                    <button type="submit" mat-button mat-raised-button color="primary" class="mr-1 mt-05"
+                        [disabled]="!leaveFrequencyForm.valid || (isUpsertInProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertInProgress$ | async">
+                        </mat-progress-bar>
+                        {{'LEAVETYPES.ADD' | translate}}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div fxLayout="column">
+        <div fxFlex>
+            <mat-card class="default" class="p-0">
+                <mat-card-title class="full-width">
+                    <div fxFlex fxLayout="row" fxLayout.xs="column">
+                        <div fxFlex="280" fxLayout="row" fxLayoutAlign="start center">
+                            <div fxFlex="80px">
+                                <button type="submit" mat-icon-button (click)="filterClick()"
+                                    matTooltip="{{'HRMANAGAMENT.ADVANCESEARCH' | translate}}">
+                                    <fa-icon icon="filter"
+                                        [ngClass]="{ 'filter-icon': !isOpen ,'mat-color-accent': isOpen }">
+                                    </fa-icon>
+                                </button>
+                                <button mat-icon-button matTooltip="{{'RESET' | translate}}" (click)="resetAllFilters()"
+                                    [hidden]="!isOpen">
+                                    <fa-icon class="filter mat-color-accent" icon="undo"></fa-icon>
+                                </button>
+                            </div>
+                            <div fxFlex class="filter-section" [hidden]="!isOpen">
+                                <ul>
+                                    <li [ngClass]="{ 'active': dateFromFilterIsActive }"
+                                        [satPopoverAnchorFor]="dateFromPopover" (click)="dateFromPopover.open()">
+                                        <a>
+                                            <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.FROMDATE' | translate}}
+                                        </a>
+                                        <sat-popover #dateFromPopover verticalAlign="below" hasBackdrop
+                                            horizontalAlign="start">
+                                            <mat-card class="filter-data" fxFlex="300px">
+                                                <mat-form-field class="full-width">
+                                                    <mat-label>{{'LEAVESLIST.SELECTDATEFROM' | translate}}</mat-label>
+                                                    <input matInput [matDatepicker]="picker5"
+                                                        [(ngModel)]="leaveDateFromFilter" (click)="picker5.open()"
+                                                        autocomplete="off" [readonly]="true"
+                                                        (dateChange)="onLeaveDateFromChange($event)"
+                                                        class="date-picker">
+                                                    <mat-datepicker-toggle matSuffix [for]="picker5">
+                                                    </mat-datepicker-toggle>
+                                                    <mat-datepicker #picker5></mat-datepicker>
+                                                </mat-form-field>
+                                            </mat-card>
+                                        </sat-popover>
+                                    </li>
+                                    <li [ngClass]="{ 'active': dateToFilterIsActive }"
+                                        [satPopoverAnchorFor]="dateToPopover" (click)="dateToPopover.open()">
+                                        <a>
+                                            <mat-icon>arrow_drop_down</mat-icon>{{'LEAVETYPES.TODATE' | translate}}
+                                        </a>
+                                        <sat-popover #dateToPopover verticalAlign="below" hasBackdrop
+                                            horizontalAlign="start">
+                                            <mat-card class="filter-data" fxFlex="300px">
+                                                <mat-form-field class="full-width">
+                                                    <mat-label>{{'LEAVESLIST.SELECTDATETO' | translate}}</mat-label>
+                                                    <input matInput [matDatepicker]="picker6"
+                                                        [(ngModel)]="leaveDateToFilter" (click)="picker6.open()"
+                                                        autocomplete="off" [readonly]="true"
+                                                        (dateChange)="onLeaveDateToChange($event)" class="date-picker"
+                                                        [min]="minDate">
+                                                    <mat-datepicker-toggle matSuffix [for]="picker6">
+                                                    </mat-datepicker-toggle>
+                                                    <mat-datepicker #picker6></mat-datepicker>
+                                                </mat-form-field>
+                                            </mat-card>
+                                        </sat-popover>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div fxFlex="calc(100% - 280px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-slide-toggle matTooltip="{{ 'ARCHIVE' | translate }}" class="mr-1 archive-switch"
+                                [(ngModel)]="isArchived" [checked]="isArchived" (change)="loadLeaveFrequencies()">
+                            </mat-slide-toggle>
+                        </div>
+                    </div>
+                </mat-card-title>
+            </mat-card>
+        </div>
+        <div class="activity-data leave-type-configtable"  fxLayout="column" id="style-1">
+            <ngx-datatable class="btrak" [rows]="leaveFrequenciesList$ | async" [columnMode]="'force'"
+                [headerHeight]="35" [footerHeight]="35" [rowHeight]="35" [externalPaging]="true"
+                [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true"
+                (sort)="onSort($event)" (page)='setPage($event)'
+                [loadingIndicator]="isLoadingLeaveFrequenciesInProgress"
+                [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}">
+                <ngx-datatable-column name="{{'LEAVETYPES.LEAVETYPENAME' | translate}}" [flexGrow]="1" [sortable]="true"
+                    prop="leaveTypeName">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <div class="hide-content-overflowx">
+                            {{ row?.leaveTypeName | translate }}
+
+                        </div>
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{'LEAVETYPES.FROMDATE' | translate}}" [flexGrow]="1" [sortable]="true"
+                    prop="dateFrom">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <div class="hide-content-overflowx">
+                            {{ row?.dateFrom | date: "dd-MMM-yyyy"}}
+                        </div>
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{'LEAVETYPES.TODATE' | translate}}" [flexGrow]="1" [sortable]="true"
+                    prop="dateTo">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        {{row?.dateTo | date: "dd-MMM-yyyy"}}
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{'LEAVETYPES.NOOFLEAVES' | translate}}" [flexGrow]="1" [sortable]="true"
+                    prop="noOfLeaves">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        {{row?.noOfLeaves}}
+                    </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="{{ 'ACTIONS' | translate }}" [flexGrow]="1" [sortable]="false">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <button class="text-center" title="{{ 'HOLIDAY.EDITHOLIDAYTITLE' | translate }}"
+                            *ngIf="!isArchived" [satPopoverAnchorFor]="upsertLeaveFrequencyPopOver"
+                            #upsertLeaveFrequencyPopUp="satPopoverAnchor"
+                            (click)="editLeaveFrequencyPopupOpen(row,upsertLeaveFrequencyPopUp)" mat-icon-button>
+                            <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                        <button class="text-center" title="{{ 'HOLIDAY.ARCHIVEHOLIDAYTITLE' | translate }}"
+                            (click)="deleteLeaveFrequencyPopUpOpen(row,deleteLeaveFrequencyPopUp)"
+                            [satPopoverAnchorFor]="deleteLeaveFrequencyPopover"
+                            #deleteLeaveFrequencyPopUp="satPopoverAnchor" mat-icon-button>
+                            <fa-icon icon="archive" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                        </button>
+                    </ng-template>
+                </ngx-datatable-column>
+            </ngx-datatable>
+        </div>
+    </div>
+
+    <div fxLayout="row" class="pull-right">
+        <button mat-button mat-raised-button class="mr-1" (click)="previousPage()"
+            [disabled]="((isUpsertexistingInProgress$ | async) || !toNext)">
+            {{'LEAVETYPES.PREVIOUS' | translate}}
+        </button>
+        <button type="button" mat-button mat-raised-button class="mr-1" (click)='goToPreviousPage()'
+            [disabled]="((isUpsertexistingInProgress$ | async) || !toNext)">
+            {{'LEAVETYPES.CANCEL' | translate}}
+        </button>
+        <button mat-button mat-raised-button color="primary" class="mr-1" (click)="next()"
+            [disabled]="((isUpsertexistingInProgress$ | async) || !toNext)">
+            {{'LEAVETYPES.SAVEANDPROCEED' | translate}}
+            <i class="fa fa-spin fa-spinner" *ngIf="isUpsertInProgress$ | async"></i>
+        </button>
+    </div>
+</mat-card>
+<sat-popover backdropClass="backdrop-color" #upsertLeaveFrequencyPopOver [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text  mat-bg-primary p-05 mb-1">
+                {{ leaveFrequencyEdit }}</div>
+        </mat-card-title>
+        <mat-card-content class="P-05">
+            <form [formGroup]="leaveFrequencyEditForm" #formDirective="ngForm" novalidate
+                (submit)="leaveFrequencyEditForm.valid && editLeaveTypeFrequency()">
+                <div>
+                    <mat-form-field class="mt-1 full-width">
+                        <mat-label>{{'LEAVETYPES.FROMDATE' | translate}}</mat-label>
+                        <input matInput [matDatepicker]="picker3" (click)="picker3.open()" autocomplete="off"
+                            [readonly]="true" class="date-picker" formControlName="dateFrom" (input)="editToDate()"
+                            (dateChange)="editToDate()">
+                        <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+                        <mat-datepicker #picker3></mat-datepicker>
+                        <mat-error>
+                            <span
+                                *ngIf="!leaveFrequencyEditForm.get('dateFrom').valid && leaveFrequencyEditForm.get('dateFrom').touched">
+                                {{'LEAVETYPES.FROMDATEREQUIREDERROR' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="mt-1 full-width">
+                        <mat-label>{{'LEAVETYPES.TODATE' | translate}}</mat-label>
+                        <input matInput [matDatepicker]="picker4" (click)="picker4.open()" autocomplete="off"
+                            [readonly]="true" class="date-picker" [min]="minDateForEndDate" disabled={{editBool}}
+                            formControlName="dateTo">
+                        <mat-datepicker-toggle matSuffix [for]="picker4"></mat-datepicker-toggle>
+                        <mat-datepicker #picker4></mat-datepicker>
+                        <mat-error>
+                            <span
+                                *ngIf="!leaveFrequencyEditForm.get('dateTo').valid && leaveFrequencyEditForm.get('dateTo').touched">
+                                {{'LEAVETYPES.TODATEREQUIREDERROR' | translate}}</span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="mt-1 full-width">
+                        <input matInput formControlName="noOfLeaves" type="number"
+                            placeholder="{{'LEAVETYPES.NOOFLEAVES' | translate}}" required>
+                        <mat-error *ngIf="leaveFrequencyEditForm.get('noOfLeaves').hasError('required')">
+                            {{'LEAVETYPES.NOOFLEAVESREQUIREDERROR' | translate}}
+                        </mat-error>
+                    </mat-form-field>
+                    <!-- <mat-error *ngIf="isThereAnError">{{ validationMessage }}</mat-error> -->
+                </div>
+                <mat-error *ngIf="( validationMessage )">{{ validationMessage }}</mat-error>
+                <div class="mt-1">
+                    <button type="submit" mat-button mat-raised-button color="primary" class="mr-1"
+                        [disabled]="!leaveFrequencyEditForm.valid || (isUpsertexistingInProgress$ | async)">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isUpsertInProgress$ | async">
+                        </mat-progress-bar>
+                        {{'LEAVETYPES.SAVE' | translate}}
+                        <i class="fa fa-spin fa-spinner" *ngIf="isUpsertInProgress$ | async"></i>
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeLeaveFrequencyPopup(formDirective)" type="button"
+                        [disabled]="( isUpsertexistingInProgress$ | async )">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #deleteLeaveFrequencyPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="!isArchived">
+                {{ 'LEAVEFREQUENCY.ARCHIVELEAVEFREQUENCYTITLE' | translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="isArchived">
+                {{ 'LEAVEFREQUENCY.UNARCHIVELEAVEFREQUENCYTITLE' | translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="!isArchived">
+                {{ 'LEAVEFREQUENCY.ARCHIVELEAVEFREQUENCYTEXT' | translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="isArchived">
+                {{ 'LEAVEFREQUENCY.UNARCHIVELEAVEFREQUENCYTEXT' | translate }}
+            </div>
+            <mat-error *ngIf="( validationMessage )">{{ validationMessage }}</mat-error>
+            <div class="text-center">
+                <button class="mr-1" *ngIf="!isArchived" mat-button mat-raised-button color="primary"
+                    (click)="deleteLeaveFrequency();">
+                    <fa-icon class="mr-05" icon="archive"></fa-icon> {{ 'ARCHIVE' | translate }}
+                </button>
+                <button class="mr-1" *ngIf="isArchived" mat-button mat-raised-button color="primary"
+                    (click)="deleteLeaveFrequency();" [disabled]="( isUpsertexistingInProgress$ | async)">
+                    <mat-progress-bar color="primary" mode="indeterminate"
+                        *ngIf="( isUpsertexistingInProgress$ | async )">
+                    </mat-progress-bar>
+                    <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteLeaveFrequencyDialog();"
+                    [disabled]="( isUpsertexistingInProgress$ | async)">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,291 @@
+<div>
+  <!-- <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(getGoalByIdLoading$ | async)">
+  </mat-progress-bar> -->
+  <mat-card class="p-0 unique-detail-height">
+    <div fxFlex class="mr-05" fxLayoutAlign="end center" *ngIf="isPopover" (click)="closeSatPopover()">
+      <fa-icon class="icon-button" icon="times"></fa-icon>
+    </div>
+    <div fxLayout="row wrap" fxLayout.xs="column" *ngIf="selectedConduct">
+      <div fxFlex class="mt-05" fxLayoutGap="5px" class="goal-unique-page-height" id="style-1">
+        <mat-card-content class="p-0" style="position: relative;">
+          <h6 class="p-05 m-0 unique-details-link ml-05">
+            <a matTooltip="{{ 'AUDITUNIQUE.CLICKHERETOGOTOCONDUCTPAGE' | translate | softLabelsPipe : softLabels}}"
+              class="userstory-unique unique-numbers-hover" (click)="redirectPage(); $event.stopPropagation(); ">
+              {{'AUDIT.CONDUCTS'| translate | softLabelsPipe : softLabels}}
+            </a>&nbsp;/
+            <a class="unique-numbers-cursor-text" (click)="$event.stopPropagation();"
+              matTooltip="{{ selectedConduct.auditConductDescription}}">
+              {{selectedConduct.auditConductName}}
+            </a>
+          </h6>
+          <button *ngIf="canAccess_CanAssignConductTags" mat-icon-button [satPopoverAnchorFor]="editAuditMenuPopover"
+            class="pull-right unique-details-heading mr-05"
+            (click)="editAuditMenuPopover.open(); $event.stopPropagation();"
+            style="position: absolute; top: 0; right: 0; font-size: 1.5rem;">
+            <fa-icon icon="ellipsis-h" class="goal-unique-menu"></fa-icon>
+          </button>
+          <sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background"
+            #editAuditMenuPopover hasBackdrop [interactiveClose]="true" verticalAlign="below"
+            (click)="$event.stopPropagation()" horizontalAlign="end">
+            <mat-card class="filter-data p-0">
+              <button mat-menu-item [satPopoverAnchorFor]="customFields"
+                *ngIf="canAccess_CanAnswerConductLevelCustomFields && haveCustomFields"
+                (click)="openCustomFields() ;$event.stopPropagation()">
+                <mat-icon>assignment</mat-icon> <span>{{'AUDIT.CUSTOMFIELD' | translate}}</span>
+              </button>
+              <button mat-menu-item [satPopoverAnchorFor]="addComment"
+              *ngIf="canAccess_entityType_feature_CanAddAndViewConductLevelComments"
+                      (click)="openAddComment() ;$event.stopPropagation()">
+                      <mat-icon>add_comment</mat-icon> <span>{{'ASSETS.ADDCOMMENT' | translate}}</span>
+                    </button>
+              <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="auditTagsPopover"
+                (click)="$event.stopPropagation();openTagsPopUp()" *ngIf="canAccess_CanAssignConductTags">
+                <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+              </button>
+            </mat-card>
+          </sat-popover>
+          <div fxLayout="row wrap" class="pl-1 m-0" *ngIf="selectedConduct">
+            <div *ngIf="selectedConduct.createdByUserName"
+              class="unique-background-color custom-goal-padding mr-1 mt-05 mb-1">
+              <div fxLayout="row wrap">
+                <div fxFlex fxLayoutAlign="start center" class="hide-content-overflow">
+                  <h6 class="goal-unique-font-bold m-0">
+                    {{ 'AUDITUNIQUE.CREATEDBY' | translate | softLabelsPipe : softLabels}}
+                    &nbsp;</h6>
+                  <app-avatar *ngIf="!selectedConduct.createdByProfileImage"
+                    [name]="selectedConduct.createdByUserName | removeSpecialCharacters" [isRound]="true" size="20">
+                  </app-avatar>
+                  <img class="employee_Unique_img" *ngIf="selectedConduct.createdByProfileImage"
+                    src="{{ selectedConduct.createdByProfileImage }}">
+                  &nbsp;{{ selectedConduct.createdByUserName }}
+                </div>
+              </div>
+            </div>
+            <div *ngIf="selectedConduct.createdDateTime" class="mt-05">
+              <h6 class="unique-background-color p-05 mr-1">
+                {{ 'AUDITUNIQUE.CREATEDDATE' | translate }}&nbsp;{{ selectedConduct.createdDateTime | date: 'dd/MM/yyyy'}}
+              </h6>
+            </div>
+            <div *ngIf="selectedConduct.conductScore" class="mt-05">
+              <h6 class="unique-background-color p-05 mr-1">
+                {{ 'AUDITUNIQUE.CONDUCTSCORE' | translate | softLabelsPipe : softLabels}}&nbsp;
+                {{ selectedConduct.conductScore }}
+              </h6>
+            </div>
+
+            <div *ngIf="selectedConduct.questionsCount" class="mt-05">
+              <h6 class="unique-background-color p-05 mr-1">
+                {{ 'AUDITUNIQUE.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels }} &nbsp;{{ selectedConduct.questionsCount }}
+              </h6>
+            </div>
+            <div *ngIf="compliancePercent" class="mt-05">
+              <h6 class="unique-background-color p-05 mr-1" *ngIf="isRed"
+                style="background-color: #d97373; color: whitesmoke;">
+                {{'AUDIT.COMPLIANCEPERCENT' | translate}}: {{compliancePercent}}%
+              </h6>
+              <h6 class="unique-background-color p-05 mr-1" *ngIf="isAmber"
+                style="background-color: #ffbf00; color: whitesmoke;">
+                {{'AUDIT.COMPLIANCEPERCENT' | translate}}: {{compliancePercent}}%
+              </h6>
+              <h6 class="unique-background-color p-05 mr-1" *ngIf="isGreen"
+                style="background-color: #65bb63; color: whitesmoke;">
+                {{'AUDIT.COMPLIANCEPERCENT' | translate}}: {{compliancePercent}}%
+              </h6>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="m-0 ml-05"
+            *ngIf="(auditTagsModels && auditTagsModels.length > 0) || (conductTagsModels && conductTagsModels.length > 0)">
+            <div fxFlex class="ml-05">
+              <h6 class="goal-unique-font-bold m-0">
+                {{'USERSTORY.TAGS' | translate}}:
+              </h6>
+            </div>
+          </div>
+          <div fxLayout="row wrap" class="m-0 ml-1"
+            *ngIf="(auditTagsModels && auditTagsModels.length > 0) || (conductTagsModels && conductTagsModels.length > 0)">
+            <div class="tags-unique-height ml-05" style="display: flex;">
+              <div *ngIf="conductTagsModels && conductTagsModels.length > 0">
+                <div *ngFor="let tag of conductTagsModels" class="tag-unque-displaygoaltag mt-08">
+                  <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag.tagName }}"
+                    matTooltipClass="tooltip-overflow" style="background-color: #a1b466; color: white;">
+                    {{tag.tagName}}
+                  </span>
+                </div>
+              </div>
+              <div *ngIf="auditTagsModels && auditTagsModels.length > 0">
+                <div *ngFor="let tag of auditTagsModels" class="tag-unque-displaygoaltag mt-08">
+                  <span class="hide-content-overflow tag-input-custom" matTooltip="{{ tag.tagName }}"
+                    matTooltipClass="tooltip-overflow">
+                    {{tag.tagName}}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <as-split direction="horizontal" unit="percent" gutterSize="5"
+            [hidden]="!(selectedConduct && !loadDocuments)">
+            <as-split-area size="25" minSize="10" maxSize="50">
+              <conduct-category-list-view (selectedConductCategoryData)="getSelectedConductCategoryData($event)"
+                (loadConductCategoryRelatedData)="getLoadConductCategoryRelatedData($event)"
+                (hierarchicalQuestions)="getHierarchicalQuestions($event)" [selectedConduct]="selectedConduct"
+                [categorySelected]="categorySelected" [loadConductRelatedData]="loadConductRelatedData">
+              </conduct-category-list-view>
+            </as-split-area>
+            <as-split-area size="75" minSize="90" maxSize="50" *ngIf="categoryData">
+              <div fxFlex="100" *ngIf="selectedConduct && categoryData">
+                <conduct-questions-list-view (questionPreview)="getQuestionStatusPreview($event)"
+                  (documents)="getDocumentsView($event)" [loadConductRelatedData]="loadConductRelatedData"
+                  [selectedConduct]="selectedConduct" [loadConductCategoryRelatedData]="loadConductCategoryRelatedData"
+                  [categorySelected]="categoryData" [categoryTemporaryData]="categoryTemporaryData"
+                  [selectedQuestion]="selectedQuestionFromPreview" [isHierarchical]="isHierarchical">
+                </conduct-questions-list-view>
+              </div>
+            </as-split-area>
+          </as-split>
+        </mat-card-content>
+      </div>
+      <div fxFlex="30" *ngIf="showQuestionStatusPreview && !loadDocuments">
+        <!-- <mat-progress-bar color="primary" mode="indeterminate">
+        </mat-progress-bar> -->
+        <div fxFlex="100">
+          <conduct-question-operation (closePreview)="closePreviewDialog()" [question]="showQuestionStatusPreview"
+            [selectedConduct]="selectedConductData" [isHierarchical]="isHierarchical" [fromDialog]="true"
+            (questionPreview)="getQuestionStatusPreview($event)">
+          </conduct-question-operation>
+        </div>
+      </div>
+      <div fxFlex="80" *ngIf="loadDocuments && documentsModuleLoaded" style="position: relative;">
+        <div style="position: absolute; right: 5px; top: 10px;" *ngIf="auditDocumentId">
+          <fa-icon icon="ellipsis-v" [satPopoverAnchorFor]="editThreeDotsPopover"
+            (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+            matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}" style="cursor: pointer; font-size: 16px;">
+          </fa-icon>
+        </div>
+        <div style="position: absolute; right: 5px; top: 25px;" *ngIf="conductDocumentId">
+          <fa-icon icon="ellipsis-v" [satPopoverAnchorFor]="editThreeDotsPopover"
+            (click)="$event.stopPropagation();editThreeDotsPopover.open()" class="goal-unique-menu"
+            matTooltip="{{ 'PROJECTS.MOREOPTIONS' | translate}}" style="cursor: pointer; font-size: 16px;">
+          </fa-icon>
+        </div>
+        <ndc-dynamic [ndcDynamicFactory]="documentStoreComponent.component"
+          [ndcDynamicComponent]="documentStoreComponent.component" [ndcDynamicInjector]="injector"
+          [ndcDynamicInputs]="documentStoreComponent.inputs" [ndcDynamicOutputs]="documentStoreComponent.outputs">
+        </ndc-dynamic>
+      </div>
+    </div>
+  </mat-card>
+</div>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+  hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item (click)="normalView();closeMenuPopover();">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="bars"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'AUDIT.NORMALVIEW' | translate}}
+          </div>
+        </div>
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #customFields verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeCustomFieldsPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'AUDIT.CUSTOMFIELD' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content id="style-1" *ngIf="conductRequiredData" style="width: 500px; max-height: 250px;">
+      <audits-customfields [selectedAudit]=null [selectedConduct]="conductRequiredData" [fileType]="'conduct'">
+      </audits-customfields>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #auditTagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="start" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(tagsOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog()">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-1 mat-bg-primary">
+          {{'USERSTORY.ADDTAGS' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="card-content p-05">
+        <div fxFlex="450px">
+          <mat-form-field class="full-width tags-popup" hintLabel="{{ 'AUDIT.PLEASESELECT' | translate }}">
+            <mat-chip-list #tagsList>
+              <mat-chip *ngFor="let tags of conductInputTags" [selectable]="selectable" [removable]="removable"
+                (removed)="removeAuditTags(tags)" class="userstory-tags">
+                <span class="hide-content-overflow">
+                  {{tags.tagName}}
+                </span>
+                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+              </mat-chip>
+              <!-- [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addUserStoryTags($event)" -->
+              <input placeholder="{{'USERSTORY.TAGS' | translate}}" [matAutocomplete]="auto" #tagInput
+                [matChipInputFor]="tagsList" [(ngModel)]="tag" (keyup)="searchTags($event.target.value)">
+              <!-- <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon> -->
+            </mat-chip-list>
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedTagValue($event)">
+              <mat-option *ngFor="let tags of (customTagsModel$ | async)" [value]="tags.tagId">
+                {{ tags.tagName }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <div class="text-center p-05">
+            <button type="button" mat-raised-button color="primary" class="mr-1 text-center" [disabled]="disableTag"
+              (click)="saveAuditTags();">
+              <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="(tagOperationInProgress$ | async) || (conductOperationInProgress$ | async)">
+              </mat-progress-bar>
+              <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+            </button>
+            <button mat-raised-button class="mr-1" (click)="closeTagsDialog()">
+              <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #addComment verticalAlign="below" hasBackdrop [interactiveClose]="false"
+horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeAddCommentPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'ASSETS.ADDCOMMENT' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content id="style-1" *ngIf="conductRequiredData" style="width: 500px; max-height: 250px;">
+      <snovasys-comments *ngIf="conductRequiredData.conductId" [receiverId]="conductRequiredData.conductId"
+        [componentModel]="componentModel" [isPermissionExists]="true">
+      </snovasys-comments>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<!-- <app-common-message-box *ngIf=" !(isPermissionForViewGoals)" textToDisplay="{{'DONTHAVEANYPERMISSIONS'|translate}}">
+</app-common-message-box> -->

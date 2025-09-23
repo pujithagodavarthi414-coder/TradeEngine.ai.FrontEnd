@@ -1,0 +1,400 @@
+<div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0" fxLayoutGap="10px" id="snovasys-pay"
+  class="container-md">
+  <mat-tab-group #tabGroup mat-stretch-tabs style="width:100%" (selectedTabChange)="handleTabChange($event)">
+    <mat-tab [label]="PaymentType.Cash">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="university"></fa-icon> <br> Cash
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.Cash">
+        <form [formGroup]="paymentFormGroup" *ngIf="!showCashForm" novalidate
+          (submit)="paymentFormGroup.valid && sendOtp()">
+          <div class="row">
+            <div class="col-md-6">
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'CRM.CASH' | translate }}</mat-label>
+                <input matInput autocomplete="off" type="number" placeholder="{{ 'CRM.CASH' | translate }}" required
+                  formControlName="amountPaid">
+                <mat-error
+                  *ngIf="paymentFormGroup.get('amountPaid').hasError('required') && paymentFormGroup.get('amountPaid').touched">
+                  {{ 'CRM.PLEASEENTERBENIFICAIRYNAME' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <button mat-button mat-raised-button color="primary" aria-label="Pay" style="width: 50%;"
+                [disabled]="!paymentFormGroup.valid">
+                {{ 'CRM.PAY' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+        <div *ngIf="showCashForm">
+          <form [formGroup]="otpForm" (submit)="showCashForm && otpForm.valid && submitPayment()">
+            <div class="row">
+              <div class="col-md-6">
+                <div style="display: flex;">
+                  <div class="form-group">
+                    <label for="name">Enter OTP</label>
+                    <input type="text" class="form-control" id="name" formControlName="otp" name="other_college_name"
+                      required>
+                  </div>
+                </div>
+                <button mat-button mat-raised-button color="primary" class="half-width mb-1 mt-1"
+                  [disabled]="otpForm.invalid">
+                  {{ 'CRM.VALIDATEOTP' | translate}}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </mat-tab>
+    <mat-tab [label]="PaymentType.Cheque">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="university"></fa-icon> <br> Cheque
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.Cheque">
+        <form [formGroup]="paymentFormGroup" novalidate 
+          *ngIf="!showChequeForm">
+
+          <div class="row">
+            <div class="col-md-6">
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'CRM.CHEQUENUMBER' | translate }}</mat-label>
+                <input matInput autocomplete="off" placeholder="{{ 'CRM.CHEQUENUMBER' | translate }}" maxlength="6"
+                  minlength="6" required formControlName="chequeNumber">
+                <mat-error
+                  *ngIf="paymentFormGroup.get('chequeNumber').hasError('required') && paymentFormGroup.get('chequeNumber').touched">
+                  {{ 'CRM.PLEASEENTERCHEQUENUMBER' | translate }}
+                </mat-error>
+                <mat-error
+                  *ngIf="paymentFormGroup.get('chequeNumber').hasError('maxlength') && paymentFormGroup.get('chequeNumber').touched">
+                  {{ 'CRM.ENTERVALIDCHEQUNUMBER' | translate }}
+                </mat-error>
+                <mat-error
+                  *ngIf="paymentFormGroup.get('chequeNumber').hasError('minlength') && paymentFormGroup.get('chequeNumber').touched">
+                  {{ 'CRM.ENTERVALIDCHEQUNUMBER' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'CRM.BANKNAME' | translate }}</mat-label>
+                <input matInput autocomplete="off" placeholder="{{ 'CRM.BANKNAME' | translate }}" required
+                  formControlName="bankName">
+                <mat-error
+                  *ngIf="paymentFormGroup.get('bankName').hasError('required') && paymentFormGroup.get('bankName').touched">
+                  {{ 'CRM.PLEASEENTERBANKNAME' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'CRM.BENIFICAIRYNAME' | translate }}</mat-label>
+                <input matInput autocomplete="off" placeholder="{{ 'CRM.BENIFICAIRYNAME' | translate }}" required
+                  formControlName="benificiaryName">
+                <mat-error
+                  *ngIf="paymentFormGroup.get('benificiaryName').hasError('required') && paymentFormGroup.get('benificiaryName').touched">
+                  {{ 'CRM.PLEASEENTERBENIFICAIRYNAME' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="full-width">
+                <mat-label>{{ 'CRM.CHEQUEAMOUNT' | translate }}</mat-label>
+                <input matInput autocomplete="off" placeholder="{{ 'CRM.CHEQUENAME' | translate }}" required
+                  type="number" formControlName="amountPaid">
+                <mat-error
+                  *ngIf="paymentFormGroup.get('amountPaid').hasError('required') && paymentFormGroup.get('amountPaid').touched">
+                  {{ 'CRM.PLEASEENTERCHEQUENAME' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <div class="mb-1">
+                <button mat-button mat-raised-button color="primary" (click)="fileInput.value='';fileInput.click()">
+                  <fa-icon class="icon-button" icon="paperclip" >
+                    <input type="file" id="file" (change)="uploadFile($event.target.files)"
+                      #fileInput>
+                  </fa-icon> {{ 'CRM.ATTACHFILE' | translate }}
+                </button>
+                <div *ngIf="uploading || uploaded">
+                  {{fileName}}
+                  <mat-progress-bar *ngIf="uploading" [value]="progressValue"></mat-progress-bar>
+                </div>
+              </div>
+              <button type="submit" mat-button mat-raised-button color="primary" aria-label="Call" style="width: 50%;"
+                [disabled]="!paymentFormGroup.valid" (click)="sendOtp()">
+                {{ 'CRM.PAY' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+        <div *ngIf="showChequeForm">
+          <form [formGroup]="otpForm" (submit)="showChequeForm && otpForm.valid && submitPayment()">
+            <div class="row">
+              <div class="col-md-6">
+                <div style="display: flex;">
+                  <div class="form-group">
+                    <label for="name">Enter OTP</label>
+                    <input type="text" class="form-control" id="name" formControlName="otp" name="other_college_name"
+                      required>
+                  </div>
+                </div>
+                <button mat-button mat-raised-button color="primary" class="half-width mb-1 mt-1"
+                  [disabled]="otpForm.invalid">
+                  {{ 'CRM.VALIDATEOTP' | translate}}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab [label]="PaymentType.CreditCard">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="credit-card"></fa-icon> <br> Credit card
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.CreditCard">
+        <div class="row">
+          <div class="col-xs-12 col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <form role="form">
+                  <div class="form-group">
+                    <label for="cardNumber">
+                      CARD NUMBER</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="cardNumber" placeholder="Valid Card Number" required
+                        autofocus />
+                      <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-xs-7 col-md-7">
+                      <div class="form-group">
+                        <label for="expityMonth">
+                          EXPIRY DATE</label>
+                        <div style="display:flex">
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityMonth" placeholder="MM" required />
+                          </div>
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityYear" placeholder="YY" required /></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-5 col-md-5 pull-right">
+                      <div class="form-group">
+                        <label for="cvCode">
+                          CV CODE</label>
+                        <input type="password" class="form-control" id="cvCode" placeholder="CV" required />
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="checkbox pull-right">
+              <label>
+                <input type="checkbox" />
+                Remember this card
+              </label>
+            </div>
+            <br />
+            <button mat-button mat-raised-button color="primary" aria-label="Call" style="width: 100%;">
+              Pay
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab [label]="PaymentType.UPI">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="rupee-sign"></fa-icon> <br> UPI
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.UPI">
+        <div class="row">
+
+          <div class="col-md-6">
+            <mat-form-field class="full-width">
+              <mat-label>UPI Id</mat-label>
+              <input matInput autocomplete="off" placeholder="Enter UPI Id" required>
+            </mat-form-field>
+
+            <button mat-button mat-raised-button color="primary" aria-label="Call" style="width: 50%;">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab [label]="PaymentType.NetBanking">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="university"></fa-icon> <br> Net Banking
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.NetBanking">
+        <div class="row">
+          <h5>Select Bank</h5>
+          <div class="clearfix"></div>
+          <div class="col-md-2" style="background-image: ''">
+            <img src="https://toppng.com/uploads/preview/state-bank-of-india-sbi-vector-logo-115742596090gi1tb90l9.png"
+              width="45px" height="45px">
+            <br>
+            <mat-label>SBI</mat-label>
+          </div>
+          <div class="col-md-2">
+            <img src="https://www.searchpng.com/wp-content/uploads/2019/01/Hdfc-Logo.png" width="45px" height="45px">
+            <br>
+            <mat-label>HDFC</mat-label>
+          </div>
+          <div class="col-md-2">
+            <img src="https://www.searchpng.com/wp-content/uploads/2019/01/ICICI-Bank-PNG-Icon.png" width="45px"
+              height="45px">
+            <br>
+            <mat-label>ICICI</mat-label>
+          </div>
+          <div class="col-md-2">
+            <img src="https://www.searchpng.com/wp-content/uploads/2019/01/Axis-Bank-PNG-Logo-.png" width="45px"
+              height="45px">
+            <br>
+            <mat-label>Axis</mat-label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <mat-form-field class="full-width">
+              <mat-label>Other Banks</mat-label>
+              <mat-select>
+                <mat-option value="bank1">Bank 1</mat-option>
+                <mat-option value="bank2">Bank 2</mat-option>
+                <mat-option value="bank3">Bank 3</mat-option>
+                <mat-option value="bank4">Bank 4</mat-option>
+                <mat-option value="bank5">Bank 5</mat-option>
+                <mat-option value="bank6">Bank 6</mat-option>
+                <mat-option value="bank7">Bank 7</mat-option>
+                <mat-option value="bank8">Bank 8</mat-option>
+                <mat-option value="bank9">Bank 9</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-button mat-raised-button color="primary" aria-label="Call" style="width: 50%;">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </mat-tab>
+    <mat-tab [label]="PaymentType.DebitCard">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="credit-card"></fa-icon> <br> Debit card
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.DebitCard">
+        <div class="row">
+          <div class="col-xs-12 col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <form role="form">
+                  <div class="form-group">
+                    <label for="cardNumber">
+                      CARD NUMBER</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="cardNumber" placeholder="Valid Card Number" required
+                        autofocus />
+                      <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-xs-7 col-md-7">
+                      <div class="form-group">
+                        <label for="expityMonth">
+                          EXPIRY DATE</label>
+                        <div style="display:flex">
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityMonth" placeholder="MM" required />
+                          </div>
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityYear" placeholder="YY" required /></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-5 col-md-5 pull-right">
+                      <div class="form-group">
+                        <label for="cvCode">
+                          CV CODE</label>
+                        <input type="password" class="form-control" id="cvCode" placeholder="CV" required />
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="checkbox pull-right">
+              <label>
+                <input type="checkbox" />
+                Remember this card
+              </label>
+            </div>
+            <br />
+            <button mat-button mat-raised-button color="primary" aria-label="Call" style="width: 100%;">
+              Pay
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab [label]="PaymentType.Others">
+      <ng-template mat-tab-label>
+        <fa-icon class="mr-05 full-width" icon="credit-card"></fa-icon> <br> Others
+      </ng-template>
+      <div class="container" *ngIf="selectedPayment == PaymentType.Others">
+        <div class="row">
+          <div class="col-xs-12 col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <form role="form">
+                  <div class="form-group">
+                    <label for="cardNumber">
+                      CARD NUMBER</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="cardNumber" placeholder="Valid Card Number" required
+                        autofocus />
+                      <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-xs-7 col-md-7">
+                      <div class="form-group">
+                        <label for="expityMonth">
+                          EXPIRY DATE</label>
+                        <div style="display:flex">
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityMonth" placeholder="MM" required />
+                          </div>
+                          <div class="col-xs-6 col-lg-6 pl-ziro">
+                            <input type="text" class="form-control" id="expityYear" placeholder="YY" required /></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-5 col-md-5 pull-right">
+                      <div class="form-group">
+                        <label for="cvCode">
+                          CV CODE</label>
+                        <input type="password" class="form-control" id="cvCode" placeholder="CV" required />
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="checkbox pull-right">
+              <label>
+                <input type="checkbox" />
+                Remember this card
+              </label>
+            </div>
+            <br />
+            <button mat-button mat-raised-button color="primary" aria-label="Call" style="width: 100%;">
+              Pay
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+
+</div>

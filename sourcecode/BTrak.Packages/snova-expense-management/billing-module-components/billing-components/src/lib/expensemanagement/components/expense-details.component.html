@@ -1,0 +1,310 @@
+<div fxLayout="column">  
+<div fxLayout="row" fxFlex fxLayoutAlign="end center" class="custom-expense-dialog">
+    <fa-icon matTooltip="{{ 'EXPENSEMANAGEMENT.CLOSE' | translate}}" class="custom-close icon-button pt-lg-1 pl-05 top-right-close-icon" icon="times"
+        (click)="closeExpenseDetailsForm()"></fa-icon>
+</div>
+
+
+<div class="invoice-dialog-preview p-05" fxLayout="column">
+    <div fxLayout="row" fxFlex fxLayoutGap="20px">
+        <div fxFlex="55">
+            <div>
+                <h5 style="position: relative;">{{selectedExpenseDetails?.expenseName}} ({{selectedExpenseDetails.identificationNumber}})
+                    <span style="position:absolute; bottom: -9px;">
+                        <button *ngIf="!isArchived && (canAccess_feature_AddOrUpdateExpense) && (selectedExpenseDetails.expenseStatus == 'Pending' || selectedExpenseDetails.expenseStatus == 'Rejected')"
+                                class="text-center" title="{{ 'EXPENSEMANAGEMENT.EDITEXPENSE' | translate }}"
+                                mat-icon-button (click)="editExpenseDetailsForm();$event.stopPropagation();">
+                                <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                            </button>
+                    </span>
+                </h5>
+                <h3 class="pb-1">{{selectedExpenseDetails.currencySymbol}}{{selectedExpenseDetails.totalAmount}}</h3>
+                <hr>
+                <div fxLayout="row" class="pt-1">
+                    <div class="pr-05">{{selectedExpenseDetails.expenseDate | utcToLocalTime |date: "dd-MMM-yyyy"}}
+                    </div>
+                    <div> | </div>
+                    <div class="pl-05">{{selectedExpenseDetails.merchantName}}</div>
+                </div>
+                <div class="pt-05 pb-05">{{selectedExpenseDetails.expenseStatus}}</div>
+            </div>
+        </div>
+        <div fxFlex="42">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(getFilesInProgress$ | async)">
+            </mat-progress-bar>
+            <ng-container *ngIf="galleryImages && galleryImages.length > 0">
+                <div class="mb-05 pt-1">
+                    <div>
+                        <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+                    </div>
+                    <div fxLayout="column" class="pt-1" fxLayoutGap="0">
+                        <div fxLayout="row wrap" class="p-05" fxLayoutGap="5px"
+                            *ngFor="let file of receiptsPdfForAnOrder">
+                            <span fxFlex="15px">
+                                <fa-icon icon="file" class="icon-button mat-color-accent"
+                                    (click)="downloadFile(file.filePath)">
+                                </fa-icon>
+                            </span>
+                            <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button"
+                                [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+                                (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+    <hr>
+
+    <div fxLayout="row">
+        <!-- <div class="pt-1" *ngIf="selectedExpenseConfigurationDetails.length == 1">
+            <div class="text-muted">
+                <h6>{{'EXPENSEMANAGEMENT.DESCRIPTION' | translate}}</h6>
+            </div>
+            <div class="pt-05">{{selectedExpenseDetails.description}}</div>
+        </div> -->
+        <div fxFlex="100" id="style-1" class="pt-1 full-width container-width">
+            <div fxLayout="row">
+                <div style="font-weight: bold;" fxFlex="20" fxLayoutAlign="center center">
+                    {{'EXPENSEMANAGEMENT.EXPENSECATEGORYNAME' | translate}}
+                </div>
+                <div style="font-weight: bold;" fxFlex="20" fxLayoutAlign="center center">
+                    {{'EXPENSEMANAGEMENT.MERCHANTNAME' | translate}}
+                </div>
+                <div fxFlex="20" style="font-weight: bold;">
+                    {{'EXPENSEMANAGEMENT.EXPENSECATEGORYDESCRIPTIONTITLE' | translate}}
+                </div>
+                <div style="font-weight: bold;" fxFlex="20" fxLayoutAlign="center center">
+                    {{'EXPENSEMANAGEMENT.AMOUNT' | translate}}
+                </div>
+                <div style="font-weight: bold;" fxFlex="20" fxLayoutAlign="center center">
+                    {{'EXPENSEMANAGEMENT.RECEIPTS' | translate}}
+                </div>
+            </div>
+            <div *ngFor="let item of selectedExpenseConfigurationDetails">
+                <div fxLayout="row" class="mt-05">
+                    <div fxFlex="20" fxLayoutAlign="center center">
+                        <h6>{{item.expenseCategoryName}}</h6>
+                    </div>
+                    <div fxFlex="20" fxLayoutAlign="center center">
+                        <h6>{{item.merchantName}}</h6>
+                    </div>
+                    <div fxFlex="20">
+                        <h6>{{item.categoryName}}</h6>
+                        <div class="pt-05 text-muted">{{item.description}}</div>
+                    </div>
+                    <div fxFlex="20" fxLayoutAlign="center center">
+                        <div style="font-weight: bold;">{{selectedExpenseDetails.currencySymbol}}</div> {{item.amount}}
+                    </div>
+                    <div fxFlex="20" fxLayoutAlign="center center" *ngIf="(item.receipts && item.receipts.length > 0)||(selectedExpenseDetails.expenseReceipts&&selectedExpenseConfigurationDetails.length==1)">
+                        <button class="text-center" matTooltip="{{'EXPENSEMANAGEMENT.RECEIPTS' | translate}}"
+                            (click)="showReceiptsPopupOpen(item,showReceiptsPopUp);$event.stopPropagation();"
+                            [satPopoverAnchorFor]="showReceiptsPopover" #showReceiptsPopUp="satPopoverAnchor"
+                            mat-icon-button>
+                            <i class="material-icons mat-color-accent" style="cursor: pointer;">photo</i>
+                            <span>({{receiptsCount(item)}})</span>
+                        </button>
+                    </div>
+                </div>
+                <hr>
+            </div>
+            <div fxLayout="row">
+                <div fxFlex="80" class="ml-1">
+                    <h6 style="font-weight: bold;">{{'EXPENSEMANAGEMENT.TOTAL' | translate}}</h6>
+                </div>
+                <div style="font-weight: bold;" fxFlex="20" fxLayoutAlign="center center">
+                    {{selectedExpenseDetails.currencySymbol}} {{selectedExpenseDetails.totalAmount}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <mat-tab-group class="app-tabs container-width" [selectedIndex]="selectedTab" (selectedTabChange)="selectedMatTab($event)">
+        <mat-tab label="History">
+            <ng-template mat-tab-label>
+                {{'EXPENSEMANAGEMENT.HISTORY' | translate}}
+            </ng-template>
+            <ng-template matTabContent>
+                <div *ngIf="selectedTab == 0">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                    </mat-progress-bar>
+                    <div fxLayout="row" id="style-1">
+                        <div class="expense_history_section" id="style-1">
+                            <div *ngFor="let history of expenseHistoryDetails">
+                                <div fxLayout="row wrap" fxLayoutGap="10px" class="p-05">
+                                    <div mat-card-avatar fxFlex="5" fxFlex.gt-lg="3" fxFlex.xs="13">
+                                        <app-avatar matTooltip="{{ history.fullName }}"
+                                            [name]="history.fullName | removeSpecialCharacters"
+                                            [src]="history.profileImage | fetchSizedAndCachedImage: '20':''"
+                                            [isRound]="true" size="20">
+                                        </app-avatar>
+                                    </div>
+                                    <div fxFlex fxLayout="column" fxLayoutGap="5px">
+                                        <div fxLayout="row">
+                                            <div fxFlex="50" fxFlex.gt-lg="20" fxFlex.lg="30" fxFlex.md="45">
+                                                {{history.fullName}}
+                                            </div>
+                                            <div fxFlex>
+                                                <span class="pull-right"
+                                                    matTooltip="{{history.createdDateTime| date:'dd-MM-yyyy, h:mm a ' }}">{{history.createdDateTime | utcToLocalTime | timeago : 'live' }}</span>
+                                            </div>
+                                        </div>
+                                        <div fxLayout="row">
+                                            <span *ngIf="history.description == 'ExpenseNameChange'">
+                                                <b>{{'EXPENSEMANAGEMENT.EXPENSENAME' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'ExpenseDateChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.EXPENSEDATE' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'MerchantNameChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.MERCHANT' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'CategoryChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.CATEGORY' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'ExpenseCategoryNameChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.EXPENSECATEGORYNAME' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'CurrencyNameChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.CURRENCY' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'AmountChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.AMOUNT' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b> {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'ExpenseStatusChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.EXPENSESTATUS' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span
+                                                *ngIf="history.description == 'DescriptionChanged' && history.oldValue != null">
+                                                <b>{{'EXPENSEMANAGEMENT.DESCRIPTION' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span *ngIf="history.description == 'ClaimedByUserChanged'">
+                                                <b>{{'EXPENSEMANAGEMENT.CLAIMEDBYUSER' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b> {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span
+                                                *ngIf="history.description == 'BranchNameChanged' && history.oldValue != null && history.newValue != null">
+                                                <b>{{'EXPENSEMANAGEMENT.BRANCHNAME' | translate}}</b>
+                                                {{'EXPENSEMANAGEMENT.CHANGEDFROM' | translate}}
+                                                <b>{{history.oldValue}}</b> {{'EXPENSEMANAGEMENT.TO' | translate}}
+                                                <b>{{history.newValue}}</b>
+                                                {{'EXPENSEMANAGEMENT.FROMTO' | translate}}
+                                            </span>
+                                            <span
+                                                *ngIf="history.description == 'BranchNameChanged' && history.oldValue == null && history.newValue != null">{{history.newValue}}
+                                                <b>{{'EXPENSEMANAGEMENT.BRANCHADDED' | translate}}</b></span>
+                                            <span
+                                                *ngIf="history.description == 'BranchNameChanged' && history.oldValue != null && history.newValue == null">{{history.newValue}}
+                                                <b>{{'EXPENSEMANAGEMENT.BRANCHREMOVED' | translate}}</b></span>
+                                            <span *ngIf="history.description == 'ExpenseAdded'">{{history.newValue}}
+                                                <b>{{'EXPENSEMANAGEMENT.EXPENSEADDED' | translate}}</b></span>
+                                            <span
+                                                *ngIf="history.description == 'DescriptionRemoved'">{{'EXPENSEMANAGEMENT.DESCRIPTIONREMOVED' | translate}}</span>
+                                            <span
+                                                *ngIf="history.description == 'DescriptionAdded'">{{'EXPENSEMANAGEMENT.DESCRIPTIONADDED' | translate}}</span>
+                                            <span
+                                                *ngIf="history.description == 'ReceiptAdded'">{{'EXPENSEMANAGEMENT.RECEIPTADDED' | translate}}</span>
+                                            <span
+                                                *ngIf="history.description == 'ReceiptDeleted'">{{'EXPENSEMANAGEMENT.RECEIPTDELETED' | translate}}</span>
+                                            <span
+                                                *ngIf="history.description == 'ExpenseCategoryAdded'">{{'EXPENSEMANAGEMENT.EXPENSECATEGORYADDED' | translate}}</span>
+                                            <span
+                                                *ngIf="history.description == 'ExpenseCategoryRemoved'">{{'EXPENSEMANAGEMENT.EXPENSECATEGORYREMOVED' | translate}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </mat-tab>
+        <mat-tab label="Comments">
+            <ng-template mat-tab-label>
+                {{'EXPENSEMANAGEMENT.COMMENTS' | translate}}
+            </ng-template>
+            <ng-template matTabContent>
+                <div id="style-1">
+                    <snovasys-comments [receiverId]="expenseId" [isPermissionExists]="true"
+                        [componentModel]="componentModel" *ngIf="selectedTab == 1">
+                    </snovasys-comments>
+                </div>
+            </ng-template>
+        </mat-tab>
+    </mat-tab-group>
+</div>
+</div>
+
+
+
+
+<sat-popover backdropClass="backdrop-color" #showReceiptsPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end" [interactiveClose]="false">
+    <mat-card class="p-0 expense-recipts-width">
+        <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+            <div fxFlex class="text-center">
+                {{'HRMANAGAMENT.RECEIPTS' | translate}}
+            </div>
+            <div fxFlex="20px" fxLayoutAlign="end center">
+                <span class="inline_edit_close_btn" (click)="closeReceiptsPopup()">
+                    <fa-icon icon="times"></fa-icon>
+                </span>
+            </div>
+        </div>
+        <mat-card-content class="p-05 mobile-view-popover">
+            <div *ngIf="categoryGalleryImages && categoryGalleryImages.length > 0">
+                <ngx-gallery [options]="galleryOptions" [images]="categoryGalleryImages"></ngx-gallery>
+            </div>
+            <div fxLayout="column" fxLayoutGap="0">
+                <div fxLayout="row wrap" class="p-05" fxLayoutGap="5px"
+                    *ngFor="let file of categoryReceiptsPdfForAnOrder">
+                    <span fxFlex="15px">
+                        <fa-icon icon="file" class="icon-button mat-color-accent" (click)="downloadFile(file.filePath)">
+                        </fa-icon>
+                    </span>
+                    <span fxFlex="calc(100% - 20px)" class="hide-content-overflow icon-button"
+                        [matTooltip]="file.fileName.length > 15 ? file.fileName : ''" matTooltipShowDelay="300"
+                        (click)="downloadFile(file.filePath)">{{file.fileName}}</span>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

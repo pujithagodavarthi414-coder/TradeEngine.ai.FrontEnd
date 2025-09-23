@@ -1,0 +1,788 @@
+<div *ngIf="(canAccess_feature_AddOrUpdateApplications)">
+    <div fxLayout="row">
+        <div fxFlex>
+            <ul class="widget-progressbar mt-1" [ngClass]="getWizardsList()">
+                <li [ngClass]="{'active': selectedTabIndex >= 0}"> {{'CUSTOMAPPLICATION.APPDETAILS' | translate}} </li>
+                <li [ngClass]="{'active': selectedTabIndex >= 1}"> {{'CUSTOMAPPLICATION.ASSIGNFORM' | translate}} </li>
+                <li [ngClass]="{'active': selectedTabIndex >= 2}">
+                    Stages </li>
+                <li *ngIf="isPdfRequired==true" [ngClass]="{'active': selectedTabIndex >= 3}">
+                    {{'CUSTOMAPPLICATION.DOCINFO' | translate}} </li>
+
+                <li *ngIf="isRecordLevelPermissionEnabled==true" [ngClass]="{'active': selectedTabIndex >= 4}">
+                    Record level permission </li>
+                <li [ngClass]="{'active': selectedTabIndex >= 5}"> {{'CUSTOMAPPLICATION.PROCESSDEFINATION' | translate}}
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div fxLayout="row">
+        <div fxFlex class="custom-app-title-height">
+            <div [style.display]="selectedTabIndex == 0 ?'inherit':'none'" *ngIf="selectedTabIndex == 0">
+                <div class="p-0 ml-1 mr-1 custom-app-details-height" id="style-1">
+                    <form [formGroup]="customApplicationForm" novalidate #formDirective="ngForm">
+                        <div fxLayout="column">
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex="50" fxFlex.xs="100">
+                                    <span>
+                                        <fa-icon class="mr-05" icon="globe"></fa-icon>
+                                        {{ (isPublished ? 'CUSTOMAPPLICATION.PUBLISHED' : 'CUSTOMAPPLICATION.DRAFT' ) |
+                                        translate }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-form-field class="full-width">
+                                        <input matInput formControlName="customApplicationName"
+                                            placeholder="{{ 'CUSTOMAPPLICATION.CUSTOMAPLICATIONNAME' | translate }}"
+                                            required>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="customApplicationForm.get('customApplicationName').hasError('required') && customApplicationForm.get('customApplicationName').touched">
+                                                {{ 'CUSTOMAPPLICATION.PLEASEENTERCUSTOMAPPLICATIONNAME' | translate }}
+                                            </span>
+                                            <span
+                                                *ngIf="customApplicationForm.get('customApplicationName').hasError('maxlength')">
+                                                {{ 'CUSTOMAPPLICATION.SHOULDNOTEXCEED50CHARECTERS' | translate }}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-form-field class="full-width">
+                                        <mat-select placeholder="{{'GENERICFORM.SELECTROLESTEXT' | translate}}"
+                                            formControlName="roleIds" multiple [compareWith]="compareSelectedRoles"
+                                            required>
+                                            <mat-option #allSelected (click)="toggleAllRolesSelected()" [value]="0">
+                                                {{ 'ADVANCEDSEARCH.SELECTALL' | translate}}
+                                            </mat-option>
+                                            <mat-option *ngFor="let role of rolesList" (click)="toggleUserPerOne()"
+                                                [value]="role.roleId">
+                                                {{role.roleName}}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="33.33">
+                                    <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                                        <mat-select formControlName="moduleIds" [compareWith]="compareSelectedModuleFn"
+                                            placeholder="{{ 'APP.MODULEPLACEHOLDER' | translate }}" multiple required>
+                                            <mat-option #allModuleSelected (click)="toggleAllModuleSelected()"
+                                                [value]="0">
+                                                {{ 'PERMISSIONMANAGEMENT.SELECTALL' | translate }}</mat-option>
+                                            <mat-option [value]="module.moduleId" *ngFor="let module of modulesDropDown"
+                                                #allModuleSelected (click)="toggleModulePerOne()">
+                                                {{ module.moduleName | translate | softLabelsPipe :softLabels }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="customApplicationForm.get('moduleIds').hasError('required') && customApplicationForm.get('moduleIds').touched">
+                                                {{ 'APP.SELECTANYMODULE' | translate }}</span>
+                                            <span
+                                                *ngIf="customApplicationForm.get('moduleIds').hasError('required') && customApplicationForm.get('moduleIds').untouched">
+                                                {{'APP.SELECTANYMODULE' | translate}}</span>
+                                        </mat-error>
+                                    </mat-form-field>
+
+                                </div>
+
+                            </div>
+
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-checkbox fxFlex="45" (change)="showFormFields($event.checked)"
+                                        [checked]="showFields" mat-primary> Approve Needed
+                                    </mat-checkbox>
+                                </div>
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-checkbox fxFlex="45" (change)="allowAnnonymousChange($event.checked)"
+                                        [checked]="allowAnnonymous" mat-primary> Allow annonymous
+                                    </mat-checkbox>
+                                </div>
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-checkbox fxFlex="45" (change)="changeRecordLevelPermission($event.checked)"
+                                        [checked]="isRecordLevelPermissionEnabled" mat-primary> Record level
+                                        permission enabled
+                                    </mat-checkbox>
+                                </div>
+                            </div>
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex="33.33" fxFlex.xs="100" *ngIf="showFields">
+                                    <mat-form-field>
+                                        <mat-select formControlName="userList" placeholder="Please Select User" required
+                                            multiple>
+                                            <mat-option *ngFor="let data of userLists"
+                                                [value]="data.userId">{{data.fullName}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="customApplicationForm.get('userList').hasError('required') && customApplicationForm.get('userList').touched">
+                                                {{ 'App.UserSelect' | translate }}</span>
+                                            <span
+                                                *ngIf="customApplicationForm.get('userList').hasError('required') && customApplicationForm.get('userList').untouched">
+                                                {{'APP.UserSelect' | translate}}</span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex>
+                                    <mat-form-field class="full-width">
+                                        <textarea matInput formControlName="customApplicationDescription" rows="3"
+                                            placeholder="{{ 'CUSTOMAPPLICATION.DESCRIPTION' | translate }}"></textarea>
+                                        <mat-error>
+                                            <span
+                                                *ngIf="customApplicationForm.get('customApplicationDescription').hasError('maxlength')">
+                                                {{ 'CUSTOMAPPLICATION.PUBLICMESSAGELENGTHRESTRICTION' | translate }}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                            </div>
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFill>
+                                    <custom-app-component-tags [referenceId]="applicationId" [isFromCustomApp]=true
+                                        [tagsModel]="tagModel" (getCustomTags)="getTagsList($event)">
+                                    </custom-app-component-tags>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="m-1">
+                    <button class="pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button mat-raised-button color="primary" class="mr-1 pull-right" [disabled]="checkDisabled()"
+                        (click)="navigateToFormSelection()">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar> {{ 'APP.NEXT' | translate }} <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                </div>
+
+            </div>
+
+            <div [style.display]="selectedTabIndex == 1 ?'inherit':'none'" *ngIf="selectedTabIndex == 1">
+                <div class="p-0 ml-1 mr-1 custom-app-details-height" id="style-1">
+                    <div fxLayout="column">
+                        <form [formGroup]="customApplicationConfigureForm" novalidate #formDirective="ngForm">
+                            <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutAlign="end center"
+                                fxLayoutGap.xs="0px">
+                                <div fxFlex *ngIf="enableConfigureFormKeySettings">
+                                    <mat-form-field class="full-width">
+                                        <input matInput formControlName="publicMessage"
+                                            placeholder="{{ 'CUSTOMAPPLICATION.PUBLICMESSAGE' | translate }}">
+                                        <mat-error>
+                                            <span
+                                                *ngIf="customApplicationConfigureForm.get('publicMessage').hasError('maxlength')">
+                                                {{ 'CUSTOMAPPLICATION.PUBLICMESSAGELENGTHRESTRICTION' | translate }}
+                                            </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="24px" fxFlex.xs="24px"
+                                    matTooltip="{{ 'CUSTOMAPPLICATION.CONFIGUREKEYSETTINGS' | translate }}"
+                                    (click)="toggleDisplayKeys()" style="line-height: 10px !important;">
+                                    <mat-icon class="material-icons icon-button mat-color-accent">brightness_high
+                                    </mat-icon>
+                                </div>
+                            </div>
+                            <div *ngIf="enableConfigureFormKeySettings" fxLayout="row" fxLayout.xs="column"
+                                fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <mat-checkbox fxFlex="45" [checked]="isPdfRequired"
+                                        (change)="isPdfRequiredChange($event)" mat-primary>Is PDF Required?
+                                    </mat-checkbox>
+                                </div>
+                                <div fxFlex="33.33" fxFlex.xs="100">
+                                    <button mat-raised-button color="primary" *ngIf="isPdfRequired"
+                                        (click)="openEmailConfigurationPopUp();">
+                                        Configure email template for share document
+                                    </button>
+                                </div>
+                                <div fxFlex="33.33" fxFlex.xs="100" *ngIf="showFields">
+                                    <button mat-raised-button color="primary"
+                                        (click)="openTemplateConfigurationPopUp();">
+                                        Configure template for approval
+                                    </button>
+                                </div>
+                                <div fxFlex="33.33">
+                                </div>
+                            </div>
+                            <div fxLayout="column"
+                                *ngIf="enableConfigureFormKeySettings && multipleGenericFormKeys.length > 0 && selectedFormIds.length > 0 ">
+                                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="gettingTagKeysInprogress">
+                                </mat-progress-bar>
+
+                                <div *ngFor="let formKeys of multipleGenericFormKeys">
+                                    <label class=''>{{ 'CUSTOMAPPLICATION.SELECTADEFAULTCOLUMN' | translate }}</label>
+                                    <table>
+                                        <tr>
+                                            <th class="p-05">{{ 'CUSTOMAPPLICATION.KEYNAME' | translate }}</th>
+                                            <th class="p-05">{{ 'CUSTOMAPPLICATION.ISDEFAULT' | translate }}</th>
+                                            <th class="p-05">{{ 'CUSTOMAPPLICATION.ISPRIVATE' | translate }}</th>
+                                            <th class="p-05">{{ 'CUSTOMAPPLICATION.ISTAG' | translate }}</th>
+                                            <th class="p-05">{{ 'CUSTOMAPPLICATION.ENABLETRENDS' | translate }}</th>
+                                        </tr>
+                                        <tr *ngFor="let option of formKeys; let i = index">
+                                            <td class="p-05">{{option.label}}</td>
+                                            <td class="p-05 text-center">
+                                                <mat-checkbox
+                                                    name="{{ 'CUSTOMAPPLICATION.DEFAULT' | translate }} - {{ option.key }}"
+                                                    (change)="onChange(option.genericFormKeyId, $event)"
+                                                    id="checkbox-{{ option.genericFormKeyId }}"
+                                                    value="{{ option.genericFormKeyId }}" [checked]="option.isActive">
+                                                </mat-checkbox>
+                                            </td>
+                                            <td class="p-05 text-center">
+                                                <mat-checkbox
+                                                    name="{{ 'CUSTOMAPPLICATION.PRIVATE' | translate }} - {{ option.key }}"
+                                                    (change)="onPrivateChange(option.genericFormKeyId, $event)"
+                                                    id="private-{{ option.genericFormKeyId }}"
+                                                    value="{{ option.genericFormKeyId }}" [checked]="option.isPrivate">
+                                                </mat-checkbox>
+                                            </td>
+                                            <td class="p-05 text-center">
+                                                <mat-checkbox
+                                                    name="{{ 'CUSTOMAPPLICATION.TAG' | translate }} - {{ option.key }}"
+                                                    (change)="onTagChange(option.genericFormKeyId, $event)"
+                                                    id="tag-{{ option.genericFormKeyId }}"
+                                                    value="{{ option.genericFormKeyId }}" [checked]="option.isTag">
+                                                </mat-checkbox>
+                                            </td>
+                                            <td class="p-05 text-center">
+                                                <mat-checkbox
+                                                    name="{{ 'CUSTOMAPPLICATION.ENABLETRENDS' | translate }} - {{ option.key }}"
+                                                    (change)="onEnableTrendsChange(option.genericFormKeyId, $event)"
+                                                    id="enableTrends-{{ option.genericFormKeyId }}"
+                                                    value="{{ option.genericFormKeyId }}"
+                                                    [checked]="option.isEnableTrends">
+                                                </mat-checkbox>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                            <div fxFlex>
+                                <genericforms-view [selectedFormTypeId]="selectedFormTypeId"
+                                    [selectedFormIds]="selectedFormIds" (selectForm)="formSelect($event)"
+                                    [isFromWizard]="true"></genericforms-view>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="m-1">
+                    <button class="pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button mat-raised-button color="primary" (click)="saveCustomApplicationForm(null)"
+                        class="mr-1 pull-right" [disabled]="validateConfigureForm()|| isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <span *ngIf="!applicationId">
+                            <fa-icon class="mr-05" icon="save"></fa-icon>
+                            {{'CUSTOMAPPLICATION.SAVEANDNEXT' | translate}}
+                        </span>
+                        <span *ngIf="applicationId">
+                            <fa-icon class="mr-05" icon="save"></fa-icon>
+                            {{ 'CUSTOMAPPLICATION.UPDATEANDNEXT' | translate}}
+                        </span>
+                        <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigateToMainDetails()" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                    </button>
+                </div>
+
+            </div>
+            <div  [style.display]="selectedTabIndex == 2 ?'inherit':'none'" *ngIf="selectedTabIndex == 2">
+                <div fxLayout="column">
+
+                    <div class="p-0 ml-1 mr-1">
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px" id="style-1"
+                            style="height: calc(100vh - 344px);">
+                            <form [formGroup]="stageApplicationForm" novalidate>
+                                <div formArrayName="stageScenarioSteps"
+                                    *ngFor="let item of stageApplicationForm.get('stageScenarioSteps')['controls']; let i = index;">
+                                    <div [formGroupName]="i" fxLayout="column">
+                                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                            <div class="align-center mt-1 ml-05" fxFlex="2" style="height: 40px;">
+                                                <span class="badge-item test-case-step-count count-padding">{{i
+                                                    + 1}}</span>
+                                            </div>
+                                            <div style="width: 300px !important;">
+                                                <mat-form-field class="full-width">
+                                                    <mat-select placeholder="Select form keys"
+                                                        formControlName="fieldName">
+                                                        <mat-option *ngFor="let key of formKeysList"
+                                                            [value]="key.key">
+                                                            {{key.label}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+                                            <div style="width: 300px !important;">
+                                                <mat-form-field class="full-width">
+                                                    <input matInput formControlName="fieldValue"
+                                                        placeholder="Field value">
+                                                </mat-form-field>
+                                            </div>
+                                            <div style="width: 300px !important;">
+                                                <mat-form-field class="full-width">
+                                                    <input matInput formControlName="stage" placeholder="Stage">
+                                                </mat-form-field>
+                                            </div>
+                                            <div fxFlex="25" fxLayout="column" fxLayoutAlign="center center"
+                                                fxLayoutGap="4px">
+                                                <span>
+                                                    <a class="padding-p5 icon-hover" matTooltip="Add stage"
+                                                        (click)="addNewStage(i);">
+                                                        <fa-icon icon="plus"></fa-icon>
+                                                    </a>
+                                                    <a class="padding-p5 icon-hover ml-1" matTooltip="Remove stage"
+                                                        (click)="removeStageScenario(i);">
+                                                        <fa-icon icon="minus"></fa-icon>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="m-1">
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        Cancel
+                    </button>
+                    <button mat-raised-button color="primary" (click)="saveCustomApplicationForm(null)"
+                        class="mr-1 pull-right" [disabled]="isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="save"></fa-icon>
+                        Save and next
+                        <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigateFormSelection()" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> Previous
+                    </button>
+                </div>
+            </div>
+
+            <div class="levels-table-container" [style.display]="selectedTabIndex == 3 ?'inherit':'none'"
+                *ngIf="selectedTabIndex == 3 && isPdfRequired">
+                <div class="p-0 ml-1 mr-1 custom-app-details-height" id="style-1">
+                    <div fxLayout="column">
+                        <div fxLayout="row" class="m-1">
+                            <div fxFlex fxLayoutAlign="start center">
+                                <div style="float:left; text-align: left">
+                                    <span style="padding: 10px;">Is Archived : </span>
+                                    <i style="margin-right: 5px;padding: 10px; "
+                                        title="Click here to get archived levels"
+                                        class="fa fa-toggle-off designer-action-icons" aria-hidden="true"
+                                        (click)="showgrid()" *ngIf="isArchived == false"></i>
+                                    <i style="margin-right: 5px;padding: 10px; "
+                                        title="Click here to get unarchived levels"
+                                        class="fa fa-toggle-on designer-action-icons" aria-hidden="true"
+                                        (click)="showgrid()" *ngIf="isArchived == true"></i>
+                                </div>
+                            </div>
+
+                            <div fxFlex fxLayoutAlign="end center">
+                                <button mat-button mat-raised-button color="primary" class="pull-right"
+                                    (click)="createLevel()" matTooltip="Create Level">
+                                    <fa-icon icon="plus" class="mr-05"></fa-icon> Add
+                                </button>
+                            </div>
+                        </div>
+                        <kendo-grid [data]="gridData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+                            [pageable]="true" [sortable]="true" [sort]="state.sort"
+                            (dataStateChange)="dataStateChange($event)" [columnMenu]="true">
+                            <kendo-grid-column field="level" title="LEVEL NUMBER">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.level }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="levelName" title="LEVEL NAME">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.levelName }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="pdfTemplate" title="PDF TEMPLATE">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ getpdfTemplateName(dataItem.pdfTemplate) }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="displayName" title="DISPLAY NAME">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.displayName }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="path" title="PATH">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.path }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="apiKey" title="API KEY">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.apiKey }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="parameters" title="PARAMETERS">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <div class="cursor-pointer">{{ dataItem.parameters }}
+                                    </div>
+                                </ng-template>
+                            </kendo-grid-column>
+                            <kendo-grid-column field="action" title="Actions" menu="false">
+                                <ng-template kendoGridCellTemplate let-dataItem>
+                                    <i class="fa fa-edit designer-action-icons" title="Edit" aria-hidden="true"
+                                        (click)="editTemplate(dataItem)"></i>
+                                    <i *ngIf="isArchived == false" class="fa fa-toggle-off designer-action-icons"
+                                        title="Archive" aria-hidden="true" (click)="archiveLevel(dataItem)"></i>
+                                    <i *ngIf="isArchived == true" class="fa fa-toggle-on designer-action-icons"
+                                        title="Unarchive" aria-hidden="true" (click)="unArchiveLevel(dataItem)"></i>
+                                </ng-template>
+                            </kendo-grid-column>
+                        </kendo-grid>
+                    </div>
+
+                </div>
+                <div class="m-1">
+                    <button class="pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button mat-raised-button color="primary" (click)="saveDocInfo()" class="mr-1 pull-right"
+                        [disabled]="validateConfigureForm()|| isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <span *ngIf="!applicationId">
+                            <fa-icon class="mr-05" icon="save"></fa-icon>
+                            {{'CUSTOMAPPLICATION.SAVEANDNEXT' | translate}}
+                        </span>
+                        <span *ngIf="applicationId">
+                            <fa-icon class="mr-05" icon="save"></fa-icon>
+                            {{ 'CUSTOMAPPLICATION.UPDATEANDNEXT' | translate}}
+                        </span>
+                        <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigateToAssignForm()" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                    </button>
+                </div>
+
+            </div>
+
+            <div *ngIf="selectedTabIndex == 4" [style.display]="selectedTabIndex == 4 ?'inherit':'none'">
+                <div fxLayout="column">
+                    <div class="p-0 ml-1 mr-1">
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                            <div fxFlex="50" fxFlex.xs="100">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="Select level" [(ngModel)]="conditionalEnum"
+                                        (selectionChange)="getScenarioLevelChange($event.value)">
+                                        <mat-option *ngFor="let level of permissionsDropdown" [value]="level.value">
+                                            {{level.name}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="80" fxFlex.xs="100" *ngIf="conditionalEnum != 3">
+                                <mat-form-field class="full-width">
+                                    <mat-select placeholder="Select key" [(ngModel)]="recordLevelPermissionFieldName"
+                                        required>
+                                        <mat-option *ngFor="let formKey of formKeysList" [value]="formKey.key">
+                                            {{formKey.label}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex fxFlex.xs="100" *ngIf="conditionalEnum">
+                                <button  mat-icon-button  style="margin-top: 15px !important;"
+                                    (click)="removeRecordLevelPermission()">
+                                    <fa-icon class="filter mat-color-accent mr-05" icon="archive"></fa-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="10px" fxLayoutGap.xs="0px"
+                            *ngIf="conditionalEnum == 3" id="style-1" style="height: calc(100vh - 344px);">
+                            <form [formGroup]="scenarioForm" novalidate>
+                                <div formArrayName="scenarioSteps"
+                                    *ngFor="let item of scenarioForm.get('scenarioSteps')['controls']; let i = index;">
+                                    <div [formGroupName]="i" fxLayout="column">
+                                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                            <div class="align-center mt-1 ml-05" fxFlex="2" style="height: 40px;">
+                                                <span class="badge-item test-case-step-count count-padding">{{i
+                                                    + 1}}</span>
+                                            </div>
+                                            <div fxFlex style="width: 400px !important;">
+                                                <mat-form-field class="full-width">
+                                                    <mat-select placeholder="Select Roles"
+                                                        formControlName="roleIdsArray"
+                                                        (selectionChange)="getSelectedRolesFunction($event.value,i)"
+                                                        multiple [compareWith]="compareSelectedRoles">
+                                                        <mat-option *ngFor="let role of rolesList"
+                                                            [value]="role.roleId">
+                                                            {{role.roleName}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+                                            <div fxFlex style="width: 400px !important;">
+                                                <mat-form-field class="full-width">
+                                                    <mat-select placeholder="Select Users"
+                                                        formControlName="userIdsArray" multiple
+                                                        [compareWith]="compareSelectedUsers">
+                                                        <mat-option
+                                                            *ngFor="let user of userLists | userSearchFilter : selectedScenarioRoles : selectedScenarioIndex : i"
+                                                            [value]="user.userId">
+                                                            {{user.fullName}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+
+                                            <div>
+                                                <button class="mr-1" mat-button mat-raised-button type="button"
+                                                    (click)="addFields(i,-1)" color="primary"
+                                                    *ngIf="item.get('fields').length == 0">
+                                                    <fa-icon class="mr-05" icon="plus"></fa-icon>Add Fields
+                                                </button>
+                                            </div>
+                                            <div fxFlex fxLayout="column" fxLayoutAlign="center center"
+                                                fxLayoutGap="4px">
+                                                <span>
+                                                    <a class="padding-p5 icon-hover" matTooltip="Add scenario"
+                                                        (click)="addNewScenario(i);">
+                                                        <fa-icon icon="plus"></fa-icon>
+                                                    </a>
+                                                    <a class="padding-p5 icon-hover ml-1" matTooltip="Remove scenario"
+                                                        (click)="removeScenario(i);" *ngIf="i != 0">
+                                                        <fa-icon icon="minus"></fa-icon>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div fxLayout="column" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                            <div formArrayName="fields"
+                                                *ngFor="let step of item.get('fields')['controls']; let j = index;">
+                                                <div [formGroupName]="j">
+                                                    <div fxLayout="row" fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                                                        <div class="align-center mt-1 ml-05" fxFlex="5"
+                                                            style="height: 40px;">
+                                                            <span
+                                                                class="badge-item test-case-step-count count-padding">{{i+1}}.{{j
+                                                                + 1}}</span>
+                                                        </div>
+                                                        <div style="width: 300px !important;">
+                                                            <mat-form-field class="full-width">
+                                                                <mat-select placeholder="Select form keys"
+                                                                    formControlName="fieldName">
+                                                                    <mat-option *ngFor="let key of genericFormKeyList"
+                                                                        [value]="key.key">
+                                                                        {{key.label}}
+                                                                    </mat-option>
+                                                                </mat-select>
+                                                            </mat-form-field>
+                                                        </div>
+                                                        <div style="width: 300px !important;">
+                                                            <mat-form-field class="full-width">
+                                                                <input matInput formControlName="fieldValue"
+                                                                    placeholder="Field value">
+                                                            </mat-form-field>
+                                                        </div>
+                                                        <div style="width: 300px !important;">
+                                                            <mat-form-field class="full-width">
+                                                                <mat-select placeholder="Condition"
+                                                                    formControlName="condition">
+                                                                    <mat-option value="and">And</mat-option>
+                                                                    <mat-option value="or">Or</mat-option>
+                                                                </mat-select>
+                                                            </mat-form-field>
+                                                        </div>
+                                                        <div fxFlex="25" fxLayout="column" fxLayoutAlign="center center"
+                                                            fxLayoutGap="4px">
+                                                            <span>
+                                                                <a class="padding-p5 icon-hover" matTooltip="Add fields"
+                                                                    (click)="addFields(i,j);">
+                                                                    <fa-icon icon="plus"></fa-icon>
+                                                                </a>
+                                                                <a class="padding-p5 icon-hover ml-1"
+                                                                    matTooltip="Remove fields"
+                                                                    (click)="removeFields(i,j);">
+                                                                    <fa-icon icon="minus"></fa-icon>
+                                                                </a>
+                                                            </span>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="m-1">
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        Cancel
+                    </button>
+                    <button mat-raised-button color="primary" (click)="saveCustomApplicationForm(null)"
+                        class="mr-1 pull-right"
+                        [disabled]="(!recordLevelPermissionFieldName && (conditionalEnum ==  1 || conditionalEnum == 2))|| isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="save"></fa-icon>
+                        Save and next
+                        <fa-icon class="ml-05" icon="arrow-right">
+                        </fa-icon>
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigateFormSelection()" [disabled]="isAnyOperationIsInprogress">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> Previous
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="selectedTabIndex == 5" [style.display]="selectedTabIndex == 5 ?'inherit':'none'">
+                <mat-card class="p-0 ml-1 mr-1 custom-app-details-height">
+                    <app-workflow-list *ngIf="selectedTabIndex == 5" [selectedFormIds]="customFormIds"
+                        (emitMailEvent)="getMailAlertsCount($event)"></app-workflow-list>
+                </mat-card>
+
+                <div fxLayout="row" *ngIf="!isArchivedWorkflows && emailsCount > 0" fxLayout.xs="column"
+                    fxLayoutGap="10px" fxLayoutGap.xs="0px">
+                    <div fxFlex="100" fxFlex.xs="100" fxLayoutAlign="end center">
+                        <b style="margin-right: 16px !important;font-size: 16px !important;">Would you like to share the
+                            new record through email
+                            <mat-slide-toggle class="archive-switch" [(ngModel)]="isRedirectToEmail"
+                                [checked]="isRedirectToEmail" (change)="saveCustomApplicationForm(false)">
+                            </mat-slide-toggle>
+                        </b>
+                    </div>
+                </div>
+                <div class="m-1">
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigatetocustomwidgets(false)">
+                        <fa-icon class="mr-05" icon="times"></fa-icon>
+                        {{ 'CANCEL' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" *ngIf="isPublished != true" mat-button mat-raised-button
+                        color="primary" type="button" (click)="saveCustomApplicationForm(true)"
+                        [disabled]="isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="globe"></fa-icon>
+                        {{ 'CUSTOMAPPLICATION.PUBLISH' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" *ngIf="isPublished == true" mat-button mat-raised-button
+                        color="primary" type="button" (click)="saveCustomApplicationForm(false)"
+                        [disabled]="isAnyOperationIsInprogress">
+                        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+                        </mat-progress-bar>
+                        <fa-icon class="mr-05" icon="save"></fa-icon>
+                        {{ 'CUSTOMAPPLICATION.UNPUBLISH' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button color="primary" type="button"
+                        (click)="navigatetocustomwidgets(true)">
+                        {{ 'FINISH' | translate }}
+                    </button>
+                    <button class="mr-1 pull-right" mat-button mat-raised-button type="button"
+                        (click)="navigateToFormSelection()">
+                        <fa-icon class="mr-05" icon="arrow-left"></fa-icon> {{ 'APP.PREVIOUS' | translate }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <sat-popover backdropClass="backdrop-color" #addWorkflowType verticalAlign="below" hasBackdrop
+        [interactiveClose]="false" horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mat-bg-primary p-05 mb-1">
+                    {{ 'CUSTOMAPPLICATION.ADDWORKFLOW' | translate }}
+                </div>
+            </mat-card-title>
+            <mat-card-content>
+                <mat-form-field class="full-width">
+                    <mat-select placeholder="{{ 'CUSTOMAPPLICATION.WORKFLOWTYPES' | translate }}"
+                        [formControl]="selectedWorkflowType">
+                        <mat-option *ngFor="let type of workflowTypes" [value]="type.customApplicationWorkflowTypeId">
+                            {{type.customApplicationWorkflowTypeName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-hint>{{ 'CUSTOMAPPLICATION.SELECTAWORKFLOWTYPE' | translate }}</mat-hint>
+                </mat-form-field>
+                <div class="text-center mt-1">
+                    <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+                        [disabled]="checkStatusDisabled()" (click)="addWorkFlowType(selectedWorkflowType.value)">
+                        <fa-icon icon="plus" class="mr-05"></fa-icon>{{ 'ADD' | translate }}
+                    </button>
+                    <button mat-button mat-raised-button (click)="closeWorkFlowTypeDialog()">
+                        <fa-icon icon="times" class="mr-05"></fa-icon>
+                        {{ 'PIVOTGRID.CANCEL' | translate }}
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </sat-popover>
+</div>
+
+
+<app-common-message-box *ngIf="!(canAccess_feature_AddOrUpdateApplications)"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>
+
+<ng-template #workflowBpmnComponent let-data>
+    <workflow-bpmn [data]=[data]></workflow-bpmn>
+</ng-template>
+<ng-template #addLevelComponent let-data>
+    <add-level-dialog [data]=[data] (submitFinished)="submitFinished()"></add-level-dialog>
+</ng-template>
+
+<!-- <sat-popover backdropClass="backdrop-color" #ConfigureEmailPopOver verticalAlign="center" hasBackdrop
+    [interactiveClose]="false" horizontalAlign="center"> -->
+<ng-template #emailConfigurationTemplate let-data>
+    <email-configuration [data]=[data]></email-configuration>
+</ng-template>
+<!-- </sat-popover> -->

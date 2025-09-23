@@ -1,0 +1,187 @@
+<div class="p-0 m-0 full-height" *ngIf="canAccess_feature_ManageManageEntryFormField">
+    <mat-card class="p-0 m-0">
+        <mat-card-title class="data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayoutGap="0">
+                <div fxFlex fxLayoutAlign="start center">
+                    <div class="card-title-text pl-05 ml-05">{{ 'SITE.MANAGEENTRYFORMFIELD' | translate |
+                        titlecase}}
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <div class="no-drag">
+        <kendo-grid [data]="entryModel" [pageSize]="state.take" [skip]="state.skip" [pageable]="true" [sortable]="true"
+            [sort]="state.sort" [filterable]="false" [loading]="anyOperationInProgress"
+            (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-column field="fieldTypeName" title="{{'SITE.FIELDTYPE' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <b>
+                        {{ dataItem.fieldTypeName }}
+                    </b>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="displayName" title="{{'SITE.DISPLAYNAME' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.displayName }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="selectedGrdNames" title="GRD">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.selectedGrdNames }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="unit" title="{{'SITE.UNIT' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.unit }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="isDisplay" title="Display on form">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        <span *ngIf="dataItem.isDisplay == true">Yes</span>
+                        <span *ngIf="dataItem.isDisplay == false">No</span>
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+
+            <kendo-grid-command-column title="{{'KYCCONFIG.ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1" icon="edit"
+                        [satPopoverAnchorFor]="addEntryFormPopOver" #addEntryFormPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'SITE.EDITENTRYFORMFIELD' | translate}}"
+                        (click)="editEntryFormPopUp(dataItem,addEntryFormPopUp)">
+                    </fa-icon>
+                    <fa-icon class="mat-color-accent cursor-pointer mr-1"
+                        [satPopoverAnchorFor]="archiveEntryFormPopOver" #archiveEntryFormPopUp="satPopoverAnchor"
+                        matTooltip="{{ 'SITE.ARCHIVEENTRYFORMFIELD' | translate}}"
+                        (click)="deleteEntryFormPopUp(dataItem,archiveEntryFormPopUp)" icon="trash">
+                    </fa-icon>
+
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+
+
+    <sat-popover #addEntryFormPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="filter-data p-0">
+            <div class="card-title-text mat-bg-primary p-05 text-center">
+
+                <div class="card-title-text mb-1">{{ 'SITE.UPDATEENTRYFORMFIELD' | translate }}
+                </div>
+            </div>
+            <div class="card-content p-05">
+                <form [formGroup]="entryForm" novalidate #formDirective="ngForm" (submit)="upsertEntryFormField()">
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="fieldTypeId" placeholder="{{'SITE.FIELDTYPE' | translate}}" required>
+                            <mat-option *ngFor="let field of entryFormFieldModelTypes" [value]="field.id">
+                                {{field.fieldTypeName}}
+                            </mat-option>
+                            <mat-error>
+                                <span
+                                    *ngIf="entryForm.get('fieldTypeId').hasError('required') && entryForm.get('fieldTypeId').touched">{{'SITE.PLEASESELECTFIELDTYPE'
+                                    | translate}}
+                                </span>
+                            </mat-error>
+                        </mat-select>
+
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input formControlName="displayName" matInput required
+                            placeholder="{{'SITE.DISPLAYNAME' | translate}}">
+                        <mat-error>
+                            <span
+                                *ngIf="entryForm.get('displayName').hasError('required') && entryForm.get('displayName').touched">
+                                {{'SITE.PLEASEENTERDISPLAYNAME' | translate}} </span>
+                            <span
+                                *ngIf="entryForm.get('displayName').hasError('maxlength')">{{'SITE.DISPLAYNAMECANNOTEXCEED250CHARACTERS'
+                                | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <mat-select formControlName="grdiD" placeholder="Select GRD" required multiple
+                            [compareWith]="compareSelectedgrdFn" (selectionChange)="selectGrd()">
+                            <mat-select-trigger>
+                                {{selectedGrdNames}}
+                            </mat-select-trigger>
+                            <mat-option [value]="0" #allSelected (click)="toggleAllGrdSelection()">
+                                {{'ADVANCEDSEARCH.SELECTALL' | translate}}
+                            </mat-option>
+                            <mat-option *ngFor="let field of gREMOdel" [value]="field.id" (click)="togglGrdSelected(allSelected.value)">
+                                {{field.name}}
+                            </mat-option>
+                            <mat-error>
+                                <span
+                                    *ngIf="entryForm.get('grdiD').hasError('required') && entryForm.get('grdiD').touched">Please
+                                    select GRD
+                                </span>
+                            </mat-error>
+                        </mat-select>
+
+                    </mat-form-field>
+                    <mat-form-field class="full-width">
+                        <input formControlName="unit" matInput required placeholder="{{'SITE.UNIT' | translate}}">
+                        <mat-error>
+                            <span *ngIf="entryForm.get('unit').hasError('required') && entryForm.get('unit').touched">
+                                {{'SITE.PLEASEENTERUNIT' | translate}} </span>
+                            <span
+                                *ngIf="entryForm.get('unit').hasError('maxlength')">{{'SITE.UNITCANNOTEXCEED50CHARACTERS'
+                                | translate}}
+                            </span>
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-checkbox formControlName="isDisplay">Display on form</mat-checkbox>
+
+                    <div class="mt-1 text-center">
+                        <button mat-raised-button type="submit" color="primary" class="mr-1"
+                            [disabled]="!entryForm.valid||addOperationInProgress">
+                            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="addOperationInProgress">
+                            </mat-progress-bar>
+                            <fa-icon class="mr-05" icon="save"></fa-icon> {{ 'SAVE' | translate }}
+                        </button>
+                        <button mat-button mat-raised-button (click)="closePopUp()" type="button"
+                            [disabled]="addOperationInProgress">
+                            <fa-icon class="mr-05" icon="times"></fa-icon>
+                            {{ 'CANCEL' | translate }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-card>
+    </sat-popover>
+
+    <sat-popover #archiveEntryFormPopOver hasBackdrop horizontalAlign="end">
+        <mat-card class="p-1">
+            <mat-card-title class="text-center">
+                <div class="card-title-text mb-1">{{ 'SITE.AREYOUSUREWANTTODELETEENTRYFORMFIELD' | translate }}
+                </div>
+            </mat-card-title>
+            <div class="text-center">
+                <button mat-button mat-raised-button color="primary" class="mr-1" (click)="archiveEntryFormField();"
+                    [disabled]="archiveOperationInprogress">
+                    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="archiveOperationInprogress">
+                    </mat-progress-bar>
+                    <fa-icon icon="check" class="mr-05"> </fa-icon> {{ 'YES' | translate }} &nbsp;
+                </button>
+                <button mat-button mat-raised-button (click)="closeArchivePopUp();"
+                    [disabled]="archiveOperationInprogress">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'ROSTER.NO' | translate }}
+                </button>
+            </div>
+        </mat-card>
+    </sat-popover>
+</div>
+
+
+<app-common-message-box *ngIf="!canAccess_feature_ManageManageEntryFormField"
+    textToDisplay="{{ 'PERMISSIONMESSAGE' | translate }}">
+</app-common-message-box>

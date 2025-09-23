@@ -1,0 +1,311 @@
+<mat-card-content class="p-0">
+    <form [formGroup]="addTestCaseForm" novalidate (submit)="addTestCaseForm.valid && addNewTestCase()">
+        <div class="p-0" fxLayout="row wrap">
+            <div fxLayout="row" class="mb-05" fxFlex="100" fxFlex.gt-sm="100">
+                <mat-form-field fxFlex="calc(100% - 20px)">
+                    <input matInput placeholder="{{'TESTMANAGEMENT.TITLE' | translate}}" required
+                        formControlName="title">
+                    <mat-hint>{{'TESTMANAGEMENT.TESTCASETITLEHINT' | translate}}</mat-hint>
+                    <mat-error
+                        *ngIf="addTestCaseForm.get('title').hasError('required') && addTestCaseForm.get('title').touched">
+                        {{'TESTMANAGEMENT.PLEASEFILLTESTCASETITLE' | translate}}
+                    </mat-error>
+                    <mat-error *ngIf="addTestCaseForm.get('title').hasError('maxlength')">
+                        {{'TESTMANAGEMENT.TESTCASETITLENOTEXCEED500CHARACTERS' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                    <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORPRECONDITION' | translate}}" icon="image"
+                        class="mat-color-accent icon-button" [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                        #testSuiteFileUploadPopup="satPopoverAnchor"
+                        (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteCaseReferenceTypeId,testSuiteFileUploadPopup)">
+                    </fa-icon>
+                </span>
+            </div>
+            <div>
+            <div id="style-1" class="case-scenario-steps" fxFlex="100" fxFlex.gt-sm="100" style="flex-flow: wrap !important;">
+                <mat-form-field class="mr-1 case-scenario-steps-edit">
+                    <input matInput placeholder="{{'TESTMANAGEMENT.SECTION' | translate}}" disabled
+                        [value]="addTestCaseForm.get('sectionName').value">
+                </mat-form-field>
+                <mat-form-field class="mr-1 case-scenario-steps-edit">
+                    <mat-select placeholder="{{'TESTMANAGEMENT.TEMPLATE' | translate}}" required
+                        formControlName="templateId" (selectionChange)="onChangeTemplate($event)">
+                        <mat-option *ngFor="let template of (testCaseTemplatesList$ | async) " [value]="template.id">
+                            {{template.value}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addTestCaseForm.get('templateId').hasError('required') && addTestCaseForm.get('templateId').touched">
+                        Please select template
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="case-scenario-steps-edit">
+                    <mat-select placeholder="{{'TESTMANAGEMENT.TYPE' | translate}}" required formControlName="typeId">
+                        <mat-option *ngFor="let type of (testCaseTypesList$ | async) " [value]="type.id">
+                            {{type.value}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addTestCaseForm.get('typeId').hasError('required') && addTestCaseForm.get('typeId').touched">
+                        Please select type
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="mr-1 case-scenario-steps-edit">
+                    <mat-select placeholder="{{'TESTMANAGEMENT.PRIORITY' | translate}}" required
+                        formControlName="priorityId">
+                        <mat-option *ngFor="let priority of (testCasePrioritiesList$ | async) " [value]="priority.id">
+                            {{priority.value}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addTestCaseForm.get('priorityId').hasError('required') && addTestCaseForm.get('priorityId').touched">
+                        {{'TESTMANAGEMENT.PELASESELECTPRIORITY' | translate}}
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="mr-1 case-scenario-steps-edit">
+                    <input matInput placeholder="{{'TESTMANAGEMENT.ESTIMATE' | translate}}" formControlName="estimate">
+                    <mat-hint>{{'TESTMANAGEMENT.ESTIMATEHINT' | translate}}</mat-hint>
+                    <mat-error *ngIf="addTestCaseForm.get('estimate').hasError('pattern')">
+                        {{'TESTMANAGEMENT.PLEASEENTERVALIDFORMAT' | translate}}1d/1h/1m/1s)
+                    </mat-error>
+                </mat-form-field>
+                <mat-form-field class="case-scenario-steps-edit">
+                    <mat-select placeholder="{{'TESTMANAGEMENT.AUTOMATIONTYPE' | translate}}" required
+                        formControlName="automationTypeId">
+                        <mat-option *ngFor="let automation of (testCaseAutomationsList$ | async) "
+                            [value]="automation.id">
+                            {{automation.automationTypeName}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error
+                        *ngIf="addTestCaseForm.get('automationTypeId').hasError('required') && addTestCaseForm.get('automationTypeId').touched">
+                        {{'TESTMANAGEMENT.PLEASESELECTAUTOMATIONTYPE' | translate}}
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="full-width" fxFlex="100" fxFlex.gt-sm="100">
+                    <input matInput placeholder="{{'TESTMANAGEMENT.REFERENCES' | translate}}"
+                        formControlName="references">
+                    <mat-hint>{{'TESTMANAGEMENT.PLEASEENTERREFERENCESWITHCOMMASEPERATED' | translate}}</mat-hint>
+                </mat-form-field>
+                <div fxLayout="row" *ngIf="textShow || stepsShow" fxFlex="100" fxFlex.gt-sm="100">
+                    <mat-form-field fxFlex="calc(100% - 20px)">
+                        <textarea matInput rows="2" placeholder="{{'TESTMANAGEMENT.PRECONDITIONS' | translate}}"
+                            formControlName="precondition"></textarea>
+                        <mat-hint>{{'TESTMANAGEMENT.PRECONDITIONSHINT' | translate}}</mat-hint>
+                    </mat-form-field>
+                    <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                        <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORPRECONDITION' | translate}}" icon="image"
+                            class="mat-color-accent icon-button" [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                            #testSuiteFileUploadPopup="satPopoverAnchor"
+                            (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteCasePreconditionReferenceTypeId,testSuiteFileUploadPopup)">
+                        </fa-icon>
+                    </span>
+                </div>
+                <mat-card class="p-0 mt-1 test-display" *ngIf="stepsShow && stepsCount == 0" fxFlex="100"
+                    fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="50" class="p-05">
+                            <p class="m-0">{{'TESTMANAGEMENT.ADDSTEPSTOTHISTESTCASE' | translate}}</p>
+                            <p class="m-0">
+                                {{'TESTMANAGEMENT.FOREVERYTESTSTEPENTERASHORTDISCRIPTION' | translate}}</p>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="40" class="p-05">
+                            <p class="m-0">{{'TESTMANAGEMENT.WHATARESTEPS' | translate}}</p>
+                            <p> {{'TESTMANAGEMENT.ENTERALLTESTSTEPSNEEDEDTOVERIFYTESTCASE' | translate}}</p>
+                        </div>
+                    </div>
+                </mat-card>
+                <div class="mt-05" *ngIf="stepsShow" fxFlex="100" fxFlex.gt-sm="100">
+                    <div formArrayName="testCaseSteps"
+                        *ngFor="let item of getStepControls()  let i = index;">
+                        <div class="Step-description" fxFlex="100" fxFlex.gt-sm="100">
+                            <div [formGroupName]="i" style="display: flex">
+                                <div class="align-center mr-05" fxFlex="100" fxFlex="5">
+                                    <span class="badge-item test-case-step-count count-padding">{{i + 1}}</span>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36" class="mr-05">
+                                    <textarea rows="3" placeholder=" {{'TESTMANAGEMENT.STEPDESCRIPTION' | translate}}"
+                                        formControlName="stepText" style="width: 100%"></textarea>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="42" fxFlex.xs="36">
+                                    <textarea rows="3" placeholder=" {{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}"
+                                        formControlName="stepExpectedResult" style="width: 100%"></textarea>
+                                </div>
+                                <div fxFlex="100" fxFlex.gt-xs="8" fxFlex.xs="17" fxLayout="column"
+                                    fxLayoutAlign="center center" fxLayoutGap="4px">
+                                    <span>
+                                        <a class="padding-p5 icon-hover"
+                                            matTooltip="{{'TESTMANAGEMENT.ADDFIELD' | translate}}" (click)="addItem(i)">
+                                            <fa-icon icon="plus"></fa-icon>
+                                        </a>
+                                        <a class="padding-p5 icon-hover ml-1"
+                                            matTooltip="{{'TESTMANAGEMENT.DELETEFIELD' | translate}}"
+                                            [satPopoverAnchorFor]="deleteFeaturePopOver"
+                                            #deleteStepPopover="satPopoverAnchor"
+                                            (click)="removeItem(i,deleteStepPopover)">
+                                            <fa-icon icon="minus"></fa-icon>
+                                        </a>
+                                    </span>
+                                    <span *ngIf="item.get('stepId').value != null && item.get('stepId').value != ''"
+                                        fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="12px">
+                                        <fa-icon
+                                            matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORSTEPDESCRIPTION' | translate}}"
+                                            icon="image" class="mat-color-accent icon-button"
+                                            [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                            #testSuiteFileUploadPopup="satPopoverAnchor"
+                                            (click)="openFileUploadPopover(item.get('stepId').value,testSuiteStepDescriptionReferenceTypeId,testSuiteFileUploadPopup)">
+                                        </fa-icon>
+                                        <fa-icon
+                                            matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFOREXPECTEDRESULT' | translate}}"
+                                            icon="image" class="mat-color-accent icon-button"
+                                            [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                            #testSuiteFileUploadPopup="satPopoverAnchor"
+                                            (click)="openFileUploadPopover(item.get('stepId').value,testSuiteStepExpectedReferenceTypeId,testSuiteFileUploadPopup)">
+                                        </fa-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- </div> -->
+                    <div class="text-right" fxflex="100" fxflex.gt-sm="100">
+                        <a (click)="addNewItem()"
+                            style="text-decoration: underline">{{'TESTMANAGEMENT.ADDSTEP' | translate}}</a>
+                    </div>
+                </div>
+                <div fxLayout="column" *ngIf="textShow" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row">
+                        <mat-form-field fxFlex="calc(100% - 20px)">
+                            <textarea matInput placeholder="{{'TESTMANAGEMENT.STEPDESCRIPTION' | translate}}"
+                                formControlName="steps"></textarea>
+                        </mat-form-field>
+                        <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                            <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORDESCRIPTION' | translate}}"
+                                icon="image" class="mat-color-accent icon-button"
+                                [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                #testSuiteFileUploadPopup="satPopoverAnchor"
+                                (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteTextDescriptionReferenceTypeId,testSuiteFileUploadPopup)">
+                            </fa-icon>
+                        </span>
+                    </div>
+                    <div fxLayout="row">
+                        <mat-form-field fxFlex="calc(100% - 20px)">
+                            <textarea matInput placeholder="{{'TESTMANAGEMENT.EXPECTEDRESULT' | translate}}"
+                                formControlName="expectedResult"></textarea>
+                        </mat-form-field>
+                        <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                            <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFOREXPECTEDRESULT' | translate}}"
+                                icon="image" class="mat-color-accent icon-button"
+                                [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                #testSuiteFileUploadPopup="satPopoverAnchor"
+                                (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteTextExpectedReferenceTypeId,testSuiteFileUploadPopup)">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </div>
+                <div fxLayout="column" *ngIf="exploratoryShow" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row">
+                        <mat-form-field fxFlex="calc(100% - 20px)">
+                            <textarea matInput placeholder="{{'TESTMANAGEMENT.MISSION' | translate}}"
+                                formControlName="mission"></textarea>
+                        </mat-form-field>
+                        <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                            <fa-icon matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORMISSION' | translate}}" icon="image"
+                                class="mat-color-accent icon-button" [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                #testSuiteFileUploadPopup="satPopoverAnchor"
+                                (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteCaseMissionReferenceTypeId,testSuiteFileUploadPopup)">
+                            </fa-icon>
+                        </span>
+                    </div>
+                    <div fxLayout="row">
+                        <mat-form-field fxFlex="calc(100% - 20px)">
+                            <textarea matInput
+                                placeholder="{{'TESTMANAGEMENT.GOALS' | translate | softLabelsPipe : softLabels}}"
+                                formControlName="goals"></textarea>
+                        </mat-form-field>
+                        <span fxFlex="20px" class="pb-07" fxLayoutAlign="center end">
+                            <fa-icon
+                                matTooltip="{{'TESTMANAGEMENT.UPLOADFILESFORGOALS' | translate | softLabelsPipe : softLabels}}"
+                                icon="image" class="mat-color-accent icon-button"
+                                [satPopoverAnchorFor]="testSuiteFileUploadPopover"
+                                #testSuiteFileUploadPopup="satPopoverAnchor"
+                                (click)="openFileUploadPopover(testCaseDetail.testCaseId,testSuiteCaseGoalReferenceTypeId,testSuiteFileUploadPopup)">
+                            </fa-icon>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <div class="full-width text-center Test-buttons mt-05">
+                <button *ngIf="!editTestCase" mat-button mat-raised-button color="primary"
+                    class="mr-1 test-button mb-05" type="submit" [disabled]="disabledTestCase">
+                    <fa-icon class="mr-05" icon="check"></fa-icon>
+                    {{'TESTMANAGEMENT.SAVETESTCASE' | translate}}
+                </button>
+                <button *ngIf="editTestCase" mat-button mat-raised-button color="primary" class="mr-1 test-button"
+                    type="submit" [disabled]="disabledTestCase">
+                    <fa-icon class="mr-05" icon="edit"></fa-icon>
+                    {{'TESTMANAGEMENT.SAVETESTCASE' | translate}}
+                </button>
+                <button mat-button mat-raised-button type="button" (click)="closeTestCaseEditDialog()">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </div>
+    </form>
+</mat-card-content>
+
+<!--Delete dialog-->
+<sat-popover #deleteFeaturePopOver hasBackdrop backdropClass="backdrop-color" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content p-05">
+                {{'TESTMANAGEMENT.REALLYDELETETHISSTEPTHISOPERATIONCANNOTBEUNDONE' | translate}}
+            </div>
+            <div class="text-center">
+                <button class="mr-05" mat-button mat-raised-button color="primary" (click)="removeItemAtIndex()">
+                    <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeDeleteStepDialog();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+<!--Delete dialog-->
+
+<!--Upload test suite files popup-->
+<sat-popover #testSuiteFileUploadPopover hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="p-0 mr-0 custom-hrm-dropzone" *ngIf="fileUploadPopover && testCaseDetail">
+        <mat-card-title>
+            <div class="card-title-text mat-bg-primary p-05" fxLayout="row">
+                <div fxFlex class="text-center">
+                    {{'TESTMANAGEMENT.UPLOADFILES' | translate}}
+                </div>
+                <div fxFlex="20px" fxLayoutAlign="end center">
+                    <button class="inline_edit_close_btn btn" (click)="closeFileUploadPopover()">
+                        <fa-icon icon="times"></fa-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-card-title>
+        <div class="mobile-view-popover p-1">
+             <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [referenceId]="referenceId"
+                [selectedParentFolderId]="referenceId" [selectedStoreId]="selectedStoreId"
+                [isButtonVisible]="isButtonVisible" [getFilesByReferenceId]="true">
+            </app-dropzone> 
+        </div>
+    </mat-card>
+</sat-popover>
+<!--Upload test suite files popup-->

@@ -1,0 +1,146 @@
+<div class="full-height">
+    <mat-card class="p-0 canteen-manage m-0">
+        <mat-card-title class="full-width data-table-header drag-handler">
+            <div fxLayout="row wrap" fxLayout.xs="column">
+                <div class="card-title-text p-05 ml-05" fxFlex="30" fxLayoutAlign="start center">
+                    <span fxFlex="100" class="hide-content-overflow" matTooltip="Purchase shipments">Purchase
+                        shipments</span>
+                </div>
+                <div fxFlex fxLayout="row" fxLayout.xs="column">
+                    <div fxFlex="calc(100% - 250px)" fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                        <mat-slide-toggle
+                            [matTooltip]="(isArchived == true)?('SWITCHTOUNARCHIVE'| translate):('SWITCHTOARCHIVE'| translate)"
+                            class="mr-1 archive-switch" [(ngModel)]="isArchived" [checked]="isArchived"
+                            (change)="getShipmentExecutionDetails()">
+                        </mat-slide-toggle>
+                    </div>
+                    <div fxFlex="210px" fxFlex.xs="60px" class="search_goalinput mr-3" fxLayoutAlign="end center"
+                        fxLayoutAlign.xs="start center">
+                        <div fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <mat-form-field class="full-width">
+                                <input class="search_goal" matInput placeholder="{{'HRMANAGAMENT.SEARCH' | translate}}"
+                                    [(ngModel)]="searchText" (input)="filterByName($event)">
+                            </mat-form-field>
+                        </div>
+                        <span class="close_icon masterdata-search-close" style="right: 0px !important;"
+                            fxLayoutAlign="end center" fxLayoutAlign.xs="start center">
+                            <span *ngIf="!searchText"></span>
+                            <mat-icon *ngIf="searchText" class="icon-button mr-05" aria-hidden="false"
+                                (click)="closeSearch()" style="cursor:pointer">
+                                close</mat-icon>
+                        </span>
+                        <!-- <button mat-icon-button matTooltip="{{ 'EMPLOYEEGRADE.CREATEEMPLOYEEGRADE' | translate  | softLabelsPipe : softLabels }}"
+                            [satPopoverAnchorFor]="upsertGradePopover" #upsertGradePopUp="satPopoverAnchor"
+                            (click)="creatGradePopupOpen(upsertGradePopUp);clearForm()" *ngIf="!isArchived">
+                            <fa-icon icon="plus" class="filter mat-color-accent">
+                            </fa-icon>
+                        </button> -->
+                        <div fxFlex="36px" *ngIf="isArchived"></div>
+                    </div>
+                </div>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-card-title>
+    </mat-card>
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isInProgress">
+    </mat-progress-bar>
+    <div class="activity-data no-drag projects-list-grid buyers-table-height">
+        <kendo-grid [data]="shipmentExecutionListData" [filterable]="false" [pageSize]="state.take" [skip]="state.skip" (dataStateChange)="dataStateChange($event)"
+            [sort]="state.sort" [sortable]="true" [pageable]="true">
+            <kendo-grid-column width="150" field="contractNumber" title="{{ 'CONTRACT.CONTRACTNUMBER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="shipmentNumber" title="{{ 'PURCHASE.SHIPMENTNUMBER' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="shipmentQuantity" title="{{ 'PURCHASE.SHIPMENTQUANTITY' |  translate }}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.shipmentQuantity | number: '1.2-2' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="product" title="{{ 'CONTRACT.PRODUCT' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="grade" title="{{ 'CONTRACT.GRADE' |  translate }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="blsCount" title="Total BL's">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <div>
+                        {{ dataItem.blsCount | number: '1.0-0' }}
+                    </div>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="vesselName" title="{{ 'PURCHASE.VESSELNAME' |  translate | titlecase  }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="voyageNumber" title="{{ 'PURCHASE.VOYAGENUMBER' |  translate | titlecase  }}">
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="etaDate" title="Vessel ETA">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                {{ dataItem.etaDate | utcToLocalTime | date: 'dd-mm-yyyy' }}
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column width="150" field="statusName" title="{{ 'CONTRACT.STATUS' |  translate }}">
+                <ng-template kendoGridHeaderTemplate let-column let-columnIndex="columnIndex">
+                    Status
+                </ng-template>
+                <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+                    <mat-chip class="mt-05 allgoals_process text-center mat-chip-color-text" mat-sm-chip
+                        [style.backgroundColor]="dataItem?.color">
+                        {{ dataItem.statusName }}
+                    </mat-chip>
+                </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column width="150" field="action" title="{{'ACTIONS' | translate}}">
+                <ng-template kendoGridCellTemplate let-dataItem>
+                    <button class="text-center" title="{{ 'PURCHASE.EDITPURCHASESHIPMENTEXECUTION' |  translate }}" mat-icon-button
+                        (click)="editPurchaseExecution(dataItem)" *ngIf="!isArchived && canAccess_feature_AddPurchaseExecution">
+                        <fa-icon icon="edit" style="cursor: pointer;" class="mat-color-accent"></fa-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'PURCHASE.ARCHIVEPURCHASESHIPMENTEXECUTION' |  translate }}"
+                        [satPopoverAnchorFor]="deleteShipmentPopover" #deleteShipmentPopup="satPopoverAnchor"
+                        (click)="deleteShipementPopUpOpen(dataItem,deleteShipmentPopup)" *ngIf="!isArchived && canAccess_feature_AddPurchaseExecution" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">archive</mat-icon>
+                    </button>
+                    <button class="text-center" title="{{ 'PURCHASE.UNARCHIVEPURCHASESHIPMENTEXECUTION' |  translate }}"
+                        [satPopoverAnchorFor]="deleteShipmentPopover" #deleteShipmentPopup="satPopoverAnchor"
+                        (click)="deleteShipementPopUpOpen(dataItem,deleteShipmentPopup)" *ngIf="isArchived && canAccess_feature_AddPurchaseExecution" mat-icon-button>
+                        <mat-icon class="mat-color-accent" style="cursor: pointer;">unarchive</mat-icon>
+                    </button>
+                </ng-template>
+            </kendo-grid-command-column>
+        </kendo-grid>
+    </div>
+</div>
+
+<!-- deletepopover -->
+<sat-popover backdropClass="backdrop-color" #deleteShipmentPopover hasBackdrop backdropClass="backdrop-color"
+    verticalAlign="below" horizontalAlign="end">
+    <mat-card class="p-0">
+        <mat-card-title class="text-center mat-bg-primary">
+            <div class="card-title-text mb-1" *ngIf="isShipementArchived">
+                {{ 'PURCHASE.ARCHIVEPURCHASESHIPMENTEXECUTION' |  translate }}</div>
+            <div class="card-title-text mb-1" *ngIf="!isShipementArchived">
+                {{ 'PURCHASE.UNARCHIVEPURCHASESHIPMENTEXECUTION' |  translate }}</div>
+        </mat-card-title>
+        <mat-card-content>
+            <div class="card-content mb-1" *ngIf="isShipementArchived">
+                {{ 'PURCHASE.AREYOUSUREYOUWANTTOARCHIVETHISSHIPMENT?' |  translate }}
+            </div>
+            <div class="card-content mb-1" *ngIf="!isShipementArchived">
+                {{ 'PURCHASE.AREYOUSUREYOUWANTTOUNARCHIVETHISSHIPMENT?' |  translate }}
+            </div>
+            <div class="text-center">
+                <button class="mr-1" mat-button mat-raised-button color="primary" *ngIf="isShipementArchived"
+                    [disabled]="isInProgress" (click)="deleteShipement();">
+                    <mat-icon style="cursor: pointer;">archive</mat-icon>{{ 'DESIGNATION.ARCHIVE' | translate }}
+                </button>
+                <button mat-button mat-raised-button color="primary" *ngIf="!isShipementArchived" [disabled]="isInProgress"
+                    (click)="deleteShipement();">
+                    <mat-icon style="cursor: pointer;">unarchive</mat-icon> {{ 'YES' | translate }}
+                </button>
+                <button mat-button mat-raised-button (click)="closedeleteShipmentPopUp();">
+                    <fa-icon class="mr-05" icon="times"></fa-icon> {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>

@@ -1,0 +1,30 @@
+import { Pipe, PipeTransform } from '@angular/core';
+import { EmployeeListModel } from '../../activitytracker/models/employee-model copy';
+@Pipe({
+    name: 'rosterEmployeeFilter'
+})
+export class RosterEmployeeFilterPipe implements PipeTransform {
+    transform(items: EmployeeListModel[], shiftId: any, departmentId: any | string) {
+        if(typeof (departmentId) == "object" && departmentId.length > 0){
+            if(departmentId.length > 0 && departmentId[departmentId.length - 1] == 0){
+                return items;
+            }
+        }
+        if (items && items.length) {
+            return items.filter(item => {
+                let retValue = true;
+                if (departmentId && item.departmentId
+                    && ((typeof (departmentId) == "string" && item.departmentId != departmentId)
+                        || (!departmentId.includes(item.departmentId) && item.departmentId != null))) {
+                    retValue = false;
+                }
+                if (shiftId && item.shiftTimingId != shiftId) {
+                    retValue = false;
+                }
+                return retValue;
+            })
+        } else {
+            return items;
+        }
+    }
+}

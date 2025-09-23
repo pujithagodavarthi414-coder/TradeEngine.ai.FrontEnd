@@ -1,0 +1,173 @@
+<div class="p-1 invoice-preview-height" id="style-1">
+    <div class="invoice-container">
+        <div>
+            <h6><b>{{ 'BILLINGMANAGEMENT.BILLTO' | translate }}</b></h6>
+            <div fxLayout="row wrap">
+                <div fxFlex="50" fxLayoutAlign="start center" class="d-block word-break">
+                    {{estimateDetails.clientName}}
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div>
+            <div fxLayout="row wrap">
+                <div fxFlex="50" fxLayoutAlign="start center" fxLayout="row wrap" class="mb-1">
+                    <div fxFlex="100" class="mt-02 invoice-page invoice-amount-price word-break">
+                        {{estimateDetails?.title}}
+                    </div>
+                    <div fxFlex="100">
+                        <span><b>{{ 'BILLINGMANAGEMENT.ESTIMATE#' | translate | softLabelsPipe : softLabels }}:
+                            </b></span>
+                        {{estimateDetails.estimateNumber}}
+                    </div>
+                    <div fxFlex="100">
+                        <span><b>{{ 'BILLINGMANAGEMENT.PO#' | translate }}:</b> </span>
+                        {{estimateDetails?.po}}
+                    </div>
+                    <div fxFlex="100">
+                        {{estimateDetails?.issueDate | date: 'mediumDate' }}
+                    </div>
+                </div>
+                <div fxFlex="50" fxLayout="row wrap" fxLayoutAlign="end start">
+                    <div fxFlex="100" class="mt-02" fxLayoutAlign="end start">
+                        <span class="invoice-amount-price" style="text-align: right;">
+                            {{estimateDetails.currencyCode}}{{estimateDetails.symbol}}{{estimateDetails.totalEstimateAmount.toFixed(2) | number}}
+                        </span>
+                    </div>
+                    <div fxFlex="100" class="mt-02" fxLayoutAlign="end start" *ngIf="estimateDetails.dueDate">
+                        <span><b>{{ 'BILLINGMANAGEMENT.DUE' | translate }}: </b></span>
+                        {{estimateDetails?.dueDate | date: 'mediumDate'}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="invoice-container" *ngIf="estimateDetails.estimateTasks && estimateDetails.estimateTasks.length > 0">
+        <div class="table-responsive overflow-visible">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ 'BILLINGMANAGEMENT.TASK' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.RATE' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.HOURS' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let task of estimateDetails.estimateTasks;let i = index">
+                        <td>
+                            <div fxLayout="row" class="word-break">
+                                {{task?.taskName}}
+                            </div>
+                            <div fxLayout="row" class="mt-05 word-break">
+                                {{task?.taskDescription}}
+                            </div>
+                        </td>
+                        <td>
+                            {{task?.rate.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            {{task?.hours.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            <label>{{estimateDetails.symbol}}{{calculateTaskTotal(task?.rate.toFixed(2),task?.hours.toFixed(2)) | number}}</label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="invoice-container" *ngIf="estimateDetails.estimateItems && estimateDetails.estimateItems.length > 0">
+        <div class="table-responsive overflow-visible">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ 'BILLINGMANAGEMENT.ITEM' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.PRICE' | translate }} </th>
+                        <th>{{ 'BILLINGMANAGEMENT.QTY' | translate }}</th>
+                        <th>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of estimateDetails.estimateItems;let i = index">
+                        <td>
+                            <div fxLayout="row" class="word-break">
+                                {{item?.itemName}}
+                            </div>
+                            <div fxLayout="row" class="mt-05 word-break">
+                                {{item?.itemDescription}}
+                            </div>
+                        </td>
+                        <td>
+                            {{item?.price.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            {{item?.quantity.toFixed(2) | number}}
+                        </td>
+                        <td>
+                            <label>{{estimateDetails.symbol}}{{calculateItemTotal(item?.price.toFixed(2),item?.quantity.toFixed(2)) | number}}</label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div fxLayout="row" class="mt-1-05 invoice-container">
+        <div fxFlex="48">
+            <div *ngIf="estimateDetails.terms">
+                <span class="mb-0">
+                    <b>{{ 'BILLINGMANAGEMENT.TERMS' | translate }}</b>
+                </span>
+                <div class="word-break">
+                    {{estimateDetails?.terms}}
+                </div>
+            </div>
+            <div *ngIf="estimateDetails.notes" class="mt-1">
+                <span class="mb-0">
+                    <b>{{ 'BILLINGMANAGEMENT.NOTES' | translate }}</b>
+                </span>
+                <div class="word-break">
+                    {{estimateDetails?.notes}}
+                </div>
+            </div>
+        </div>
+        <div fxFlex>
+            <div fxLayout="row" class="mt-05 ml-1">
+                <div fxFlex="49" fxLayout="column">
+                    <span><b>{{ 'BILLINGMANAGEMENT.SUBTOTAL' | translate }}:</b></span>
+                    <span>{{ 'BILLINGMANAGEMENT.DISCOUNT' | translate }}: (
+                        {{estimateDetails?.discount.toFixed(2)}}%)
+                    </span>
+                </div>
+                <div fxFlex="50" fxLayout="column">
+                    <span
+                        fxLayoutAlign="end center"><b>{{estimateDetails.symbol}}{{estimateDetails.subTotalEstimateAmount.toFixed(2) | number}}</b></span>
+                    <span fxLayoutAlign="end center">
+                        ({{estimateDetails.symbol}}{{estimateDetails.estimateDiscountAmount.toFixed(2) | number}})</span>
+                </div>
+            </div>
+            <hr class="ml-1">
+            <div fxLayout="row" class="mt-05  ml-1">
+                <div fxFlex="49" fxLayout="column">
+                    <span><b>{{ 'BILLINGMANAGEMENT.TOTAL' | translate }}:</b></span>
+                    <span>{{ 'BILLINGMANAGEMENT.PAID' | translate }}:</span>
+                </div>
+                <div fxFlex="50" fxLayout="column">
+                    <span
+                        fxLayoutAlign="end center"><b>{{estimateDetails.symbol}}{{estimateDetails.totalEstimateAmount.toFixed(2) | number}}</b></span>
+                    <span fxLayoutAlign="end center"> {{estimateDetails.symbol}}0.00</span>
+                </div>
+            </div>
+            <hr class="ml-1">
+            <div fxLayout="row" class="mt-05 ml-1 mb-1">
+                <div fxFlex="49">
+                    <span><b>{{ 'BILLINGMANAGEMENT.AMOUNTDUE' | translate }}:</b></span>
+                </div>
+                <div fxFlex="50">
+                    <span
+                        fxLayoutAlign="end center"><b>{{estimateDetails.symbol}}{{estimateDetails.totalEstimateAmount.toFixed(2) | number}}</b></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

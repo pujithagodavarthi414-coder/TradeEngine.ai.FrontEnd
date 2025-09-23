@@ -1,0 +1,110 @@
+<mat-card class="p-0">
+  <mat-card-title class="text-center" (click)="$event.stopPropagation();">
+    <div class="card-title-text mat-bg-primary p-05">
+      {{'HRMANAGAMENT.PLACEANORDER' | translate}}
+    </div>
+  </mat-card-title>
+  <form [formGroup]="foodOrderForm" #formDirective="ngForm" novalidate
+    (submit)="foodOrderForm.valid && upsertFoodOrder()">
+    <div mat-dialog-content>
+      <div class="card-content p-05" (click)="$event.stopPropagation();">
+        <div fxLayout="row wrap" fxLayoutGap.xs="0px" fxLayoutGap="5px" fxLayout.xs="column">
+          <div fxFlex fxFlex.gt-sm="49" fxFlex.xs="100">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <input formControlName="orderedDate" matInput [matDatepicker]="picker" [max]="maxDate"
+                placeholder="{{'HRMANAGAMENT.ORDERDATE' | translate}}" (click)="picker.open()" required>
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error>
+                <span *ngIf="!foodOrderForm.get('orderedDate').valid && foodOrderForm.get('orderedDate').touched">
+                  {{'HRMANAGAMENT.PLEASESELECTORDERDATE' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex fxFlex.gt-sm="49" fxFlex.xs="100">
+            <mat-form-field class="full-width">
+              <input formControlName="foodOrderItems" matInput placeholder="{{'HRMANAGAMENT.FOODITEMS' | translate}}"
+                (click)="$event.stopPropagation();" required>
+              <mat-error>
+                <span
+                  *ngIf="foodOrderForm.get('foodOrderItems').hasError('required') && foodOrderForm.get('foodOrderItems').touched">
+                  {{'HRMANAGAMENT.PLEASEENTERORDERITEMS' | translate}}</span>
+                <span *ngIf="foodOrderForm.get('foodOrderItems').hasError('maxlength')">
+                  {{'HRMANAGAMENT.FOODOREDERTEXTCANTEXCEED800CHARACTERS' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mt-05" fxLayoutGap.xs="0px" fxLayoutGap="5px">
+          <div fxFlex fxFlex.gt-sm="49">
+            <mat-form-field class="full-width">
+              <input type="number" onkeydown="return event.keyCode !== 69" min="1" formControlName="amount" matInput
+                placeholder="{{'HRMANAGAMENT.AMOUNTRS' | translate}}" (click)="$event.stopPropagation();" required>
+              <mat-error>
+                <span *ngIf="foodOrderForm.get('amount').hasError('required') && foodOrderForm.get('amount').touched">
+                  {{'HRMANAGAMENT.PLEASEENTERAMOUNT' | translate}}</span>
+                <span
+                  *ngIf="foodOrderForm.get('amount').hasError('min')">{{'HRMANAGAMENT.ORDERAMOUNTTOBECREDITEDVALIDATIONMESSAGE' | translate}}</span>
+                <span
+                  *ngIf="foodOrderForm.get('amount').hasError('max')">{{'HRMANAGAMENT.ORDERAMOUNTMAXVALIDATIONMESSAGE' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div fxFlex fxFlex.gt-sm="49" fxFlex.xs="100">
+            <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+              <mat-select formControlName="memberId" placeholder="{{'HRMANAGAMENT.ORDEREDBY' | translate}}" multiple
+                required>
+                <mat-select-trigger>
+                  {{selectedUsersList}}
+                </mat-select-trigger>
+                <mat-option #allSelected (click)="toggleAllUsersSelected()" [value]="0">Select All</mat-option>
+                <mat-option [value]="person.id" *ngFor="let person of userDropDownListData"
+                  (click)="getUserslistByUserId();toggleUserPerOne()">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.fullName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" src="{{person.profileImage}}"
+                    *ngIf="person.profileImage">{{person.fullName}}
+                </mat-option>
+              </mat-select>
+              <mat-error>
+                <span *ngIf="!foodOrderForm.get('memberId').valid && foodOrderForm.get('memberId').touched">
+                  {{'HRMANAGAMENT.MEMBERNAMESHOULDBESELECTED' | translate}}</span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div fxLayout="row wrap" class="mb-1 mt-05" fxLayoutGap.xs="0px" fxLayoutGap="5px">
+          <div fxFlex fxFlex.gt-sm="98">
+            <mat-form-field class="full-width">
+              <input formControlName="comment" matInput placeholder="{{'HRMANAGAMENT.COMMENTS' | translate}}"
+                (click)="$event.stopPropagation();">
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="custom-hrm-dropzone">
+          <app-dropzone [moduleTypeId]="moduleTypeId" [referenceTypeId]="referenceTypeId" [getFilesByReferenceId]="true"
+            [referenceId]="referenceId" [selectedParentFolderId]="" [selectedStoreId]="selectedStoreId"
+            [isButtonVisible]="false" (isFilesExist)="filesExist($event)" (closeFilePopup)="closeFilePopup()"
+            [isToUploadFiles]="isToUploadFiles">
+          </app-dropzone>
+        </div>
+        <!-- <mat-label>{{'USERSTORY.FILEEXTENSIONS' | translate}} :&nbsp;jpg, jpeg, png, pdf</mat-label> -->
+      </div>
+    </div>
+    <div class="text-center mb-1 p-05">
+      <button type="submit" mat-raised-button color="primary" class="mr-05" (click)="$event.stopPropagation()"
+        matTooltip="{{'HRMANAGAMENT.CLAIMEXPENSE' | translate}}"
+        [disabled]="(anyOperationInProgress$ | async) || (fileUploadInProgress$ | async)">
+        <mat-progress-bar color="primary" mode="indeterminate"
+          *ngIf="(anyOperationInProgress$ | async) || (fileUploadInProgress$ | async)">
+        </mat-progress-bar>
+        <fa-icon icon="plus" class="mr-05"></fa-icon> {{'HRMANAGAMENT.CLAIMEXPENSE' | translate}}
+      </button>
+      <button mat-raised-button type="reset" (click)="closeAddFoodOrderPopup()"
+        matTooltip="{{'HRMANAGAMENT.CANCEL' | translate}}"
+        [disabled]="(anyOperationInProgress$ | async) || (fileUploadInProgress$ | async)">
+        <fa-icon icon="times" class="mr-05"></fa-icon>{{'HRMANAGAMENT.CANCEL' | translate}}
+      </button>
+    </div>
+  </form>
+</mat-card>

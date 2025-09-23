@@ -1,0 +1,274 @@
+<div *ngIf="canAccess_feature_ViewPermissions" class="full-height">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow">{{'PERMISSIONHISTORY.TITLE' | translate | titlecase}}</span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button class="text-center" (click)="reset();" mat-icon-button>
+            <fa-icon class="filter mat-color-accent" icon="undo"
+              matTooltip="{{ 'PERMISSIONHISTORY.RESET' | translate}}"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+        <!-- <mat-menu #filterMenu="matMenu"  class="filter-panel" (click)="$event.stopPropagation()">
+          <button mat-menu-item [matMenuTriggerFor]="employeeSearch">
+            {{ 'PERMISSIONHISTORY.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}</button>
+          <button mat-menu-item
+            [matMenuTriggerFor]="fromDateSearch">{{ 'PERMISSIONHISTORY.FROMDATE' | translate }}</button>
+          <button mat-menu-item
+            [matMenuTriggerFor]="toDateSearch">{{ 'PERMISSIONHISTORY.TODATE' | translate }}</button>
+          <button mat-menu-item
+            [matMenuTriggerFor]="reasonSearch">{{ 'PERMISSIONHISTORY.SELECTREASON' | translate }}</button>
+        </mat-menu> -->
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <!-- <div fxFlex="180px" class="ml-05 mr-05"> -->
+            <mat-form-field class="full-width">
+              <input type="text"
+                placeholder="{{ 'PERMISSIONHISTORY.SELECTEMPLOYEE' | translate | softLabelsPipe : softLabels}}" matInput
+                [(ngModel)]="searchEmployee" (input)="searchByEmployee()" [matAutocomplete]="auto" autocomplete="off"
+                trim>
+              <i class="fa fa-spin fa-spinner custom-auto-spinner-timesheet" *ngIf="employeeLoading"></i>
+              <span class="close_icon mt-n2" *ngIf="searchEmployee && !employeeLoading">
+                <span *ngIf="!searchEmployee">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <mat-icon *ngIf="searchEmployee" class="icon-button custom-auto-close-timesheet" aria-hidden="false"
+                  (click)="closeSearchEmployee()" style="cursor:pointer">
+                  close</mat-icon>
+              </span>
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)"
+                (optionSelected)="onChangeEmployee($event.option.value)">
+                <mat-option *ngFor="let person of  employeesDropDown" [value]="person.teamMemberId">
+                  <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.teamMemberName}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{ 'PERMISSIONHISTORY.FROMDATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker1" [max]="maxDate" autocomplete="off" (click)="picker1.open()"
+                (dateChange)="dateFromChanged($event)" class="date-picker" [(ngModel)]="dateFrom" [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+              <mat-datepicker #picker1></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-label>{{ 'PERMISSIONHISTORY.TODATE' | translate }}</mat-label>
+              <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="minDate" [max]="maxDate"
+                (click)="picker2.open()" (dateChange)="dateToChanged($event)" class="date-picker" [(ngModel)]="dateTo"
+                [readonly]="true">
+              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+              <mat-datepicker #picker2></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field class="full-width">
+              <mat-select placeholder="{{ 'PERMISSIONHISTORY.SELECTREASON' | translate }}"
+                (selectionChange)="onChangePermission($event)" [(value)]="selectedReason">
+                <mat-option name="selectAll">{{ 'PERMISSIONHISTORY.SELECTNONE' | translate }}</mat-option>
+                <mat-option [value]="reason.id" *ngFor="let reason of permissionReasonList">
+                  {{reason.permissionReason}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <!-- </div> -->
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <div class="permission_history">
+    
+  </div>
+  <mat-card-content class="p-0 m-0 no-drag">
+    <ngx-datatable class="btrak" [scrollbarH]="true" [columnMode]="'flex'" [headerHeight]="35" [footerHeight]="35" [rowHeight]="35"
+      [externalPaging]="true" [scrollbarH]="scrollbarH" [count]="page.totalElements" (page)='setPage($event)'
+      (sort)="onSort($event)"
+      [messages]="{emptyMessage:('NODATATODISPLAY' | translate), totalMessage: 'TOTAL' | translate}"
+      [offset]="page.pageNumber" [limit]="page.size" [externalSorting]="true" [rows]="permissionListdata"
+      [loadingIndicator]="isAnyOperationIsInprogress">
+
+      <ngx-datatable-column minWidth="150" name="{{'PERMISSIONHISTORY.TITLE' | translate}}" [sortable]="true" prop="date"
+        [flexGrow]="2">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+           {{row.fullName}} {{ 'PERMISSIONHISTORY.TAKES' | translate }}
+           {{row.duration.toString().split(":")[0]+" h " }}
+           {{row.duration.toString().split(":")[1]+" m" }}
+           {{ 'PERMISSIONHISTORY.PERMISSIONON' | translate }} 
+           {{row.date | date: "dd-MMM-yyyy" }} {{ 'PERMISSIONHISTORY.BECAUSEOF' | translate }}
+           {{row.reasonName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column minWidth="150" name="{{ 'ACTIONS' | translate}}" [flexGrow]="1" [sortable]="false"
+        *ngIf="(canAccess_feature_UpdatePermission || canAccess_feature_DeletePermissions)">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button class="text-center" title="{{ 'PERMISSIONHISTORY.EDIT' | translate}}"
+            *ngIf="canAccess_feature_UpdatePermission"
+            (click)="editPermissionPopupOpen(row, upsertPermissionpopup); loadUsers();"
+            [satPopoverAnchorFor]="upsertPermissionPopover" #upsertPermissionpopup="satPopoverAnchor" mat-icon-button>
+            <fa-icon icon="edit" class="mat-color-accent" style="cursor: pointer;"></fa-icon>
+          </button>
+          <button class="text-center" title="{{ 'PERMISSIONHISTORY.DELETE' | translate}}"
+            *ngIf="canAccess_feature_DeletePermissions"
+            (click)="deletePermissionPopupOpen(row, deletePermissionPopover)"
+            [satPopoverAnchorFor]="deletePermissionPopup" #deletePermissionPopover="satPopoverAnchor" mat-icon-button>
+            <fa-icon icon="trash" class="mat-color-accent" style="cursor: pointer;"></fa-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </mat-card-content>
+
+  <!-- edit -->
+  <sat-popover backdropClass="backdrop-color" #upsertPermissionPopover [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">{{ 'PERMISSIONHISTORY.EDITPERMISSION' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="P-05">
+        <form [formGroup]="permissionForm" novalidate (submit)="permissionForm.valid && savePermission(null)"
+          class="p-0 feed_timesheet">
+          <div class="card-content">
+            <div fxLayout="row wrap">
+              <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap" class="mr-1">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                  <mat-select formControlName="userId"
+                    placeholder="{{ 'PERMISSIONHISTORY.EMPLOYEENAME' | translate | softLabelsPipe : softLabels}}">
+                   <mat-option [value]="person.teamMemberId" *ngFor="let person of employeesDropDown">
+                     <app-profile-avatar class="employee_img" *ngIf="!person.profileImage"
+                       [name]="person.teamMemberName | removeSpecialCharacters" [isRound]="true" size="30"></app-profile-avatar>
+                     <img class="employee_img" *ngIf="person.profileImage"
+                      [src]="person.profileImage | fetchSizedAndCachedImage: '40':''">{{person.teamMemberName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div fxFlex="100" fxFlex.gt-sm="47" fxLayout="column wrap">
+                <mat-form-field class="full-width" (click)="$event.stopPropagation();">
+                  <input formControlName="date" matInput autocomplete="off" [matDatepicker]="picker" [max]="maxDate"
+                    [readonly]="true" (click)="picker.open()"
+                    placeholder="{{ 'PERMISSIONHISTORY.DATEOFPERMISSION' | translate }}" required />
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap.xs="0px" fxLayoutGap="15px">
+              <div fxFlex fxFlex.gt-xl="33.3">
+                <mat-form-field class="full-width permission-time" style="margin-top: 5px !important;">
+                  <input formControlName="duration" matInput placeholder="{{ 'PERMISSIONHISTORY.TIME' | translate  }}"
+                    aria-label="24hr format" [ngxTimepicker]="duration" [format]="24" readonly
+                    (click)="durationTimeShow();" [(ngModel)]="durationTimepicker" />
+                  <ngx-material-timepicker #duration [cancelBtnTmpl]="durationCancelBtn" [confirmBtnTmpl]="confirmBtn">
+                  </ngx-material-timepicker>
+                  <span class="close-icon-padding close_icon pull-right" style="top: 22px !important;">
+                    <mat-icon *ngIf="durationTimepicker" class="icon-button" aria-hidden="false"
+                      (click)="closeDurationTime()" style="cursor:pointer">close</mat-icon>
+                  </span>
+                  <mat-error>
+                    <span
+                      *ngIf="permissionForm.get('duration').hasError('required') && permissionForm.get('duration').touched">{{'FEEDTIMESHEET.PLEASESPECIFYDURATION' | translate}}</span>
+                  </mat-error>
+                </mat-form-field>
+                <ng-template #durationCancelBtn>
+                  <p class="feedtimesheet-datepicker-button" style="margin-right: 10px;" (click)="closeDurationTime()">
+                    {{'FEEDTIMESHEET.CANCEL' | translate}}</p>
+                </ng-template>
+                <ng-template #confirmBtn>
+                  <p class="feedtimesheet-datepicker-button">{{'FEEDTIMESHEET.OK' | translate}}</p>
+                </ng-template>
+              </div>
+              <div fxFlex="100" fxFlex.gt-sm="47">
+                <mat-form-field class="full-width reason-input" (click)="$event.stopPropagation();">
+                  <mat-select formControlName="reasonId"
+                    placeholder="{{ 'PERMISSIONHISTORY.SELECTREASON' | translate }}">
+                    <mat-option [value]="reason.id" *ngFor="let reason of permissionReasonList">
+                      {{reason.permissionReason}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <mat-checkbox formControlName="isMorning" (click)="$event.stopPropagation();"
+              class="mb-1 checkbox-text full-width">
+              {{ 'PERMISSIONHISTORY.ISMORNING' | translate }}
+            </mat-checkbox>
+          </div>
+
+          <div class="text-center mt-1">
+            <button type="submit" mat-raised-button color="primary" class="mr-1"
+              [disabled]="isAnyOperationIsInprogress || !permissionForm.valid || (employeeLoading$ | async)">
+              <mat-progress-bar color="primary" mode="indeterminate"
+                *ngIf="isAnyOperationIsInprogress || (employeeLoading$ | async)">
+              </mat-progress-bar>
+              <fa-icon class="mr-05" icon="check"></fa-icon> {{ 'PERMISSIONHISTORY.UPDATE' | translate }}
+            </button>
+            <button mat-button mat-raised-button (click)="closedialog()" type="button"
+              [disabled]="isAnyOperationIsInprogress">
+              <fa-icon class="mr-05" icon="times"></fa-icon>
+              {{ 'CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- edit -->
+
+  <!-- delete -->
+  <sat-popover backdropClass="backdrop-color" #deletePermissionPopup [autoFocus]="false" hasBackdrop
+    [restoreFocus]="false" [interactiveClose]="false" scrollStrategy="reposition" verticalAlign="below"
+    horizontalAlign="end">
+    <mat-card class="p-0 mr-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text  mat-bg-primary p-05 mb-1">
+          {{ 'PERMISSIONHISTORY.DELETEPERMISSIONDETAILS' | translate }}
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="card-content mb-1">
+          {{ 'PERMISSIONHISTORY.DELETEPERMISSION' | translate }}
+        </div>
+        <mat-error *ngIf="isThereAnError">{{validationmessage}}</mat-error>
+        <div class="text-center">
+          <button class="mr-1" mat-button mat-raised-button color="primary" (click)="delete()"
+            [disabled]="isAnyOperationIsInprogress">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="isAnyOperationIsInprogress">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="check"></fa-icon>{{ 'PERMISSIONHISTORY.YES' | translate }}
+          </button>
+
+          <button class="mr-1" mat-button mat-raised-button (click)="closeDeletePopup()"
+            [disabled]="isAnyOperationIsInprogress">
+            <fa-icon class="mr-05" icon="times"></fa-icon>{{ 'PERMISSIONHISTORY.NO' | translate }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </sat-popover>
+  <!-- delete -->
+</div>
+
+<app-common-message-box *ngIf="!canAccess_feature_ViewPermissions"
+  textToDisplay="{{ 'PERMISSIONSSREGISTER.ALERTMESSAGE' | translate }}">
+</app-common-message-box>

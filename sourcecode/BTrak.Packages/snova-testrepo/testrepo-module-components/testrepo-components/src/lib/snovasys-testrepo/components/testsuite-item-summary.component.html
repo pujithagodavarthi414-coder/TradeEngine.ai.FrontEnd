@@ -1,0 +1,156 @@
+<div class="test-suite-item-padding testrail-summary" [ngClass]="{'selected-panel-header': testSuiteSelected == true}"
+  (contextmenu)="openContextMenu($event)">
+  <mat-accordion>
+    <mat-expansion-panel hideToggle="true" class="primary-text" [expanded]="panelOpenState">
+      <mat-expansion-panel-header class="p-03" (click)="expandClick()" [collapsedHeight]="'45px'"
+        [expandedHeight]="'45px'">
+        <div fxFlex="100" fxLayout="row wrap">
+          <div fxFlex="20px">
+            <mat-icon class="ml-n1 expansion-icon" (click)="$event.stopPropagation();togglePanel()">
+              {{expansionIcon  ? 'keyboard_arrow_down' : 'keyboard_arrow_right' }}
+            </mat-icon>
+          </div>
+          <div fxFlex="80" fxFlex.sm="78" class="mb-05" #testSuiteTitle (mouseover)="checkTooltipStatus()">
+            <span class="testsuite-title-overflow  testsuites-on-hover" matTooltip="{{testSuiteData.testSuiteName}}"
+              matTooltipShowDelay="400">{{testSuiteData.testSuiteName}}
+            </span>
+          </div>
+
+          <div fxFlex="25px" class="pull-right">
+            <app-avatar
+              matTooltip="{{'TESTMANAGEMENT.CREATEDBY' | translate}} {{testSuiteData.createdByName}} - {{testSuiteData.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+              [name]="testSuiteData.createdByName | removeSpecialCharacters" [src]="testSuiteData.createdByProfileImage"
+              [isRound]="true" size="22">
+            </app-avatar>
+          </div>
+
+          <!-- 
+          <div fxFlex="20px" class="pull-right">
+            <a class="testsuites-on-hover" *ngIf="(canAccess_entityType_feature_AddOrUpdateTestrun)"
+              matTooltip="{{'TESTMANAGEMENT.CREATETESTRUN' | translate}}">
+              <fa-icon icon="play" class="ml-02 mat-color-accent" [satPopoverAnchorFor]="addNewTestRun"
+                #addNewRunPopover="satPopoverAnchor"
+                (click)="$event.stopPropagation();addTestRuns(addNewRunPopover,testSuiteData)"></fa-icon>
+            </a>
+            <a class="testsuites-on-hover ml-1" matTooltip="{{'TESTMANAGEMENT.TESTRUNS' | translate}}">
+                                        <fa-icon icon="eye"></fa-icon>
+                                    </a> 
+          </div> -->
+          <mat-icon
+            *ngIf="(canAccess_entityType_feature_AddOrUpdateScenario) || (canAccess_entityType_feature_DeleteScenario)"
+            class="card-control right-click testsuite-operations" [matMenuTriggerFor]="testSuitesMenu"
+            [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y"
+            (click)="$event.stopPropagation();makeEditFalse()">
+          </mat-icon>
+        </div>
+      </mat-expansion-panel-header>
+      <div class="p-03" *ngIf="testSuiteData.totalEstimate > 0" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.TOTALESTIMATE' | translate}}</span>
+        <span fxFlex="30%" class="hide-content-overflow" matTooltip="{{testSuiteData.totalEstimate | estimationTime}}">
+          <!-- <fa-icon icon="clock" class="clock-icon mat-color-accent mt-n1"
+            matTooltip="{{testSuiteData.totalEstimate | estimationTime}}">
+          </fa-icon> -->
+          {{testSuiteData.totalEstimate | estimationTime}}
+        </span>
+      </div>
+      <div class="p-03" *ngIf="testSuiteData.totalEstimate == null || testSuiteData.totalEstimate == '0'"
+        fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.TOTALESTIMATE' | translate}}</span>
+        <span fxFlex="30%">
+          <!-- <fa-icon icon="clock" class="clock-icon mat-color-accent mt-n1" matTooltip="0h"></fa-icon> -->
+          0h
+        </span>
+      </div>
+
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.SECTIONSCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testsuite-sections-count"
+            matTooltip="{{'TESTMANAGEMENT.SECTIONSCOUNT' | translate}}">{{ testSuiteData.sectionsCount }}</span></div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.CASESCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testsuite-sections-count"
+            matTooltip="{{'TESTMANAGEMENT.CASESCOUNT' | translate}}">{{ testSuiteData.casesCount }}</span></div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.RUNSCOUNT' | translate | softLabelsPipe : softLabels}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span class="testsuite-sections-count"
+            matTooltip="{{'TESTMANAGEMENT.RUNSCOUNT' | translate | softLabelsPipe : softLabels}}">{{ testSuiteData.runsCount }}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'TESTMANAGEMENT.CREATETESTRUN' | translate | softLabelsPipe : softLabels}}</span>
+        <div fxFlex="30%" fxLayoutAlign="start center"><span>
+            <a class="testsuites-on-hover" *ngIf="(canAccess_entityType_feature_AddOrUpdateRun)">
+              <fa-icon icon="play" class="ml-02 mat-color-accent" [satPopoverAnchorFor]="addNewTestRun"
+                #addNewRunPopover="satPopoverAnchor"
+                (click)="$event.stopPropagation();addTestRuns(addNewRunPopover,testSuiteData)"></fa-icon>
+            </a></span></div>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+
+  <mat-menu class="goal-options" #testSuitesMenu="matMenu" (click)="$event.stopPropagation()">
+    <button mat-menu-item [satPopoverAnchorFor]="addTestSuite"
+      *ngIf="(canAccess_entityType_feature_AddOrUpdateScenario)"
+      (click)="addTestSuite.toggle();detailsOpen() ;$event.stopPropagation()">
+      <mat-icon>edit</mat-icon> <span>{{'TESTMANAGEMENT.EDIT' | translate}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="deleteTestSuite" *ngIf="(canAccess_entityType_feature_DeleteScenario)"
+      (click)="deleteTestSuite.toggle(); $event.stopPropagation()">
+      <mat-icon>delete</mat-icon> <span>{{'TESTMANAGEMENT.DELETE' | translate}}</span>
+    </button>
+  </mat-menu>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #addTestSuite verticalAlign="below" hasBackdrop horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'TESTMANAGEMENT.EDITTESTSUITE' | translate | softLabelsPipe : softLabels}}
+      </div>
+    </mat-card-title>
+    <app-testrail-testsuite-edit *ngIf="isEditTestSuite" (updatedId)="getUpdatedId($event)"
+      (updatedDescription)="getUpdatedDescription($event)" [testSuite]="editTestSuiteData" [editTestSuites]="true"
+      [testSuiteId]="testSuiteId" (closeTestSuite)="closeTestSuiteDialog()"></app-testrail-testsuite-edit>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteTestSuite hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'TESTMANAGEMENT.AREYOUSUREDELETETESTSUITE' | translate | softLabelsPipe : softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableTestSuiteDelete"
+          (click)="deleteSelectedTestSuite()">
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{'TESTMANAGEMENT.DELETE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="deleteTestSuite.close()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<div class="testrun-popup">
+  <sat-popover #addNewTestRun hasBackdrop [interactiveClose]="false" backdropClass="testrun-popover"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data p-0">
+      <mat-card-title class="text-center">
+        <div class="card-title-text mat-bg-primary p-05">
+          {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+        </div>
+      </mat-card-title>
+      <testrun-add-new *ngIf="loadNewTestRun" [projectId]="projectId" [selectedTestSuiteIdForRun]="testSuiteIdForRun"
+        [selectedTestSuiteNameForRun]="testSuiteNameForRun" (closeTestRun)="closeNewTestRunDialog()">
+      </testrun-add-new>
+    </mat-card>
+  </sat-popover>
+</div>

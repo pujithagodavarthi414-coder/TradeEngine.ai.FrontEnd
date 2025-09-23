@@ -1,0 +1,309 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+</head>
+<div *ngIf="personalChatDisplay ==true">
+  <div class="headerSide hilightText">
+    <span class="img disableselect" *ngIf="profileImage != null && profileImage != ''">
+      <app-avatar [src]="profileImage" [isRound]="true" size="30">
+      </app-avatar>
+    </span>
+    <span class="img disableselect" *ngIf="profileImage == null || profileImage == ''">
+      <app-avatar [name]="fullName | removeSpecialCharacters" [isRound]="true" size="30">
+      </app-avatar>
+    </span>    
+    <h5 class="name lap col-11 pl-0" (click)="openColleagueDetails(userId)">{{fullName}}</h5>    
+  </div>
+</div>
+<div *ngIf="personalChatDisplay == false">
+  <!-- Displaying Channel Profile and Channel name -->
+  <div class="row hilightText">
+    <img class="rounded-circle ml-15 headerImage" src="{{channelProfileImage}}" width="30" height="30">
+    <h5 class="name lap col-11" (click)="channelDetails()">{{channelName}}</h5>
+  </div>
+</div>
+<div class="hrLine">
+  <div><mat-progress-bar *ngIf="chatLoading" mode="indeterminate" ></mat-progress-bar></div>
+</div>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="side" position="end">
+    <div *ngIf="showDetails=='channelMembers'">
+      <div class="userName">
+        <button class='btn pull-right p-0 closeButton' (click)="sidenavClose()"> 
+          <mat-icon>close</mat-icon>
+        </button>
+        <strong class="sidenavHeadings">{{'CHATAPP.TOPICDETAILS' | translate}}</strong>
+      </div>
+      <div class="hrLine"></div>
+      <p class="mt-05 topicsBasicDetails"><b class="topicDetailsFont">{{'CHATAPP.CREATEDBY' | translate}}:</b>
+        <small class="createdUserName" *ngIf="createdByUserName.length > 30" matTooltip={{createdByUserName}} matTooltipPosition="above"
+          matTooltipClass="primary-tooltip">
+          {{ createdByUserName | slice:0:30}}{{createdByUserName.length > 30 ? '...' : ''}}
+        </small>
+        <small class="createdUserName" *ngIf="createdByUserName.length <= 30">
+          {{createdByUserName}}
+        </small>
+      </p>
+      <p class="topicsBasicDetails"><b class="topicDetailsFont">{{'CHATAPP.CREATEDON' | translate}}:</b>
+        <small class="createdDate">{{createdDateTime | date :'dd MMM yyyy'}}</small>
+      </p>
+      <p class="currentOwner"><b class="topicDetailsFont">{{'CHATAPP.CURRENTOWNER' | translate}}:</b>
+        <small class="currentOwnerName" *ngIf="createdByUserName.length > 30" matTooltip={{createdByUserName}} matTooltipPosition="above"
+          matTooltipClass="primary-tooltip">
+          {{ createdByUserName | slice:0:30}}{{createdByUserName.length > 30 ? '...' : ''}}
+        </small>
+        <small class="currentOwnerName" *ngIf="createdByUserName.length <= 30">
+          {{createdByUserName}}
+        </small>
+      </p>
+      <div class="hrLine"></div>
+      <p class="ml-1 sidenavHeadings topicMembers"><strong>{{'CHATAPP.TOPICMEMBERS' | translate}} ({{channelMemberCount}})</strong>
+        <button class='btn p-0 ml-1 closeButton' matTooltip="{{'CHATAPP.ADDMEMBERS' | translate}}" (click)="openAddMembersToChannelDiloag()" *ngIf="canAccess_feature_AddOrUpdateChannel"> 
+          <mat-icon class="iconsize">person_add</mat-icon>
+        </button>
+      </p>
+      <div class="hrLine"></div>
+      <mat-nav-list>
+        <ng-container *ngFor="let channelMember of channelMembersList">
+          <div class="flex flex-column">
+            <div class="channelMember">
+              <div class="main p-03">
+                <div class="onech disableselect">
+                  <span *ngIf="channelMember.profileImage!=null">
+                    <app-avatar [src]="channelMember.profileImage" [isRound]="true" size="30">
+                    </app-avatar>
+                  </span>
+                  <span *ngIf="channelMember.profileImage==null">
+                    <app-avatar [name]="channelMember.fullName | removeSpecialCharacters" [isRound]="true" size="30">
+                    </app-avatar>
+                  </span>
+                </div>
+                <div class="twoch">
+                  <span class="memberNames pb-0" *ngIf="channelMember.fullName.length > 25" matTooltip={{channelMember.fullName}} matTooltipPosition="above"
+                    matTooltipClass="primary-tooltip">
+                    <b>{{channelMember.fullName | slice:0:25}}{{channelMember.fullName.length > 25 ? '...' : ''}}</b>
+                  </span>
+                  <span class="memberNames pb-0" *ngIf="channelMember.fullName.length <= 25">
+                    <b>{{channelMember.fullName}}</b>
+                  </span>
+                  <small class="Textch">{{channelMember.roleName}}</small>
+                </div>
+                <span class="removeUserIcon pull-right" *ngIf="channelMember.userId!=loggedInUserId && canAccess_feature_AddOrUpdateChannel" 
+                (click)="removeUser(channelMember.userId)" matTooltip="{{'CHATAPP.REMOVEMEMBER' | translate}}" matTooltipPosition="above">
+                  <mat-icon>delete</mat-icon>
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </mat-nav-list>
+    </div>
+    <div *ngIf="showDetails=='colleagueDetails'">      
+      <div class="userName">
+        <button class='btn pull-right p-0 closeButton' (click)="sidenavClose()"> 
+          <mat-icon>close</mat-icon>
+        </button>
+        <strong class="sidenavHeadings" *ngIf="colleagueDetails.fullName.length > 30" matTooltip={{colleagueDetails.fullName}} matTooltipPosition="above"
+          matTooltipClass="primary-tooltip">
+          {{ colleagueDetails.fullName | slice:0:30}}{{ colleagueDetails.fullName.length > 30 ? '...' : ''}}
+        </strong>
+        <strong class="sidenavHeadings" *ngIf="colleagueDetails.fullName.length <= 30">
+          {{colleagueDetails.fullName}}
+        </strong>
+      </div>
+      <div class="hrLine mt-05"></div>
+      <div class="row ml-0 mr-0">
+        <div class="col-4 padding">
+          <span *ngIf="colleagueDetails.profileImage!=null">
+            <app-avatar [src]="colleagueDetails.profileImage" [isRound]="false" size="100">
+            </app-avatar>
+          </span>
+          <span *ngIf="colleagueDetails.profileImage==null">
+            <app-avatar [name]="colleagueDetails.fullName | removeSpecialCharacters" [isRound]="false" size="100">
+            </app-avatar>
+          </span>
+        </div>
+        <div class="col-8 padding">
+          <p class="fontColor mt-1"><strong>{{'CHATAPP.DESIGNATION' | translate}}</strong></p>
+          <p *ngIf="colleagueDetails.designationName!=null" class="mt-05 detailsColor">{{colleagueDetails.designationName}}</p>
+          <p *ngIf="colleagueDetails.designationName==null" class="mt-05 detailsColor">{{'CHATAPP.NOTSPECIFIED' | translate}}</p>
+          <div *ngIf="colleagueDetails.mobileNo!=null && (canAccess_feature_CanEditOtherEmployeeDetails || userId == loggedInUserId)">
+            <p class="fontColor">
+              <strong>{{'CHATAPP.CONTACTNUMBER' | translate}}</strong>
+            </p>
+            <p class="mt-05 detailsColor">{{colleagueDetails.mobileNo}}</p>
+          </div>
+        </div>
+      </div>
+      <div class="hrLine"></div>
+      <p *ngIf="colleagueDetails.email!=null" class="mt-05 mb-05 ml-1"><strong class="fontColor">{{'CHATAPP.EMAILID' | translate}}  </strong>
+        <span class="sharedTopic">{{colleagueDetails.email}}</span></p>
+      <div *ngIf="colleagueDetails.email!=null" class="hrLine"></div>
+      <div class="flex-container" fxLayout="row">
+        <strong [ngClass]="{'activeClass' : shared, 'inactiveClass': !shared}"
+          class="child-1 flex-fill sharedAndUnsharedButtons"
+          (click)="sharedTopicsList(colleagueDetails.userId)">{{'CHATAPP.SHAREDTOPICS' | translate}}
+          <span *ngIf="shared">({{sharedOrUnsharedTopicsCount}})</span>
+        </strong>
+        <strong [ngClass]="{'activeClass' : !shared, 'inactiveClass': shared}" 
+          class="child-2 flex-fill sharedAndUnsharedButtons"
+          (click)="unsharedTopicsList(colleagueDetails.userId)">{{'CHATAPP.UNSHAREDTOPICS' | translate}}
+          <span *ngIf="!shared">({{sharedOrUnsharedTopicsCount}})</span>
+        </strong>
+      </div>
+      <div class="hrLine" style="margin-bottom: 10px;">
+      <mat-progress-bar *ngIf="sharedOrUnsharedTopicsLoading" mode="indeterminate"></mat-progress-bar></div>
+      <div *ngFor="let topic of sharedOrUnsharedTopics">
+        <div class="p-05 ml-15 sharedTopic" (click)="moveToChannel(topic)">
+          {{topic.channelName}}
+        </div>
+      </div>
+    </div>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div class="sidenav-content">
+      <div>
+        <div class="container scrollBar" #scrollBar [scrollTop]="scrollPosition == true ? 0 : scrollBar.scrollHeight"
+            (scroll)="chatScroll($event)" *ngIf="!chatLoading">
+              <div *ngFor="let chatelement of chat">
+                <div class="date" *ngIf="chatelement.date == 'Today'|| chatelement.date == 'Yesterday'">
+                  <b>{{chatelement.date}}</b>
+                </div>
+                <div class="date"
+                  *ngIf="chatelement.date != null && chatelement.date != 'Yesterday' && chatelement.date != 'Today' ">
+                  <b>{{chatelement.messageDateTime | date :'	EEEE, MMMM dd' }}{{chatelement.wordOfDay}}</b>
+                </div>
+                <div class="main">
+                  <div class="one">
+                    <!-- profileImage -->
+                    <div class="disableselect" *ngIf="chatelement.senderProfileImage != null && chatelement.senderProfileImage != '' && chatelement.showNameAndTime">
+                      <app-avatar [src]="chatelement.senderProfileImage" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                    <div class="disableselect" *ngIf="(chatelement.senderProfileImage == null || chatelement.senderProfileImage == '') && chatelement.showNameAndTime">
+                      <app-avatar [name]="chatelement.senderName | removeSpecialCharacters" [isRound]="true" size="30">
+                      </app-avatar>
+                    </div>
+                  </div>
+                  <div class="two">
+                    <span class="mt-0 reactionsBox disableselect">
+                      <a class="reactionbtn" (click)="thumsupReaction(chatelement)">
+                        <mat-icon>thumb_up</mat-icon>
+                      </a>
+                      <div class="hrLinereact"></div>
+                      <a class="reactionbtn" [satPopoverAnchorFor]="menu" (click)="menu.toggle()">
+                        <mat-icon>tag_faces</mat-icon>
+                      </a>
+                      <sat-popover #menu hasBackdrop verticalAlign="below">
+                        <div class="popover-wrapper">
+                          <emoji-mart class="emoji" [showPreview]="false" [color]="companythemecolor"
+                            (emojiSelect)="emojiReactions(chatelement,$event)">
+                          </emoji-mart>
+                        </div>
+                      </sat-popover>
+                    </span>
+                    <!-- Name and Time -->
+                    <div class="NameandTime" *ngIf="chatelement.showNameAndTime">
+                      <div class="Name underLine" (click)="openColleagueDetails(chatelement.senderUserId)">
+                        <b>{{chatelement.senderName}}</b>
+                      </div>
+                      <div class="Time"><small>{{chatelement.messageDateTime | date :'hh:mm a' }}</small></div>
+                    </div>
+                    <div *ngIf="chatelement.textMessage!=null && chatelement.reportMessage == null">
+                      <div class="Text" [innerHtml]="chatelement.textMessage"></div>
+                    </div>
+                    <div *ngIf="chatelement.reportMessage != null">
+                      <div class="Text">
+                        {{chatelement.reportMessage.text}}
+                        <div *ngFor="let attachment of chatelement.reportMessage.attachments"> 
+                          <div class="rowOfReport">
+                            <div *ngIf="attachment.color!=null" class="col-0" class="colorLine" [style.border-color]=attachment.color></div> 
+                            <div class="col-0 attachmentTitle">
+                            <strong>{{attachment.title}}</strong>
+                            <div *ngFor="let field of attachment.fields">
+                              <strong>{{field.title}}</strong>
+                              <p class="description">{{field.value}}</p>
+                            </div>
+                            </div> 
+                          </div>
+                          <div *ngIf="attachment.image_url!=null">
+                            <img style="height: 400px;" src={{attachment.image_url}} alt="attachment.image_url">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Images -->
+                    <div *ngIf="chatelement.fileType=='image'">
+                      <img class="image" src={{chatelement.filePath}} alt="{{chatelement.filePath}}">
+                    </div>
+                    <!-- files -->
+                    <div *ngIf="chatelement.fileType=='file'">
+                      <a href={{chatelement.filePath}} class="File" target="_blank">{{chatelement.fileName}}</a>
+                    </div>
+                    <div fxLayout="row" class="disableselect">
+                      <a *ngFor="let reaction of chatelement.messageReactions">
+                        <mat-chip class="emojiReaction" *ngIf="reaction.emojiCount>0"
+                          (click)="addEmojiReaction(chatelement, reaction.textMessage)" selected
+                          matTooltip={{reactionsToolTip(reaction.reactedByUserIds)}} matTooltipPosition="above"
+                          matTooltipClass="primary-tooltip"
+                          style="background-color: rgb(226, 241, 245); color: var(--primary-theme-color); margin: 5px;">
+                          {{reaction.textMessage}} {{reaction.emojiCount}}
+                        </mat-chip>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          </div>
+      </div>
+      <footer>
+        <div *ngIf="currentArchivedChannel != true" class="input-group m-1 textBox">
+          <div class="input-group-prepend">
+            <button mat-icon-button class="btn" matTooltip="{{'CHATAPP.ATTACHFILE' | translate }}">
+              <fa-icon class="icon-button" icon="paperclip" (click)="fileInput.value='';fileInput.click()">
+                <input type="file" id="file" multiple="multiple" (change)="messageToUserOrCollegue($event.target.files)"
+                  #fileInput>
+              </fa-icon>
+            </button>
+          </div>
+          <textarea class="form-control message-input-box" rows="1" id="id1" type="text"
+            placeholder="{{'CHATAPP.MESSAGE' | translate }} {{nameOfCurrentChat}}"
+            [mentionConfig]="{items:items,triggerChar:'@',labelKey:'fullName',dropUp:'true'}"
+            [mentionListTemplate]="mentionListTemplate" (click)="toggleEmojiPickerPopUp()"
+            (keyup.shift.@)="checkTag($event)" (keyup.enter)="messageToUserOrCollegue($event)" (keyup)="isTyping()"
+            [(ngModel)]="messageOfUser"> </textarea>
+          <ng-template #mentionListTemplate let-item="item">
+            <div class="taggedPersons">
+              <img *ngIf="item.profileImage != null" class="mr-3" src="{{item.profileImage}}" alt="" width="30"
+                height="30">
+              <img *ngIf="item.profileImage == null" class="mr-3"
+                src="https://ramcotubular.com/wp-content/uploads/default-avatar.jpg" alt="" width="30" height="30">
+              &nbsp;
+              <span>{{item.fullName}}</span>
+            </div>
+          </ng-template>
+          <div class="input-group-append">
+            <button mat-icon-button class="btn btn-outline-secondary" (click)="toggleEmojiPicker()"
+              matTooltip="{{'CHATAPP.EMOJI' | translate }}">
+              <mat-icon>tag_faces</mat-icon>
+            </button>
+            <emoji-mart class="emoji" [showPreview]="false" [color]="companythemecolor" *ngIf="showEmojiPicker"
+              (emojiSelect)="addEmoji($event)">
+            </emoji-mart>
+          </div>
+        </div>
+        <div *ngIf="currentArchivedChannel==true">
+          <div class="archivedChanelFooter">
+            <div class="col-md-11 channelFooterText">
+              You are viewing <strong><mat-icon inline=true>lock</mat-icon> {{nameOfCurrentChat}},</strong> an archived topic
+              <button class="btn btn-outline-dark" (click)="archivedChannelClose()">close</button>
+            </div>
+          </div>
+        </div>
+        <div  class="typingStatus" *ngIf="typingStatusOfSelectedOne ==  true && flag == 0" ><b>{{nameOfCurrentChat}}</b> is typing...</div>
+        <div  class="typingStatus" *ngIf="typingStatusOfSelectedOne ==  true && flag == 1" ><b>{{typingPersonNameInChannel}}</b> is typing...</div>
+      </footer>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+</html>

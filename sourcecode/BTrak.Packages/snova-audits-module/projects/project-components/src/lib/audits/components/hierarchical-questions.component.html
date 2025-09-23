@@ -1,0 +1,51 @@
+<div class="ml-1 mb-05" fxLayout="row">
+    <mat-checkbox
+        *ngIf="canAccess_entityType_feature_CopyOrMoveQuestionsFromCategoryToCategory && (questionsCount > 0) && !isAuditArchived"
+        class="mr-05" [(ngModel)]="isMultiQuestionsSelected" (change)="changeStatus($event.checked)"
+        style="position: relative; top: 3px;">
+    </mat-checkbox>
+    <b class="word-break user-select-text"
+        matTooltip="{{'AUDIT.CATEGORYNAME' | translate}}">{{hierarchicalData.auditCategoryName}}</b>
+    <span matTooltip="{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}"
+        class="ml-05 badge-item test-case-count-number">{{questionsCount}}</span>
+</div>
+<div class="ml-1 mb-1"
+    *ngIf="hierarchicalData.auditCategoryDescription != null && hierarchicalData.auditCategoryDescription.length > 0">
+    <span class="section-description word-break user-select-text"
+        [innerHTML]="hierarchicalData.auditCategoryDescription"></span>
+</div>
+<mat-card-content class="p-0">
+    <mat-list class="compact-list ml-02 mb-1" dragula="questions" [(dragulaModel)]="questionsModel"
+        [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+        <mat-divider class="mat-divider-position">
+        </mat-divider>
+        <mat-list-item *ngFor="let question of (questions$ | async)" style="line-height: 45px; height: 45px !important;"
+            [attr.data-questionId]="question.questionId"
+            [ngStyle]="{ 'pointer-events': (reOrderOperationInProgress$ | async)  ? 'none' : '' }">
+            <question-case class="full-width" (click)="handleClick(question)"
+                (questionPreview)="getQuestionPreviewDetails($event)" (questionSelection)="getQuestionSelection($event)"
+                (questionsSelected)="getQuestionsSelected($event)" [selectedAudit]="selectedAudit"
+                [questionSelected]="question.questionId === selectedQuestionId" [questionDetails]="question"
+                [allQuestionsSelect]="selection">
+            </question-case>
+        </mat-list-item>
+    </mat-list>
+</mat-card-content>
+<div fxLayout="row" class="mt-1" *ngIf="canAccess_entityType_feature_AddOrUpdateAuditQuestions && !isAuditArchived">
+    <div fxFlex="100" class="mb-05 mt-02">
+        <a class="ml-05 new-testcase" (click)="upsertAuditQuestion()">
+            <fa-icon icon="plus" class="mr-05 add-icon"></fa-icon>
+            <b>{{'AUDIT.ADDQUESTION' | translate | softLabelsPipe :softLabels}}</b>
+        </a>
+    </div>
+</div>
+<div class="ml-08 mb-05 hierarchical-subsection-border"
+    *ngIf="!(hierarchicalData.subAuditCategories == null) && hierarchicalData.subAuditCategories.length > 0">
+    <div class="ml-05" *ngFor="let subCategory of hierarchicalData.subAuditCategories">
+        <hierarchical-questions (questionPreview)="getQuestionPreviewDetails($event)"
+            (questionSelection)="getQuestionSelection($event)" (questionsSelected)="getQuestionsSelected($event)"
+            [hierarchicalData]="subCategory" [questionsData]="questions" [selectedAudit]="selectedAudit"
+            [selectedQuestion]="questionFromPreview" [allQuestionsSelect]="selection">
+        </hierarchical-questions>
+    </div>
+</div>

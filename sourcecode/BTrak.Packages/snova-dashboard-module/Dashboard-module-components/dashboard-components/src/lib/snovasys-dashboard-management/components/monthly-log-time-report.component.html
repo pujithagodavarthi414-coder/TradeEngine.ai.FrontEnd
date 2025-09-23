@@ -1,0 +1,79 @@
+<app-common-message-box *ngIf="!(canAccess_feature_LogTimeReport)"
+  textToDisplay="{{'LOGTIMEREPORT.PERMISSION' | translate}}">
+</app-common-message-box>
+<div class="p-0 full-height gridster-noset" *ngIf="(canAccess_feature_LogTimeReport)">
+  <mat-card class="p-0 m-0">
+    <mat-card-title class="full-width data-table-header drag-handler">
+      <div fxLayout="row wrap" fxLayoutGap="0">
+        <div fxFlex fxLayoutAlign="start center" class="card-title-text p-05 full-width">
+          <span fxFlex="100" class="hide-content-overflow"
+                matTooltip="{{'LOGTIMEREPORT.MONTHLYLOGTIMEREPORT' | translate | titlecase}}">
+             {{'LOGTIMEREPORT.MONTHLYLOGTIMEREPORT' | translate | titlecase}}</span>
+        </div>
+        <div fxFlex="135px" class="search_goalinput mr-05" fxLayoutAlign="end center" fxLayout="row wrap" fxLayoutAlign.xs="start center">
+          <mat-form-field class="full-width">
+            <input class="search_goal" matInput placeholder="{{'SEARCH' | translate}}" [(ngModel)]="searchText"
+              (input)="searchRecords()">
+          </mat-form-field>
+          <span class="close_icon" style="right: 0px !important;">
+            <span *ngIf="!searchText">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()"
+              style="cursor:pointer">
+              close</mat-icon>
+          </span>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button mat-icon-button (click)="resetAllFilters()">
+            <fa-icon matTooltip="{{'RESET' | translate}}" class="filter mat-color-accent" icon="undo"></fa-icon>
+          </button>
+        </div>
+        <div fxFlex="40px" fxFlex.xs="25px" fxLayoutAlign="end center" class="ml-02">
+          <button type="submit" mat-icon-button class="pull-right" (click)="filterClick()"
+            [matMenuTriggerFor]="filterMenu">
+            <fa-icon icon="user-cog" class="filter mat-color-accent"
+              matTooltip="{{'WIDGETS.CONFIGUREAPPSETTINGS' | translate}}">
+            </fa-icon>
+          </button>
+        </div>
+        <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+          <mat-card class="filter-data" (click)="$event.stopPropagation()">
+            <div fxLayoutAlign="center start">
+              <fa-icon (click)="getPreviousSelectedDate()" style="cursor:pointer" icon="chevron-left"></fa-icon>
+              <b>{{  date | date: " MMM-yyyy "}}</b>
+              <fa-icon (click)=" getCurrentSelectedDate()" style="cursor:pointer" icon="chevron-right"> </fa-icon>
+            </div>
+            <mat-form-field class="full-width" *ngIf="lineManager?.length > 0">
+              <mat-select [(ngModel)]="userId" (selectionChange)="selectedlineManagerId($event.value)"
+                placeholder="{{'LOGTIMEREPORT.SELECTLINEMANAGER'|translate}}">
+                <mat-option value="0">{{'ADVANCEDSEARCH.ALL' | translate}}
+                </mat-option>
+                <mat-option [value]="person.userId" *ngFor="let person of lineManager">
+                  <app-avatar class="employee_img" *ngIf="!person.profileImage"
+                    [name]="person.userName | removeSpecialCharacters" [isRound]="true" size="30"></app-avatar>
+                  <img class="employee_img" *ngIf="person.profileImage"
+                    src="{{person.profileImage}}">{{person.userName}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="full-width" *ngIf="entities?.length > 1">
+              <mat-select placeholder="{{ 'WIDGETS.SELECTBRANCH' | translate }}" [(ngModel)]="selectedEntity"
+                (selectionChange)="entityValues($event.value)">
+                <mat-option *ngFor="let entity of entities" [value]="entity.id">
+                  {{entity.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card>
+        </mat-menu>
+      </div>
+    </mat-card-title>
+  </mat-card>
+  <mat-progress-bar color="primary" mode="indeterminate" *ngIf="anyOperationInProgress"> </mat-progress-bar>
+  <div class="no-drag" id="widget-scroll-id">
+    <ejs-heatmap *ngIf="responseDataDates" id='container' style="display:block;" [dataSource]='dataSource'
+      [xAxis]='xAxis' [yAxis]='yAxis' [titleSettings]='titleSettings' [cellSettings]='cellSettings'
+      [paletteSettings]='paletteSettings' style="height: 660px;">
+    </ejs-heatmap>
+    <div *ngIf="!responseDataDates" class="no-data">{{'NODATATODISPLAY' | translate}}</div>
+  </div>
+</div>

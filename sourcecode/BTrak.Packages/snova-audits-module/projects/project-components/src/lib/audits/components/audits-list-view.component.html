@@ -1,0 +1,945 @@
+<mat-card class="custom-box mb-0 mt-0 p-0">
+  <div class="p-0">
+    <div fxLayout="row" fxLayoutGap="0" class="mb-05 mt-05 ml-05 mr-05">
+      <div fxFlex class="custom-searchbar search-audits">
+        <input type="text" name="search" class="full-width p-03 search_goal"
+          placeholder="{{'TESTMANAGEMENT.SEARCHBYENTER' | translate}}" [(ngModel)]='searchText'
+          (keydown)="checkSearchText($event,searchText)" style="padding: 2px !important;">
+        <div class="close_icon clear-search mt-02">
+          <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">close
+          </mat-icon>
+        </div>
+      </div>
+      <div class="ml-05" fxFlex="65px" fxLayoutAlign="end center" hasBackdrop
+        *ngIf="(canAccess_entityType_feature_AddOrUpdateAudit && !isArchived) || (folderTreeModel && folderTreeModel.length > 0)">
+        <a *ngIf="canAccess_entityType_feature_AddOrUpdateAudit && !isArchived" class="add-test-case"
+          matTooltip="{{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}" [satPopoverAnchorFor]="addAudit"
+          #addAuditsPopover="satPopoverAnchor" (click)="openAuditDialog(addAuditsPopover, null)">
+          <fa-icon class="mr-05 add-section-square mat-color-accent" icon="plus-square"></fa-icon>
+        </a>
+        <a *ngIf="!expandAll && (folderTreeModel && folderTreeModel.length > 0)" class="add-test-case"
+          matTooltip="{{'DOCUMENTMANAGEMENT.EXPANDALL' | translate}}" (click)="expandAll = !expandAll; expand()">
+          <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-right"></fa-icon>
+        </a>
+        <a *ngIf="expandAll && (folderTreeModel && folderTreeModel.length > 0)" class="add-test-case"
+          matTooltip="{{'DOCUMENTMANAGEMENT.COLLAPSEALL' | translate}}" (click)="expandAll = !expandAll; collapse()">
+          <fa-icon class="mr-05 add-section-square mat-color-accent" icon="caret-square-down"></fa-icon>
+        </a>
+        <a *ngIf="(folderTreeModel && folderTreeModel.length > 0)" class="add-test-case"
+          [matMenuTriggerFor]="filterMenu">
+          <fa-icon class="mat-color-accent" icon="user-cog"></fa-icon>
+        </a>
+      </div>
+      <div class="ml-05" fxFlex="35px" fxLayoutAlign="end center" hasBackdrop
+        *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAudit">
+        <mat-slide-toggle
+          [matTooltip]="(isArchived == true) ? ('SWITCHTOUNARCHIVE' | translate) : ('SWITCHTOARCHIVE' | translate)"
+          [(ngModel)]="isArchived" [checked]="isArchived" (change)="loadAuditFolderView()">
+        </mat-slide-toggle>
+      </div>
+      <div fxFlex="25px" fxLayoutAlign="end center" hasBackdrop
+        *ngIf="canAccess_entityType_feature_CanImportAndExportAudits">
+        <div fxFlex>
+          <span class="pull-right date-filter">
+            <fa-icon style="cursor: pointer;"
+              matTooltip="{{'AUDIT.IMPORTAUDITS' | translate | softLabelsPipe :softLabels}}"
+              [satPopoverAnchorFor]="editThreeDotsPopover"
+              (click)="$event.stopPropagation();editThreeDotsPopover.open()" icon="file-import"
+              class="mat-color-accent filter-operation">
+            </fa-icon>
+          </span>
+        </div>
+      </div>
+      <div fxFlex="25px" fxLayoutAlign="end center" hasBackdrop
+        *ngIf="canAccess_entityType_feature_CanImportAndExportAudits">
+        <div fxFlex>
+          <span class="pull-right date-filter">
+            <fa-icon style="cursor: pointer;"
+              matTooltip="{{'AUDIT.EXPORTAUDITS' | translate | softLabelsPipe :softLabels}}" icon="file-export"
+              class="mat-color-accent filter-operation" [satPopoverAnchorFor]="exportPopover"
+              (click)="openExportPopover()">
+            </fa-icon>
+          </span>
+        </div>
+        <sat-popover backdropClass="backdrop-color" #exportPopover verticalAlign="below" hasBackdrop
+          [interactiveClose]="false" horizontalAlign="end">
+          <mat-card class="filter-data p-0" style="max-width: 300px;">
+            <mat-card-title class="text-center">
+              <div class="card-title-text mat-bg-primary p-05">
+                {{'AUDIT.EXPORTAUDITS' | translate | softLabelsPipe :softLabels}}
+              </div>
+            </mat-card-title>
+            <mat-form-field class="p-05 full-width mb-1">
+              <input matInput placeholder="{{'AUDIT.EXPORTEG' | translate | softLabelsPipe :softLabels}}" [(ngModel)]="auditName" />
+              <mat-hint>{{'AUDIT.EXPORTEG' | translate | softLabelsPipe :softLabels}}</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="p-05 full-width mb-05">
+              <textarea matInput placeholder="{{'HRMANAGAMENT.TO' | translate}}" [(ngModel)]="toMails"></textarea>
+              <mat-hint>{{'TESTMANAGEMENT.EXAMPLEMAIL' | translate}}</mat-hint>
+              <mat-hint align="end">{{'TESTMANAGEMENT.MULTIPLEMAILS' | translate}}</mat-hint>
+            </mat-form-field>
+            <span class="ml-05 mb-05" style="color: red; font-size: 11px;"
+              *ngIf="emptyMail">{{'TESTMANAGEMENT.ENTEREXPORTEMAILADDRESS' | translate}}</span>
+            <div class="text-center mb-05">
+              <button class="mr-1" mat-button mat-raised-button color="primary" type="button" (click)="exportaudit()"
+                [disabled]="disableExport">
+                <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableExport">
+                </mat-progress-bar>
+                <fa-icon class="mr-05" icon="file-export"></fa-icon>
+                {{'TESTMANAGEMENT.EXPORT' | translate}}
+              </button>
+              <button mat-button mat-raised-button type="button" (click)="closeExportPopover()">
+                <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+              </button>
+            </div>
+          </mat-card>
+        </sat-popover>
+      </div>
+    </div>
+    <mat-menu #filterMenu="matMenu" xPosition="before" class="custom-matpanel">
+      <mat-card class="filter-data" (click)="$event.stopPropagation()" style="position: relative;">
+        <div hasBackdrop style="position: absolute; right: 3px; top: 3px;">
+          <a class="add-test-case" (click)="resetFilters()">
+            <fa-icon class="mr-05 add-section-square mat-color-accent" matTooltip="{{'RESET' | translate}}" icon="undo"
+              style="font-size: 15px;">
+            </fa-icon>
+          </a>
+        </div>
+        <mat-form-field class="full-width mt-05">
+          <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTEMPLOYEE' | translate}}" [(ngModel)]="selectedUser"
+            (selectionChange)="statusValues($event.value)">
+            <mat-option *ngFor="let employee of userDropdown" value="option" [value]="employee.projectMember.id">
+              <!-- (click)="goToUserProfile(employee.userId);$event.stopPropagation()" -->
+              <app-avatar class="employee_img" *ngIf="!employee.projectMember.profileImage"
+                [name]="employee.projectMember.name | removeSpecialCharacters" [isRound]="true" size="30">
+              </app-avatar>
+              <img class="employee_img" src="{{employee.projectMember.profileImage}}"
+                *ngIf="employee.projectMember.profileImage">
+              {{employee.projectMember.name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTPERIOD' | translate}}" [(ngModel)]="selectedPeriod"
+            (selectionChange)="periodValue($event.value)">
+            <mat-option *ngFor="let period of periodDropDown" value="option" [value]="period">
+              {{period}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="full-width mt-1" *ngIf="dateFromfilter">
+          <mat-form-field class="full-width">
+            <input matInput [matDatepicker]="picker1" (click)="picker1.open()"
+              placeholder="{{'HISTORICALREPORT.FROMDATE' | translate}}" required autocomplete="off" [readonly]="true"
+              (dateChange)="dateFromChanged($event)">
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="full-width mt-1" *ngIf="dateTofilter">
+          <mat-form-field class="full-width">
+            <input matInput [matDatepicker]="picker2" (click)="picker2.open()"
+              placeholder="{{'HISTORICALREPORT.TODATE' | translate}}" required autocomplete="off" [readonly]="true"
+              (dateChange)="dateToChanged($event)" [min]="minToDate">
+            <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <mat-form-field class="full-width">
+          <mat-select placeholder="{{ 'PRODUCTIVITYDASHBOARD.SELECTBRANCH' | translate}}" [(ngModel)]="selectedBranch"
+            (selectionChange)="branchValue($event.value)">
+            <mat-option *ngFor="let branch of branchDropdown" value="option" [value]="branch.branchId">
+              {{branch.branchName}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <!-- <mat-form-field class="full-width">
+          <mat-select [formControl]="businessUnitIds" placeholder="{{'BUSINESSUNIT.SELECTBUSINESSUNIT' | translate}}" multiple>
+            <mat-select-trigger>
+              {{selectedBusinessUnits}}
+            </mat-select-trigger>
+            <mat-option [value]="0" #businessUnitsSelected (click)="toggleAllBusinessUnitsSelected();">
+              Select all
+            </mat-option>
+            <mat-option *ngFor="let businessUnit of businessUnitsList" [value]="businessUnit.businessUnitId"
+              (click)="getSelectedBusinessUnits();toggleBusinessUnitsPerOne()">
+              {{businessUnit.businessUnitName}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field> -->
+        <div fxLayout="row" class="mb-05">
+          <div class="custom-searchbar search-audits full-width">
+            <input type="text" name="search" class="full-width p-03 search_goal"
+              placeholder="{{'AUDIT.SEARCHTAGSBYENTER' | translate}}" [(ngModel)]='searchTagsText'
+              (keydown)="checkSearchTagsText($event,searchTagsText)">
+            <div class="close_icon clear-search mt-02">
+              <mat-icon *ngIf="searchTagsText" class="icon-button" aria-hidden="false" (click)="closeTagsSearch()">close
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+        <div fxLayout="row" class="mb-05">
+          <div class="custom-searchbar search-audits full-width">
+            <input type="text" name="search" class="full-width p-03 search_goal"
+              placeholder="{{'AUDIT.SEARCHSTATUSBYENTER' | translate}}" [(ngModel)]='searchStatusText'
+              (keydown)="checksearchStatusText($event,searchStatusText)">
+            <div class="close_icon clear-search mt-02">
+              <mat-icon *ngIf="searchStatusText" class="icon-button" aria-hidden="false" (click)="closeStatusSearch()">close
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </mat-card>
+    </mat-menu>
+    <div class="p-0 m-0 audits-list fit-content-audits-height" id="style-1">
+      <div *ngIf="!anyOperationInProgress">
+        <!-- <mat-list-item
+                    *ngFor="let audit of (auditList$ | async | auditName: searchText: 'audit' | auditArchive: isArchived: 'audit')">
+                    <audit-item-summary class="full-width" [audit]="audit" (click)="handleClickOnAuidtItem(audit)"
+                        (deletedCategoryId)="getDeletedCategoryId($event)"
+                        [auditSelected]="audit.auditId === selectedAuditId" [auditId]="selectedAuditId">
+                    </audit-item-summary>
+                </mat-list-item>
+                <mat-card
+                    *ngIf="(auditList$ | async | auditName: searchText: 'audit' | auditArchive: isArchived: 'audit').length === 0"
+                    class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                            <p class="m-0" *ngIf="isArchived == false">
+                                {{'AUDIT.NOACTIVEAUDITS' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                            <p class="m-0" *ngIf="!(isArchived == false)">
+                                {{'AUDIT.NOARCHIVEDAUDITS' | translate | softLabelsPipe : softLabels}}
+                            </p>
+                        </div>
+                    </div>
+                </mat-card> -->
+
+
+        <kendo-treeview [nodes]="isSearching ? filteredFolderTreeModel : folderTreeModel" textField="auditName"
+          kendoTreeViewHierarchyBinding childrenField="children" (collapse)="handleCollapse($event)"
+          (expand)="handleExpand($event)" kendoTreeViewDragAndDrop kendoTreeViewDragAndDropEditing
+          (nodeDragStart)="log('nodeDragStart', $event)" (nodeDrag)="log('nodeDrag', $event)"
+          (nodeDrop)="handleDrop($event)" (addItem)="log('addItem', $event)" (removeItem)="log('removeItem', $event)"
+          (nodeDragEnd)="log('nodeDragEnd', $event)" class="full-height document-tree" id="style-1"
+          kendoTreeViewExpandable [expandBy]="'auditId'" [(expandedKeys)]="expandKeys" kendoTreeViewSelectable
+          (selectionChange)="handleSelection($event)" [isSelected]="isItemSelected" style="overflow: visible;">
+          <ng-template kendoTreeViewNodeTemplate let-dataItem>
+            <div>
+              <span [matMenuTriggerFor]="auditMenu" [matMenuTriggerData]="{auditData: dataItem}"
+                #auditMenuTrigger="matMenuTrigger"></span>
+              <span [matMenuTriggerFor]="folderMenu" [matMenuTriggerData]="{folder: dataItem}"
+                #folderMenuTrigger="matMenuTrigger"></span>
+              <div fxLayout="row" fxLayoutAlign="start center" (click)="selecteNodeDetils(dataItem)"
+                (contextmenu)="dataItem.isAudit ? openAuditMenu($event, auditMenuTrigger,dataItem) : openFolderMenu($event, folderMenuTrigger,dataItem)">
+                <!-- <span *ngIf="!(dataItem.isAudit)" [ngClass]="iconClass(dataItem)" class=""
+                  style="font-size: large;"></span> -->
+                <span *ngIf="!(dataItem.isAudit)">
+                  <fa-icon class="mr-05 icon-primary" icon="folder" style="font-size: 15px;"></fa-icon>
+                </span>
+                <span *ngIf="dataItem.isAudit"
+                  [ngStyle]="{'margin-bottom': dataItem?.responsibleProfileImage ? '5px' : ''}">
+                  <app-avatar
+                    matTooltip="{{dataItem?.responsibleUserName}} - {{dataItem?.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+                    matTooltipShowDelay="300" [name]="dataItem?.responsibleUserName | removeSpecialCharacters"
+                    [src]="dataItem?.responsibleProfileImage" [isRound]="true" size="22">
+                  </app-avatar>
+                </span>
+                <div class="documents" fxLayout="column" [ngClass]="{'ml-01' : dataItem.isAudit}">
+                  <!-- [ngStyle]="{'top': dataItem.auditTagsModels && dataItem.auditTagsModels.length > 0 ? '3px' : '',"
+                  'position': dataItem.auditTagsModels && dataItem.auditTagsModels.length > 0 ? 'relative' : ''} -->
+                  <div>{{dataItem.auditName}}&nbsp;
+                    <!-- <span matTooltip="{{'AUDIT.AUDITSCOUNT' | translate}}" style="font-size: 10px;"
+                      *ngIf="!(dataItem.isAudit)">
+                      ({{checkAuditsCount(dataItem.children)}})
+                    </span> -->
+                  </div>
+                  <div>
+                    <span *ngIf="dataItem.status && dataItem.enableWorkFlowForAudit"
+                      [ngStyle]="{'font-size': dataItem.status ? '8px' : ''}">
+                      <span class="question-tag"
+                      [ngStyle]="{'background-color': dataItem.statusColor ? dataItem.statusColor : 'darkgrey' }">{{dataItem.status}}</span>
+                    </span>
+                  <span *ngIf="dataItem.auditTagsModels && dataItem.auditTagsModels.length > 0"
+                    [ngStyle]="{'font-size': dataItem.auditTagsModels && dataItem.auditTagsModels.length > 0 ? '8px' : ''}">
+                    <span *ngFor="let tag of dataItem.auditTagsModels" class="question-tag"
+                      style="background-color: #afadad;">{{tag.tagName}}</span>
+                  </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </kendo-treeview>
+
+        <mat-card *ngIf="callSucceeded && folderTreeModel && folderTreeModel.length == 0" class="p-0 test-display"
+          fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+              <p class="m-0" *ngIf="isArchived == false">
+                {{'AUDIT.NOACTIVEAUDITS' | translate | softLabelsPipe : softLabels}}
+              </p>
+              <p class="m-0" *ngIf="!(isArchived == false)">
+                {{'AUDIT.NOARCHIVEDAUDITS' | translate | softLabelsPipe : softLabels}}
+              </p>
+            </div>
+          </div>
+        </mat-card>
+
+        <mat-card *ngIf="isSearching && (filteredFolderTreeModel == null || filteredFolderTreeModel.length == 0)"
+          class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+          <div fxLayout="row" fxFlex="100">
+            <div fxFlex="100" fxFlex.gt-xs="5" class="p-05">
+              <fa-icon icon="info-circle"></fa-icon>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="95" class="p-05 ml-1">
+              <p class="m-0">
+                {{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}
+              </p>
+            </div>
+          </div>
+        </mat-card>
+
+
+      </div>
+      <div *ngIf="anyOperationInProgress">
+        <mat-list-item>
+          <audit-list-loading class="full-width"></audit-list-loading>
+        </mat-list-item>
+      </div>
+    </div>
+  </div>
+</mat-card>
+
+<mat-menu #auditMenu="matMenu" [overlapTrigger]="false">
+  <ng-template matMenuContent let-auditData="auditData">
+    <div id="style-1" style="max-height: 250px;">
+      <button mat-menu-item [satPopoverAnchorFor]="auditDetails"
+        *ngIf="canAccess_entityType_feature_ViewAuditDetails && auditData.isArchived == false"
+        (click)="auditdetailsOpen(auditData) ;$event.stopPropagation()">
+        <mat-icon>visibility</mat-icon> <span>{{'AUDIT.VIEWAUDITDETAILS' | translate | softLabelsPipe :softLabels}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="editAudit"
+        *ngIf="canAccess_entityType_feature_AddOrUpdateAudit && !isArchived"
+        (click)="detailsOpen(auditData) ;$event.stopPropagation()">
+        <mat-icon>edit</mat-icon> <span>{{'TESTMANAGEMENT.EDIT' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="customFields"
+        *ngIf="canAccess_entityType_feature_CanAddAuditLevelCustomFields && !isArchived"
+        (click)="openCustomFields(auditData) ;$event.stopPropagation()">
+        <mat-icon>assignment</mat-icon> <span>{{'AUDIT.CUSTOMFIELD' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="addComment"
+      *ngIf="canAccess_entityType_feature_CanAddAndViewAuditLevelComments"
+        (click)="openAddComment(auditData) ;$event.stopPropagation()">
+        <mat-icon>add_comment</mat-icon> <span>{{'ASSETS.ADDCOMMENT' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="cloneAudit"
+        *ngIf="canAccess_entityType_feature_CanCloneAudit && !isArchived"
+        (click)="openCloneAuditPopover(auditData); $event.stopPropagation()">
+        <mat-icon>file_copy</mat-icon> <span>{{'AUDIT.CLONE' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="versionAudit"
+        *ngIf="canAccess_entityType_feature_CanCreateAuditVersion && auditData?.auditQuestionsCount > 0 && !isArchived"
+        (click)="openAuditVersionPopover(auditData); $event.stopPropagation()">
+        <mat-icon>add_circle</mat-icon> <span>{{'AUDIT.ADDVERSION' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="versionHistory"
+        *ngIf="canAccess_entityType_feature_CanViewAuditVersions && auditData?.haveAuditVersions && !isArchived"
+        (click)="openAuditVersionHistoryPopover(auditData); $event.stopPropagation()">
+        <mat-icon>insights</mat-icon> <span>{{'AUDIT.VERSIONHISTORY' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="deleteAudit"
+        *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAudit && !isArchived"
+        (click)="openArchiveAuditPopover(auditData); $event.stopPropagation()">
+        <mat-icon>archive</mat-icon> <span>{{'AUDIT.ARCHIVE' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="deleteAudit"
+        *ngIf="canAccess_entityType_feature_ArchiveOrUnarchiveAudit && !(auditData.isArchived == false)"
+        (click)="openArchiveAuditPopover(auditData); $event.stopPropagation()">
+        <mat-icon>archive</mat-icon> <span>{{'AUDIT.UNARCHIVE' | translate}}</span>
+      </button>
+      <button mat-menu-item (click)="triggerJob(auditData)"
+        *ngIf="auditData.schedulingDetails != null && auditData.schedulingDetails.length > 0 && !isArchived">
+        <mat-icon>event</mat-icon> <span>{{'AUDIT.TRIGGERCURRENTACTIVESCHEDULE' | translate}}</span>
+      </button>
+      <button mat-menu-item [satPopoverAnchorFor]="addAuditConduct"
+        (click)="addConducts(auditData); $event.stopPropagation()"
+        *ngIf="!auditData.schedulingDetails && !isArchived && displayConductAudit">
+        <mat-icon>event</mat-icon> <span>{{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}</span>
+      </button>
+      <button mat-menu-item class="allgoals_icons" *ngIf="auditData && auditData.auditId"
+        (click)="copyLink(auditData); $event.stopPropagation()">
+        <mat-icon>file_copy</mat-icon>{{'USERSTORY.CLICKHERETOCOPYLINK' | translate}}
+      </button>
+      <button mat-menu-item class="allgoals_icons" *ngIf="auditData && auditData.auditId"
+        (click)="openInNewTab(auditData); $event.stopPropagation()">
+        <mat-icon>web_asset</mat-icon>{{'USERSTORY.CLICKHERETOOPENINNEWTAB' | translate}}
+      </button>
+      <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="auditTagsPopover"
+        *ngIf="canAccess_entityType_feature_CanAssignAuditTags && !isArchived"
+        (click)="$event.stopPropagation();openTagsPopUp(auditData)">
+        <mat-icon>local_offer</mat-icon><span>{{ 'USERSTORY.TAGS' | translate }} </span>
+      </button>
+      <button mat-menu-item class="allgoals_icons" [satPopoverAnchorFor]="triggerWorkFlow"
+        *ngIf="displaySubmitted && auditData.enableWorkFlowForAudit"
+        (click)="triggerWorkFlow.toggle();$event.stopPropagation();">
+        <mat-icon>send</mat-icon><span>{{ 'AUDIT.SUBMITAUDIT' | translate | softLabelsPipe :softLabels }} </span>
+      </button>
+      <div mat-menu-item disableRipple class="allgoals_icons" *ngIf="auditData.enableWorkFlowForAudit"
+        (click)="$event.stopPropagation();$event.preventDefault()">
+        <ndc-dynamic [ndcDynamicFactory]="dashboard.component" *ngIf="loaded"
+          [ndcDynamicComponent]="dashboard.component" [ndcDynamicInjector]="injector"
+          [ndcDynamicInputs]="dashboard.inputs" [ndcDynamicOutputs]="outputs">
+        </ndc-dynamic>
+        <mat-spinner class="highlight-calender mb-1" strokeWidth="2" [diameter]="20" *ngIf="!loaded"></mat-spinner>
+      </div>
+    </div>
+  </ng-template>
+</mat-menu>
+
+<mat-menu #folderMenu="matMenu" [overlapTrigger]="false">
+  <ng-template matMenuContent let-folder="folder">
+    <button mat-menu-item [satPopoverAnchorFor]="addEditFolder" #addEditAuditPopover="satPopoverAnchor"
+      *ngIf="canAccess_entityType_feature_AddOrUpdateAuditFolder && !isArchived && folder.parentAuditId"
+      (click)="openAddEditFolder(addEditAuditPopover, folder, true) ;$event.stopPropagation()">
+      <mat-icon>edit</mat-icon> <span>{{'DOCUMENTMANAGEMENT.EDITFOLDER' | translate}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="addEditFolder" #addEditAuditPopover="satPopoverAnchor"
+      *ngIf="canAccess_entityType_feature_AddOrUpdateAuditFolder && !isArchived"
+      (click)="openAddEditFolder(addEditAuditPopover, folder, false) ;$event.stopPropagation()">
+      <mat-icon>create_new_folder</mat-icon> <span>{{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="addAudit" #addAuditsPopover="satPopoverAnchor"
+      (click)="openAuditDialog(addAuditsPopover, folder) ;$event.stopPropagation()"
+      *ngIf="canAccess_entityType_feature_AddOrUpdateAudit && !isArchived">
+      <mat-icon>add_circle</mat-icon> <span>{{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}</span>
+    </button>
+    <button mat-menu-item [satPopoverAnchorFor]="deleteFolder"
+      *ngIf="canAccess_entityType_feature_DeleteAuditFolder && !isArchived && folder.parentAuditId"
+      (click)="openDeleteFolderPopover(folder); $event.stopPropagation()">
+      <mat-icon>delete</mat-icon> <span>{{'DOCUMENTMANAGEMENT.DELETEFOLDER' | translate}}</span>
+    </button>
+  </ng-template>
+</mat-menu>
+
+<sat-popover backdropClass="backdrop-color" #addAudit verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'AUDIT.ADDAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <audit-add-or-edit *ngIf="loadAddAudit" [parentAuditId]="parentAuditId" [fromMain]=true
+      [defaultWorkflows]="defaultWorkflows" (closeAudit)="closeAuditDialog()">
+    </audit-add-or-edit>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #customFields hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition" [verticalAlign]="setAlignmentForpopUp()">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeCustomFieldsPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'AUDIT.CUSTOMFIELD' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content id="style-1" *ngIf="auditRequiredData" style="width: 500px; max-height: 250px;">
+      <audits-customfields [selectedAudit]="auditRequiredData" [fileType]="'audit'" [selectedConduct]=null>
+      </audits-customfields>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #addComment hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition" [verticalAlign]="setAlignmentForpopUp()">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeAddCommentPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'ASSETS.ADDCOMMENT' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content id="style-1" *ngIf="auditRequiredData" style="width: 500px; max-height: 250px;">
+      <snovasys-comments *ngIf="auditRequiredData.auditId" [receiverId]="auditRequiredData.auditId"
+        [componentModel]="componentModel" [isPermissionExists]="true">
+      </snovasys-comments>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" class="goal-options custom-goal-unique-background" #editThreeDotsPopover
+  hasBackdrop [interactiveClose]="true" verticalAlign="below" (click)="$event.stopPropagation()" horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" [satPopoverAnchorFor]="importPopover"
+        (click)="openImportPopover(true, false)">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-import" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'AUDIT.IMPORTAUDITSFROMCSV'| translate | softLabelsPipe :softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" [satPopoverAnchorFor]="importPopover"
+        (click)="openImportPopover(false, true)">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-import" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            <!-- {{'AUDIT.IMPORTAUDITSFROMCSV'| translate | softLabelsPipe :softLabels}} -->
+            Import Audits from excel
+          </div>
+        </div>
+      </button>
+    </div>
+    <div fxFlex fxLayoutAlign="start center">
+      <button mat-menu-item [disabled]="disableImport" (click)="downloadAuditsCsvTemplate()">
+        <div fxLayoutAlign="row">
+          <div fxFlex="25px">
+            <fa-icon icon="file-csv" class="mat-color-accent filter-operation"></fa-icon>
+          </div>
+          <div fxFlex class="ml-05">
+            {{'AUDIT.DOWNLOADAUDITSTEMPLATE' | translate | softLabelsPipe : softLabels}}
+          </div>
+        </div>
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #importPopover verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0" style="width: 300px;">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'AUDIT.IMPORTAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <div class="mt-05 mb-05 p-05">
+      <div ngx-dropzone [multiple]="false" [accept]="acceptableFileFormat" class="custom-scenario-import"
+        style="padding-left: 40px !important;" ngx-dropzone (change)="filesSelected($event)">
+        <ngx-dropzone-label>
+          <span *ngIf="!isCsvImport">{{'TESTMANAGEMENT.DRAGANDDROPXLFILEHERE' | translate}}</span>
+          <span *ngIf="isCsvImport">{{'TESTMANAGEMENT.DRAGANDDROPCSVFILEHERE' | translate}}</span>
+        </ngx-dropzone-label>
+        <ngx-dropzone-preview class="custom-dropzone-preview" *ngFor="let f of files" [removable]="true"
+          (removed)="onRemove(f)">
+          <ngx-dropzone-label class="custom-dropzone-label" [attr.data-tip]="f.name">{{ f.name }}
+            ({{ f.type }})
+          </ngx-dropzone-label>
+        </ngx-dropzone-preview>
+      </div>
+    </div>
+    <div class="text-center mb-05">
+      <button class="mr-1" mat-button mat-raised-button color="primary" type="button" (click)="importaudit()"
+        [disabled]="disableImport">
+        <mat-progress-bar color="primary" mode="indeterminate" *ngIf="importProgress">
+        </mat-progress-bar>
+        <fa-icon class="mr-05" icon="file-export"></fa-icon>
+        {{'TESTMANAGEMENT.IMPORT' | translate}}
+      </button>
+      <button mat-button mat-raised-button type="button" (click)="closeImportPopover()">
+        <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+      </button>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #auditDetails verticalAlign="below" hasBackdrop horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeAuditDetailsPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'ASSETS.DETAILS' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content class="card-content p-05" style="width: 300px; max-height: 200px;" id="style-1">
+      <div class="p-03" fxLayout="row wrap">
+        <div fxFlex="80">
+          <span class="testsuite-title-overflow  testsuites-on-hover">{{'AUDIT.RESPONSIBLEPERSON' | translate}}
+          </span>
+        </div>
+        <div fxFlex="10" class="pull-right">
+          <app-avatar
+            matTooltip="{{auditRequiredData?.responsibleUserName}} - {{auditRequiredData?.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+            matTooltipShowDelay="300" [name]="auditRequiredData?.responsibleUserName | removeSpecialCharacters"
+            [src]="auditRequiredData?.responsibleProfileImage" [isRound]="true" size="22">
+          </app-avatar>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'AUDIT.CATEGORIESCOUNT' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="center center"><span class="testsuite-sections-count"
+            matTooltip="{{'AUDIT.CATEGORIESCOUNT' | translate}}">{{ auditRequiredData?.auditCategoriesCount }}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}</span>
+        <div fxFlex="30%" fxLayoutAlign="center center"><span class="testsuite-sections-count"
+            matTooltip="{{'AUDIT.QUESTIONSCOUNT' | translate | softLabelsPipe :softLabels}}">{{ auditRequiredData?.auditQuestionsCount }}</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap">
+        <span fxFlex>{{'AUDIT.TOTALESTIMATEDTIME' | translate}}</span>
+        <div fxFlex="30%" fxLayoutAlign="center center">
+          <span *ngIf="auditRequiredData?.totalEstimatedTime == null" class="testsuite-sections-count">0h</span>
+          <span *ngIf="auditRequiredData?.totalEstimatedTime != null" class="testsuite-sections-count">{{
+            auditRequiredData?.totalEstimatedTime }}h</span>
+        </div>
+      </div>
+      <div class="p-03" fxLayout="row wrap" fxLayoutAlign="center center" *ngIf="tagNames">
+        <mat-chip disableRipple matRipple class="mr-08">
+          <b>{{'APP.TAGS' | translate}}:&nbsp;</b>
+          {{ tagNames }}
+        </mat-chip>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #editAudit verticalAlign="below" hasBackdrop horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'AUDIT.EDITAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <audit-add-or-edit *ngIf="isEditAudit" [editAudit]="true" [audit]="auditRequiredData" [fromMain]=true
+      [defaultWorkflows]="defaultWorkflows" (closeAudit)="closeEditAuditDialog()">
+    </audit-add-or-edit>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #cloneAudit hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'AUDIT.CLONETHISAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary" [disabled]="disableAuditClone"
+          (click)="auditClone()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(cloneOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="copy"></fa-icon> {{'AUDIT.CLONE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeAuditClonePopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #versionAudit hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'AUDIT.ADDVERSION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content style="width: 310px;">
+      <form [formGroup]="auditVersionForm" novalidate (submit)="auditVersionForm.valid && addAuditVersion()">
+        <div fxLayout="row wrap">
+          <mat-form-field class="full-width mb-05">
+            <input matInput placeholder="{{'GOALS.VERSION' | translate}}" required formControlName="auditVersionName"
+              trim />
+            <mat-error *ngIf="auditVersionForm.get('auditVersionName').hasError('required') &&
+            auditVersionForm.get('auditVersionName').touched">
+              {{'GOALS.PLEASEENTERVERSION' | translate}}
+            </mat-error>
+            <mat-error *ngIf="auditVersionForm.get('auditVersionName').hasError('maxlength')">
+              {{'GOALS.VERSIONCANNOTEXCEED15CHARACTERS' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="text-center mb-05">
+          <button type="submit" class="mr-1" mat-button mat-raised-button color="primary"
+            [disabled]="disableAddVersion">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableAddVersion">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{'AUDIT.ADDVERSION' | translate}}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="closeAuditVersionPopover()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #versionHistory verticalAlign="below" hasBackdrop horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <button class="inline_edit_close btn" color="warn" (click)="closeAuditVersionHistoryPopover()">
+      <fa-icon icon="times"></fa-icon>
+    </button>
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05 mb-1">
+        {{'TESTMANAGEMENT.VERSIONS' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content style="width: 270px; max-height: 150px;" id="style-1">
+      <mat-progress-bar color="primary" mode="indeterminate" *ngIf="loadingAuditVersions">
+      </mat-progress-bar>
+      <div *ngIf="!loadingAuditVersions">
+        <div fxFlex="row wrap" fxLayoutGap="25px" *ngFor="let version of auditVersions" style="display: flex;">
+          <div mat-card-avatar fxFlex="6">
+            <app-avatar
+              matTooltip="{{version?.createdByUserName}} - {{version?.createdDateTime | utcToLocalTime | date:'mediumDate'}}"
+              matTooltipShowDelay="300" [name]="version?.createdByUserName | removeSpecialCharacters"
+              [src]="version?.createdByUserProfileImage" [isRound]="true" size="22" style="cursor: pointer;">
+            </app-avatar>
+          </div>
+          <div fxFlex>
+            <div fxFlex="85">
+              <b>{{version.auditVersionName}}</b>
+            </div>
+          </div>
+          <div fxFlex="60px">
+            <a class="add-test-case" (click)="openAuditRelatedVersionPopover(version.auditId)">
+              {{'BILLINGMANAGEMENT.VIEW' | translate}}
+            </a>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteAudit hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05" *ngIf="auditRequiredData">
+      <div class="card-content mb-1" *ngIf="auditRequiredData.isArchived == false">
+        {{'AUDIT.REALLYARCHIVETHEAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="card-content mb-1" *ngIf="!(auditRequiredData.isArchived == false)">
+        {{'AUDIT.REALLYUNARCHIVETHEAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="text-center">
+        <button *ngIf="auditRequiredData.isArchived == false" class="mr-1" mat-button mat-raised-button color="primary"
+          [disabled]="disableAuditDelete" (click)="deleteSelectedAudit(true)">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(deleteOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{'AUDIT.ARCHIVE' | translate}}
+        </button>
+        <button *ngIf="!(auditRequiredData.isArchived == false)" class="mr-1" mat-button mat-raised-button
+          color="primary" [disabled]="disableAuditDelete" (click)="deleteSelectedAudit(false)">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(deleteOperationInProgress$ | async)">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="archive"></fa-icon> {{'AUDIT.UNARCHIVE' | translate}}
+        </button>
+        <button mat-button mat-raised-button (click)="closeDeleteAuditPopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="testrun-popover" #addAuditConduct hasBackdrop [interactiveClose]="false"
+  scrollStrategy="reposition">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05">
+        {{'AUDIT.ADDCONDUCT' | translate | softLabelsPipe :softLabels}}
+      </div>
+    </mat-card-title>
+    <conduct-add-or-edit *ngIf="loadAddAuditConduct" [selectedAudit]="selectedAuditConduct"
+      (closeConduct)="closeAuditConductDialog()">
+    </conduct-add-or-edit>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #auditTagsPopover verticalAlign="below" [autoFocus]="false" [interactiveClose]="false" hasBackdrop
+  horizontalAlign="start" backdropClass="backdrop-color">
+  <mat-card class="filter-data p-0">
+    <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(tagsOperationInProgress$ | async)">
+    </mat-progress-bar>
+    <div>
+      <button class="inline_edit_close btn" color="warn" (click)="closeTagsDialog()">
+        <fa-icon icon="times"></fa-icon>
+      </button>
+      <mat-card-title class="text-center">
+        <div class="card-title-text p-1 mat-bg-primary">
+          {{'USERSTORY.ADDTAGS' | translate}}
+        </div>
+      </mat-card-title>
+      <mat-card-content class="card-content p-05">
+        <div fxFlex="450px">
+          <mat-form-field class="full-width tags-popup" hintLabel="{{ 'AUDIT.PLEASESELECT' | translate }}">
+            <mat-chip-list #tagsList>
+              <mat-chip *ngFor="let tags of auditInputTags" [selectable]="selectable" [removable]="removable"
+                (removed)="removeAuditTags(tags)" class="userstory-tags">
+                <span class="hide-content-overflow">
+                  {{tags.tagName}}
+                </span>
+                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+              </mat-chip>
+              <!-- [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addUserStoryTags($event)" -->
+              <input placeholder="{{'USERSTORY.TAGS' | translate}}" [matAutocomplete]="auto" #tagInput
+                [matChipInputFor]="tagsList" [(ngModel)]="tag" (keyup)="searchTags($event.target.value)">
+              <!-- <fa-icon icon="spinner" *ngIf="(tagsOperationInProgress$ | async)"></fa-icon> -->
+            </mat-chip-list>
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedTagValue($event)">
+              <mat-option *ngFor="let tags of (customTagsModel$ | async)" [value]="tags.tagId">
+                {{ tags.tagName }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <div class="text-center p-05">
+            <button type="button" mat-raised-button color="primary" class="mr-1 text-center" [disabled]="disableTag"
+              (click)="saveAuditTags();">
+              <mat-progress-bar color="primary" mode="indeterminate" *ngIf="(tagOperationInProgress$ | async)">
+              </mat-progress-bar>
+              <fa-icon icon="save" class="mr-05"></fa-icon> {{'SAVE' | translate}}
+            </button>
+            <button mat-raised-button class="mr-1" (click)="closeTagsDialog()">
+              <fa-icon icon="times" class="mr-05"></fa-icon> {{'CANCEL' | translate}}
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </div>
+  </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="backdrop-color" #addEditFolder verticalAlign="below" hasBackdrop [interactiveClose]="false"
+  horizontalAlign="end">
+  <mat-card class="filter-data p-0">
+    <mat-card-title class="text-center">
+      <div class="card-title-text mat-bg-primary p-05" *ngIf="!editFolder">
+        {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+      </div>
+      <div class="card-title-text mat-bg-primary p-05" *ngIf="editFolder">
+        {{'DOCUMENTMANAGEMENT.EDITFOLDER' | translate}}
+      </div>
+    </mat-card-title>
+    <mat-card-content style="width: 280px;">
+      <form [formGroup]="auditFolderForm" novalidate (submit)="auditFolderForm.valid && addOrEditAuditFolder()">
+        <div fxLayout="row wrap">
+          <mat-form-field class="full-width mb-05">
+            <input matInput placeholder="{{'DOCUMENTMANAGEMENT.FOLDERNAME' | translate}}" required
+              formControlName="auditName" trim />
+            <mat-error *ngIf="auditFolderForm.get('auditName').hasError('required') &&
+            auditFolderForm.get('auditName').touched">
+              {{'DOCUMENTMANAGEMENT.PLEASEENTERFOLDERNAME' | translate}}
+            </mat-error>
+            <mat-error *ngIf="auditFolderForm.get('auditName').hasError('maxlength')">
+              {{'DOCUMENTMANAGEMENT.FOLDERNAMESHOULDNOTEXCEED150CHARACTERS' | translate}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="text-center mb-05">
+          <button type="submit" class="mr-1" mat-button mat-raised-button color="primary"
+            [disabled]="disableAddEditFolder" *ngIf="!editFolder">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableAddEditFolder">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="plus"></fa-icon> {{'DOCUMENTMANAGEMENT.ADDFOLDER' | translate}}
+          </button>
+          <button type="submit" class="mr-1" mat-button mat-raised-button color="primary"
+            [disabled]="disableAddEditFolder" *ngIf="editFolder">
+            <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableAddEditFolder">
+            </mat-progress-bar>
+            <fa-icon class="mr-05" icon="edit"></fa-icon> {{'DOCUMENTMANAGEMENT.EDITFOLDER' | translate}}
+          </button>
+          <button type="button" mat-button mat-raised-button (click)="closeAddEditFolder()">
+            <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #deleteFolder hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'DOCUMENTMANAGEMENT.AREYOUSUREYOUWANTTODELETETHISFOLDER' | translate}}
+      </div>
+      <div class="text-center">
+        <button type="button" class="mr-1" mat-button mat-raised-button color="primary"
+          [disabled]="disableAuditFolderDelete" (click)="deleteSelectedAuditFolder()">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="disableAuditFolderDelete">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="trash"></fa-icon> {{'DOCUMENTMANAGEMENT.DELETE' | translate}}
+        </button>
+        <button type="button" mat-button mat-raised-button (click)="closeDeleteAuditFolderPopover()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+
+<sat-popover #triggerWorkFlow hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false" verticalAlign="below"
+  horizontalAlign="end">
+  <mat-card class="p-0">
+    <mat-card-title class="text-center mat-bg-primary">
+      <div class="card-title-text p-05">{{'TESTMANAGEMENT.CONFIRMATION' | translate}}</div>
+    </mat-card-title>
+    <mat-card-content class="p-05">
+      <div class="card-content mb-1">
+        {{'AUDIT.REALLYSUBMITTHEAUDIT' | translate | softLabelsPipe :softLabels}}
+      </div>
+      <div class="text-center">
+        <button class="mr-1" mat-button mat-raised-button color="primary"
+          (click)="submitAuditToTriggerWorkFlow(triggerWorkFlow)">
+          <mat-progress-bar color="primary" mode="indeterminate" *ngIf="submitAudit">
+          </mat-progress-bar>
+          <fa-icon class="mr-05" icon="plus"></fa-icon> {{ 'AUDIT.SUBMITAUDIT' | translate | softLabelsPipe :softLabels }}
+        </button>
+        <button mat-button mat-raised-button (click)="triggerWorkFlow.close()">
+          <fa-icon class="mr-05" icon="times"></fa-icon> {{'TESTMANAGEMENT.CANCEL' | translate}}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</sat-popover>
+<!-- <sat-popover #openAuditsPage [autoFocus]="false" hasBackdrop backdropClass="backdrop-color" [restoreFocus]="false"
+  [interactiveClose]="false" scrollStrategy="reposition">
+  <div style="width: calc(88vw)">
+    <app-audit-unique-detail [auditId]="auditVersionId" [notFromAuditVersion]=false
+      *ngIf="auditVersionId && loadPopover" (closePopover)="closeSatPopover($event)">
+    </app-audit-unique-detail>
+  </div>
+</sat-popover> -->
+
+<ng-template #auditVersionUniqueDetail let-data>
+  <audit-version-unique-dialog [data]=[data] *ngIf="auditVersionId && loadPopover">
+  </audit-version-unique-dialog>
+</ng-template>

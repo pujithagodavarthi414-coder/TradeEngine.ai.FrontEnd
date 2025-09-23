@@ -1,0 +1,183 @@
+<div class="p-0 ">
+    <div fxLayout="row" fxLayoutGap="0" class="mb-05 mt-05 ml-05 mr-05" *ngIf="!fromCustomApp">
+        <div fxFlex="80" class="custom-searchbar search-testruns">
+            <input type="text" name="search" class="search_goal full-width" (input)="changeSearch()"
+                placeholder="{{'ASSETS.SEARCH' | translate}}" [(ngModel)]='searchText'>
+            <div class="close_icon clear-search mt-02">
+                <mat-icon *ngIf="searchText" class="icon-button" aria-hidden="false" (click)="closeSearch()">
+                    close
+                </mat-icon>
+            </div>
+        </div>
+        <div fxFlex="30px" fxLayoutAlign="end center" hasBackdrop *ngIf="(canAccess_entityType_feature_AddOrUpdateRun)">
+            <a class="add-test-case"
+                matTooltip="{{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe :softLabels}}"
+                [satPopoverAnchorFor]="addTestRun" #addRunPopover="satPopoverAnchor"
+                (click)="openTestRunDialog(addRunPopover)">
+                <fa-icon class="add-section-square mat-color-accent" icon="plus-square" style="margin-right: 0.2rem;">
+                </fa-icon>
+            </a>
+        </div>
+        <div fxFlex="10" [satPopoverAnchorFor]="sortPopover" hasBackdrop (click)="sortPopover.toggle()">
+            <div class="mr-05 mt-02" fxFlex>
+                <span class="pull-right date-filter">
+                    <fa-icon matTooltip="{{'GOALS.SORT' | translate}}" icon="sort"
+                        class="mat-color-accent filter-operation">
+                    </fa-icon>
+                </span>
+            </div>
+            <sat-popover #sortPopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="filter-data">
+                    <mat-form-field class="goal-replan full-width search-userstory">
+                        <mat-select [(ngModel)]="runListFilter" (click)="$event.stopPropagation();"
+                            placeholder="{{'TESTMANAGEMENT.SORTBY' | translate}}"
+                            (selectionChange)="getTestRunsOrderBy($event.value)">
+                            <mat-option value="CreatedDate">{{'TESTMANAGEMENT.CREATEDDATE' | translate}} (
+                                {{'ADVANCEDSEARCH.DESCENDING' | translate}} )</mat-option>
+                            <mat-option value="TestRunName">
+                                {{'TESTMANAGEMENT.TESTRUNNAME' | translate | softLabelsPipe : softLabels}} (
+                                {{'ADVANCEDSEARCH.ASCENDING' | translate}} )</mat-option>
+                            <mat-option value="CompletionPercent">{{'TESTMANAGEMENT.PASSED' | translate}} % (
+                                {{'ADVANCEDSEARCH.DESCENDING' | translate}} )</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-card>
+            </sat-popover>
+        </div>
+        <div fxFlex="10" [satPopoverAnchorFor]="datePopover" hasBackdrop (click)="datePopover.toggle()">
+            <div class="mr-05 mt-02" fxFlex>
+                <span class="pull-right date-filter">
+                    <fa-icon matTooltip="{{'TESTMANAGEMENT.FILTER' | translate}}" icon="filter"
+                        class="mat-color-accent filter-operation">
+                    </fa-icon>
+                </span>
+            </div>
+            <sat-popover #datePopover verticalAlign="below" hasBackdrop horizontalAlign="start">
+                <mat-card class="p-0">
+                    <mat-card-title class="text-center">
+                        <div class="card-title-text mat-bg-primary p-05">
+                            {{'TESTMANAGEMENT.FILTER' | translate}}
+                        </div>
+                    </mat-card-title>
+                    <div class="card-content p-1" fxLayout="column" fxLayoutGap="5px">
+                        <div fxLayout="row" fxLayoutGap="15px" fxLayoutAlign="start center">
+                            <span>{{'TESTMANAGEMENT.COMPLETED' | translate}}:</span>
+                            <mat-slide-toggle [(ngModel)]="isCompleted" [checked]="isCompleted"
+                                (change)="loadTestRuns()">
+                            </mat-slide-toggle>
+                        </div>
+                        <div class="mt-1">
+                            <a [ngClass]="{ 'active': (dateFrom && dateTo) }">
+                                {{'TESTMANAGEMENT.CREATEDDATE' | translate}}:
+                            </a>
+                        </div>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center" style="position: relative;">
+                            <mat-form-field>
+                                <mat-label> {{'TESTMANAGEMENT.DATEFROM' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker1" autocomplete="off" [max]="maxDate"
+                                    (click)="picker1.open()" readonly class="date-picker" [(ngModel)]="dateFrom"
+                                    (dateChange)="changeDeadline(dateFrom,dateTo)">
+                                <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                            </mat-form-field>
+                            <mat-form-field>
+                                <mat-label> {{'TESTMANAGEMENT.TODATE' | translate}}</mat-label>
+                                <input matInput [matDatepicker]="picker2" autocomplete="off" [min]="dateFrom"
+                                    [max]="maxDate" (click)="picker2.open()" readonly class="date-picker"
+                                    [(ngModel)]="dateTo">
+                                <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                            </mat-form-field>
+                            <div class="close_icon date_search custom-position-initial"
+                                style="right: -10px !important; top: 8px !important;">
+                                <mat-icon *ngIf="dateFrom || dateTo" class="icon-button" aria-hidden="false"
+                                    (click)="closeDateFilter()" style="cursor:pointer">close</mat-icon>
+                            </div>
+                        </div>
+                    </div>
+                </mat-card>
+            </sat-popover>
+        </div>
+    </div>
+    <div class="p-0 m-0 test-runs-list" id="style-1">
+        <div class="p-0">
+            <span *ngIf="!(anyOperationInProgress$ | async)">
+                <mat-list-item
+                    *ngFor="let testRun of (testRunsList$ | async | testrailName: searchText: 'testrun' | dateFilter : dateFrom : dateTo|  milestoneCompleted: isCompleted: 'testrun' | sortBy : sortByName)">
+                    <testrun-item-summary [testRunData]="testRun" (editingTestRunId)="getEditingTestRunId($event)"
+                        (editedRunData)="getEditedRunData($event)" (updateId)="getUpdatedId($event)"
+                        (updateDescription)="getUpdatedDescription($event)" (deleteId)="getDeletedId($event)"
+                        (click)="handleClickOnTestRunItem(testRun)" [testRunSelectedId]="selectedTestRunId"
+                        class="full-width">
+                    </testrun-item-summary>
+                </mat-list-item>
+                <mat-card
+                    *ngIf="(testRunsList$ | async | testrailName: searchText: 'testrun' | dateFilter : dateFrom : dateTo| milestoneCompleted: isCompleted: 'testrun' | sortBy : sortByName).length === 0"
+                    class="p-0 test-display" fxFlex="100" fxFlex.gt-sm="100">
+                    <div fxLayout="row" fxFlex="100">
+                        <div fxFlex="100" fxFlex.gt-sm="5" class="p-05">
+                            <fa-icon icon="info-circle"></fa-icon>
+                        </div>
+                        <div fxFlex="100" fxFlex.gt-sm="95" class="p-05 ml-1">
+                            <p class="m-0">
+                                {{'TESTMANAGEMENT.NOSEARCHRESULTSFOUND' | translate | softLabelsPipe : softLabels}}</p>
+                        </div>
+                    </div>
+                </mat-card>
+            </span>
+            <span *ngIf="anyOperationInProgress$ | async">
+                <mat-list-item>
+                    <testruns-list-loading class="full-width"></testruns-list-loading>
+                </mat-list-item>
+            </span>
+        </div>
+    </div>
+</div>
+
+<sat-popover backdropClass="backdrop-color" #addTestRun verticalAlign="below" hasBackdrop [interactiveClose]="false"
+    horizontalAlign="end">
+    <mat-card class="filter-data p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05 mb-1">
+                {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-form-field class="full-width">
+                <mat-select placeholder="{{'TESTMANAGEMENT.TESTSUITE' | translate | softLabelsPipe : softLabels}}	*"
+                    [formControl]="selectedTestSuite">
+                    <mat-option *ngFor="let suite of (testsuitesList$ | async)" [value]="suite">
+                        {{suite.testSuiteName}}
+                    </mat-option>
+                </mat-select>
+                <mat-hint>{{'TESTMANAGEMENT.SELECTTHETESTSUITEFORNEW' | translate | softLabelsPipe : softLabels}}
+                </mat-hint>
+            </mat-form-field>
+            <div class="text-center mt-1">
+                <button class="mr-1" type="button" mat-button mat-raised-button color="primary"
+                    [disabled]="checkStatusDisabled()" [satPopoverAnchorFor]="addNewTestRun" (click)="addTestRuns()">
+                    <fa-icon icon="plus" class="mr-05"></fa-icon> {{'TESTMANAGEMENT.ADD' | translate}}
+                </button>
+                <button mat-button mat-raised-button (click)="closeTestRunDialog()">
+                    <fa-icon icon="times" class="mr-05"></fa-icon>
+                    {{'TESTMANAGEMENT.CANCEL' | translate}}
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
+
+<sat-popover backdropClass="testrun-popover" #addNewTestRun hasBackdrop [interactiveClose]="false"
+    scrollStrategy="reposition">
+    <mat-card class="filter-data card-filter-runs p-0">
+        <mat-card-title class="text-center">
+            <div class="card-title-text mat-bg-primary p-05">
+                {{'TESTMANAGEMENT.ADDTESTRUN' | translate | softLabelsPipe : softLabels}}
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <testrun-add-new *ngIf="loadNewTestRun" [projectId]="projectId" [selectedTestSuite]="selectedTestSuite"
+                (closeTestRun)="closeNewTestRunDialog()"></testrun-add-new>
+        </mat-card-content>
+    </mat-card>
+</sat-popover>
