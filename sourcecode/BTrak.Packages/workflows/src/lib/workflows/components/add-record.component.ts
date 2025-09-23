@@ -77,7 +77,8 @@ export class AddRecordComponent implements OnInit {
     getCustomApplications() {
         var searchModel: any = {};
         searchModel.isArchived = false;
-        searchModel.isCompanyBased = false;
+        searchModel.isIncludedAllForms = true;
+        searchModel.IsFromWorkflow = true;
         this.activityService.getCustomApplications(searchModel).subscribe((response: any) => {
             if (response.success) {
                 this.customApplications = response.data;
