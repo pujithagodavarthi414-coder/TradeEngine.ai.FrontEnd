@@ -728,7 +728,7 @@ export class AddWorkflowComponent implements OnInit {
       maxHeight: "80vh",
       disableClose: true,
       id: "add-new-record-dialog",
-      data: { name: this.selectedForm, formPhysicalId: "add-new-record-dialog", formId: this.workflowForm.get("formtypeName").value, formsList: this.formsDropDown, formKeys: this.formFieldsDropDown, formValue: this.insertionSteps.controls[i].value, isEdit: true }
+      data: { name: this.selectedForm, formPhysicalId: "add-new-record-dialog", formId: this.workflowForm.get("formtypeName").value, formsList: this.forms, formKeys: this.formFieldsDropDown, formValue: this.insertionSteps.controls[i].value, isEdit: true }
     });
     dialogRef.afterClosed().subscribe((res: any) => {
       if (res) {
